@@ -1,7 +1,8 @@
+
 "use client";
 
-import { useState } from "react";
-import { useAuth } from "@/firebase";
+import { useState, useEffect } from "react";
+import { useAuth, useUser, useFirestore } from "@/firebase";
 import { initiateEmailSignIn } from "@/firebase/non-blocking-login";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,21 +11,76 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Activity, LogIn, UserPlus } from "lucide-react";
+import { Activity, LogIn, UserPlus, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPending, setIsPending] = useState(false);
   const auth = useAuth();
+  const { user } = useUser();
+  const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+
+  // Redirección automática después de que el estado de auth cambia a 'logueado'
+  useEffect(() => {
+    async function handleRedirect() {
+      if (user && db) {
+        setIsPending(true);
+        try {
+          const userRef = doc(db, "users", user.uid);
+          const userSnap = await getDoc(userRef);
+          
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            const role = userData.role;
+            
+            toast({
+              title: "Sesión iniciada",
+              description: `Bienvenido(a), ${userData.fullName || 'Usuario'}.`,
+            });
+            
+            if (role === "receptionist") {
+              router.push("/reception");
+            } else if (role === "teens") {
+              router.push("/teens");
+            } else {
+              router.push("/");
+            }
+          } else {
+            // Si el perfil no existe, redirigir al inicio por seguridad
+            router.push("/");
+          }
+        } catch (error) {
+          console.error("Error al obtener el rol:", error);
+          setIsPending(false);
+        }
+      }
+    }
+
+    handleRedirect();
+  }, [user, db, router, toast]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
 
+    setIsPending(true);
+    // La función initiateEmailSignIn no es bloqueante.
+    // La redirección se maneja en el useEffect superior cuando 'user' cambia.
     initiateEmailSignIn(auth, email, password);
+    
+    // Si después de unos segundos no ha cambiado el estado (error de credenciales), 
+    // liberamos el estado de carga. En un sistema real, capturaríamos el error de la promesa.
+    setTimeout(() => {
+      if (!user) {
+        setIsPending(false);
+        // Nota: El error de Firebase suele ser manejado por el listener global
+      }
+    }, 3000);
   };
 
   return (
@@ -53,6 +109,7 @@ export default function LoginPage() {
                   className="rounded-xl h-12"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isPending}
                 />
               </div>
               <div className="space-y-2">
@@ -64,16 +121,22 @@ export default function LoginPage() {
                   className="rounded-xl h-12"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isPending}
                 />
               </div>
-              <Button type="submit" className="w-full h-12 rounded-xl text-lg font-semibold mt-4">
-                <LogIn className="mr-2 h-5 w-5" /> Iniciar Sesión
+              <Button type="submit" className="w-full h-12 rounded-xl text-lg font-semibold mt-4" disabled={isPending}>
+                {isPending ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <LogIn className="mr-2 h-5 w-5" />
+                )}
+                {isPending ? "Iniciando..." : "Iniciar Sesión"}
               </Button>
             </form>
             
             <div className="mt-8 pt-6 border-t text-center space-y-3">
               <p className="text-sm text-muted-foreground">¿Eres un funcionario nuevo?</p>
-              <Button variant="outline" className="w-full h-11 rounded-xl" asChild>
+              <Button variant="outline" className="w-full h-11 rounded-xl" asChild disabled={isPending}>
                 <Link href="/register">
                   <UserPlus className="mr-2 h-4 w-4" /> Crear cuenta de Staff
                 </Link>
