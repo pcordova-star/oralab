@@ -147,7 +147,7 @@ function ActiveExamCard({ session }: { session: any }) {
   );
 }
 
-export default function TeensPage() {
+function TeensContent() {
   const db = useFirestore();
   const { toast } = useToast();
 
@@ -167,7 +167,7 @@ export default function TeensPage() {
   const startExam = async (patient: any) => {
     if (!db) return;
     try {
-      await addDocumentNonBlocking(collection(db, "exam_sessions"), {
+      addDocumentNonBlocking(collection(db, "exam_sessions"), {
         appointmentId: patient.id,
         patientName: patient.patientName,
         examType: patient.examType,
@@ -185,58 +185,64 @@ export default function TeensPage() {
   };
 
   return (
+    <div className="grid lg:grid-cols-4 gap-8">
+      <div className="lg:col-span-1 space-y-6">
+        <h2 className="text-xl font-bold text-primary flex items-center gap-2">
+          <Clock className="h-5 w-5" /> Sala de Espera ({waitingPatients?.length || 0})
+        </h2>
+        {loadingWaiting ? (
+          <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+        ) : !waitingPatients || waitingPatients.length === 0 ? (
+          <Card className="rounded-2xl border-dashed bg-muted/20">
+            <CardContent className="p-6 text-center text-xs text-muted-foreground">Sin pacientes en espera.</CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {waitingPatients.map((p) => (
+              <Card key={p.id} className="rounded-xl border-l-4 border-l-yellow-500 shadow-sm">
+                <CardContent className="p-4 space-y-3">
+                  <p className="font-bold text-sm">{p.patientName}</p>
+                  <Badge variant="secondary" className="text-[10px]">{p.examType}</Badge>
+                  <Button size="sm" className="w-full rounded-lg" onClick={() => startExam(p)}>
+                    <Play className="h-3 w-3 mr-1" /> Iniciar
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="lg:col-span-3 space-y-6">
+        <h2 className="text-xl font-bold text-primary flex items-center gap-2">
+          <Activity className="h-5 w-5" /> Estaciones de Test Activas ({activeSessions?.length || 0})
+        </h2>
+        {loadingSessions ? (
+          <div className="flex justify-center p-12"><Loader2 className="h-10 w-10 animate-spin" /></div>
+        ) : !activeSessions || activeSessions.length === 0 ? (
+          <div className="h-64 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed text-center p-8">
+            <Activity className="h-12 w-12 text-muted-foreground/30 mb-4" />
+            <h3 className="text-lg font-bold text-muted-foreground">Centro de test vacío</h3>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {activeSessions.map((session) => (
+              <ActiveExamCard key={session.id} session={session} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function TeensPage() {
+  return (
     <AuthGuard requiredRole="teens">
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-grow container mx-auto px-4 py-8">
-          <div className="grid lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-1 space-y-6">
-              <h2 className="text-xl font-bold text-primary flex items-center gap-2">
-                <Clock className="h-5 w-5" /> Sala de Espera ({waitingPatients?.length || 0})
-              </h2>
-              {loadingWaiting ? (
-                <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
-              ) : waitingPatients?.length === 0 ? (
-                <Card className="rounded-2xl border-dashed bg-muted/20">
-                  <CardContent className="p-6 text-center text-xs text-muted-foreground">Sin pacientes en espera.</CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {waitingPatients?.map((p) => (
-                    <Card key={p.id} className="rounded-xl border-l-4 border-l-yellow-500 shadow-sm">
-                      <CardContent className="p-4 space-y-3">
-                        <p className="font-bold text-sm">{p.patientName}</p>
-                        <Badge variant="secondary" className="text-[10px]">{p.examType}</Badge>
-                        <Button size="sm" className="w-full rounded-lg" onClick={() => startExam(p)}>
-                          <Play className="h-3 w-3 mr-1" /> Iniciar
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="lg:col-span-3 space-y-6">
-              <h2 className="text-xl font-bold text-primary flex items-center gap-2">
-                <Activity className="h-5 w-5" /> Estaciones de Test Activas ({activeSessions?.length || 0})
-              </h2>
-              {loadingSessions ? (
-                <div className="flex justify-center p-12"><Loader2 className="h-10 w-10 animate-spin" /></div>
-              ) : activeSessions?.length === 0 ? (
-                <div className="h-64 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed text-center p-8">
-                  <Activity className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-bold text-muted-foreground">Centro de test vacío</h3>
-                </div>
-              ) : (
-                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {activeSessions?.map((session) => (
-                    <ActiveExamCard key={session.id} session={session} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <TeensContent />
         </main>
       </div>
     </AuthGuard>

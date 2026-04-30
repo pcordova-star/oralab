@@ -19,7 +19,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
-export default function ReceptionPage() {
+function ReceptionContent() {
   const [search, setSearch] = useState("");
   const [prepInstructions, setPrepInstructions] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -60,136 +60,144 @@ export default function ReceptionPage() {
   };
 
   const filtered = appointments?.filter(a => 
-    a.patientName.toLowerCase().includes(search.toLowerCase()) && 
+    a.patientName?.toLowerCase().includes(search.toLowerCase()) && 
     (a.status === 'scheduled' || a.status === 'waiting')
   );
 
+  return (
+    <>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">Agenda del Día</h1>
+          <p className="text-muted-foreground">Gestión de llegada de pacientes y recepción.</p>
+        </div>
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Buscar paciente..." 
+            className="pl-10 rounded-xl"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <Card className="rounded-2xl shadow-sm border overflow-hidden">
+        <CardHeader className="bg-white border-b py-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">Pacientes Agendados</CardTitle>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="flex gap-1 items-center">
+                <Clock className="h-3 w-3" /> Pendientes: {appointments?.filter(a => a.status === 'scheduled').length || 0}
+              </Badge>
+              <Badge variant="outline" className="flex gap-1 items-center border-yellow-500 text-yellow-600 bg-yellow-50">
+                <Info className="h-3 w-3" /> En Espera: {appointments?.filter(a => a.status === 'waiting').length || 0}
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30">
+                  <TableHead>Hora</TableHead>
+                  <TableHead>Paciente</TableHead>
+                  <TableHead>Examen</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {!filtered || filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                      No se encontraron pacientes para hoy.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filtered.map((app) => (
+                    <TableRow key={app.id} className="hover:bg-muted/10">
+                      <TableCell className="font-semibold text-primary">
+                        {app.dateTime ? format(new Date(app.dateTime), "HH:mm") : '--:--'}
+                      </TableCell>
+                      <TableCell className="font-medium">{app.patientName}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="font-semibold">{app.examType}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={`status-badge-${app.status} px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider`}>
+                          {app.status === 'scheduled' ? 'Agendado' : 'En espera'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {app.status === 'scheduled' && (
+                            <Button 
+                              size="sm" 
+                              className="bg-yellow-500 hover:bg-yellow-600 rounded-lg flex gap-1"
+                              onClick={() => handleStatusChange(app.id, 'waiting')}
+                            >
+                              <UserCheck className="h-4 w-4" /> Recepcionar
+                            </Button>
+                          )}
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="rounded-lg flex gap-1 border-primary text-primary hover:bg-primary/5"
+                            onClick={() => handleShowInstructions(app.examType as any)}
+                          >
+                            <Info className="h-4 w-4" /> Instrucciones
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!prepInstructions} onOpenChange={() => setPrepInstructions(null)}>
+        <DialogContent className="max-w-2xl rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <Info className="text-primary" /> Instrucciones de Preparación Estándar
+            </DialogTitle>
+            <DialogDescription>
+              Información clínica para el paciente antes de realizar el examen.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 p-6 bg-muted/50 rounded-2xl whitespace-pre-line border italic text-sm text-foreground/80 leading-relaxed">
+            {prepInstructions}
+          </div>
+          <div className="mt-6 flex justify-end gap-4">
+            <Button variant="outline" className="rounded-xl" onClick={() => setPrepInstructions(null)}>Cerrar</Button>
+            <Button className="rounded-xl px-8" onClick={handleCopy}>
+              {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+              {copied ? "Copiado" : "Copiar Instrucciones"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+export default function ReceptionPage() {
   return (
     <AuthGuard requiredRole="receptionist">
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-grow container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-primary">Agenda del Día</h1>
-              <p className="text-muted-foreground">Gestión de llegada de pacientes y recepción.</p>
-            </div>
-            <div className="relative w-full md:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar paciente..." 
-                className="pl-10 rounded-xl"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <Card className="rounded-2xl shadow-sm border overflow-hidden">
-            <CardHeader className="bg-white border-b py-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Pacientes Agendados</CardTitle>
-                <div className="flex gap-2">
-                  <Badge variant="outline" className="flex gap-1 items-center">
-                    <Clock className="h-3 w-3" /> Pendientes: {appointments?.filter(a => a.status === 'scheduled').length || 0}
-                  </Badge>
-                  <Badge variant="outline" className="flex gap-1 items-center border-yellow-500 text-yellow-600 bg-yellow-50">
-                    <Info className="h-3 w-3" /> En Espera: {appointments?.filter(a => a.status === 'waiting').length || 0}
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              {isLoading ? (
-                <div className="flex items-center justify-center p-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30">
-                      <TableHead>Hora</TableHead>
-                      <TableHead>Paciente</TableHead>
-                      <TableHead>Examen</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered?.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                          No se encontraron pacientes para hoy.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filtered?.map((app) => (
-                        <TableRow key={app.id} className="hover:bg-muted/10">
-                          <TableCell className="font-semibold text-primary">
-                            {format(new Date(app.dateTime), "HH:mm")}
-                          </TableCell>
-                          <TableCell className="font-medium">{app.patientName}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="font-semibold">{app.examType}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={`status-badge-${app.status} px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider`}>
-                              {app.status === 'scheduled' ? 'Agendado' : 'En espera'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              {app.status === 'scheduled' && (
-                                <Button 
-                                  size="sm" 
-                                  className="bg-yellow-500 hover:bg-yellow-600 rounded-lg flex gap-1"
-                                  onClick={() => handleStatusChange(app.id, 'waiting')}
-                                >
-                                  <UserCheck className="h-4 w-4" /> Recepcionar
-                                </Button>
-                              )}
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="rounded-lg flex gap-1 border-primary text-primary hover:bg-primary/5"
-                                onClick={() => handleShowInstructions(app.examType as any)}
-                              >
-                                <Info className="h-4 w-4" /> Instrucciones
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <ReceptionContent />
         </main>
-
-        <Dialog open={!!prepInstructions} onOpenChange={() => setPrepInstructions(null)}>
-          <DialogContent className="max-w-2xl rounded-3xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl flex items-center gap-2">
-                <Info className="text-primary" /> Instrucciones de Preparación Estándar
-              </DialogTitle>
-              <DialogDescription>
-                Información clínica para el paciente antes de realizar el examen.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="mt-4 p-6 bg-muted/50 rounded-2xl whitespace-pre-line border italic text-sm text-foreground/80 leading-relaxed">
-              {prepInstructions}
-            </div>
-            <div className="mt-6 flex justify-end gap-4">
-              <Button variant="outline" className="rounded-xl" onClick={() => setPrepInstructions(null)}>Cerrar</Button>
-              <Button className="rounded-xl px-8" onClick={handleCopy}>
-                {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                {copied ? "Copiado" : "Copiar Instrucciones"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </AuthGuard>
   );

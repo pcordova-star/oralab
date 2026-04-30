@@ -46,14 +46,15 @@ service cloud.firestore {
     }
 
     match /roles_receptionist/{userId} {
-      // Permite que el dueño cree su propio marcador para asegurar su acceso
-      allow get, create, update: if isOwner(userId) || isSuperAdmin() || isReceptionist();
-      allow delete: if isSuperAdmin();
+      // Permite que el dueño cree su propio marcador para asegurar su acceso en cualquier momento
+      allow get, create, update: if isOwner(userId) || isSuperAdmin();
+      allow list: if isSuperAdmin();
     }
 
     match /roles_teens/{userId} {
-      allow get, create, update: if isOwner(userId) || isSuperAdmin() || isTeens();
-      allow delete: if isSuperAdmin();
+      // Permite que el dueño cree su propio marcador para asegurar su acceso en cualquier momento
+      allow get, create, update: if isOwner(userId) || isSuperAdmin();
+      allow list: if isSuperAdmin();
     }
 
     match /patients/{patientId} {
