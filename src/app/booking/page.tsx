@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -12,12 +13,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar as CalendarIcon, CheckCircle2, Clock, Printer, Download, Mail } from "lucide-react";
+import { Calendar as CalendarIcon, CheckCircle2, Clock, Printer, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { StaffRedirect } from "@/components/staff-redirect";
 import { PROTOCOLS } from "@/app/lib/types";
+import { useFirestore } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function BookingPage() {
   const [examType, setExamType] = useState<string>("SIBO");
@@ -26,6 +30,8 @@ export default function BookingPage() {
   const [patientData, setPatientData] = useState({ name: "", rut: "", phone: "", email: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  
+  const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -48,24 +54,43 @@ export default function BookingPage() {
     return slots;
   }, [examType]);
 
-  useEffect(() => {
-    if (selectedTime && !timeSlots.includes(selectedTime)) {
-      setSelectedTime("");
-    }
-  }, [examType, timeSlots, selectedTime]);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!db || !date) return;
+
     setIsSubmitting(true);
     
-    setTimeout(() => {
+    try {
+      const appointmentDate = new Date(date);
+      const [hours, minutes] = selectedTime.split(":").map(Number);
+      appointmentDate.setHours(hours, minutes, 0, 0);
+
+      // Crear cita en Firestore
+      await addDocumentNonBlocking(collection(db, "appointments"), {
+        patientName: patientData.name,
+        patientRut: patientData.rut,
+        patientEmail: patientData.email,
+        patientPhone: patientData.phone,
+        examType: examType,
+        dateTime: appointmentDate.toISOString(),
+        status: "scheduled",
+        createdAt: new Date().toISOString()
+      });
+
       setIsSubmitting(false);
       setIsConfirmed(true);
       toast({
         title: "¡Reserva Exitosa!",
         description: `Se ha enviado un correo con el resumen y las instrucciones a ${patientData.email}.`,
       });
-    }, 1500);
+    } catch (error) {
+      setIsSubmitting(false);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo completar la reserva. Intente nuevamente.",
+      });
+    }
   };
 
   const handlePrint = () => {
@@ -138,9 +163,6 @@ export default function BookingPage() {
               </Button>
             </CardFooter>
           </Card>
-          <p className="mt-8 text-muted-foreground text-sm print:hidden">
-            Recuerde llegar 15 minutos antes de su cita.
-          </p>
         </main>
       </div>
     );

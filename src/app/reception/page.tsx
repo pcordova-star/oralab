@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -7,34 +8,39 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Search, UserCheck, Clock, Info, Copy, Check } from "lucide-react";
+import { Search, UserCheck, Clock, Info, Copy, Check, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Appointment, AppointmentStatus, PROTOCOLS } from "@/app/lib/types";
+import { PROTOCOLS } from "@/app/lib/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AuthGuard } from "@/components/auth-guard";
-
-const MOCK_APPOINTMENTS: Appointment[] = [
-  { id: "1", patientId: "p1", patientName: "Carlos Ruiz", examType: "SIBO", datetime: "09:00", status: "scheduled" },
-  { id: "2", patientId: "p2", patientName: "María González", examType: "HP", datetime: "09:30", status: "scheduled" },
-  { id: "3", patientId: "p3", patientName: "Andrés Bello", examType: "SIBO", datetime: "10:15", status: "waiting" },
-  { id: "4", patientId: "p4", patientName: "Lucía Fernández", examType: "HP", datetime: "10:45", status: "in_progress" },
-  { id: "5", patientId: "p5", patientName: "Patricia Salas", examType: "SIBO", datetime: "11:30", status: "completed" },
-];
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, doc } from "firebase/firestore";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function ReceptionPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
   const [search, setSearch] = useState("");
   const [prepInstructions, setPrepInstructions] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const db = useFirestore();
   const { toast } = useToast();
 
-  const handleStatusChange = (id: string, newStatus: AppointmentStatus) => {
-    setAppointments(prev => prev.map(app => 
-      app.id === id ? { ...app, status: newStatus } : app
-    ));
+  const appointmentsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "appointments"), orderBy("dateTime", "asc"));
+  }, [db]);
+
+  const { data: appointments, isLoading } = useCollection(appointmentsQuery);
+
+  const handleStatusChange = (id: string, newStatus: string) => {
+    if (!db) return;
+    const docRef = doc(db, "appointments", id);
+    updateDocumentNonBlocking(docRef, { status: newStatus });
+    
     toast({
       title: "Estado actualizado",
-      description: `Paciente marcado como ${newStatus === 'waiting' ? 'en espera' : newStatus}.`,
+      description: `Paciente marcado como ${newStatus === 'waiting' ? 'en espera' : 'agendado'}.`,
     });
   };
 
@@ -53,8 +59,9 @@ export default function ReceptionPage() {
     }
   };
 
-  const filtered = appointments.filter(a => 
-    a.patientName.toLowerCase().includes(search.toLowerCase())
+  const filtered = appointments?.filter(a => 
+    a.patientName.toLowerCase().includes(search.toLowerCase()) && 
+    (a.status === 'scheduled' || a.status === 'waiting')
   );
 
   return (
@@ -83,62 +90,80 @@ export default function ReceptionPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Pacientes Agendados</CardTitle>
                 <div className="flex gap-2">
-                  <Badge variant="outline" className="flex gap-1 items-center"><Clock className="h-3 w-3" /> Pendientes: {appointments.filter(a => a.status === 'scheduled').length}</Badge>
-                  <Badge variant="outline" className="flex gap-1 items-center border-yellow-500 text-yellow-600 bg-yellow-50"><Info className="h-3 w-3" /> En Espera: {appointments.filter(a => a.status === 'waiting').length}</Badge>
+                  <Badge variant="outline" className="flex gap-1 items-center">
+                    <Clock className="h-3 w-3" /> Pendientes: {appointments?.filter(a => a.status === 'scheduled').length || 0}
+                  </Badge>
+                  <Badge variant="outline" className="flex gap-1 items-center border-yellow-500 text-yellow-600 bg-yellow-50">
+                    <Info className="h-3 w-3" /> En Espera: {appointments?.filter(a => a.status === 'waiting').length || 0}
+                  </Badge>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="w-[100px]">Hora</TableHead>
-                    <TableHead>Paciente</TableHead>
-                    <TableHead>Examen</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((app) => (
-                    <TableRow key={app.id} className="hover:bg-muted/10">
-                      <TableCell className="font-semibold text-primary">{app.datetime}</TableCell>
-                      <TableCell className="font-medium">{app.patientName}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="font-semibold">{app.examType}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={`status-badge-${app.status} px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider`}>
-                          {app.status === 'scheduled' ? 'Agendado' : 
-                           app.status === 'waiting' ? 'En espera' : 
-                           app.status === 'in_progress' ? 'En proceso' : 'Finalizado'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {app.status === 'scheduled' && (
-                            <Button 
-                              size="sm" 
-                              className="bg-yellow-500 hover:bg-yellow-600 rounded-lg flex gap-1"
-                              onClick={() => handleStatusChange(app.id, 'waiting')}
-                            >
-                              <UserCheck className="h-4 w-4" /> Recepcionar
-                            </Button>
-                          )}
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="rounded-lg flex gap-1 border-primary text-primary hover:bg-primary/5"
-                            onClick={() => handleShowInstructions(app.examType as any)}
-                          >
-                            <Info className="h-4 w-4" /> Instrucciones
-                          </Button>
-                        </div>
-                      </TableCell>
+              {isLoading ? (
+                <div className="flex items-center justify-center p-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30">
+                      <TableHead>Hora</TableHead>
+                      <TableHead>Paciente</TableHead>
+                      <TableHead>Examen</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered?.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                          No se encontraron pacientes para hoy.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filtered?.map((app) => (
+                        <TableRow key={app.id} className="hover:bg-muted/10">
+                          <TableCell className="font-semibold text-primary">
+                            {format(new Date(app.dateTime), "HH:mm")}
+                          </TableCell>
+                          <TableCell className="font-medium">{app.patientName}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="font-semibold">{app.examType}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={`status-badge-${app.status} px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider`}>
+                              {app.status === 'scheduled' ? 'Agendado' : 'En espera'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              {app.status === 'scheduled' && (
+                                <Button 
+                                  size="sm" 
+                                  className="bg-yellow-500 hover:bg-yellow-600 rounded-lg flex gap-1"
+                                  onClick={() => handleStatusChange(app.id, 'waiting')}
+                                >
+                                  <UserCheck className="h-4 w-4" /> Recepcionar
+                                </Button>
+                              )}
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="rounded-lg flex gap-1 border-primary text-primary hover:bg-primary/5"
+                                onClick={() => handleShowInstructions(app.examType as any)}
+                              >
+                                <Info className="h-4 w-4" /> Instrucciones
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </main>
