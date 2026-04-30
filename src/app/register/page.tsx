@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState } from "react";
 import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,8 +15,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { UserPlus, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -38,7 +37,7 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 1. Crear perfil de usuario
+      // 1. Crear perfil de usuario (Esperamos para asegurar persistencia antes de redirigir)
       const userRef = doc(db, "users", user.uid);
       const userData = {
         id: user.uid,
@@ -48,40 +47,26 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-
-      setDoc(userRef, userData).catch((err) => {
-        errorEmitter.emit("permission-error", new FirestorePermissionError({
-          path: userRef.path,
-          operation: "create",
-          requestResourceData: userData
-        }));
-      });
+      await setDoc(userRef, userData);
 
       // 2. Crear marcador de rol para seguridad (RBAC)
       const roleCollection = role === "receptionist" ? "roles_receptionist" : "roles_teens";
       const roleRef = doc(db, roleCollection, user.uid);
-      
-      setDoc(roleRef, { active: true }).catch((err) => {
-        errorEmitter.emit("permission-error", new FirestorePermissionError({
-          path: roleRef.path,
-          operation: "create",
-          requestResourceData: { active: true }
-        }));
-      });
+      await setDoc(roleRef, { active: true });
 
       toast({
         title: "Cuenta creada",
         description: `Bienvenido(a), ${fullName}. Has sido registrado como ${role === 'receptionist' ? 'Recepcionista' : 'TEENS'}.`,
       });
 
-      router.push(role === "receptionist" ? "/reception" : "/teens");
+      // Usamos replace para evitar que vuelvan al registro con el botón atrás
+      router.replace(role === "receptionist" ? "/reception" : "/teens");
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error en el registro",
         description: error.message || "No se pudo crear la cuenta.",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -111,6 +96,7 @@ export default function RegisterPage() {
                   className="rounded-xl h-12"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -123,6 +109,7 @@ export default function RegisterPage() {
                   className="rounded-xl h-12"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -134,6 +121,7 @@ export default function RegisterPage() {
                   className="rounded-xl h-12"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
               
@@ -143,6 +131,7 @@ export default function RegisterPage() {
                   value={role} 
                   onValueChange={(v: any) => setRole(v)}
                   className="grid grid-cols-2 gap-4"
+                  disabled={isLoading}
                 >
                   <div>
                     <RadioGroupItem value="receptionist" id="role-receptionist" className="peer sr-only" />

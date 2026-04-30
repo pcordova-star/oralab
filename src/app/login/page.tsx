@@ -25,7 +25,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Redirección automática después de que el estado de auth cambia a 'logueado'
   useEffect(() => {
     async function handleRedirect() {
       if (user && db) {
@@ -43,16 +42,16 @@ export default function LoginPage() {
               description: `Bienvenido(a), ${userData.fullName || 'Usuario'}.`,
             });
             
+            // Usamos replace para limpiar el historial
             if (role === "receptionist") {
-              router.push("/reception");
+              router.replace("/reception");
             } else if (role === "teens") {
-              router.push("/teens");
+              router.replace("/teens");
             } else {
-              router.push("/");
+              router.replace("/");
             }
           } else {
-            // Si el perfil no existe, redirigir al inicio por seguridad
-            router.push("/");
+            router.replace("/");
           }
         } catch (error) {
           console.error("Error al obtener el rol:", error);
@@ -69,18 +68,14 @@ export default function LoginPage() {
     if (!auth) return;
 
     setIsPending(true);
-    // La función initiateEmailSignIn no es bloqueante.
-    // La redirección se maneja en el useEffect superior cuando 'user' cambia.
     initiateEmailSignIn(auth, email, password);
     
-    // Si después de unos segundos no ha cambiado el estado (error de credenciales), 
-    // liberamos el estado de carga. En un sistema real, capturaríamos el error de la promesa.
+    // Timeout de seguridad por si falla la red
     setTimeout(() => {
       if (!user) {
         setIsPending(false);
-        // Nota: El error de Firebase suele ser manejado por el listener global
       }
-    }, 3000);
+    }, 5000);
   };
 
   return (
@@ -92,9 +87,9 @@ export default function LoginPage() {
             <div className="bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Activity className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="text-3xl font-bold">Bienvenido</CardTitle>
+            <CardTitle className="text-3xl font-bold">Bienvenido Staff</CardTitle>
             <CardDescription>
-              Ingresa tus credenciales para acceder al sistema.
+              Ingresa tus credenciales de funcionario Oralab.
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-10">
@@ -130,7 +125,7 @@ export default function LoginPage() {
                 ) : (
                   <LogIn className="mr-2 h-5 w-5" />
                 )}
-                {isPending ? "Iniciando..." : "Iniciar Sesión"}
+                {isPending ? "Verificando..." : "Iniciar Sesión"}
               </Button>
             </form>
             
