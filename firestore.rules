@@ -16,7 +16,7 @@ service cloud.firestore {
     }
 
     function isSuperAdmin() {
-      return isSignedIn() && request.auth.token.email == "control@pcgoperacion.com";
+      return isSignedIn() && (request.auth.token.email == "control@pcgoperacion.com");
     }
 
     function isOwner(userId) {
@@ -32,7 +32,7 @@ service cloud.firestore {
     }
 
     function isStaff() {
-      return isReceptionist() || isTeens() || isSuperAdmin();
+      return isReceptionist() || isTeens();
     }
 
     // --- Collection Rules ---

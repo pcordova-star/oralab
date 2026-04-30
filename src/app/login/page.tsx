@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,9 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Activity, LogIn, UserPlus, Loader2, ShieldCheck } from "lucide-react";
+import { Activity, LogIn, UserPlus, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -46,6 +47,15 @@ export default function LoginPage() {
           if (userSnap.exists()) {
             const userData = userSnap.data();
             const role = userData.role;
+
+            // Auto-reparación de marcador de rol (QAP) si falta
+            const roleCollection = role === "receptionist" ? "roles_receptionist" : "roles_teens";
+            const roleMarkerRef = doc(db, roleCollection, user.uid);
+            const roleMarkerSnap = await getDoc(roleMarkerRef);
+            
+            if (!roleMarkerSnap.exists()) {
+              await setDoc(roleMarkerRef, { active: true, repaired: true });
+            }
             
             toast({
               title: "Sesión iniciada",
@@ -60,7 +70,7 @@ export default function LoginPage() {
               router.replace("/");
             }
           } else {
-            // Si el documento no existe pero el mail no es admin, algo salió mal
+            // Usuario sin perfil en Firestore
             setIsPending(false);
           }
         } catch (error) {
@@ -80,11 +90,10 @@ export default function LoginPage() {
     setIsPending(true);
     initiateEmailSignIn(auth, email, password);
     
+    // Timeout de seguridad por si falla la respuesta de Firebase
     setTimeout(() => {
-      if (!user) {
-        setIsPending(false);
-      }
-    }, 5000);
+      setIsPending(false);
+    }, 8000);
   };
 
   return (

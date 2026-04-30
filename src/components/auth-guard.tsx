@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
@@ -54,16 +55,19 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
           }
         }
       } else {
+        // Documento no encontrado o carga lenta: dar un margen de espera antes de redirigir
         const timeout = setTimeout(() => {
-          if (!userData) router.replace("/");
-        }, 3000);
+          if (!userData && !isUserDataLoading) {
+            router.replace("/");
+          }
+        }, 5000);
         return () => clearTimeout(timeout);
       }
     }
   }, [user, isUserLoading, userData, isUserDataLoading, router, requiredRole, isSuperAdmin]);
 
   // Pantalla de carga mientras se determina el estado
-  if (isUserLoading || (user && !isSuperAdmin && isUserDataLoading) || (user && !isSuperAdmin && !userData)) {
+  if (isUserLoading || (user && !isSuperAdmin && isUserDataLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">

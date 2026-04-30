@@ -37,7 +37,12 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 1. Crear perfil de usuario (Esperamos para asegurar persistencia antes de redirigir)
+      // 1. Crear marcador de rol para seguridad (RBAC) PRIMERO para evitar 403 inmediatos
+      const roleCollection = role === "receptionist" ? "roles_receptionist" : "roles_teens";
+      const roleRef = doc(db, roleCollection, user.uid);
+      await setDoc(roleRef, { active: true });
+
+      // 2. Crear perfil de usuario
       const userRef = doc(db, "users", user.uid);
       const userData = {
         id: user.uid,
@@ -49,17 +54,12 @@ export default function RegisterPage() {
       };
       await setDoc(userRef, userData);
 
-      // 2. Crear marcador de rol para seguridad (RBAC)
-      const roleCollection = role === "receptionist" ? "roles_receptionist" : "roles_teens";
-      const roleRef = doc(db, roleCollection, user.uid);
-      await setDoc(roleRef, { active: true });
-
       toast({
         title: "Cuenta creada",
         description: `Bienvenido(a), ${fullName}. Has sido registrado como ${role === 'receptionist' ? 'Recepcionista' : 'TEENS'}.`,
       });
 
-      // Usamos replace para evitar que vuelvan al registro con el botón atrás
+      // Redirigir al panel correspondiente
       router.replace(role === "receptionist" ? "/reception" : "/teens");
     } catch (error: any) {
       toast({
