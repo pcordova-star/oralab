@@ -102,18 +102,13 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
 /**
  * Hook to access core Firebase services and user authentication state.
- * Only throws if used completely outside of a Provider tree.
+ * Returns null if services are not available yet.
  */
-export const useFirebase = (): FirebaseServicesAndUser => {
+export const useFirebase = (): FirebaseServicesAndUser | null => {
   const context = useContext(FirebaseContext);
 
-  if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider.');
-  }
-
-  if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth) {
-    // If services aren't ready, we throw to be caught by a boundary or handled by the caller
-    throw new Error('Firebase core services not available. Check FirebaseProvider props.');
+  if (!context || !context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth) {
+    return null;
   }
 
   return {
