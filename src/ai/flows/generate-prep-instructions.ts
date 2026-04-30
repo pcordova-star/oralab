@@ -1,22 +1,22 @@
 'use server';
 /**
- * @fileOverview A Genkit flow for generating pre-appointment instructions for patients.
+ * @fileOverview Un flujo de Genkit para generar instrucciones de preparación pre-cita para pacientes.
  *
- * - generatePrepInstructions - A function that generates customized pre-appointment instructions.
- * - GeneratePrepInstructionsInput - The input type for the generatePrepInstructions function.
- * - GeneratePrepInstructionsOutput - The return type for the generatePrepInstructions function.
+ * - generatePrepInstructions - Función que genera instrucciones personalizadas.
+ * - GeneratePrepInstructionsInput - Tipo de entrada para la función.
+ * - GeneratePrepInstructionsOutput - Tipo de retorno para la función.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GeneratePrepInstructionsInputSchema = z.object({
-  examType: z.enum(['SIBO', 'HP']).describe('The type of exam booked (SIBO or HP).'),
+  examType: z.enum(['SIBO', 'HP']).describe('El tipo de examen reservado (SIBO o HP).'),
 });
 export type GeneratePrepInstructionsInput = z.infer<typeof GeneratePrepInstructionsInputSchema>;
 
 const GeneratePrepInstructionsOutputSchema = z.object({
-  instructions: z.string().describe('Concise pre-appointment instructions for the patient.'),
+  instructions: z.string().describe('Instrucciones concisas de preparación para el paciente.'),
 });
 export type GeneratePrepInstructionsOutput = z.infer<typeof GeneratePrepInstructionsOutputSchema>;
 
@@ -30,26 +30,28 @@ const prompt = ai.definePrompt({
   name: 'generatePrepInstructionsPrompt',
   input: { schema: GeneratePrepInstructionsInputSchema },
   output: { schema: GeneratePrepInstructionsOutputSchema },
-  prompt: `You are an AI assistant for Oralab, a clinical laboratory. Your task is to generate concise and clear pre-appointment instructions for a patient based on the type of exam they have booked.
+  prompt: `Eres un asistente de IA para Oralab, un laboratorio clínico especializado en Chile. Tu tarea es generar instrucciones claras y concisas para un paciente que ha reservado un examen.
 
-Here are the standard instructions for each exam type:
+Debes responder ÚNICAMENTE en ESPAÑOL.
 
-**SIBO Exam Instructions:**
-1.  **Preparation (24 hours prior):** Avoid antibiotics, laxatives, probiotics, and motility drugs.
-2.  **Preparation (12 hours prior):** Fasting is required. Do not eat, drink (except plain water), smoke, or chew gum.
-3.  **On the day:** Bring all your current medications. The test involves drinking a special solution and providing breath samples at timed intervals. The total duration is approximately 3 hours.
-4.  **Important:** If you have consumed any restricted items, please inform the reception upon arrival as the test may need to be rescheduled.
+Aquí están las instrucciones estándar para cada tipo de examen:
 
-**Helicobacter pylori (HP) Exam Instructions:**
-1.  **Preparation (4 weeks prior):** Do not take antibiotics.
-2.  **Preparation (2 weeks prior):** Do not take bismuth-containing medications (e.g., Pepto-Bismol).
-3.  **Preparation (1 week prior):** Do not take proton pump inhibitors (PPIs) such as omeprazole, lansoprazole, pantoprazole, rabeprazole, esomeprazole.
-4.  **Preparation (24 hours prior):** Do not take H2-blockers (e.g., ranitidine, famotidine).
-5.  **Preparation (12 hours prior):** Fasting is required. Do not eat, drink (except plain water), smoke, or chew gum.
-6.  **On the day:** The test involves providing a breath sample, drinking a solution, and then providing another breath sample after 15 minutes. The total duration is approximately 30 minutes.
-7.  **Important:** If you have consumed any restricted items, please inform the reception upon arrival as the test may need to be rescheduled.
+**Instrucciones para Examen SIBO:**
+1. **Preparación (24 horas antes):** Evitar antibióticos, laxantes, probióticos y medicamentos que afecten la motilidad intestinal.
+2. **Preparación (12 horas antes):** Ayuno obligatorio. No comer, beber (excepto agua pura sin gas), fumar ni masticar chicle.
+3. **El día del examen:** Traer una lista de sus medicamentos actuales. El test consiste en soplar en bolsas especiales, beber una solución de sustrato y volver a soplar en intervalos de tiempo. La duración total es de aproximadamente 3 horas.
+4. **Importante:** Si ha consumido algún elemento restringido, informe a la recepción al llegar, ya que es posible que deba reprogramar su cita.
 
-Please generate the instructions for a patient who has booked a {{{examType}}} exam. Ensure the instructions are easy to understand and provide all necessary details for preparation. Output ONLY the instructions text.`,
+**Instrucciones para Examen Helicobacter pylori (HP):**
+1. **Preparación (4 semanas antes):** No haber tomado antibióticos.
+2. **Preparación (2 semanas antes):** No haber tomado medicamentos que contengan bismuto (ej. Pepto-Bismol).
+3. **Preparación (1 semana antes):** No haber tomado inhibidores de la bomba de protones (PPI) como omeprazol, lansoprazol, pantoprazol, esomeprazol.
+4. **Preparación (24 horas antes):** No tomar bloqueadores H2 (ej. famotidina).
+5. **Preparación (12 horas antes):** Ayuno obligatorio. No comer, beber (excepto agua pura sin gas), fumar ni masticar chicle.
+6. **El día del examen:** El test consiste en soplar una muestra basal, beber una solución de Urea C13 y soplar nuevamente tras 15 minutos. La duración total es de aproximadamente 30 minutos.
+7. **Importante:** Si ha consumido algún elemento restringido, informe a la recepción al llegar para evaluar si el examen puede realizarse.
+
+Genera las instrucciones para un paciente que se realizará un examen de tipo {{{examType}}}. Usa un tono amable pero profesional. Entrega el texto listo para ser copiado y entregado al paciente.`,
 });
 
 const generatePrepInstructionsFlow = ai.defineFlow(
