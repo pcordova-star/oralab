@@ -65,7 +65,11 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   });
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth) {
+      // Si no hay auth (SSR o carga inicial), aseguramos que no se quede cargando indefinidamente
+      setUserAuthState(prev => ({ ...prev, isUserLoading: !firebaseApp }));
+      return;
+    }
 
     const unsubscribe = onAuthStateChanged(
       auth,
@@ -77,7 +81,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
     );
     return () => unsubscribe(); 
-  }, [auth]);
+  }, [auth, firebaseApp]);
 
   const contextValue = useMemo((): FirebaseContextState => {
     const servicesAvailable = !!(firebaseApp && firestore && auth);
@@ -121,19 +125,19 @@ export const useFirebase = (): FirebaseServicesAndUser | null => {
   };
 };
 
-/** Hook to access Firebase Auth instance. */
+/** Hook to access Firebase Auth instance. Safe for use outside Provider. */
 export const useAuth = (): Auth | null => {
   const context = useContext(FirebaseContext);
   return context?.auth || null;
 };
 
-/** Hook to access Firestore instance. */
+/** Hook to access Firestore instance. Safe for use outside Provider. */
 export const useFirestore = (): Firestore | null => {
   const context = useContext(FirebaseContext);
   return context?.firestore || null;
 };
 
-/** Hook to access Firebase App instance. */
+/** Hook to access Firebase App instance. Safe for use outside Provider. */
 export const useFirebaseApp = (): FirebaseApp | null => {
   const context = useContext(FirebaseContext);
   return context?.firebaseApp || null;
@@ -141,6 +145,9 @@ export const useFirebaseApp = (): FirebaseApp | null => {
 
 type MemoFirebase <T> = T & {__memo?: boolean};
 
+/**
+ * Utility to memoize Firebase references and queries.
+ */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
   const memoized = useMemo(factory, deps);
   if(typeof memoized !== 'object' || memoized === null) return memoized;
