@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,19 +26,33 @@ export default function BookingPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // Generar bloques de tiempo cada 15 minutos de 09:00 a 18:00
+  // Generar bloques de tiempo dinámicos según el tipo de examen
+  // SIBO dura 3h (última cita 15:00), HP dura 30min (última cita 17:30)
   const timeSlots = useMemo(() => {
     const slots = [];
+    const limitHour = examType === "SIBO" ? 15 : 17;
+    const limitMin = examType === "SIBO" ? 0 : 30;
+    const limitTotal = limitHour * 60 + limitMin;
+
     for (let hour = 9; hour <= 18; hour++) {
       for (let min = 0; min < 60; min += 15) {
-        if (hour === 18 && min > 0) break;
+        const currentTotal = hour * 60 + min;
+        if (currentTotal > limitTotal) break;
+        
         const h = hour.toString().padStart(2, '0');
         const m = min.toString().padStart(2, '0');
         slots.push(`${h}:${m}`);
       }
     }
     return slots;
-  }, []);
+  }, [examType]);
+
+  // Limpiar hora seleccionada si cambia el tipo de examen y la hora ya no es válida
+  useEffect(() => {
+    if (selectedTime && !timeSlots.includes(selectedTime)) {
+      setSelectedTime("");
+    }
+  }, [examType, timeSlots, selectedTime]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,6 +187,11 @@ export default function BookingPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {examType === "SIBO" && (
+                      <p className="text-[10px] text-muted-foreground px-1 italic">
+                        * Los test de SIBO se agendan hasta las 15:00 por su duración de 3 horas.
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
