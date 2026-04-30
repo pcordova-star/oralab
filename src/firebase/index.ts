@@ -4,7 +4,7 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, initializeFirestore, terminate } from 'firebase/firestore'
+import { getFirestore, Firestore, initializeFirestore } from 'firebase/firestore'
 
 // Global variables to hold instances across HMR cycles
 let firebaseApp: FirebaseApp | undefined;
@@ -18,8 +18,7 @@ let firestoreInstance: Firestore | undefined;
  */
 export function initializeFirebase() {
   if (typeof window === 'undefined') {
-    // Return placeholder for SSR if called server-side
-    return {} as any;
+    return { firebaseApp: null, auth: null, firestore: null } as any;
   }
 
   // 1. Initialize App
@@ -37,8 +36,6 @@ export function initializeFirebase() {
   // 3. Initialize Firestore with specific settings for Cloud IDEs
   if (!firestoreInstance) {
     try {
-      // We use initializeFirestore instead of getFirestore to pass experimental settings
-      // that prevent assertion errors in proxied environments.
       firestoreInstance = initializeFirestore(firebaseApp, {
         experimentalAutoDetectLongPolling: true,
       });
