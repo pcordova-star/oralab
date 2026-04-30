@@ -12,96 +12,58 @@ service cloud.firestore {
      * - /roles_...: Marker collections used for high-performance role verification via exists() checks.
      * - /patients, /appointments: Shared clinical data accessible by staff and created by public/anonymous users.
      * - /exam_sessions: Real-time session data managed primarily by TEENS staff.
-     *
-     * KEY SECURITY DECISIONS:
-     * - Role Segregation: Authorization is decoupled from user documents using dedicated 'role' collections.
-     * - Public Entry Points: Patients and Appointments allow creation by any authenticated user (including anonymous)
-     *    to support web booking, but restricted updates/deletes to staff only.
-     * - Prototyping Flexibility: Rules enforce strict authorization and relational consistency (e.g., ID matching)
-     *    but remain agnostic to specific data types or field presence to allow rapid schema iteration.
-     * - Auditable Writes: Destructive operations (update, delete) strictly verify document existence.
      */
 
     // --- Helper Functions ---
 
-    /** Checks if the request is from an authenticated user (Password or Anonymous). */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** Checks if the user's UID matches the provided ID. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** Verifies a user holds the 'Receptionist' role via role-collection lookup. */
     function isReceptionist() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_receptionist/$(request.auth.uid));
     }
 
-    /** Verifies a user holds the 'TEENS' role via role-collection lookup. */
     function isTeens() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_teens/$(request.auth.uid));
     }
 
-    /** Checks if the user belongs to any authorized staff group. */
     function isStaff() {
       return isReceptionist() || isTeens();
     }
 
-    /** Combines ownership check with existence check for safe updates/deletes. */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
 
     // --- Collection Rules ---
 
-    /**
-     * @description Rules for staff user profiles.
-     * @path /users/{userId}
-     * @allow (get, update) if the authenticated user's UID matches {userId}.
-     * @deny (create) if the request.resource.data.id does not match the path userId.
-     * @principle Enforces path-based ownership and data consistency.
-     */
     match /users/{userId} {
-      allow get, list: if isOwner(userId);
+      allow get: if isStaff() || isOwner(userId);
+      allow list: if isStaff();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
     }
 
-    /**
-     * @description Role marker for Receptionists. Used for exists() authorization checks.
-     * @path /roles_receptionist/{userId}
-     * @allow (get) if the user is viewing their own role marker.
-     * @deny (write) All write operations (managed by admin/system).
-     * @principle Provides high-performance RBAC via lookup collections.
-     */
     match /roles_receptionist/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create, update, delete: if false;
+      allow get: if isOwner(userId) || isReceptionist();
+      // Permitimos la creación por el dueño para el registro inicial en el prototipo
+      allow create: if isOwner(userId);
+      allow update, delete: if false;
     }
 
-    /**
-     * @description Role marker for TEENS staff. Used for exists() authorization checks.
-     * @path /roles_teens/{userId}
-     * @allow (get) if the user is viewing their own role marker.
-     * @deny (write) All write operations (managed by admin/system).
-     * @principle Provides high-performance RBAC via lookup collections.
-     */
     match /roles_teens/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create, update, delete: if false;
+      allow get: if isOwner(userId) || isTeens();
+      // Permitimos la creación por el dueño para el registro inicial en el prototipo
+      allow create: if isOwner(userId);
+      allow update, delete: if false;
     }
 
-    /**
-     * @description Patient records accessible by staff and created by the public.
-     * @path /patients/{patientId}
-     * @allow (create) if the user is signed in (supports anonymous booking).
-     * @allow (update) if the user is a Receptionist or TEENS member.
-     * @deny (delete) for non-staff members.
-     * @principle Permits public data entry while restricting management to authorized staff.
-     */
     match /patients/{patientId} {
       allow get, list: if isStaff();
       allow create: if isSignedIn();
@@ -109,26 +71,11 @@ service cloud.firestore {
       allow delete: if isStaff() && resource != null;
     }
 
-    /**
-     * @description Master list of medical exam procedures.
-     * @path /protocols/{protocolId}
-     * @allow (get, list) if the user is an authorized staff member.
-     * @deny (write) All write operations (typically handled by system admins).
-     * @principle Read-only access for operational staff to reference procedures.
-     */
     match /protocols/{protocolId} {
       allow get, list: if isStaff();
       allow create, update, delete: if false;
     }
 
-    /**
-     * @description Management of scheduled appointments.
-     * @path /appointments/{appointmentId}
-     * @allow (create) if signed in (public booking).
-     * @allow (update) if staff (managing status or details).
-     * @deny (list) for unauthenticated or non-staff users.
-     * @principle Supports public booking entry while securing the clinical dashboard.
-     */
     match /appointments/{appointmentId} {
       allow get, list: if isStaff();
       allow create: if isSignedIn();
@@ -136,14 +83,6 @@ service cloud.firestore {
       allow delete: if isStaff() && resource != null;
     }
 
-    /**
-     * @description Real-time tracking of active exam sessions.
-     * @path /exam_sessions/{examSessionId}
-     * @allow (create, update) if the user has the 'TEENS' role.
-     * @allow (get, list) if the user is any staff member (Receptionist or TEENS).
-     * @deny (write) for Receptionists (read-only monitoring).
-     * @principle Restricts execution control to TEENS while allowing Receptionists to monitor progress.
-     */
     match /exam_sessions/{examSessionId} {
       allow get, list: if isStaff();
       allow create: if isTeens();

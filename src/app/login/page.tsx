@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Activity, LogIn } from "lucide-react";
+import { Activity, LogIn, UserPlus } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,8 +25,6 @@ export default function LoginPage() {
     if (!auth) return;
 
     initiateEmailSignIn(auth, email, password);
-    // Note: Success/Failure is handled by FirebaseProvider's onAuthStateChanged
-    // We can redirect on next render if user becomes available
   };
 
   return (
@@ -71,6 +70,15 @@ export default function LoginPage() {
                 <LogIn className="mr-2 h-5 w-5" /> Iniciar Sesión
               </Button>
             </form>
+            
+            <div className="mt-8 pt-6 border-t text-center space-y-3">
+              <p className="text-sm text-muted-foreground">¿Eres un funcionario nuevo?</p>
+              <Button variant="outline" className="w-full h-11 rounded-xl" asChild>
+                <Link href="/register">
+                  <UserPlus className="mr-2 h-4 w-4" /> Crear cuenta de Staff
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </main>
