@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Activity, Clock, Play, CheckCircle2, AlertCircle, Timer, Loader2 } from "lucide-react";
+import { Activity, Clock, Play, CheckCircle2, Timer, Loader2 } from "lucide-react";
 import { PROTOCOLS } from "@/app/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { AuthGuard } from "@/components/auth-guard";
@@ -15,8 +15,7 @@ import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, doc, orderBy } from "firebase/firestore";
 import { updateDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
-// Componente para un examen activo individual
-function ActiveExamCard({ session, onComplete }: { session: any, onComplete: () => void }) {
+function ActiveExamCard({ session }: { session: any }) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const { toast } = useToast();
@@ -29,18 +28,12 @@ function ActiveExamCard({ session, onComplete }: { session: any, onComplete: () 
   useEffect(() => {
     if (session.nextStepTime) {
       const targetTime = new Date(session.nextStepTime).getTime();
-      
       const updateTimer = () => {
         const now = new Date().getTime();
         const diff = Math.max(0, Math.floor((targetTime - now) / 1000));
         setTimeLeft(diff);
         setTimerActive(diff > 0);
-        
-        if (diff === 0 && session.timerWasActive) {
-           // Notificar que terminó el tiempo solo una vez
-        }
       };
-
       updateTimer();
       const interval = setInterval(updateTimer, 1000);
       return () => clearInterval(interval);
@@ -48,29 +41,24 @@ function ActiveExamCard({ session, onComplete }: { session: any, onComplete: () 
       setTimeLeft(0);
       setTimerActive(false);
     }
-  }, [session.nextStepTime, session.timerWasActive]);
+  }, [session.nextStepTime]);
 
   const handleNextStep = () => {
     if (!db) return;
-
     if (isLastStep) {
-      // Finalizar sesión y cita
       updateDocumentNonBlocking(doc(db, "exam_sessions", session.id), { status: "completed" });
       updateDocumentNonBlocking(doc(db, "appointments", session.appointmentId), { status: "completed" });
       toast({ title: "Examen Finalizado", description: `Protocolo completado para ${session.patientName}` });
       return;
     }
-
     const nextIndex = session.currentStepIndex + 1;
     const nextStep = protocol.steps[nextIndex];
     let nextStepTime = null;
-
     if (nextStep.waitMinutes > 0) {
       const time = new Date();
       time.setMinutes(time.getMinutes() + nextStep.waitMinutes);
       nextStepTime = time.toISOString();
     }
-
     updateDocumentNonBlocking(doc(db, "exam_sessions", session.id), {
       currentStepIndex: nextIndex,
       nextStepTime: nextStepTime,
@@ -80,10 +68,8 @@ function ActiveExamCard({ session, onComplete }: { session: any, onComplete: () 
 
   const handleStartTimer = () => {
     if (!db || currentStep.waitMinutes === 0) return;
-    
     const time = new Date();
     time.setMinutes(time.getMinutes() + currentStep.waitMinutes);
-    
     updateDocumentNonBlocking(doc(db, "exam_sessions", session.id), {
       nextStepTime: time.toISOString(),
       timerWasActive: true
@@ -135,9 +121,7 @@ function ActiveExamCard({ session, onComplete }: { session: any, onComplete: () 
                 {formatTime(timeLeft)}
               </div>
               {timeLeft === 0 && !timerActive && session.timerWasActive && (
-                <Badge variant="destructive" className="mt-2 text-[10px] rounded-full">
-                  ¡Tiempo cumplido!
-                </Badge>
+                <Badge variant="destructive" className="mt-2 text-[10px] rounded-full">¡Tiempo cumplido!</Badge>
               )}
             </>
           ) : (
@@ -155,20 +139,8 @@ function ActiveExamCard({ session, onComplete }: { session: any, onComplete: () 
             <Play className="mr-2 h-4 w-4" /> Iniciar Espera
           </Button>
         )}
-        <Button 
-          disabled={timerActive && timeLeft > 0}
-          onClick={handleNextStep}
-          className="w-full"
-        >
+        <Button disabled={timerActive && timeLeft > 0} onClick={handleNextStep} className="w-full">
           {isLastStep ? "Finalizar Examen" : "Siguiente Paso"}
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-destructive hover:bg-destructive/10"
-          onClick={() => { if(confirm("¿Seguro que deseas abortar el examen?")) updateDocumentNonBlocking(doc(db!, "exam_sessions", session.id), { status: "aborted" }); }}
-        >
-          Abortar
         </Button>
       </CardFooter>
     </Card>
@@ -194,9 +166,7 @@ export default function TeensPage() {
 
   const startExam = async (patient: any) => {
     if (!db) return;
-
     try {
-      // 1. Crear sesión de examen
       await addDocumentNonBlocking(collection(db, "exam_sessions"), {
         appointmentId: patient.id,
         patientName: patient.patientName,
@@ -207,12 +177,7 @@ export default function TeensPage() {
         timerWasActive: false,
         nextStepTime: null
       });
-
-      // 2. Actualizar estado de la cita
-      updateDocumentNonBlocking(doc(db, "appointments", patient.id), {
-        status: "in_progress"
-      });
-
+      updateDocumentNonBlocking(doc(db, "appointments", patient.id), { status: "in_progress" });
       toast({ title: "Examen Iniciado", description: `Iniciando protocolo para ${patient.patientName}` });
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "No se pudo iniciar el examen." });
@@ -225,36 +190,25 @@ export default function TeensPage() {
         <Navbar />
         <main className="flex-grow container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-4 gap-8">
-            {/* Columna de Espera */}
             <div className="lg:col-span-1 space-y-6">
               <h2 className="text-xl font-bold text-primary flex items-center gap-2">
-                <Clock className="h-5 w-5" /> En Espera ({waitingPatients?.length || 0})
+                <Clock className="h-5 w-5" /> Sala de Espera ({waitingPatients?.length || 0})
               </h2>
               {loadingWaiting ? (
                 <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
               ) : waitingPatients?.length === 0 ? (
                 <Card className="rounded-2xl border-dashed bg-muted/20">
-                  <CardContent className="p-6 text-center text-xs text-muted-foreground">
-                    No hay pacientes en sala de espera.
-                  </CardContent>
+                  <CardContent className="p-6 text-center text-xs text-muted-foreground">Sin pacientes en espera.</CardContent>
                 </Card>
               ) : (
                 <div className="space-y-3">
                   {waitingPatients?.map((p) => (
                     <Card key={p.id} className="rounded-xl border-l-4 border-l-yellow-500 shadow-sm">
                       <CardContent className="p-4 space-y-3">
-                        <div>
-                          <p className="font-bold text-sm">{p.patientName}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary" className="text-[10px]">{p.examType}</Badge>
-                          </div>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          className="w-full rounded-lg"
-                          onClick={() => startExam(p)}
-                        >
-                          <Play className="h-3 w-3 mr-1" /> Iniciar Examen
+                        <p className="font-bold text-sm">{p.patientName}</p>
+                        <Badge variant="secondary" className="text-[10px]">{p.examType}</Badge>
+                        <Button size="sm" className="w-full rounded-lg" onClick={() => startExam(p)}>
+                          <Play className="h-3 w-3 mr-1" /> Iniciar
                         </Button>
                       </CardContent>
                     </Card>
@@ -263,27 +217,21 @@ export default function TeensPage() {
               )}
             </div>
 
-            {/* Columna de Exámenes Activos */}
             <div className="lg:col-span-3 space-y-6">
               <h2 className="text-xl font-bold text-primary flex items-center gap-2">
-                <Activity className="h-5 w-5" /> Exámenes en Curso ({activeSessions?.length || 0})
+                <Activity className="h-5 w-5" /> Estaciones de Test Activas ({activeSessions?.length || 0})
               </h2>
               {loadingSessions ? (
                 <div className="flex justify-center p-12"><Loader2 className="h-10 w-10 animate-spin" /></div>
               ) : activeSessions?.length === 0 ? (
                 <div className="h-64 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed text-center p-8">
                   <Activity className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-bold text-muted-foreground">Sin exámenes activos</h3>
-                  <p className="text-sm text-muted-foreground">Los pacientes que inicies aparecerán aquí.</p>
+                  <h3 className="text-lg font-bold text-muted-foreground">Centro de test vacío</h3>
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {activeSessions?.map((session) => (
-                    <ActiveExamCard 
-                      key={session.id} 
-                      session={session} 
-                      onComplete={() => {}} 
-                    />
+                    <ActiveExamCard key={session.id} session={session} />
                   ))}
                 </div>
               )}
