@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar as CalendarIcon, CheckCircle2 } from "lucide-react";
+import { Calendar as CalendarIcon, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -19,10 +20,25 @@ import { useRouter } from "next/navigation";
 export default function BookingPage() {
   const [examType, setExamType] = useState<string>("SIBO");
   const [date, setDate] = useState<Date>();
+  const [selectedTime, setSelectedTime] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+
+  // Generar bloques de tiempo cada 15 minutos de 08:00 a 18:00
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    for (let hour = 8; hour <= 18; hour++) {
+      for (let min = 0; min < 60; min += 15) {
+        if (hour === 18 && min > 0) break;
+        const h = hour.toString().padStart(2, '0');
+        const m = min.toString().padStart(2, '0');
+        slots.push(`${h}:${m}`);
+      }
+    }
+    return slots;
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +50,7 @@ export default function BookingPage() {
       setIsConfirmed(true);
       toast({
         title: "¡Reserva Exitosa!",
-        description: "Recibirás un correo con las instrucciones de preparación.",
+        description: `Tu cita para ${examType} ha sido agendada.`,
       });
     }, 1500);
   };
@@ -50,7 +66,7 @@ export default function BookingPage() {
             </div>
             <CardTitle className="text-3xl mb-4">Cita Agendada</CardTitle>
             <CardDescription className="text-lg mb-8">
-              Tu reserva para el examen <strong>{examType}</strong> ha sido confirmada para el día <strong>{date ? format(date, "PPP", { locale: es }) : "seleccionado"}</strong>.
+              Tu reserva para el examen <strong>{examType}</strong> ha sido confirmada para el día <strong>{date ? format(date, "PPP", { locale: es }) : ""}</strong> a las <strong>{selectedTime}</strong>.
             </CardDescription>
             <div className="space-y-4">
               <Button className="w-full rounded-xl" onClick={() => router.push('/')}>
@@ -112,7 +128,7 @@ export default function BookingPage() {
                 <CardHeader className="bg-primary/5">
                   <CardTitle className="text-xl">2. Fecha y Hora</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-6 space-y-4">
+                <CardContent className="pt-6 space-y-6">
                   <div className="flex flex-col space-y-2">
                     <Label>Selecciona el día</Label>
                     <Popover>
@@ -138,6 +154,25 @@ export default function BookingPage() {
                         />
                       </PopoverContent>
                     </Popover>
+                  </div>
+
+                  <div className="flex flex-col space-y-2">
+                    <Label>Selecciona la hora</Label>
+                    <Select value={selectedTime} onValueChange={setSelectedTime}>
+                      <SelectTrigger className="rounded-xl h-12">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <SelectValue placeholder="Selecciona un horario" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timeSlots.map((time) => (
+                          <SelectItem key={time} value={time}>
+                            {time} hrs
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </CardContent>
               </Card>
@@ -173,7 +208,7 @@ export default function BookingPage() {
               <Button 
                 type="submit" 
                 className="w-full h-16 text-xl font-bold rounded-2xl shadow-lg"
-                disabled={isSubmitting || !date}
+                disabled={isSubmitting || !date || !selectedTime}
               >
                 {isSubmitting ? "Procesando..." : "Confirmar Reserva"}
               </Button>
