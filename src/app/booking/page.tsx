@@ -27,14 +27,15 @@ export default function BookingPage() {
   const router = useRouter();
 
   // Generar bloques de tiempo dinámicos según el tipo de examen
-  // SIBO dura 3h (última cita 15:00), HP dura 30min (última cita 17:30)
+  // Laboratorio cierra a las 17:00
+  // SIBO dura 3h (última cita 14:00), HP dura 30min (última cita 16:30)
   const timeSlots = useMemo(() => {
     const slots = [];
-    const limitHour = examType === "SIBO" ? 15 : 17;
+    const limitHour = examType === "SIBO" ? 14 : 16;
     const limitMin = examType === "SIBO" ? 0 : 30;
     const limitTotal = limitHour * 60 + limitMin;
 
-    for (let hour = 9; hour <= 18; hour++) {
+    for (let hour = 9; hour <= 17; hour++) {
       for (let min = 0; min < 60; min += 15) {
         const currentTotal = hour * 60 + min;
         if (currentTotal > limitTotal) break;
@@ -189,7 +190,7 @@ export default function BookingPage() {
                     </Select>
                     {examType === "SIBO" && (
                       <p className="text-[10px] text-muted-foreground px-1 italic">
-                        * Los test de SIBO se agendan hasta las 15:00 por su duración de 3 horas.
+                        * Los test de SIBO se agendan hasta las 14:00 por su duración de 3 horas.
                       </p>
                     )}
                   </div>
