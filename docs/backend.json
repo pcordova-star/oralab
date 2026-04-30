@@ -1,0 +1,326 @@
+{
+  "entities": {
+    "Patient": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Patient",
+      "type": "object",
+      "description": "Represents a patient who schedules appointments and undergoes medical exams at Oralab.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Patient entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the patient."
+        },
+        "rut": {
+          "type": "string",
+          "description": "The RUT (Chilean national identification number) of the patient."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The contact phone number of the patient."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the patient.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "rut",
+        "phone",
+        "email"
+      ]
+    },
+    "Appointment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appointment",
+      "type": "object",
+      "description": "Represents a scheduled appointment for a patient to undergo a specific medical exam.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Appointment entity."
+        },
+        "patientId": {
+          "type": "string",
+          "description": "Reference to Patient. (Relationship: Patient 1:N Appointment)"
+        },
+        "examType": {
+          "type": "string",
+          "description": "The type of exam scheduled for this appointment (e.g., 'SIBO', 'Helicobacter pylori')."
+        },
+        "dateTime": {
+          "type": "string",
+          "description": "The scheduled date and time of the appointment.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the appointment (e.g., 'Agendado', 'En espera', 'En atención', 'Finalizado')."
+        },
+        "protocolId": {
+          "type": "string",
+          "description": "Reference to Protocol. (Relationship: Protocol 1:N Appointment)"
+        }
+      },
+      "required": [
+        "id",
+        "patientId",
+        "examType",
+        "dateTime",
+        "status",
+        "protocolId"
+      ]
+    },
+    "Protocol": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Protocol",
+      "type": "object",
+      "description": "Defines the step-by-step procedure and timings for a specific type of medical exam.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Protocol entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The descriptive name of the protocol (e.g., 'SIBO Protocol', 'Helicobacter pylori Protocol')."
+        },
+        "examType": {
+          "type": "string",
+          "description": "The type of exam this protocol is designed for (e.g., 'SIBO', 'Helicobacter pylori')."
+        },
+        "steps": {
+          "type": "array",
+          "description": "An ordered list of steps that compose the exam protocol, including any waiting times.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "examType",
+        "steps"
+      ]
+    },
+    "ExamSession": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ExamSession",
+      "type": "object",
+      "description": "Tracks the real-time execution progress of a medical exam for a specific appointment.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ExamSession entity."
+        },
+        "appointmentId": {
+          "type": "string",
+          "description": "Reference to Appointment. (Relationship: Appointment 1:N ExamSession)"
+        },
+        "protocolId": {
+          "type": "string",
+          "description": "Reference to Protocol. This indicates which protocol is being followed for this session. (Relationship: Protocol 1:N ExamSession)"
+        },
+        "currentStepIndex": {
+          "type": "number",
+          "description": "The zero-based index of the current step being executed within the protocol."
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The timestamp when the exam session was initiated.",
+          "format": "date-time"
+        },
+        "nextStepTime": {
+          "type": "string",
+          "description": "The timestamp indicating when the next step in the protocol is due.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the exam session (e.g., 'in_progress', 'paused', 'completed')."
+        }
+      },
+      "required": [
+        "id",
+        "appointmentId",
+        "protocolId",
+        "currentStepIndex",
+        "startTime",
+        "status"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents an authorized staff member (Receptionist or TEENS) who can access the system's administrative panels.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, used for login and identification (authentication handled externally).",
+          "format": "email"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "The full name of the staff member."
+        },
+        "role": {
+          "type": "string",
+          "description": "The assigned role of the user, determining their access rights within the system (e.g., 'Receptionist', 'TEENS')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "fullName",
+        "role",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores profile information for staff members (Receptionists, TEENS). Access is restricted to the owner for read/write of their own profile, and potentially by an 'admin' role (not explicitly defined in roles collections) for management. Includes `role` field.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, matching their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_receptionist/{userId}",
+        "definition": {
+          "entityName": "UserRole",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Used for role-based access control. A document exists in this collection if the user with `userId` holds the 'Receptionist' role. This collection is primarily for `exists()` checks in security rules to enable Queryable Access Patterns (QAPs). Documents can be empty.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user (matching Firebase Authentication UID)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_teens/{userId}",
+        "definition": {
+          "entityName": "UserRole",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Used for role-based access control. A document exists in this collection if the user with `userId` holds the 'TEENS' role. This collection is primarily for `exists()` checks in security rules to enable Queryable Access Patterns (QAPs). Documents can be empty.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user (matching Firebase Authentication UID)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/patients/{patientId}",
+        "definition": {
+          "entityName": "Patient",
+          "schema": {
+            "$ref": "#/backend/entities/Patient"
+          },
+          "description": "Contains patient demographic and contact information. Accessible by users with 'Receptionist' or 'TEENS' roles. Creation can be allowed for unauthenticated users (public web booking).",
+          "params": [
+            {
+              "name": "patientId",
+              "description": "The unique identifier for the patient."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/protocols/{protocolId}",
+        "definition": {
+          "entityName": "Protocol",
+          "schema": {
+            "$ref": "#/backend/entities/Protocol"
+          },
+          "description": "Defines the step-by-step procedures and timings for specific medical exams. Read-only access for 'Receptionist' and 'TEENS' roles. Write access would typically be for an 'admin' role (not explicitly defined via role collection here).",
+          "params": [
+            {
+              "name": "protocolId",
+              "description": "The unique identifier for the exam protocol."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/appointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": {
+            "$ref": "#/backend/entities/Appointment"
+          },
+          "description": "Manages scheduled appointments. Public users can create new appointments. 'Receptionist' and 'TEENS' roles have read/update access to manage appointment statuses. Includes denormalized 'patientName' and 'examType' for easier dashboard display without additional lookups, although these are not strictly for authorization independence.",
+          "params": [
+            {
+              "name": "appointmentId",
+              "description": "The unique identifier for the appointment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/exam_sessions/{examSessionId}",
+        "definition": {
+          "entityName": "ExamSession",
+          "schema": {
+            "$ref": "#/backend/entities/ExamSession"
+          },
+          "description": "Tracks the real-time execution of an exam. This collection is crucial for TEENS. Includes extensive denormalization for authorization independence and data clarity: 'patientId', 'patientName' (from Patient), 'examType' (from Protocol), 'protocolSteps' (array of objects with 'stepName' and 'waitMinutes', from Protocol), 'appointmentId', and 'appointmentStatus' (from Appointment). This ensures TEENS and Receptionists can view and interact with exam sessions without requiring `get()` calls to other collections. 'TEENS' role has create/read/update access; 'Receptionist' role has read access.",
+          "params": [
+            {
+              "name": "examSessionId",
+              "description": "The unique identifier for the exam session."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The proposed Firestore structure prioritizes secure, scalable, and debuggable access control by strictly adhering to the core design principles and strategy mandates. \n\n**Authorization Independence (CRITICAL):** This structure achieves authorization independence by:\n1.  **Role Segregation:** Staff roles (Receptionist, TEENS) are managed through dedicated collections (`/roles_receptionist/{userId}`, `/roles_teens/{userId}`). This allows security rules to use the `exists()` function, checking if `request.auth.uid` is present in a role collection, rather than performing `get()` calls on the `/users` collection or relying on custom claims. This completely decouples authorization logic from document content, enabling atomic operations and simplifying rule evaluation.\n2.  **Denormalization for Context:** For `ExamSession` documents, critical information from related entities like `Patient` (`patientId`, `patientName`) and `Protocol` (`examType`, `protocolSteps` including `stepName` and `waitMinutes`) is denormalized directly into the `ExamSession` document. This ensures that the TEENS panel, which operates on `ExamSession` data, has all necessary context without needing to perform `get()` calls to parent or related documents. Similarly, `appointmentId` and `appointmentStatus` are denormalized into `ExamSession` to provide a complete picture for both TEENS and Receptionists without requiring chained lookups.\n\n**QAPs (Rules are not Filters):** The structure supports Queryable Access Patterns (QAPs) by:\n1.  **Role-Based Collection Access:** Collections like `/patients`, `/appointments`, `/protocols`, and `/exam_sessions` are designed to be accessible globally by users belonging to specific roles (Receptionist, TEENS). Security rules will grant `list` access based solely on the presence of `request.auth.uid` in the relevant `/roles_...` collection. For instance, a rule like `allow list: if exists(/databases/$(database)/documents/roles_receptionist/$(request.auth.uid))` ensures that any query made by an authorized receptionist will return only documents they are allowed to see, without requiring client-side filtering or server-side data fetching for each document to check permissions.\n2.  **Explicit Data State:** The use of a clear `status` field in `Appointment` and `ExamSession` allows for direct, indexed queries (e.g., `appointments.where('status', '==', 'En espera')`) which are inherently secure as permissions are pre-verified by the `list` rule.\n3.  **Path-Based Ownership:** For user profiles (`/users/{userId}`), access is naturally restricted to the owner (`request.auth.uid == userId`), a fundamental QAP pattern.\n\nThis design minimizes complexity in security rules, avoids performance pitfalls associated with `get()` calls in `list` operations, and ensures that the system is both secure and scalable for real-time operations."
+  }
+}
