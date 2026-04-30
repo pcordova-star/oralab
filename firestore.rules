@@ -39,22 +39,20 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     match /users/{userId} {
-      allow get: if isStaff() || isOwner(userId);
+      allow get: if isSignedIn() && (isOwner(userId) || isStaff());
       allow list: if isStaff();
       allow create, update: if isOwner(userId) || isSuperAdmin();
       allow delete: if isSuperAdmin();
     }
 
     match /roles_receptionist/{userId} {
-      // Permite que el dueño lea su propio marcador para la lógica de auto-reparación
-      allow get: if isOwner(userId) || isReceptionist() || isSuperAdmin();
-      allow create, update: if isOwner(userId) || isSuperAdmin();
+      // Permite que el dueño cree su propio marcador para asegurar su acceso
+      allow get, create, update: if isOwner(userId) || isSuperAdmin() || isReceptionist();
       allow delete: if isSuperAdmin();
     }
 
     match /roles_teens/{userId} {
-      allow get: if isOwner(userId) || isTeens() || isSuperAdmin();
-      allow create, update: if isOwner(userId) || isSuperAdmin();
+      allow get, create, update: if isOwner(userId) || isSuperAdmin() || isTeens();
       allow delete: if isSuperAdmin();
     }
 

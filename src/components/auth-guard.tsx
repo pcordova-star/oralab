@@ -4,7 +4,7 @@
 import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, ReactNode } from "react";
-import { doc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 
 interface AuthGuardProps {
@@ -14,7 +14,7 @@ interface AuthGuardProps {
 
 /**
  * Protege las rutas de Staff verificando el perfil del usuario en Firestore.
- * El correo control@pcgoperacion.com tiene bypass total.
+ * Implementa auto-reparación de marcadores de rol (QAP) para asegurar permisos.
  */
 export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const { user, isUserLoading } = useUser();
@@ -42,9 +42,19 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
       return;
     }
 
-    // Una vez que tenemos los datos del perfil, verificamos el rol para staff normal
+    // Una vez que tenemos los datos del perfil, verificamos el rol y reparamos marcadores
     if (!isUserLoading && !isUserDataLoading && user && !isSuperAdmin) {
       if (userData) {
+        // AUTO-REPARACIÓN: Asegurar que el marcador de rol existe en Firestore para las reglas de seguridad
+        const roleCollection = userData.role === "receptionist" ? "roles_receptionist" : "roles_teens";
+        const roleMarkerRef = doc(db!, roleCollection, user.uid);
+        
+        // Operación no bloqueante e idempotente para asegurar que el QAP esté presente
+        setDoc(roleMarkerRef, { 
+          active: true, 
+          lastVerified: new Date().toISOString() 
+        }, { merge: true });
+
         if (userData.role !== requiredRole) {
           if (userData.role === "receptionist") {
             router.replace("/reception");
@@ -55,7 +65,7 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
           }
         }
       } else {
-        // Documento no encontrado o carga lenta: dar un margen de espera antes de redirigir
+        // Margen de espera para perfiles recién creados
         const timeout = setTimeout(() => {
           if (!userData && !isUserDataLoading) {
             router.replace("/");
@@ -64,7 +74,7 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
         return () => clearTimeout(timeout);
       }
     }
-  }, [user, isUserLoading, userData, isUserDataLoading, router, requiredRole, isSuperAdmin]);
+  }, [user, isUserLoading, userData, isUserDataLoading, router, requiredRole, isSuperAdmin, db]);
 
   // Pantalla de carga mientras se determina el estado
   if (isUserLoading || (user && !isSuperAdmin && isUserDataLoading)) {

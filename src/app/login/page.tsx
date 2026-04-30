@@ -48,8 +48,7 @@ export default function LoginPage() {
             const userData = userSnap.data();
             const role = userData.role;
 
-            // Auto-reparación de marcador de rol (QAP) si falta
-            // Usamos setDoc directo con merge para asegurar que el marcador exista sin depender de permisos de lectura previos
+            // Auto-reparación de marcador de rol (QAP) crucial para permisos de Firestore
             const roleCollection = role === "receptionist" ? "roles_receptionist" : "roles_teens";
             const roleMarkerRef = doc(db, roleCollection, user.uid);
             
@@ -93,10 +92,10 @@ export default function LoginPage() {
     setIsPending(true);
     initiateEmailSignIn(auth, email, password);
     
-    // Timeout de seguridad por si falla la respuesta de Firebase
+    // Timeout de seguridad
     setTimeout(() => {
-      setIsPending(false);
-    }, 10000);
+      if (isPending) setIsPending(false);
+    }, 15000);
   };
 
   return (
