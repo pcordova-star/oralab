@@ -1,11 +1,15 @@
+"use client";
+
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Activity, Clock, CheckCircle2, ArrowRight, Lock } from "lucide-react";
+import { StaffRedirect } from "@/components/staff-redirect";
 
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
+      <StaffRedirect />
       <Navbar />
       
       <main className="flex-grow">
@@ -33,7 +37,6 @@ export default function HomePage() {
             </div>
           </div>
           
-          {/* Subtle background decoration */}
           <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] bg-secondary/10 rounded-full blur-3xl -z-10" />
           <div className="absolute top-0 right-0 p-20 hidden lg:block">
             <div className="relative">
@@ -59,7 +62,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Services Section */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-16 text-primary">Nuestros Exámenes Especializados</h2>

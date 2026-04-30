@@ -16,6 +16,7 @@ import { Calendar as CalendarIcon, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { StaffRedirect } from "@/components/staff-redirect";
 
 export default function BookingPage() {
   const [examType, setExamType] = useState<string>("SIBO");
@@ -26,9 +27,6 @@ export default function BookingPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // Generar bloques de tiempo dinámicos según el tipo de examen
-  // Laboratorio cierra a las 17:00
-  // SIBO dura 3h (última cita 14:00), HP dura 30min (última cita 16:30)
   const timeSlots = useMemo(() => {
     const slots = [];
     const limitHour = examType === "SIBO" ? 14 : 16;
@@ -48,7 +46,6 @@ export default function BookingPage() {
     return slots;
   }, [examType]);
 
-  // Limpiar hora seleccionada si cambia el tipo de examen y la hora ya no es válida
   useEffect(() => {
     if (selectedTime && !timeSlots.includes(selectedTime)) {
       setSelectedTime("");
@@ -59,7 +56,6 @@ export default function BookingPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
       setIsConfirmed(true);
@@ -99,6 +95,7 @@ export default function BookingPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <StaffRedirect />
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
@@ -188,11 +185,6 @@ export default function BookingPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {examType === "SIBO" && (
-                      <p className="text-[10px] text-muted-foreground px-1 italic">
-                        * Los test de SIBO se agendan hasta las 14:00 por su duración de 3 horas.
-                      </p>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -232,9 +224,6 @@ export default function BookingPage() {
               >
                 {isSubmitting ? "Procesando..." : "Confirmar Reserva"}
               </Button>
-              <p className="text-center text-sm text-muted-foreground px-8">
-                Al confirmar, aceptas nuestros términos de servicio y política de privacidad.
-              </p>
             </div>
           </form>
         </div>

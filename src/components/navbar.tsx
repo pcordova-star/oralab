@@ -17,25 +17,27 @@ export function Navbar() {
   const handleLogout = async () => {
     if (auth) {
       await signOut(auth);
-      router.push("/");
+      router.replace("/");
     }
   };
 
-  const navItems = [
-    { href: "/", label: "Web", icon: Home },
-    { href: "/booking", label: "Agenda Online", icon: Calendar },
-    ...(user ? [
-      { href: "/reception", label: "Recepción", icon: Users },
-      { href: "/teens", label: "Panel TEENS", icon: Activity },
-    ] : []),
-  ];
+  // Si el usuario es Staff, solo mostramos los paneles de gestión
+  const navItems = user 
+    ? [
+        { href: "/reception", label: "Recepción", icon: Users },
+        { href: "/teens", label: "Panel TEENS", icon: Activity },
+      ]
+    : [
+        { href: "/", label: "Inicio", icon: Home },
+        { href: "/booking", label: "Agenda Online", icon: Calendar },
+      ];
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href={user ? "/reception" : "/"} className="flex items-center gap-2">
               <div className="bg-primary p-1.5 rounded-lg">
                 <Activity className="h-6 w-6 text-white" />
               </div>
