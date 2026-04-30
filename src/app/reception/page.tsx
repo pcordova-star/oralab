@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Search, UserCheck, Clock, Info } from "lucide-react";
+import { Search, UserCheck, Clock, Info, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Appointment, AppointmentStatus } from "@/app/lib/types";
-import { generatePrepInstructions } from "@/ai/flows/generate-prep-instructions";
+import { Appointment, AppointmentStatus, PROTOCOLS } from "@/app/lib/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AuthGuard } from "@/components/auth-guard";
 
@@ -26,7 +25,7 @@ export default function ReceptionPage() {
   const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
   const [search, setSearch] = useState("");
   const [prepInstructions, setPrepInstructions] = useState<string | null>(null);
-  const [isLoadingPrep, setIsLoadingPrep] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
   const handleStatusChange = (id: string, newStatus: AppointmentStatus) => {
@@ -39,15 +38,18 @@ export default function ReceptionPage() {
     });
   };
 
-  const handleGenInstructions = async (examType: 'SIBO' | 'HP') => {
-    setIsLoadingPrep(true);
-    try {
-      const result = await generatePrepInstructions({ examType });
-      setPrepInstructions(result.instructions);
-    } catch (err) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudieron generar las instrucciones." });
-    } finally {
-      setIsLoadingPrep(false);
+  const handleShowInstructions = (examType: 'SIBO' | 'HP') => {
+    const instructions = PROTOCOLS[examType]?.instructions || "No hay instrucciones disponibles.";
+    setPrepInstructions(instructions);
+    setCopied(false);
+  };
+
+  const handleCopy = () => {
+    if (prepInstructions) {
+      navigator.clipboard.writeText(prepInstructions);
+      setCopied(true);
+      toast({ title: "Copiado", description: "Instrucciones copiadas al portapapeles." });
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -127,7 +129,7 @@ export default function ReceptionPage() {
                             size="sm" 
                             variant="outline" 
                             className="rounded-lg flex gap-1 border-primary text-primary hover:bg-primary/5"
-                            onClick={() => handleGenInstructions(app.examType as any)}
+                            onClick={() => handleShowInstructions(app.examType as any)}
                           >
                             <Info className="h-4 w-4" /> Instrucciones
                           </Button>
@@ -145,21 +147,21 @@ export default function ReceptionPage() {
           <DialogContent className="max-w-2xl rounded-3xl">
             <DialogHeader>
               <DialogTitle className="text-2xl flex items-center gap-2">
-                <Info className="text-primary" /> Instrucciones de Preparación
+                <Info className="text-primary" /> Instrucciones de Preparación Estándar
               </DialogTitle>
               <DialogDescription>
                 Información clínica para el paciente antes de realizar el examen.
               </DialogDescription>
             </DialogHeader>
-            <div className="mt-4 p-6 bg-muted/50 rounded-2xl whitespace-pre-line border italic text-sm text-foreground/80">
+            <div className="mt-4 p-6 bg-muted/50 rounded-2xl whitespace-pre-line border italic text-sm text-foreground/80 leading-relaxed">
               {prepInstructions}
             </div>
             <div className="mt-6 flex justify-end gap-4">
               <Button variant="outline" className="rounded-xl" onClick={() => setPrepInstructions(null)}>Cerrar</Button>
-              <Button className="rounded-xl px-8" onClick={() => {
-                toast({ title: "Copiado", description: "Instrucciones copiadas al portapapeles." });
-                navigator.clipboard.writeText(prepInstructions || "");
-              }}>Copiar al Portapapeles</Button>
+              <Button className="rounded-xl px-8" onClick={handleCopy}>
+                {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                {copied ? "Copiado" : "Copiar Instrucciones"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

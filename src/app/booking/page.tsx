@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,16 +12,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar as CalendarIcon, CheckCircle2, Clock } from "lucide-react";
+import { Calendar as CalendarIcon, CheckCircle2, Clock, Printer, Download, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { StaffRedirect } from "@/components/staff-redirect";
+import { PROTOCOLS } from "@/app/lib/types";
 
 export default function BookingPage() {
   const [examType, setExamType] = useState<string>("SIBO");
   const [date, setDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>("");
+  const [patientData, setPatientData] = useState({ name: "", rut: "", phone: "", email: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const { toast } = useToast();
@@ -61,33 +63,84 @@ export default function BookingPage() {
       setIsConfirmed(true);
       toast({
         title: "¡Reserva Exitosa!",
-        description: `Tu cita para ${examType} ha sido agendada.`,
+        description: `Se ha enviado un correo con el resumen y las instrucciones a ${patientData.email}.`,
       });
     }, 1500);
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (isConfirmed) {
+    const instructions = PROTOCOLS[examType as keyof typeof PROTOCOLS]?.instructions || "";
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-background print:bg-white">
         <Navbar />
-        <main className="flex-grow container mx-auto px-4 py-12 flex items-center justify-center">
-          <Card className="max-w-md w-full text-center p-8 rounded-3xl">
-            <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
-            </div>
-            <CardTitle className="text-3xl mb-4">Cita Agendada</CardTitle>
-            <CardDescription className="text-lg mb-8">
-              Tu reserva para el examen <strong>{examType}</strong> ha sido confirmada para el día <strong>{date ? format(date, "PPP", { locale: es }) : ""}</strong> a las <strong>{selectedTime}</strong>.
-            </CardDescription>
-            <div className="space-y-4">
-              <Button className="w-full rounded-xl" onClick={() => router.push('/')}>
+        <main className="flex-grow container mx-auto px-4 py-12 flex flex-col items-center">
+          <Card className="max-w-3xl w-full rounded-3xl overflow-hidden shadow-xl border-none print:shadow-none print:border">
+            <CardHeader className="bg-primary text-white text-center p-10 print:bg-white print:text-black print:border-b">
+              <div className="h-16 w-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 print:hidden">
+                <CheckCircle2 className="h-10 w-10 text-white" />
+              </div>
+              <CardTitle className="text-4xl font-extrabold mb-2">¡Reserva Confirmada!</CardTitle>
+              <CardDescription className="text-primary-foreground/80 text-lg print:text-black">
+                Hemos enviado el resumen y las instrucciones a su correo electrónico.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              <div className="grid md:grid-cols-2 gap-8 border-b pb-8">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-primary">Resumen de la Cita</h3>
+                  <div className="space-y-2">
+                    <p className="flex justify-between">
+                      <span className="text-muted-foreground">Paciente:</span>
+                      <span className="font-bold">{patientData.name}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-muted-foreground">RUT:</span>
+                      <span className="font-bold">{patientData.rut}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-muted-foreground">Examen:</span>
+                      <span className="font-bold text-primary">{examType}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-muted-foreground">Fecha:</span>
+                      <span className="font-bold">{date ? format(date, "PPP", { locale: es }) : ""}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-muted-foreground">Hora:</span>
+                      <span className="font-bold">{selectedTime} hrs</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-muted/30 p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+                   <Mail className="h-8 w-8 text-primary mb-2 print:hidden" />
+                   <p className="text-sm font-medium">Un correo de confirmación ha sido enviado a:</p>
+                   <p className="font-bold text-primary break-all">{patientData.email}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-primary">Instrucciones de Preparación</h3>
+                <div className="bg-background border rounded-2xl p-6 text-sm whitespace-pre-line leading-relaxed italic">
+                  {instructions}
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="p-8 bg-muted/20 border-t flex flex-col sm:flex-row gap-4 print:hidden">
+              <Button variant="outline" className="flex-1 h-12 rounded-xl" onClick={handlePrint}>
+                <Printer className="mr-2 h-4 w-4" /> Imprimir / Descargar PDF
+              </Button>
+              <Button className="flex-1 h-12 rounded-xl" onClick={() => router.push('/')}>
                 Volver al Inicio
               </Button>
-              <p className="text-sm text-muted-foreground">
-                Por favor revise su email para las instrucciones de ayuno y preparación.
-              </p>
-            </div>
+            </CardFooter>
           </Card>
+          <p className="mt-8 text-muted-foreground text-sm print:hidden">
+            Recuerde llegar 15 minutos antes de su cita.
+          </p>
         </main>
       </div>
     );
@@ -106,7 +159,7 @@ export default function BookingPage() {
 
           <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <Card className="rounded-2xl shadow-sm overflow-hidden">
+              <Card className="rounded-2xl shadow-sm overflow-hidden border-none shadow-md">
                 <CardHeader className="bg-primary/5">
                   <CardTitle className="text-xl">1. Tipo de Examen</CardTitle>
                 </CardHeader>
@@ -136,7 +189,7 @@ export default function BookingPage() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl shadow-sm overflow-hidden">
+              <Card className="rounded-2xl shadow-sm overflow-hidden border-none shadow-md">
                 <CardHeader className="bg-primary/5">
                   <CardTitle className="text-xl">2. Fecha y Hora</CardTitle>
                 </CardHeader>
@@ -191,27 +244,56 @@ export default function BookingPage() {
             </div>
 
             <div className="space-y-6">
-              <Card className="rounded-2xl shadow-sm overflow-hidden">
+              <Card className="rounded-2xl shadow-sm overflow-hidden border-none shadow-md">
                 <CardHeader className="bg-primary/5">
                   <CardTitle className="text-xl">3. Datos del Paciente</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre Completo</Label>
-                    <Input id="name" placeholder="Ej: Juan Pérez" required className="rounded-xl h-12" />
+                    <Input 
+                      id="name" 
+                      placeholder="Ej: Juan Pérez" 
+                      required 
+                      className="rounded-xl h-12"
+                      value={patientData.name}
+                      onChange={(e) => setPatientData({...patientData, name: e.target.value})}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="rut">RUT</Label>
-                    <Input id="rut" placeholder="Ej: 12.345.678-9" required className="rounded-xl h-12" />
+                    <Input 
+                      id="rut" 
+                      placeholder="Ej: 12.345.678-9" 
+                      required 
+                      className="rounded-xl h-12"
+                      value={patientData.rut}
+                      onChange={(e) => setPatientData({...patientData, rut: e.target.value})}
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="phone">Teléfono</Label>
-                      <Input id="phone" placeholder="+56 9..." required className="rounded-xl h-12" />
+                      <Input 
+                        id="phone" 
+                        placeholder="+56 9..." 
+                        required 
+                        className="rounded-xl h-12"
+                        value={patientData.phone}
+                        onChange={(e) => setPatientData({...patientData, phone: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" placeholder="email@ejemplo.com" required className="rounded-xl h-12" />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="email@ejemplo.com" 
+                        required 
+                        className="rounded-xl h-12"
+                        value={patientData.email}
+                        onChange={(e) => setPatientData({...patientData, email: e.target.value})}
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -220,7 +302,7 @@ export default function BookingPage() {
               <Button 
                 type="submit" 
                 className="w-full h-16 text-xl font-bold rounded-2xl shadow-lg"
-                disabled={isSubmitting || !date || !selectedTime}
+                disabled={isSubmitting || !date || !selectedTime || !patientData.name || !patientData.rut || !patientData.email}
               >
                 {isSubmitting ? "Procesando..." : "Confirmar Reserva"}
               </Button>
