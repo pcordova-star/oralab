@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
@@ -12,19 +11,21 @@ interface AuthGuardProps {
   requiredRole: "receptionist" | "teens";
 }
 
+/**
+ * Protege rutas de Staff verificando la autenticación y la existencia del rol en Firestore.
+ * Evita bucles infinitos esperando a que los datos de rol estén completamente cargados.
+ */
 export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
 
-  // Verificamos el rol requerido para esta página
   const roleCollection = requiredRole === "receptionist" ? "roles_receptionist" : "roles_teens";
   const roleDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, roleCollection, user.uid);
   }, [firestore, user, roleCollection]);
 
-  // También verificamos el rol contrario para evitar bucles de redirección
   const otherRoleCollection = requiredRole === "receptionist" ? "roles_teens" : "roles_receptionist";
   const otherRoleDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -41,15 +42,19 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   }, [user, isUserLoading, router]);
 
   useEffect(() => {
-    // Si ya terminó de cargar todo y el usuario no tiene el rol de esta página
-    if (!isUserLoading && user && !isRoleLoading && !isOtherRoleLoading && !roleData) {
-      if (otherRoleData) {
-        // Si tiene el OTRO rol de staff, enviarlo a su panel correcto en lugar de al home
-        const targetPath = requiredRole === "receptionist" ? "/teens" : "/reception";
-        router.replace(targetPath);
-      } else {
-        // Si no tiene ningún rol de staff, enviarlo al home
-        router.replace("/");
+    // IMPORTANTE: Solo actuar cuando la carga de datos haya finalizado completamente
+    const allLoadingFinished = !isUserLoading && !isRoleLoading && !isOtherRoleLoading;
+    
+    if (allLoadingFinished && user) {
+      if (!roleData) {
+        if (otherRoleData) {
+          // El usuario tiene el rol contrario, redirigir a su panel correcto
+          const targetPath = requiredRole === "receptionist" ? "/teens" : "/reception";
+          router.replace(targetPath);
+        } else {
+          // El usuario no tiene ningún rol de staff, enviarlo al home
+          router.replace("/");
+        }
       }
     }
   }, [user, isUserLoading, roleData, isRoleLoading, otherRoleData, isOtherRoleLoading, router, requiredRole]);
@@ -62,6 +67,7 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
     );
   }
 
+  // Si no hay usuario o no tiene el rol, no renderizar nada mientras ocurre la redirección del useEffect
   if (!user || !roleData) {
     return null;
   }
