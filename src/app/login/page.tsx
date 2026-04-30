@@ -49,19 +49,22 @@ export default function LoginPage() {
             const role = userData.role;
 
             // Auto-reparación de marcador de rol (QAP) si falta
+            // Usamos setDoc directo con merge para asegurar que el marcador exista sin depender de permisos de lectura previos
             const roleCollection = role === "receptionist" ? "roles_receptionist" : "roles_teens";
             const roleMarkerRef = doc(db, roleCollection, user.uid);
-            const roleMarkerSnap = await getDoc(roleMarkerRef);
             
-            if (!roleMarkerSnap.exists()) {
-              await setDoc(roleMarkerRef, { active: true, repaired: true });
-            }
+            await setDoc(roleMarkerRef, { 
+              active: true, 
+              lastLogin: new Date().toISOString(),
+              repaired: true 
+            }, { merge: true });
             
             toast({
               title: "Sesión iniciada",
               description: `Bienvenido(a), ${userData.fullName || 'Usuario'}.`,
             });
             
+            // Redirección definitiva basada en el rol confirmado
             if (role === "receptionist") {
               router.replace("/reception");
             } else if (role === "teens") {
@@ -74,7 +77,7 @@ export default function LoginPage() {
             setIsPending(false);
           }
         } catch (error) {
-          console.error("Error al obtener el rol:", error);
+          console.error("Error en redirección de login:", error);
           setIsPending(false);
         }
       }
@@ -93,7 +96,7 @@ export default function LoginPage() {
     // Timeout de seguridad por si falla la respuesta de Firebase
     setTimeout(() => {
       setIsPending(false);
-    }, 8000);
+    }, 10000);
   };
 
   return (

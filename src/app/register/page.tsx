@@ -37,12 +37,13 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 1. Crear marcador de rol para seguridad (RBAC) PRIMERO para evitar 403 inmediatos
+      // CRITICAL: Creamos el marcador de rol PRIMERO para que las reglas de seguridad 
+      // detecten al usuario como Staff inmediatamente al crear el perfil
       const roleCollection = role === "receptionist" ? "roles_receptionist" : "roles_teens";
       const roleRef = doc(db, roleCollection, user.uid);
-      await setDoc(roleRef, { active: true });
+      await setDoc(roleRef, { active: true, createdAt: new Date().toISOString() });
 
-      // 2. Crear perfil de usuario
+      // Luego creamos el perfil detallado del usuario
       const userRef = doc(db, "users", user.uid);
       const userData = {
         id: user.uid,
@@ -59,9 +60,10 @@ export default function RegisterPage() {
         description: `Bienvenido(a), ${fullName}. Has sido registrado como ${role === 'receptionist' ? 'Recepcionista' : 'TEENS'}.`,
       });
 
-      // Redirigir al panel correspondiente
+      // Redirigir al panel correspondiente usando replace para limpiar historial
       router.replace(role === "receptionist" ? "/reception" : "/teens");
     } catch (error: any) {
+      console.error("Error en registro:", error);
       toast({
         variant: "destructive",
         title: "Error en el registro",

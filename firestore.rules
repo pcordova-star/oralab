@@ -23,6 +23,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // RBAC check using exists() for Authorization Independence
     function isReceptionist() {
       return isSuperAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_receptionist/$(request.auth.uid)));
     }
@@ -45,6 +46,7 @@ service cloud.firestore {
     }
 
     match /roles_receptionist/{userId} {
+      // Permite que el dueño lea su propio marcador para la lógica de auto-reparación
       allow get: if isOwner(userId) || isReceptionist() || isSuperAdmin();
       allow create, update: if isOwner(userId) || isSuperAdmin();
       allow delete: if isSuperAdmin();
