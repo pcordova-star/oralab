@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -5,7 +6,6 @@ service cloud.firestore {
     /**
      * CORE PHILOSOPHY:
      * Role-Based Access Control (RBAC) optimized for clinical operations.
-     * Uses marker collections (roles_...) for high-performance exists() checks.
      * Hardcoded Super Admin bypass for control@pcgoperacion.com
      */
 
@@ -35,18 +35,13 @@ service cloud.firestore {
       return isReceptionist() || isTeens() || isSuperAdmin();
     }
 
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
     // --- Collection Rules ---
 
     match /users/{userId} {
       allow get: if isStaff() || isOwner(userId);
       allow list: if isStaff();
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if (isExistingOwner(userId) || isSuperAdmin()) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId) || isSuperAdmin();
+      allow create, update: if isOwner(userId) || isSuperAdmin();
+      allow delete: if isSuperAdmin();
     }
 
     match /roles_receptionist/{userId} {
@@ -64,8 +59,7 @@ service cloud.firestore {
     match /patients/{patientId} {
       allow get, list: if isStaff();
       allow create: if isSignedIn();
-      allow update: if isStaff() && resource != null;
-      allow delete: if isStaff() && resource != null;
+      allow update, delete: if isStaff();
     }
 
     match /protocols/{protocolId} {
@@ -76,15 +70,13 @@ service cloud.firestore {
     match /appointments/{appointmentId} {
       allow get, list: if isStaff();
       allow create: if isSignedIn();
-      allow update: if isStaff() && resource != null;
-      allow delete: if isStaff() && resource != null;
+      allow update, delete: if isStaff();
     }
 
     match /exam_sessions/{examSessionId} {
       allow get, list: if isStaff();
       allow create: if isTeens() || isSuperAdmin();
-      allow update: if (isTeens() || isSuperAdmin()) && resource != null;
-      allow delete: if (isTeens() || isSuperAdmin()) && resource != null;
+      allow update, delete: if (isTeens() || isSuperAdmin());
     }
   }
 }
