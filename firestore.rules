@@ -4,14 +4,8 @@ service cloud.firestore {
 
     /**
      * CORE PHILOSOPHY:
-     * This ruleset implements a Role-Based Access Control (RBAC) model optimized for clinical operations.
-     * It distinguishes between staff members (Receptionists and TEENS) and public users (Patients).
-     *
-     * DATA STRUCTURE:
-     * - /users: Staff profile information.
-     * - /roles_...: Marker collections used for high-performance role verification via exists() checks.
-     * - /patients, /appointments: Shared clinical data accessible by staff and created by public/anonymous users.
-     * - /exam_sessions: Real-time session data managed primarily by TEENS staff.
+     * Role-Based Access Control (RBAC) optimized for clinical operations.
+     * Uses marker collections (roles_...) for high-performance exists() checks.
      */
 
     // --- Helper Functions ---
@@ -50,18 +44,18 @@ service cloud.firestore {
       allow delete: if isExistingOwner(userId);
     }
 
+    // Role markers: crucial for RBACexists() checks.
+    // Allow owner to create/update to ensure the marker exists after registration.
     match /roles_receptionist/{userId} {
       allow get: if isOwner(userId) || isReceptionist();
-      // Permitimos la creación por el dueño para el registro inicial en el prototipo
-      allow create: if isOwner(userId);
-      allow update, delete: if false;
+      allow create, update: if isOwner(userId);
+      allow delete: if false;
     }
 
     match /roles_teens/{userId} {
       allow get: if isOwner(userId) || isTeens();
-      // Permitimos la creación por el dueño para el registro inicial en el prototipo
-      allow create: if isOwner(userId);
-      allow update, delete: if false;
+      allow create, update: if isOwner(userId);
+      allow delete: if false;
     }
 
     match /patients/{patientId} {

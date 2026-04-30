@@ -14,7 +14,7 @@ interface AuthGuardProps {
 
 /**
  * Protege las rutas de Staff verificando el perfil del usuario en Firestore.
- * Simplificado para evitar bucles de redirección.
+ * Mejorado para prevenir bucles de redirección durante estados de carga.
  */
 export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const { user, isUserLoading } = useUser();
@@ -29,38 +29,49 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    // Si no hay usuario, enviar a login
+    // Si la autenticación terminó y no hay usuario, ir a login
     if (!isUserLoading && !user) {
       router.replace("/login");
       return;
     }
 
-    // Una vez cargado el perfil, verificar el rol
-    if (!isUserLoading && !isUserDataLoading && user && userData) {
-      if (userData.role !== requiredRole) {
-        // Si tiene el otro rol de staff, enviarlo a su panel correcto
-        if (userData.role === "receptionist" || userData.role === "teens") {
-          router.replace(userData.role === "receptionist" ? "/reception" : "/teens");
-        } else {
-          // Si no tiene rol de staff, fuera
-          router.replace("/");
+    // Una vez que tenemos los datos del perfil, verificamos el rol
+    if (!isUserLoading && !isUserDataLoading && user) {
+      if (userData) {
+        if (userData.role !== requiredRole) {
+          // Si tiene un rol de staff distinto, enviarlo a su panel correcto
+          if (userData.role === "receptionist") {
+            router.replace("/reception");
+          } else if (userData.role === "teens") {
+            router.replace("/teens");
+          } else {
+            router.replace("/");
+          }
         }
+      } else {
+        // Usuario autenticado pero sin documento de perfil aún
+        // Esperamos un momento o redirigimos si persiste el estado nulo
+        const timeout = setTimeout(() => {
+          if (!userData) router.replace("/");
+        }, 2000);
+        return () => clearTimeout(timeout);
       }
-    } else if (!isUserLoading && !isUserDataLoading && user && !userData) {
-      // Usuario autenticado pero sin perfil (error de registro)
-      router.replace("/");
     }
   }, [user, isUserLoading, userData, isUserDataLoading, router, requiredRole]);
 
-  if (isUserLoading || isUserDataLoading) {
+  // Pantalla de carga mientras se determina el estado
+  if (isUserLoading || isUserDataLoading || (user && !userData)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">Verificando credenciales Oralab...</p>
+        </div>
       </div>
     );
   }
 
-  // Solo renderizar si el rol coincide exactamente
+  // Solo renderizar el contenido si el rol coincide
   if (user && userData?.role === requiredRole) {
     return <>{children}</>;
   }
