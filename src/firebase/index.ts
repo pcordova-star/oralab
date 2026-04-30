@@ -3,36 +3,43 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore, initializeFirestore } from 'firebase/firestore'
+
+// Caché para las instancias de los servicios
+let authInstance: Auth | null = null;
+let firestoreInstance: Firestore | null = null;
 
 /**
- * Inicializa los servicios de Firebase.
- * En desarrollo y en el entorno de Studio, preferimos usar la configuración explícita.
+ * Inicializa los servicios de Firebase de forma robusta.
+ * Configura Firestore para usar long-polling si es necesario, 
+ * evitando errores de aserción interna en entornos de proxy.
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
 
   if (!getApps().length) {
-    try {
-      // Intentamos inicializar con la config explícita primero para asegurar conectividad en desarrollo
-      firebaseApp = initializeApp(firebaseConfig);
-    } catch (e) {
-      // Fallback a inicialización automática si falla la anterior (útil en producción App Hosting)
-      firebaseApp = initializeApp();
-    }
+    firebaseApp = initializeApp(firebaseConfig);
   } else {
     firebaseApp = getApp();
   }
 
-  return getSdks(firebaseApp);
-}
+  if (!authInstance) {
+    authInstance = getAuth(firebaseApp);
+  }
 
-export function getSdks(firebaseApp: FirebaseApp) {
+  if (!firestoreInstance) {
+    // initializeFirestore nos permite configurar opciones experimentales de conexión
+    // que resuelven los "INTERNAL ASSERTION FAILED" en entornos de Cloud Workstation.
+    firestoreInstance = initializeFirestore(firebaseApp, {
+      experimentalAutoDetectLongPolling: true,
+    });
+  }
+
   return {
     firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    auth: authInstance,
+    firestore: firestoreInstance
   };
 }
 
