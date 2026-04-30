@@ -6,6 +6,7 @@ service cloud.firestore {
      * CORE PHILOSOPHY:
      * Role-Based Access Control (RBAC) optimized for clinical operations.
      * Uses marker collections (roles_...) for high-performance exists() checks.
+     * Hardcoded Super Admin bypass for control@pcgoperacion.com
      */
 
     // --- Helper Functions ---
@@ -14,20 +15,24 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isSuperAdmin() {
+      return isSignedIn() && request.auth.token.email == "control@pcgoperacion.com";
+    }
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     function isReceptionist() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_receptionist/$(request.auth.uid));
+      return isSuperAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_receptionist/$(request.auth.uid)));
     }
 
     function isTeens() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_teens/$(request.auth.uid));
+      return isSuperAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_teens/$(request.auth.uid)));
     }
 
     function isStaff() {
-      return isReceptionist() || isTeens();
+      return isReceptionist() || isTeens() || isSuperAdmin();
     }
 
     function isExistingOwner(userId) {
@@ -40,22 +45,20 @@ service cloud.firestore {
       allow get: if isStaff() || isOwner(userId);
       allow list: if isStaff();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow update: if (isExistingOwner(userId) || isSuperAdmin()) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId) || isSuperAdmin();
     }
 
-    // Role markers: crucial for RBACexists() checks.
-    // Allow owner to create/update to ensure the marker exists after registration.
     match /roles_receptionist/{userId} {
-      allow get: if isOwner(userId) || isReceptionist();
-      allow create, update: if isOwner(userId);
-      allow delete: if false;
+      allow get: if isOwner(userId) || isReceptionist() || isSuperAdmin();
+      allow create, update: if isOwner(userId) || isSuperAdmin();
+      allow delete: if isSuperAdmin();
     }
 
     match /roles_teens/{userId} {
-      allow get: if isOwner(userId) || isTeens();
-      allow create, update: if isOwner(userId);
-      allow delete: if false;
+      allow get: if isOwner(userId) || isTeens() || isSuperAdmin();
+      allow create, update: if isOwner(userId) || isSuperAdmin();
+      allow delete: if isSuperAdmin();
     }
 
     match /patients/{patientId} {
@@ -67,7 +70,7 @@ service cloud.firestore {
 
     match /protocols/{protocolId} {
       allow get, list: if isStaff();
-      allow create, update, delete: if false;
+      allow create, update, delete: if isSuperAdmin();
     }
 
     match /appointments/{appointmentId} {
@@ -79,9 +82,9 @@ service cloud.firestore {
 
     match /exam_sessions/{examSessionId} {
       allow get, list: if isStaff();
-      allow create: if isTeens();
-      allow update: if isTeens() && resource != null;
-      allow delete: if isTeens() && resource != null;
+      allow create: if isTeens() || isSuperAdmin();
+      allow update: if (isTeens() || isSuperAdmin()) && resource != null;
+      allow delete: if (isTeens() || isSuperAdmin()) && resource != null;
     }
   }
 }

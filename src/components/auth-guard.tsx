@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
@@ -14,12 +13,14 @@ interface AuthGuardProps {
 
 /**
  * Protege las rutas de Staff verificando el perfil del usuario en Firestore.
- * Mejorado para prevenir bucles de redirección durante estados de carga.
+ * El correo control@pcgoperacion.com tiene bypass total.
  */
 export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
+
+  const isSuperAdmin = user?.email === "control@pcgoperacion.com";
 
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -35,11 +36,15 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
       return;
     }
 
-    // Una vez que tenemos los datos del perfil, verificamos el rol
-    if (!isUserLoading && !isUserDataLoading && user) {
+    // Si es Super Admin, saltamos las verificaciones de rol
+    if (!isUserLoading && user && isSuperAdmin) {
+      return;
+    }
+
+    // Una vez que tenemos los datos del perfil, verificamos el rol para staff normal
+    if (!isUserLoading && !isUserDataLoading && user && !isSuperAdmin) {
       if (userData) {
         if (userData.role !== requiredRole) {
-          // Si tiene un rol de staff distinto, enviarlo a su panel correcto
           if (userData.role === "receptionist") {
             router.replace("/reception");
           } else if (userData.role === "teens") {
@@ -49,30 +54,28 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
           }
         }
       } else {
-        // Usuario autenticado pero sin documento de perfil aún
-        // Esperamos un momento o redirigimos si persiste el estado nulo
         const timeout = setTimeout(() => {
           if (!userData) router.replace("/");
-        }, 2000);
+        }, 3000);
         return () => clearTimeout(timeout);
       }
     }
-  }, [user, isUserLoading, userData, isUserDataLoading, router, requiredRole]);
+  }, [user, isUserLoading, userData, isUserDataLoading, router, requiredRole, isSuperAdmin]);
 
   // Pantalla de carga mientras se determina el estado
-  if (isUserLoading || isUserDataLoading || (user && !userData)) {
+  if (isUserLoading || (user && !isSuperAdmin && isUserDataLoading) || (user && !isSuperAdmin && !userData)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-sm font-medium text-muted-foreground animate-pulse">Verificando credenciales Oralab...</p>
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">Verificando acceso administrativo...</p>
         </div>
       </div>
     );
   }
 
-  // Solo renderizar el contenido si el rol coincide
-  if (user && userData?.role === requiredRole) {
+  // Renderizar si es super admin o el rol coincide
+  if (user && (isSuperAdmin || userData?.role === requiredRole)) {
     return <>{children}</>;
   }
 

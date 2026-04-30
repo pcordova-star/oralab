@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Activity, LogIn, UserPlus, Loader2 } from "lucide-react";
+import { Activity, LogIn, UserPlus, Loader2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { doc, getDoc } from "firebase/firestore";
 
@@ -29,6 +28,17 @@ export default function LoginPage() {
     async function handleRedirect() {
       if (user && db) {
         setIsPending(true);
+        
+        // Caso especial: Super Admin
+        if (user.email === "control@pcgoperacion.com") {
+          toast({
+            title: "Acceso Administrador",
+            description: "Bienvenido al centro de control global de OralabFlow.",
+          });
+          router.replace("/reception");
+          return;
+        }
+
         try {
           const userRef = doc(db, "users", user.uid);
           const userSnap = await getDoc(userRef);
@@ -42,7 +52,6 @@ export default function LoginPage() {
               description: `Bienvenido(a), ${userData.fullName || 'Usuario'}.`,
             });
             
-            // Usamos replace para limpiar el historial
             if (role === "receptionist") {
               router.replace("/reception");
             } else if (role === "teens") {
@@ -51,7 +60,8 @@ export default function LoginPage() {
               router.replace("/");
             }
           } else {
-            router.replace("/");
+            // Si el documento no existe pero el mail no es admin, algo salió mal
+            setIsPending(false);
           }
         } catch (error) {
           console.error("Error al obtener el rol:", error);
@@ -70,7 +80,6 @@ export default function LoginPage() {
     setIsPending(true);
     initiateEmailSignIn(auth, email, password);
     
-    // Timeout de seguridad por si falla la red
     setTimeout(() => {
       if (!user) {
         setIsPending(false);

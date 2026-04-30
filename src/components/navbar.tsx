@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Activity, Calendar, Users, Home, LogOut } from "lucide-react";
+import { Activity, Calendar, Users, Home, LogOut, ShieldCheck } from "lucide-react";
 import { useUser, useAuth } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
@@ -21,16 +21,25 @@ export function Navbar() {
     }
   };
 
-  // Si el usuario es Staff, solo mostramos los paneles de gestión
-  const navItems = user 
-    ? [
-        { href: "/reception", label: "Recepción", icon: Users },
-        { href: "/teens", label: "Panel TEENS", icon: Activity },
-      ]
-    : [
-        { href: "/", label: "Inicio", icon: Home },
-        { href: "/booking", label: "Agenda Online", icon: Calendar },
-      ];
+  const isSuperAdmin = user?.email === "control@pcgoperacion.com";
+
+  // Definir items según rol
+  const navItems = [];
+  
+  if (!user) {
+    navItems.push({ href: "/", label: "Inicio", icon: Home });
+    navItems.push({ href: "/booking", label: "Agenda Online", icon: Calendar });
+  } else {
+    if (isSuperAdmin) {
+      navItems.push({ href: "/reception", label: "Recepción", icon: Users });
+      navItems.push({ href: "/teens", label: "Panel TEENS", icon: Activity });
+    } else {
+      // Determinar basado en la ruta actual o idealmente en el rol del documento
+      // Para simplificar mostramos ambos si es staff, AuthGuard protegerá el acceso
+      navItems.push({ href: "/reception", label: "Recepción", icon: Users });
+      navItems.push({ href: "/teens", label: "Panel TEENS", icon: Activity });
+    }
+  }
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
@@ -69,7 +78,10 @@ export function Navbar() {
             {user && (
               <div className="flex items-center gap-4">
                 <div className="hidden lg:flex flex-col items-end text-right">
-                  <span className="text-xs font-bold text-primary uppercase">Personal Oralab</span>
+                  <span className="text-xs font-bold text-primary uppercase flex items-center gap-1">
+                    {isSuperAdmin && <ShieldCheck className="h-3 w-3 text-secondary" />}
+                    {isSuperAdmin ? "Super Admin" : "Personal Oralab"}
+                  </span>
                   <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{user.email}</span>
                 </div>
                 <Button 
