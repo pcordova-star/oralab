@@ -1,18 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Activity, Calendar, Users, Home, Settings } from "lucide-react";
+import { Activity, Calendar, Users, Home, LogOut, User } from "lucide-react";
+import { useUser, useAuth } from "@/firebase";
+import { Button } from "@/components/ui/button";
+import { signOut } from "firebase/auth";
 
 export function Navbar() {
   const pathname = usePathname();
+  const { user } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      router.push("/");
+    }
+  };
 
   const navItems = [
     { href: "/", label: "Web", icon: Home },
     { href: "/booking", label: "Agenda Online", icon: Calendar },
-    { href: "/reception", label: "Recepción", icon: Users },
-    { href: "/teens", label: "Panel TEENS", icon: Activity },
+    ...(user ? [
+      { href: "/reception", label: "Recepción", icon: Users },
+      { href: "/teens", label: "Panel TEENS", icon: Activity },
+    ] : []),
   ];
 
   return (
@@ -20,12 +35,14 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-primary p-1.5 rounded-lg">
-              <Activity className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-xl font-bold text-primary tracking-tight">
-              Oralab<span className="text-secondary">Flow</span>
-            </span>
+            <Link href="/" className="flex items-center gap-2">
+              <div className="bg-primary p-1.5 rounded-lg">
+                <Activity className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-xl font-bold text-primary tracking-tight">
+                Oralab<span className="text-secondary">Flow</span>
+              </span>
+            </Link>
           </div>
           
           <div className="hidden md:flex items-center gap-1">
@@ -47,9 +64,28 @@ export function Navbar() {
           </div>
           
           <div className="flex items-center gap-2">
-            <button className="p-2 text-muted-foreground hover:bg-muted rounded-full">
-              <Settings className="h-5 w-5" />
-            </button>
+            {user ? (
+              <div className="flex items-center gap-4">
+                <div className="hidden lg:flex flex-col items-end text-right">
+                  <span className="text-xs font-bold text-primary uppercase">Personal Oralab</span>
+                  <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{user.email}</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full hover:bg-red-50 hover:text-red-600"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </div>
+            ) : (
+              <Button variant="ghost" className="rounded-full gap-2" asChild>
+                <Link href="/login">
+                  <User className="h-4 w-4" /> Acceso Staff
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
