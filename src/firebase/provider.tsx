@@ -106,7 +106,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
 /**
  * Hook to access core Firebase services and user authentication state.
- * Returns null if services are not available yet.
+ * Returns null if services are not available yet or context is missing.
  */
 export const useFirebase = (): FirebaseServicesAndUser | null => {
   const context = useContext(FirebaseContext);
@@ -125,19 +125,19 @@ export const useFirebase = (): FirebaseServicesAndUser | null => {
   };
 };
 
-/** Hook to access Firebase Auth instance. Safe for use outside Provider. */
+/** Hook to access Firebase Auth instance. Safe for use outside Provider or during SSR. */
 export const useAuth = (): Auth | null => {
   const context = useContext(FirebaseContext);
   return context?.auth || null;
 };
 
-/** Hook to access Firestore instance. Safe for use outside Provider. */
+/** Hook to access Firestore instance. Safe for use outside Provider or during SSR. */
 export const useFirestore = (): Firestore | null => {
   const context = useContext(FirebaseContext);
   return context?.firestore || null;
 };
 
-/** Hook to access Firebase App instance. Safe for use outside Provider. */
+/** Hook to access Firebase App instance. Safe for use outside Provider or during SSR. */
 export const useFirebaseApp = (): FirebaseApp | null => {
   const context = useContext(FirebaseContext);
   return context?.firebaseApp || null;
@@ -157,7 +157,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
 
 /**
  * Hook specifically for accessing the authenticated user's state.
- * Safe for SSR and initial load. Does not throw if context is missing.
+ * Safe for SSR and initial load. Returns loading state if context is missing.
  */
 export const useUser = (): UserHookResult => {
   const context = useContext(FirebaseContext);
