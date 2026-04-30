@@ -26,10 +26,10 @@ export default function BookingPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // Generar bloques de tiempo cada 15 minutos de 08:00 a 18:00
+  // Generar bloques de tiempo cada 15 minutos de 09:00 a 18:00
   const timeSlots = useMemo(() => {
     const slots = [];
-    for (let hour = 8; hour <= 18; hour++) {
+    for (let hour = 9; hour <= 18; hour++) {
       for (let min = 0; min < 60; min += 15) {
         if (hour === 18 && min > 0) break;
         const h = hour.toString().padStart(2, '0');
