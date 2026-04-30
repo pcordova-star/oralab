@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Activity, Calendar, Users, Home, LogOut, User } from "lucide-react";
+import { Activity, Calendar, Users, Home, LogOut } from "lucide-react";
 import { useUser, useAuth } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
@@ -64,7 +64,7 @@ export function Navbar() {
           </div>
           
           <div className="flex items-center gap-2">
-            {user ? (
+            {user && (
               <div className="flex items-center gap-4">
                 <div className="hidden lg:flex flex-col items-end text-right">
                   <span className="text-xs font-bold text-primary uppercase">Personal Oralab</span>
@@ -79,12 +79,6 @@ export function Navbar() {
                   <LogOut className="h-5 w-5" />
                 </Button>
               </div>
-            ) : (
-              <Button variant="ghost" className="rounded-full gap-2" asChild>
-                <Link href="/login">
-                  <User className="h-4 w-4" /> Acceso Staff
-                </Link>
-              </Button>
             )}
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Activity, Clock, CheckCircle2, ArrowRight } from "lucide-react";
+import { Activity, Clock, CheckCircle2, ArrowRight, Lock } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -115,13 +115,20 @@ export default function HomePage() {
               Laboratorio clínico especializado en diagnósticos funcionales.
             </p>
           </div>
-          <div className="flex gap-8">
-            <Link href="#" className="hover:underline">Privacidad</Link>
-            <Link href="#" className="hover:underline">Contacto</Link>
-            <Link href="/booking" className="hover:underline">Agenda</Link>
-          </div>
-          <div className="text-primary-foreground/70 text-sm">
-            © 2024 Oralab Clinical Lab. Todos los derechos reservados.
+          <div className="flex flex-col items-center md:items-end gap-4">
+            <div className="flex gap-8">
+              <Link href="#" className="hover:underline">Privacidad</Link>
+              <Link href="#" className="hover:underline">Contacto</Link>
+              <Link href="/booking" className="hover:underline">Agenda</Link>
+            </div>
+            <div className="flex items-center gap-4">
+               <div className="text-primary-foreground/70 text-sm">
+                © 2024 Oralab Clinical Lab. Todos los derechos reservados.
+              </div>
+              <Link href="/login" className="text-white/20 hover:text-white/60 transition-colors">
+                <Lock className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
