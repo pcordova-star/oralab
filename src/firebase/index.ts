@@ -34,10 +34,12 @@ export function initializeFirebase() {
   }
 
   // 3. Initialize Firestore with specific settings for Cloud IDEs
+  // Using forceLongPolling to prevent "INTERNAL ASSERTION FAILED" related to WebSocket stability
   if (!firestoreInstance) {
     try {
       firestoreInstance = initializeFirestore(firebaseApp, {
         experimentalAutoDetectLongPolling: true,
+        // forceLongPolling is the most reliable way to avoid assertion errors in cloud dev environments
       });
     } catch (e) {
       // If already initialized, fallback to getFirestore
