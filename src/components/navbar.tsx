@@ -1,9 +1,10 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Activity, Calendar, Users, Home, LogOut, ShieldCheck } from "lucide-react";
+import { Activity, Calendar, Users, Home, LogOut, LogIn } from "lucide-react";
 import { useUser, useAuth } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
@@ -21,32 +22,20 @@ export function Navbar() {
     }
   };
 
-  const isSuperAdmin = user?.email === "control@pcgoperacion.com";
-
-  // Definir items según rol
-  const navItems = [];
-  
-  if (!user) {
-    navItems.push({ href: "/", label: "Inicio", icon: Home });
-    navItems.push({ href: "/booking", label: "Agenda Online", icon: Calendar });
-  } else {
-    if (isSuperAdmin) {
-      navItems.push({ href: "/reception", label: "Recepción", icon: Users });
-      navItems.push({ href: "/teens", label: "Panel TEENS", icon: Activity });
-    } else {
-      // Determinar basado en la ruta actual o idealmente en el rol del documento
-      // Para simplificar mostramos ambos si es staff, AuthGuard protegerá el acceso
-      navItems.push({ href: "/reception", label: "Recepción", icon: Users });
-      navItems.push({ href: "/teens", label: "Panel TEENS", icon: Activity });
-    }
-  }
+  // En modo desarrollo (auth desactivado), mostramos todos los items para fácil acceso
+  const navItems = [
+    { href: "/", label: "Inicio", icon: Home },
+    { href: "/booking", label: "Agenda", icon: Calendar },
+    { href: "/reception", label: "Recepción", icon: Users },
+    { href: "/teens", label: "TEENS", icon: Activity },
+  ];
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <Link href={user ? "/reception" : "/"} className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
               <div className="bg-primary p-1.5 rounded-lg">
                 <Activity className="h-6 w-6 text-white" />
               </div>
@@ -75,13 +64,10 @@ export function Navbar() {
           </div>
           
           <div className="flex items-center gap-2">
-            {user && (
+            {user ? (
               <div className="flex items-center gap-4">
                 <div className="hidden lg:flex flex-col items-end text-right">
-                  <span className="text-xs font-bold text-primary uppercase flex items-center gap-1">
-                    {isSuperAdmin && <ShieldCheck className="h-3 w-3 text-secondary" />}
-                    {isSuperAdmin ? "Super Admin" : "Personal Oralab"}
-                  </span>
+                  <span className="text-xs font-bold text-primary uppercase">Modo Abierto</span>
                   <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{user.email}</span>
                 </div>
                 <Button 
@@ -93,6 +79,12 @@ export function Navbar() {
                   <LogOut className="h-5 w-5" />
                 </Button>
               </div>
+            ) : (
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/login">
+                  <LogIn className="mr-2 h-4 w-4" /> Login Staff
+                </Link>
+              </Button>
             )}
           </div>
         </div>

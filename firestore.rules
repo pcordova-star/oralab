@@ -2,82 +2,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * CORE PHILOSOPHY:
-     * Role-Based Access Control (RBAC) optimized for clinical operations.
-     * Hardcoded Super Admin bypass for control@pcgoperacion.com
-     */
-
-    // --- Helper Functions ---
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isSuperAdmin() {
-      return isSignedIn() && (request.auth.token.email == "control@pcgoperacion.com");
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // RBAC check using exists() for Authorization Independence
-    function isReceptionist() {
-      return isSuperAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_receptionist/$(request.auth.uid)));
-    }
-
-    function isTeens() {
-      return isSuperAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_teens/$(request.auth.uid)));
-    }
-
-    function isStaff() {
-      return isReceptionist() || isTeens();
-    }
-
-    // --- Collection Rules ---
-
-    match /users/{userId} {
-      allow get: if isSignedIn() && (isOwner(userId) || isStaff());
-      allow list: if isStaff();
-      allow create, update: if isOwner(userId) || isSuperAdmin();
-      allow delete: if isSuperAdmin();
-    }
-
-    match /roles_receptionist/{userId} {
-      // Permite que el dueño cree su propio marcador para asegurar su acceso en cualquier momento
-      allow get, create, update: if isOwner(userId) || isSuperAdmin();
-      allow list: if isSuperAdmin();
-    }
-
-    match /roles_teens/{userId} {
-      // Permite que el dueño cree su propio marcador para asegurar su acceso en cualquier momento
-      allow get, create, update: if isOwner(userId) || isSuperAdmin();
-      allow list: if isSuperAdmin();
-    }
-
-    match /patients/{patientId} {
-      allow get, list: if isStaff();
-      allow create: if isSignedIn();
-      allow update, delete: if isStaff();
-    }
-
-    match /protocols/{protocolId} {
-      allow get, list: if isStaff();
-      allow create, update, delete: if isSuperAdmin();
-    }
-
-    match /appointments/{appointmentId} {
-      allow get, list: if isStaff();
-      allow create: if isSignedIn();
-      allow update, delete: if isStaff();
-    }
-
-    match /exam_sessions/{examSessionId} {
-      allow get, list: if isStaff();
-      allow create: if isTeens() || isSuperAdmin();
-      allow update, delete: if (isTeens() || isSuperAdmin());
+    // DESACTIVADO TEMPORALMENTE: Permite acceso total para desarrollo
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
