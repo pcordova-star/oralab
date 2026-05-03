@@ -148,8 +148,13 @@ function ActiveExamCard({ session }: { session: any }) {
 }
 
 function TeensContent() {
+  const [mounted, setMounted] = useState(false);
   const db = useFirestore();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const waitingQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -184,6 +189,15 @@ function TeensContent() {
     }
   };
 
+  // Evitar desajustes de hidratación al no renderizar contenido dependiente de Firebase en el servidor
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-10 w-10 animate-spin text-primary/20" />
+      </div>
+    );
+  }
+
   return (
     <div className="grid lg:grid-cols-4 gap-8">
       <div className="lg:col-span-1 space-y-6">
@@ -191,7 +205,7 @@ function TeensContent() {
           <Clock className="h-5 w-5" /> Sala de Espera ({waitingPatients?.length || 0})
         </h2>
         {loadingWaiting ? (
-          <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+          <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : !waitingPatients || waitingPatients.length === 0 ? (
           <Card className="rounded-2xl border-dashed bg-muted/20">
             <CardContent className="p-6 text-center text-xs text-muted-foreground">Sin pacientes en espera.</CardContent>
@@ -218,7 +232,7 @@ function TeensContent() {
           <Activity className="h-5 w-5" /> Estaciones de Test Activas ({activeSessions?.length || 0})
         </h2>
         {loadingSessions ? (
-          <div className="flex justify-center p-12"><Loader2 className="h-10 w-10 animate-spin" /></div>
+          <div className="flex justify-center p-12"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>
         ) : !activeSessions || activeSessions.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed text-center p-8">
             <Activity className="h-12 w-12 text-muted-foreground/30 mb-4" />

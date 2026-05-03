@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,11 +20,16 @@ import { es } from "date-fns/locale";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 function ReceptionContent() {
+  const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState("");
   const [prepInstructions, setPrepInstructions] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const db = useFirestore();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const appointmentsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -63,6 +68,14 @@ function ReceptionContent() {
     a.patientName?.toLowerCase().includes(search.toLowerCase()) && 
     (a.status === 'scheduled' || a.status === 'waiting')
   );
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-10 w-10 animate-spin text-primary/20" />
+      </div>
+    );
+  }
 
   return (
     <>
