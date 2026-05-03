@@ -2,7 +2,7 @@
 "use client";
 
 /**
- * MODO DESARROLLO: Desactivado para permitir navegación libre en páginas públicas.
+ * MODO ABIERTO: Redirección desactivada para permitir navegación libre.
  */
 export function StaffRedirect() {
   return null;

@@ -9,7 +9,8 @@ interface AuthGuardProps {
 }
 
 /**
- * MODO DESARROLLO: Pasarela que permite el acceso sin verificación de rol.
+ * MODO ABIERTO: Este componente ahora actúa como una pasarela simple.
+ * Ignora el rol requerido y renderiza el contenido directamente.
  */
 export function AuthGuard({ children }: AuthGuardProps) {
   return <>{children}</>;

@@ -2,7 +2,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // DESACTIVADO TEMPORALMENTE: Permite acceso total para desarrollo
+    // APERTURA TOTAL PARA DESARROLLO
+    // Permite que cualquier operación de lectura o escritura sea exitosa sin importar el usuario.
     match /{document=**} {
       allow read, write: if true;
     }

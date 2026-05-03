@@ -22,7 +22,7 @@ export function Navbar() {
     }
   };
 
-  // En modo desarrollo (auth desactivado), mostramos todos los items para fácil acceso
+  // En modo abierto, todos los ítems de navegación están siempre visibles
   const navItems = [
     { href: "/", label: "Inicio", icon: Home },
     { href: "/booking", label: "Agenda", icon: Calendar },
@@ -67,7 +67,7 @@ export function Navbar() {
             {user ? (
               <div className="flex items-center gap-4">
                 <div className="hidden lg:flex flex-col items-end text-right">
-                  <span className="text-xs font-bold text-primary uppercase">Modo Abierto</span>
+                  <span className="text-xs font-bold text-green-600 uppercase">Acceso Libre</span>
                   <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{user.email}</span>
                 </div>
                 <Button 
