@@ -9,8 +9,8 @@ interface AuthGuardProps {
 }
 
 /**
- * MODO ABIERTO: Este componente ahora actúa como una pasarela simple.
- * Ignora el rol requerido y renderiza el contenido directamente.
+ * MODO ABIERTO: Este componente actúa como una pasarela simple.
+ * Ignora el rol requerido y renderiza el contenido directamente para facilitar el desarrollo.
  */
 export function AuthGuard({ children }: AuthGuardProps) {
   return <>{children}</>;

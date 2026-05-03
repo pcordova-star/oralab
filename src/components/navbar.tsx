@@ -22,7 +22,7 @@ export function Navbar() {
     }
   };
 
-  // En modo abierto, todos los ítems de navegación están siempre visibles
+  // Navegación siempre visible en modo desarrollo/abierto
   const navItems = [
     { href: "/", label: "Inicio", icon: Home },
     { href: "/booking", label: "Agenda", icon: Calendar },
@@ -65,24 +65,19 @@ export function Navbar() {
           
           <div className="flex items-center gap-2">
             {user ? (
-              <div className="flex items-center gap-4">
-                <div className="hidden lg:flex flex-col items-end text-right">
-                  <span className="text-xs font-bold text-green-600 uppercase">Acceso Libre</span>
-                  <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{user.email}</span>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-full hover:bg-red-50 hover:text-red-600"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-5 w-5" />
-                </Button>
-              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full hover:bg-red-50 hover:text-red-600"
+                onClick={handleLogout}
+                title="Cerrar Sesión"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
             ) : (
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/login">
-                  <LogIn className="mr-2 h-4 w-4" /> Login Staff
+                  <LogIn className="mr-2 h-4 w-4" /> Acceso Staff
                 </Link>
               </Button>
             )}

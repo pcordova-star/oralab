@@ -2,8 +2,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // APERTURA TOTAL PARA DESARROLLO
-    // Permite que cualquier operación de lectura o escritura sea exitosa sin importar el usuario.
+    // APERTURA TOTAL PARA DESARROLLO (MODO ABIERTO)
+    // Se permite cualquier operación de lectura o escritura sin restricciones de autenticación.
+    // Esto soluciona los errores de "Missing or insufficient permissions" temporalmente.
     match /{document=**} {
       allow read, write: if true;
     }
