@@ -3,7 +3,7 @@
   "entities": {
     "Booking": {
       "title": "Booking",
-      "description": "Representa una solicitud de reserva de examen por parte de un paciente.",
+      "description": "Representa una solicitud de reserva de examen o retiro de kit.",
       "type": "object",
       "properties": {
         "firstName": { "type": "string" },
@@ -40,7 +40,7 @@
   "firestore": {
     "/bookings/{bookingId}": {
       "schema": "Booking",
-      "description": "Colección de solicitudes de reserva de exámenes."
+      "description": "Colección de solicitudes de reserva gestionadas por el administrador."
     }
   }
 }
