@@ -15,11 +15,14 @@ import {
   Stethoscope,
   MapPin,
   Package,
-  Home
+  Home,
+  MessageCircle
 } from "lucide-react";
 import Link from "next/link";
 
 export default function HowItWorksPage() {
+  const whatsappUrl = "https://wa.me/56936850468";
+
   const steps = [
     {
       title: "1. Preparación previa",
@@ -187,11 +190,12 @@ export default function HowItWorksPage() {
               Habla con tu gastroenterólogo y solicita el test de aire espirado. Estamos aquí para ayudarte a recuperar tu bienestar digestivo.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/">
-                <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold bg-secondary hover:bg-secondary/90 transition-all">
-                  Contactar ahora
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold bg-[#25D366] hover:bg-[#128C7E] transition-all">
+                  <MessageCircle className="h-6 w-6 mr-2" />
+                  Contactar por WhatsApp
                 </Button>
-              </Link>
+              </a>
               <Link href="/">
                 <Button variant="outline" size="lg" className="rounded-full h-14 px-8 text-lg font-bold border-white text-white hover:bg-white/10">
                   Volver al inicio

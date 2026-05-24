@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
+import { WhatsAppFAB } from '@/components/whatsapp-fab';
 
 export const metadata: Metadata = {
   title: 'Oralab - Salud Digestiva Avanzada',
@@ -24,6 +25,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           {children}
           <Toaster />
+          <WhatsAppFAB />
         </FirebaseClientProvider>
       </body>
     </html>

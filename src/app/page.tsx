@@ -22,11 +22,13 @@ import {
   CalendarDays,
   MapPin,
   Home,
-  Package
+  Package,
+  MessageCircle
 } from "lucide-react";
 
 export default function HomePage() {
   const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Apoquindo+3992+oficina+605+Las+Condes+Santiago+Chile";
+  const whatsappUrl = "https://wa.me/56936850468";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -272,6 +274,14 @@ export default function HomePage() {
               <p className="text-primary-foreground/70 max-w-md leading-relaxed">
                 Llevamos la ciencia de vanguardia Sunvou al servicio de los pacientes en Chile. Porque entender lo que pasa en tu interior es el primer paso para vivir mejor.
               </p>
+              <div className="mt-6">
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                  <Button className="bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-full">
+                    <MessageCircle className="h-5 w-5 mr-2" />
+                    WhatsApp +56 9 3685 0468
+                  </Button>
+                </a>
+              </div>
             </div>
             <div>
               <h5 className="font-bold mb-6 text-secondary">Ubicación</h5>
