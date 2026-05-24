@@ -1,13 +1,40 @@
 
 {
-  "entities": {},
+  "entities": {
+    "Booking": {
+      "title": "Booking",
+      "description": "Representa una solicitud de reserva de examen por parte de un paciente.",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastNameFather": { "type": "string" },
+        "lastNameMother": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "birthDate": { "type": "string", "format": "date" },
+        "diagnosis": { "type": "string" },
+        "weight": { "type": "string" },
+        "doctor": { "type": "string" },
+        "country": { "type": "string" },
+        "region": { "type": "string" },
+        "commune": { "type": "string" },
+        "sex": { "type": "string", "enum": ["not_specified", "male", "female"] },
+        "status": { "type": "string", "enum": ["pending", "contacted", "scheduled", "completed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["firstName", "lastNameFather", "email", "phone", "status"]
+    }
+  },
   "auth": {
     "providers": [
       "anonymous"
     ]
   },
   "firestore": {
-    "structure": [],
-    "reasoning": "Se ha simplificado la estructura del backend para una aplicación puramente informativa (Landing Page). Se eliminan las entidades de pacientes, citas y sesiones de examen."
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Colección de solicitudes de reserva de exámenes."
+    }
   }
 }

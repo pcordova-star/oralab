@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -28,6 +28,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "@/hooks/use-toast";
 import { ChevronLeft, ClipboardList } from "lucide-react";
 import Link from "next/link";
+import { useFirestore } from "@/firebase";
+import { collection, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const regions = [
   "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
@@ -35,7 +38,6 @@ const regions = [
   "Biobío", "La Araucanía", "Los Ríos", "Los Lagos", "Aysén", "Magallanes"
 ];
 
-// Lista extendida de comunas comunes en Chile (sin duplicados)
 const chileanCommunes = Array.from(new Set([
   "Santiago", "Concepción", "Viña del Mar", "Valparaíso", "Antofagasta", "Temuco", 
   "La Serena", "Rancagua", "Puerto Montt", "Talca", "Arica", "Iquique", 
@@ -88,6 +90,7 @@ type BookingFormValues = z.infer<typeof bookingSchema>;
 
 export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const db = useFirestore();
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
@@ -125,20 +128,55 @@ export default function BookingPage() {
   const years = Array.from({ length: 100 }, (_, i) => (new Date().getFullYear() - i).toString());
 
   function onSubmit(values: BookingFormValues) {
+    if (!db) {
+      toast({
+        variant: "destructive",
+        title: "Error de conexión",
+        description: "No se pudo conectar con el servidor. Inténtalo más tarde.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     const domain = values.emailDomain === 'otro' ? values.customEmailDomain : values.emailDomain;
     const fullEmail = `${values.emailUser}@${domain}`;
     const fullPhone = `+56 9 ${values.phone}`;
+    const birthDate = `${values.birthYear}-${values.birthMonth}-${values.birthDay.padStart(2, '0')}`;
     
-    setTimeout(() => {
-      console.log({ ...values, fullEmail, fullPhone });
-      toast({
-        title: "Solicitud enviada",
-        description: "Nos pondremos en contacto contigo a la brevedad para confirmar tu hora.",
+    const bookingData = {
+      firstName: values.firstName,
+      lastNameFather: values.lastNameFather,
+      lastNameMother: values.lastNameMother,
+      email: fullEmail,
+      phone: fullPhone,
+      address: values.address,
+      birthDate: birthDate,
+      diagnosis: values.diagnosis,
+      weight: values.weight,
+      doctor: values.doctor,
+      country: values.country,
+      region: values.region,
+      commune: values.commune,
+      sex: values.sex,
+      status: "pending",
+      createdAt: serverTimestamp(),
+    };
+
+    const bookingsRef = collection(db, "bookings");
+    
+    addDocumentNonBlocking(bookingsRef, bookingData)
+      .then(() => {
+        toast({
+          title: "Solicitud enviada correctamente",
+          description: "Nos pondremos en contacto contigo a la brevedad para confirmar tu hora.",
+        });
+        setIsSubmitting(false);
+        form.reset();
+      })
+      .catch(() => {
+        setIsSubmitting(false);
+        // El error ya es manejado por el sistema central de errores de Firebase
       });
-      setIsSubmitting(false);
-      form.reset();
-    }, 1500);
   }
 
   return (
