@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Navbar } from "@/components/navbar";
@@ -13,7 +12,8 @@ import {
   ArrowLeft,
   Info,
   Beaker,
-  Stethoscope
+  Stethoscope,
+  MapPin
 } from "lucide-react";
 import Link from "next/link";
 
@@ -89,10 +89,25 @@ export default function HowItWorksPage() {
           </div>
         </section>
 
+        {/* Location Highlight */}
+        <section className="py-12 bg-background border-y border-border">
+          <div className="container mx-auto px-4 text-center">
+            <div className="inline-flex items-center gap-3 bg-white p-6 rounded-2xl shadow-sm border border-secondary/20 max-w-2xl mx-auto">
+              <div className="bg-secondary/10 p-3 rounded-full">
+                <MapPin className="h-8 w-8 text-secondary" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-bold text-primary">Nuestra ubicación única</h3>
+                <p className="text-muted-foreground">Apoquindo 3992, oficina 605, Las Condes (Centro Médico Alcántara, a pasos del metro)</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Why it works Section */}
-        <section className="py-24 bg-background">
+        <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
-            <div className="bg-white rounded-3xl p-8 md:p-16 shadow-sm border border-secondary/10 overflow-hidden relative">
+            <div className="bg-background rounded-3xl p-8 md:p-16 shadow-sm border border-secondary/10 overflow-hidden relative">
               <div className="grid lg:grid-cols-2 gap-16 items-center relative z-10">
                 <div>
                   <h2 className="text-3xl font-bold text-primary mb-6">La ciencia detrás de un soplido</h2>
@@ -153,9 +168,11 @@ export default function HowItWorksPage() {
               Habla con tu gastroenterólogo y solicita el test de aire espirado. Estamos aquí para ayudarte a recuperar tu bienestar digestivo.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold bg-secondary hover:bg-secondary/90 transition-all">
-                Ver centros de atención
-              </Button>
+              <Link href="/">
+                <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold bg-secondary hover:bg-secondary/90 transition-all">
+                  Contactar ahora
+                </Button>
+              </Link>
               <Link href="/">
                 <Button variant="outline" size="lg" className="rounded-full h-14 px-8 text-lg font-bold border-white text-white hover:bg-white/10">
                   Volver al inicio
@@ -168,7 +185,11 @@ export default function HowItWorksPage() {
 
       <footer className="bg-primary/95 text-white py-12 border-t border-white/10">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-primary-foreground/50 text-sm">© 2024 Oralab Clinical Lab. Todos los derechos reservados.</p>
+          <div className="flex flex-col items-center gap-2 mb-4">
+            <MapPin className="h-5 w-5 text-secondary" />
+            <p className="text-sm opacity-80">Apoquindo 3992, oficina 605, Las Condes. Centro Médico Alcántara.</p>
+          </div>
+          <p className="text-primary-foreground/50 text-xs">© 2024 Oralab Clinical Lab. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>

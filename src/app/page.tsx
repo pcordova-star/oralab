@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Navbar } from "@/components/navbar";
@@ -20,7 +19,8 @@ import {
   Heart,
   Stethoscope,
   ClipboardCheck,
-  CalendarDays
+  CalendarDays,
+  MapPin
 } from "lucide-react";
 
 export default function HomePage() {
@@ -43,14 +43,15 @@ export default function HomePage() {
                 Sabemos lo frustrante que es buscar respuestas sin éxito. En <strong>Oralab</strong>, utilizamos una tecnología tan simple como respirar para descubrir qué está pasando realmente en tu interior. 
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold shadow-lg bg-primary hover:bg-primary/90 transition-all hover:scale-105">
-                  Quiero saber más <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
                 <Link href="/how-it-works">
-                  <Button variant="outline" size="lg" className="rounded-full h-14 px-8 text-lg font-bold border-2">
-                    ¿Cómo funciona el test?
+                  <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold shadow-lg bg-primary hover:bg-primary/90 transition-all hover:scale-105">
+                    ¿Cómo funciona el test? <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
+                <div className="flex items-center gap-2 text-primary font-medium px-4">
+                  <MapPin className="h-5 w-5 text-secondary" />
+                  <span className="text-sm">Las Condes, RM</span>
+                </div>
               </div>
             </div>
           </div>
@@ -225,7 +226,7 @@ export default function HomePage() {
                   <CalendarDays className="h-8 w-8 text-secondary" />
                 </div>
                 <h4 className="text-xl font-bold text-primary mb-3">2. Agenda tu Test</h4>
-                <p className="text-muted-foreground text-sm">Contáctanos para programar tu cita. El examen es rápido, cómodo y sin dolor.</p>
+                <p className="text-muted-foreground text-sm">Contáctanos para programar tu cita en nuestra consulta de Las Condes.</p>
               </div>
 
               <div className="flex flex-col items-center text-center group">
@@ -255,18 +256,17 @@ export default function HomePage() {
               </p>
             </div>
             <div>
-              <h5 className="font-bold mb-6 text-secondary">Nuestra Ciencia</h5>
+              <h5 className="font-bold mb-6 text-secondary">Ubicación</h5>
               <ul className="space-y-4 text-primary-foreground/70 text-sm">
-                <li>Tecnología Nano Coulomb</li>
-                <li>Detección Triple Gas</li>
-                <li>Consenso de Roma</li>
-                <li>Certificaciones IVD</li>
+                <li className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
+                  <span>Apoquindo 3992, oficina 605, Las Condes<br />Centro Médico Alcántara (a pasos del metro)</span>
+                </li>
               </ul>
             </div>
             <div>
               <h5 className="font-bold mb-6 text-secondary">Contacto</h5>
               <ul className="space-y-4 text-primary-foreground/70 text-sm">
-                <li>Centro de Ayuda</li>
                 <li>Preguntas Frecuentes</li>
                 <li>Privacidad de Datos</li>
                 <li>Convenios Médicos</li>
