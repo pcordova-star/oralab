@@ -20,7 +20,7 @@
         "region": { "type": "string" },
         "commune": { "type": "string" },
         "sex": { "type": "string", "enum": ["not_specified", "male", "female"] },
-        "examType": { "type": "string", "enum": ["SIBO", "HP", "Lactulosa", "Fructosa", "Lactosa"] },
+        "examType": { "type": "string", "enum": ["Lactulosa", "Fructosa", "Lactosa"] },
         "scheduledDate": { "type": "string", "format": "date" },
         "scheduledTime": { "type": "string" },
         "status": { "type": "string", "enum": ["pending", "contacted", "scheduled", "completed"] },

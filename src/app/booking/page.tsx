@@ -26,7 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ClipboardList, CalendarIcon, Clock, Beaker } from "lucide-react";
+import { ChevronLeft, ClipboardList, CalendarIcon, Clock } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -69,7 +69,7 @@ for (let hour = 8; hour <= 12; hour++) {
 }
 
 const bookingSchema = z.object({
-  examType: z.enum(["SIBO", "HP", "Lactulosa", "Fructosa", "Lactosa"], { required_error: "Seleccione tipo de examen" }),
+  examType: z.enum(["Lactulosa", "Fructosa", "Lactosa"], { required_error: "Seleccione tipo de examen" }),
   scheduledDate: z.date({ required_error: "Seleccione una fecha" }),
   scheduledTime: z.string().min(1, "Seleccione una hora"),
   firstName: z.string().min(2, "Requerido"),
@@ -101,7 +101,7 @@ export default function BookingPage() {
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      examType: "SIBO",
+      examType: "Lactulosa",
       scheduledTime: "",
       firstName: "",
       lastNameFather: "",
@@ -229,8 +229,6 @@ export default function BookingPage() {
                               <SelectItem value="Lactulosa">Test Aire Espirado Lactulosa</SelectItem>
                               <SelectItem value="Fructosa">Test Aire Espirado Fructosa</SelectItem>
                               <SelectItem value="Lactosa">Test Aire Espirado Lactosa</SelectItem>
-                              <SelectItem value="SIBO">Test Aire Espirado SIBO (General)</SelectItem>
-                              <SelectItem value="HP">Test Aire Espirado H. Pylori</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
