@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Navbar } from "@/components/navbar";
@@ -6,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { 
   Activity, 
   Wind, 
-  CheckCircle2, 
   ArrowRight, 
   Microscope, 
   ShieldCheck, 
@@ -15,10 +13,12 @@ import {
   AlertCircle,
   Globe,
   Award,
-  Users,
-  Heart,
   Search,
-  CheckCircle
+  CheckCircle,
+  Heart,
+  Stethoscope,
+  ClipboardCheck,
+  CalendarDays
 } from "lucide-react";
 
 export default function HomePage() {
@@ -38,7 +38,7 @@ export default function HomePage() {
                 ¿Vives con hinchazón o molestias y <span className="text-secondary">no sabes por qué?</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
-                Sabemos lo frustrante que es buscar respuestas sin éxito. En <strong>Oralab</strong>, utilizamos una prueba tan simple como respirar para descubrir qué está pasando realmente en tu interior. 
+                Sabemos lo frustrante que es buscar respuestas sin éxito. En <strong>Oralab</strong>, utilizamos una tecnología tan simple como respirar para descubrir qué está pasando realmente en tu interior. 
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold shadow-lg bg-primary hover:bg-primary/90 transition-all hover:scale-105">
@@ -90,6 +90,27 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Request to Specialist Section - NEW IMPORTANT ADDITION */}
+        <section className="py-12 bg-secondary/5 border-y border-secondary/10">
+          <div className="container mx-auto px-4">
+            <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-secondary/20 flex flex-col md:flex-row items-center gap-8">
+              <div className="bg-secondary/10 p-6 rounded-full">
+                <Stethoscope className="h-12 w-12 text-secondary" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl font-bold text-primary mb-2">Da el primer paso con tu médico</h3>
+                <p className="text-lg text-muted-foreground mb-4">
+                  Si te identificas con estos síntomas, <strong>solicita a tu especialista o gastroenterólogo</strong> el test de aire espirado de tecnología Sunvou. Un diagnóstico preciso es la clave para un tratamiento efectivo.
+                </p>
+                <div className="flex items-center justify-center md:justify-start gap-2 text-secondary font-bold">
+                  <ClipboardCheck className="h-5 w-5" />
+                  <span>Diagnóstico certificado por especialistas</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* High-Tech Authority Section */}
         <section className="py-24 bg-primary text-white overflow-hidden relative">
           <div className="container mx-auto px-4 relative z-10">
@@ -119,7 +140,6 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         </section>
 
@@ -148,30 +168,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Clinical Stats */}
-        <section className="py-16 bg-white border-y">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              <div>
-                <div className="text-4xl font-extrabold text-primary mb-2">70+</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Patentes Globales</div>
-              </div>
-              <div>
-                <div className="text-4xl font-extrabold text-primary mb-2">400+</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Estudios Científicos</div>
-              </div>
-              <div>
-                <div className="text-4xl font-extrabold text-primary mb-2">12M+</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Personas Ayudadas</div>
-              </div>
-              <div>
-                <div className="text-4xl font-extrabold text-primary mb-2">99%</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Satisfacción Clínica</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Symptoms Icons Grid */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
@@ -195,6 +191,44 @@ export default function HomePage() {
                   <span className="text-sm font-semibold text-primary">{item.name}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Next Steps Section */}
+        <section className="py-24 bg-primary/5">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-primary mb-4">Tu camino hacia el alivio</h2>
+              <p className="text-muted-foreground">Tres pasos simples para volver a sentirte bien.</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-12 relative">
+              <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-0.5 bg-dashed border-t-2 border-dashed border-primary/20 -z-10" />
+              
+              <div className="flex flex-col items-center text-center group">
+                <div className="w-16 h-16 rounded-full bg-white border-4 border-secondary flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-110">
+                  <ClipboardCheck className="h-8 w-8 text-secondary" />
+                </div>
+                <h4 className="text-xl font-bold text-primary mb-3">1. Consulta Especializada</h4>
+                <p className="text-muted-foreground text-sm">Habla con tu gastroenterólogo sobre tus síntomas y solicita el Test Sunvou de Oralab.</p>
+              </div>
+
+              <div className="flex flex-col items-center text-center group">
+                <div className="w-16 h-16 rounded-full bg-white border-4 border-secondary flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-110">
+                  <CalendarDays className="h-8 w-8 text-secondary" />
+                </div>
+                <h4 className="text-xl font-bold text-primary mb-3">2. Agenda tu Test</h4>
+                <p className="text-muted-foreground text-sm">Contáctanos para programar tu cita. El examen es rápido, cómodo y sin dolor.</p>
+              </div>
+
+              <div className="flex flex-col items-center text-center group">
+                <div className="w-16 h-16 rounded-full bg-white border-4 border-secondary flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-110">
+                  <Activity className="h-8 w-8 text-secondary" />
+                </div>
+                <h4 className="text-xl font-bold text-primary mb-3">3. Resultados y Tratamiento</h4>
+                <p className="text-muted-foreground text-sm">Recibe tus resultados y llévalos a tu especialista para iniciar el tratamiento adecuado.</p>
+              </div>
             </div>
           </div>
         </section>
