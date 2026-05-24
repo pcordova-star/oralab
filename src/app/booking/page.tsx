@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Navbar } from "@/components/navbar";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -29,16 +29,31 @@ import { toast } from "@/hooks/use-toast";
 import { ChevronLeft, ClipboardList } from "lucide-react";
 import Link from "next/link";
 
+const regions = [
+  "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
+  "Valparaíso", "Metropolitana de Santiago", "O'Higgins", "Maule", "Ñuble", 
+  "Biobío", "La Araucanía", "Los Ríos", "Los Lagos", "Aysén", "Magallanes"
+];
+
+const commonCommunes = [
+  "Las Condes", "Providencia", "Santiago", "Vitacura", "Lo Barnechea", 
+  "Ñuñoa", "La Reina", "Maipú", "Puente Alto", "La Florida", 
+  "Viña del Mar", "Valparaíso", "Concepción", "Temuco", "Antofagasta"
+];
+
+const emailDomains = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "icloud.com"];
+
 const bookingSchema = z.object({
   firstName: z.string().min(2, "Requerido"),
   lastNameFather: z.string().min(2, "Requerido"),
   lastNameMother: z.string().min(2, "Requerido"),
-  email: z.string().email("Email inválido"),
-  phone: z.string().min(8, "Teléfono inválido"),
+  emailUser: z.string().min(1, "Requerido"),
+  emailDomain: z.string().min(1, "Seleccione"),
+  phone: z.string().length(8, "Deben ser 8 dígitos"),
   address: z.string().min(5, "Dirección requerida"),
   birthDay: z.string().min(1, "Día"),
   birthMonth: z.string().min(1, "Mes"),
-  birthYear: z.string().min(4, "Año (4 dígitos)"),
+  birthYear: z.string().min(4, "Año"),
   diagnosis: z.string().min(2, "Indique el diagnóstico"),
   weight: z.string().min(1, "Indique peso"),
   doctor: z.string().min(2, "Indique el médico"),
@@ -61,7 +76,8 @@ export default function BookingPage() {
       firstName: "",
       lastNameFather: "",
       lastNameMother: "",
-      email: "",
+      emailUser: "",
+      emailDomain: "gmail.com",
       phone: "",
       address: "",
       birthDay: "",
@@ -77,11 +93,22 @@ export default function BookingPage() {
     },
   });
 
+  const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+  const months = [
+    { v: "01", l: "Enero" }, { v: "02", l: "Febrero" }, { v: "03", l: "Marzo" },
+    { v: "04", l: "Abril" }, { v: "05", l: "Mayo" }, { v: "06", l: "Junio" },
+    { v: "07", l: "Julio" }, { v: "08", l: "Agosto" }, { v: "09", l: "Septiembre" },
+    { v: "10", l: "Octubre" }, { v: "11", l: "Noviembre" }, { v: "12", l: "Diciembre" }
+  ];
+  const years = Array.from({ length: 100 }, (_, i) => (new Date().getFullYear() - i).toString());
+
   function onSubmit(values: BookingFormValues) {
     setIsSubmitting(true);
-    // Simulación de envío
+    const fullEmail = `${values.emailUser}@${values.emailDomain}`;
+    const fullPhone = `+56 9 ${values.phone}`;
+    
     setTimeout(() => {
-      console.log(values);
+      console.log({ ...values, fullEmail, fullPhone });
       toast({
         title: "Solicitud enviada",
         description: "Nos pondremos en contacto contigo a la brevedad para confirmar tu hora.",
@@ -108,7 +135,7 @@ export default function BookingPage() {
               <CardTitle className="text-2xl text-primary font-bold">Reserva tu Examen</CardTitle>
             </div>
             <CardDescription className="text-base italic">
-              Completa el formulario para procesar tu solicitud de hora médica.
+              Completa los datos para coordinar tu cita.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-8">
@@ -120,7 +147,7 @@ export default function BookingPage() {
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Primer Nombre y Segundo Nombre</FormLabel>
+                        <FormLabel>Nombres</FormLabel>
                         <FormControl>
                           <Input placeholder="Ej: Juan Pablo" {...field} />
                         </FormControl>
@@ -159,28 +186,60 @@ export default function BookingPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="nombre@correo.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-2">
+                    <FormLabel>Email</FormLabel>
+                    <div className="flex gap-2 items-center">
+                      <FormField
+                        control={form.control}
+                        name="emailUser"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input placeholder="usuario" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <span className="text-muted-foreground">@</span>
+                      <FormField
+                        control={form.control}
+                        name="emailDomain"
+                        render={({ field }) => (
+                          <FormItem className="w-[140px]">
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {emailDomains.map(d => (
+                                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
                   <FormField
                     control={form.control}
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Teléfono Chile (+56)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="9 1234 5678" {...field} />
-                        </FormControl>
+                        <FormLabel>Teléfono Chile</FormLabel>
+                        <div className="flex gap-2 items-center">
+                          <div className="bg-muted px-3 h-10 flex items-center rounded-md text-sm border font-medium">
+                            +56 9
+                          </div>
+                          <FormControl>
+                            <Input placeholder="12345678" maxLength={8} {...field} />
+                          </FormControl>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -194,7 +253,7 @@ export default function BookingPage() {
                     <FormItem>
                       <FormLabel>Dirección</FormLabel>
                       <FormControl>
-                        <Input placeholder="Calle, número, departamento" {...field} />
+                        <Input placeholder="Calle, número, depto" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -209,9 +268,16 @@ export default function BookingPage() {
                       name="birthDay"
                       render={({ field }) => (
                         <FormItem>
-                          <FormControl>
-                            <Input placeholder="Día" maxLength={2} {...field} />
-                          </FormControl>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Día" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -221,9 +287,16 @@ export default function BookingPage() {
                       name="birthMonth"
                       render={({ field }) => (
                         <FormItem>
-                          <FormControl>
-                            <Input placeholder="Mes" maxLength={2} {...field} />
-                          </FormControl>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Mes" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {months.map(m => <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -233,9 +306,16 @@ export default function BookingPage() {
                       name="birthYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormControl>
-                            <Input placeholder="Año" maxLength={4} {...field} />
-                          </FormControl>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Año" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -264,7 +344,7 @@ export default function BookingPage() {
                       <FormItem>
                         <FormLabel>Peso aproximado (kg)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: 70" {...field} />
+                          <Input type="number" placeholder="Ej: 70" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -279,7 +359,7 @@ export default function BookingPage() {
                     <FormItem>
                       <FormLabel>Médico que emite la orden</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nombre del gastroenterólogo" {...field} />
+                        <Input placeholder="Nombre del médico" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -296,12 +376,12 @@ export default function BookingPage() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecciona País" />
+                              <SelectValue />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="Chile">Chile</SelectItem>
-                            <SelectItem value="Extranjero">Otro</SelectItem>
+                            <SelectItem value="Otro">Otro</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -317,14 +397,11 @@ export default function BookingPage() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecciona Región" />
+                              <SelectValue placeholder="Seleccione" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="RM">Metropolitana</SelectItem>
-                            <SelectItem value="V">Valparaíso</SelectItem>
-                            <SelectItem value="VIII">Biobío</SelectItem>
-                            {/* Simplificado */}
+                            {regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -340,14 +417,11 @@ export default function BookingPage() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecciona Comuna" />
+                              <SelectValue placeholder="Seleccione" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Las Condes">Las Condes</SelectItem>
-                            <SelectItem value="Providencia">Providencia</SelectItem>
-                            <SelectItem value="Santiago">Santiago</SelectItem>
-                            {/* Simplificado */}
+                            {commonCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -366,32 +440,20 @@ export default function BookingPage() {
                         <RadioGroup
                           onValueChange={field.onChange}
                           defaultValue={field.value}
-                          className="flex flex-col space-y-1"
+                          className="flex flex-col space-y-2"
                         >
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="not_specified" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              No especifica
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="male" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              Masculino
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="female" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              Femenino
-                            </FormLabel>
-                          </FormItem>
+                          <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border">
+                            <RadioGroupItem value="not_specified" id="sex-none" />
+                            <label htmlFor="sex-none" className="text-sm font-medium leading-none cursor-pointer flex-1">No especifica</label>
+                          </div>
+                          <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border">
+                            <RadioGroupItem value="male" id="sex-male" />
+                            <label htmlFor="sex-male" className="text-sm font-medium leading-none cursor-pointer flex-1">Masculino</label>
+                          </div>
+                          <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border">
+                            <RadioGroupItem value="female" id="sex-female" />
+                            <label htmlFor="sex-female" className="text-sm font-medium leading-none cursor-pointer flex-1">Femenino</label>
+                          </div>
                         </RadioGroup>
                       </FormControl>
                       <FormMessage />
