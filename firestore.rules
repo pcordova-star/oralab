@@ -1,9 +1,15 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REGLAS DE APERTURA TOTAL - FORZANDO ACTUALIZACIÓN
-    // Timestamp de despliegue: 2026-05-24T20:15:00Z
+    // REGLAS TOTALMENTE ABIERTAS PARA DESARROLLO Y PRODUCCIÓN (ORALAB)
+    // Timestamp de despliegue forzado: 2026-05-24T20:45:00Z
     
+    // Permitir explícitamente el acceso a la colección de reservas
+    match /bookings/{bookingId} {
+      allow read, write, list: if true;
+    }
+
+    // Permitir acceso a cualquier otro documento (Apertura total)
     match /{document=**} {
       allow read, write: if true;
     }
