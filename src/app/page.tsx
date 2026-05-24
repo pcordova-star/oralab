@@ -90,7 +90,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Request to Specialist Section - NEW IMPORTANT ADDITION */}
+        {/* Request to Specialist Section */}
         <section className="py-12 bg-secondary/5 border-y border-secondary/10">
           <div className="container mx-auto px-4">
             <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-secondary/20 flex flex-col md:flex-row items-center gap-8">
@@ -100,7 +100,7 @@ export default function HomePage() {
               <div className="flex-1 text-center md:text-left">
                 <h3 className="text-2xl font-bold text-primary mb-2">Da el primer paso con tu médico</h3>
                 <p className="text-lg text-muted-foreground mb-4">
-                  Si te identificas con estos síntomas, <strong>solicita a tu especialista o gastroenterólogo</strong> el test de aire espirado de tecnología Sunvou. Un diagnóstico preciso es la clave para un tratamiento efectivo.
+                  Realizamos diversos exámenes médicos para evaluar tu sistema digestivo: <strong>Test de Hidrógeno y Metano Espirado con Lactosa, Fructosa y Lactulosa</strong>. Si te identificas con estos síntomas, solicita a tu especialista o gastroenterólogo el test de aire espirado de tecnología Sunvou. Un diagnóstico preciso es la clave para un tratamiento efectivo.
                 </p>
                 <div className="flex items-center justify-center md:justify-start gap-2 text-secondary font-bold">
                   <ClipboardCheck className="h-5 w-5" />
