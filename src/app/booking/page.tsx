@@ -26,7 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -249,7 +249,6 @@ export default function BookingPage() {
     };
 
     try {
-      // Fallback para instrucciones si la IA falla (Quota exhausted)
       let instructions = "";
       try {
         const aiResponse = await generatePrepInstructions({ examType: values.examType });
@@ -296,13 +295,23 @@ export default function BookingPage() {
             <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
               Hemos procesado tu solicitud para el correo <strong>{lastBookingValues?.email}</strong>. Por favor, descarga tu resumen a continuación.
             </p>
+
+            {/* RECORDATORIO DE CUIDADOS */}
+            <div className="bg-muted/30 border border-primary/10 rounded-2xl p-6 text-left mb-8 max-w-xl mx-auto">
+              <h3 className="flex items-center gap-2 font-bold text-primary mb-3">
+                <AlertCircle className="h-5 w-5" /> Recordatorio de Cuidados Previos
+              </h3>
+              <div className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                {prepInstructions}
+              </div>
+            </div>
             
             <div className="flex flex-col gap-4 max-w-sm mx-auto mb-8">
               <Button onClick={downloadPDF} variant="outline" size="lg" className="rounded-full flex items-center gap-2">
                 <Download className="h-5 w-5" /> Descargar Resumen PDF
               </Button>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-green-500" /> Datos guardados correctamente
+                <CheckCircle2 className="h-4 w-4 text-green-500" /> Datos guardados correctamente en sistema
               </div>
             </div>
 
