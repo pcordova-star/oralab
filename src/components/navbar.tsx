@@ -1,12 +1,11 @@
+
 "use client";
 
 import Link from "next/link";
-import { Activity, MessageCircle } from "lucide-react";
+import { Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
-  const whatsappUrl = "https://wa.me/56936850468";
-
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
@@ -26,12 +25,11 @@ export function Navbar() {
             <div className="hidden md:block text-sm font-medium text-muted-foreground italic mr-4">
               Salud Digestiva Avanzada
             </div>
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+            <Link href="/booking">
               <Button variant="secondary" size="sm" className="rounded-full font-bold">
-                <MessageCircle className="h-4 w-4 mr-2" />
                 Agendar
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

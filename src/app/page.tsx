@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Navbar } from "@/components/navbar";
@@ -21,7 +22,6 @@ import {
   ClipboardCheck,
   CalendarDays,
   MapPin,
-  Home,
   Package,
   MessageCircle
 } from "lucide-react";
@@ -247,6 +247,11 @@ export default function HomePage() {
                 </div>
                 <h4 className="text-xl font-bold text-primary mb-3">2. Agenda tu Test</h4>
                 <p className="text-muted-foreground text-sm">Programa tu cita presencial o solicita tu <strong>kit para realizar el test en casa</strong> (ambulatorio).</p>
+                <Link href="/booking" className="mt-4">
+                  <Button variant="outline" size="sm" className="rounded-full">
+                    Agendar ahora
+                  </Button>
+                </Link>
               </div>
 
               <div className="flex flex-col items-center text-center group">
@@ -274,13 +279,18 @@ export default function HomePage() {
               <p className="text-primary-foreground/70 max-w-md leading-relaxed">
                 Llevamos la ciencia de vanguardia Sunvou al servicio de los pacientes en Chile. Porque entender lo que pasa en tu interior es el primer paso para vivir mejor.
               </p>
-              <div className="mt-6">
+              <div className="mt-6 flex flex-wrap gap-4">
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   <Button className="bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-full">
                     <MessageCircle className="h-5 w-5 mr-2" />
-                    WhatsApp +56 9 3685 0468
+                    +56 9 3685 0468
                   </Button>
                 </a>
+                <Link href="/booking">
+                  <Button variant="secondary" className="font-bold rounded-full">
+                    Agendar Examen
+                  </Button>
+                </Link>
               </div>
             </div>
             <div>
