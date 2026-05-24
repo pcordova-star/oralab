@@ -8,6 +8,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebas
 import { collection, query, orderBy, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
   Table, 
@@ -65,8 +66,10 @@ export default function ReceptionPage() {
 
   async function handleLogout() {
     const auth = getAuth();
-    await signOut(auth);
-    router.push("/");
+    if (auth) {
+      await signOut(auth);
+      router.push("/");
+    }
   }
 
   async function handleDelete(bookingId: string) {
@@ -239,7 +242,7 @@ export default function ReceptionPage() {
                       </TableCell>
                       <TableCell>
                         <Badge 
-                          className={b.status === 'completed' ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-amber-100 text-amber-700 hover:bg-amber-200"}
+                          className={b.status === 'completed' ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-amber-100 text-amber-700 hover:bg-amber-200 cursor-pointer"}
                           onClick={() => handleStatusChange(b.id, b.status)}
                           variant="secondary"
                         >
