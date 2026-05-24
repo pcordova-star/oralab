@@ -26,7 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, ClipboardList, CalendarIcon, Clock, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -44,20 +44,24 @@ const regions = [
   "Biobío", "La Araucanía", "Los Ríos", "Los Lagos", "Aysén", "Magallanes"
 ];
 
-const chileanCommunes = Array.from(new Set([
-  "Santiago", "Concepción", "Viña del Mar", "Valparaíso", "Antofagasta", "Temuco", 
-  "La Serena", "Rancagua", "Puerto Montt", "Talca", "Arica", "Iquique", 
-  "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", 
-  "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", 
-  "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", 
-  "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", 
-  "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", 
-  "Recoleta", "Renca", "San Bernardo", "San Joaquín", "San Miguel", 
-  "San Ramón", "Vitacura", "Colina", "Lampa", "Tiltil", 
-  "Pirque", "San José de Maipo", "Buin", "Paine", "Calera de Tango", 
-  "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", 
-  "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"
-])).sort();
+const communesByRegion: Record<string, string[]> = {
+  "Arica y Parinacota": ["Arica", "Camarones", "Putre", "General Lagos"],
+  "Tarapacá": ["Iquique", "Alto Hospicio", "Pozo Almonte", "Camiña", "Colchane", "Huara", "Pica"],
+  "Antofagasta": ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal", "Calama", "Ollagüe", "San Pedro de Atacama", "Tocopilla", "María Elena"],
+  "Atacama": ["Copiapó", "Caldera", "Tierra Amarilla", "Chañaral", "Diego de Almagro", "Vallenar", "Alto del Carmen", "Freirina", "Huasco"],
+  "Coquimbo": ["La Serena", "Coquimbo", "Andacollo", "La Higuera", "Paiguano", "Vicuña", "Illapel", "Canela", "Los Vilos", "Salamanca", "Ovalle", "Combarbalá", "Monte Patria", "Punitaqui", "Río Hurtado"],
+  "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández", "San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo", "Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales", "Los Andes", "Calle Larga", "Rinconada", "San Esteban", "San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María", "Quilpué", "Limache", "Olmué", "Villa Alemana", "La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
+  "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Puente Alto", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
+  "O'Higgins": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente", "Pichilemu", "La Estrella", "Litueche", "Marchihue", "Navidad", "Paredones", "San Fernando", "Chépica", "Chimbarongo", "Lolol", "Nancagua", "Palmilla", "Peralillo", "Placilla", "Pumanque", "Santa Cruz"],
+  "Maule": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael", "Cauquenes", "Chanco", "Pelluhue", "Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén", "Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"],
+  "Ñuble": ["Chillán", "Bulnes", "Cobquecura", "Coelemu", "Coihueco", "Chillán Viejo", "El Carmen", "Ninhue", "Ñiquén", "Pemuco", "Pinto", "Portezuelo", "Quillón", "Quirihue", "Ránquil", "San Carlos", "San Fabián", "San Ignacio", "San Nicolás", "Treguaco", "Yungay"],
+  "Biobío": ["Concepción", "Coronel", "Chiguayante", "Florida", "Hualpén", "Hualqui", "Lota", "Penco", "San Pedro de la Paz", "Santa Juana", "Talcahuano", "Tomé", "Lebu", "Arauco", "Cañete", "Contulmo", "Curanilahue", "Los Álamos", "Tirúa", "Los Ángeles", "Antuco", "Cabrero", "Laja", "Mulchén", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa Bárbara", "Tucapel", "Yumbel", "Alto Biobío"],
+  "La Araucanía": ["Temuco", "Carahue", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre las Casas", "Perquenco", "Pitrufquén", "Pucón", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica", "Cholchol", "Angol", "Collipulli", "Curacautín", "Ercilla", "Lonquimay", "Los Sauces", "Lumaco", "Purén", "Renaico", "Traiguén", "Victoria"],
+  "Los Ríos": ["Valdivia", "Corral", "Lanco", "Los Lagos", "Máfil", "Mariquina", "Paillaco", "Panguipulli", "La Unión", "Futrono", "Lago Ranco", "Río Bueno"],
+  "Los Lagos": ["Puerto Montt", "Calbuco", "Cochamó", "Fresia", "Frutillar", "Los Muermos", "Llanquihue", "Maullín", "Puerto Varas", "Castro", "Ancud", "Chonchi", "Curaco de Vélez", "Dalcahue", "Puqueldón", "Queilén", "Quellón", "Quemchi", "Quinchao", "Osorno", "Puerto Octay", "Purranque", "Puyehue", "Río Negro", "San Juan de la Costa", "San Pablo", "Chaitén", "Futaleufú", "Hualaihué", "Palena"],
+  "Aysén": ["Coyhaique", "Lago Verde", "Aysén", "Cisnes", "Guaitecas", "Cochrane", "O'Higgins", "Tortel", "Chile Chico", "Río Ibáñez"],
+  "Magallanes": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio", "Puerto Natales", "Torres del Paine", "Porvenir", "Primavera", "Timaukel", "Cabo de Hornos", "Antártica"]
+};
 
 const timeSlots = [];
 for (let hour = 8; hour <= 12; hour++) {
@@ -131,6 +135,16 @@ export default function BookingPage() {
     },
   });
 
+  const selectedRegion = form.watch("region");
+  const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
+
+  // Reset commune when region changes
+  useEffect(() => {
+    if (selectedRegion) {
+      form.setValue("commune", "");
+    }
+  }, [selectedRegion, form]);
+
   const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
   const months = [
     { v: "01", l: "Enero" }, { v: "02", l: "Febrero" }, { v: "03", l: "Marzo" },
@@ -145,7 +159,7 @@ export default function BookingPage() {
     if (step === 1) fieldsToValidate = ["examType"];
     if (step === 2) fieldsToValidate = ["scheduledDate", "scheduledTime"];
     
-    const isValid = await form.trigger(fieldsToValidate);
+    const isValid = await form.trigger(fieldsToValidate as any);
     if (isValid) setStep(step + 1);
   }
 
@@ -198,7 +212,7 @@ export default function BookingPage() {
           description: "Nos pondremos en contacto contigo a la brevedad para confirmar tu hora.",
         });
         setIsSubmitting(false);
-        setStep(4); // Pantalla de éxito
+        setStep(4);
       })
       .catch(() => {
         setIsSubmitting(false);
@@ -261,7 +275,6 @@ export default function BookingPage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 
-                {/* ETAPA 1: TIPO DE EXAMEN */}
                 {step === 1 && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <FormField
@@ -295,7 +308,6 @@ export default function BookingPage() {
                   </div>
                 )}
 
-                {/* ETAPA 2: FECHA Y HORA */}
                 {step === 2 && (
                   <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -385,7 +397,6 @@ export default function BookingPage() {
                   </div>
                 )}
 
-                {/* ETAPA 3: DATOS DEL PACIENTE */}
                 {step === 3 && (
                   <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -489,7 +500,7 @@ export default function BookingPage() {
                           name="birthDay"
                           render={({ field }) => (
                             <FormItem>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                   <SelectTrigger><SelectValue placeholder="Día" /></SelectTrigger>
                                 </FormControl>
@@ -505,7 +516,7 @@ export default function BookingPage() {
                           name="birthMonth"
                           render={({ field }) => (
                             <FormItem>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                   <SelectTrigger><SelectValue placeholder="Mes" /></SelectTrigger>
                                 </FormControl>
@@ -521,7 +532,7 @@ export default function BookingPage() {
                           name="birthYear"
                           render={({ field }) => (
                             <FormItem>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                   <SelectTrigger><SelectValue placeholder="Año" /></SelectTrigger>
                                 </FormControl>
@@ -603,7 +614,7 @@ export default function BookingPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Región</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger><SelectValue placeholder="Seleccione" /></SelectTrigger>
                               </FormControl>
@@ -620,14 +631,15 @@ export default function BookingPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Comuna</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value} disabled={!selectedRegion}>
                               <FormControl>
-                                <SelectTrigger><SelectValue placeholder="Seleccione" /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder={selectedRegion ? "Seleccione" : "Primero elija región"} /></SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {chileanCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                {availableCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                               </SelectContent>
                             </Select>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -669,7 +681,6 @@ export default function BookingPage() {
                     </div>
                   </div>
                 )}
-
               </form>
             </Form>
           </CardContent>
