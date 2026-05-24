@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -53,15 +52,11 @@ const chileanCommunes = Array.from(new Set([
   "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"
 ])).sort();
 
-const emailDomains = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "icloud.com", "vtr.net", "otro"];
-
 const bookingSchema = z.object({
   firstName: z.string().min(2, "Requerido"),
   lastNameFather: z.string().min(2, "Requerido"),
   lastNameMother: z.string().min(2, "Requerido"),
-  emailUser: z.string().min(1, "Requerido"),
-  emailDomain: z.string().min(1, "Seleccione"),
-  customEmailDomain: z.string().optional(),
+  email: z.string().email("Email inválido").min(1, "Requerido"),
   phone: z.string().length(8, "Deben ser 8 dígitos"),
   address: z.string().min(5, "Dirección requerida"),
   birthDay: z.string().min(1, "Día"),
@@ -76,14 +71,6 @@ const bookingSchema = z.object({
   sex: z.enum(["not_specified", "male", "female"], {
     required_error: "Seleccione una opción",
   }),
-}).refine((data) => {
-  if (data.emailDomain === 'otro' && (!data.customEmailDomain || data.customEmailDomain.length < 3)) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Escriba un dominio válido",
-  path: ["customEmailDomain"],
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
@@ -98,9 +85,7 @@ export default function BookingPage() {
       firstName: "",
       lastNameFather: "",
       lastNameMother: "",
-      emailUser: "",
-      emailDomain: "gmail.com",
-      customEmailDomain: "",
+      email: "",
       phone: "",
       address: "",
       birthDay: "",
@@ -115,8 +100,6 @@ export default function BookingPage() {
       sex: "not_specified",
     },
   });
-
-  const selectedDomain = form.watch("emailDomain");
 
   const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
   const months = [
@@ -138,8 +121,6 @@ export default function BookingPage() {
     }
 
     setIsSubmitting(true);
-    const domain = values.emailDomain === 'otro' ? values.customEmailDomain : values.emailDomain;
-    const fullEmail = `${values.emailUser}@${domain}`;
     const fullPhone = `+56 9 ${values.phone}`;
     const birthDate = `${values.birthYear}-${values.birthMonth}-${values.birthDay.padStart(2, '0')}`;
     
@@ -147,7 +128,7 @@ export default function BookingPage() {
       firstName: values.firstName,
       lastNameFather: values.lastNameFather,
       lastNameMother: values.lastNameMother,
-      email: fullEmail,
+      email: values.email,
       phone: fullPhone,
       address: values.address,
       birthDate: birthDate,
@@ -175,7 +156,6 @@ export default function BookingPage() {
       })
       .catch(() => {
         setIsSubmitting(false);
-        // El error ya es manejado por el sistema central de errores de Firebase
       });
   }
 
@@ -246,83 +226,39 @@ export default function BookingPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <FormLabel>Email</FormLabel>
-                      <div className="flex gap-2 items-center">
-                        <FormField
-                          control={form.control}
-                          name="emailUser"
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormControl>
-                                <Input placeholder="usuario" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <span className="text-muted-foreground">@</span>
-                        <FormField
-                          control={form.control}
-                          name="emailDomain"
-                          render={({ field }) => (
-                            <FormItem className="w-[140px]">
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {emailDomains.map(d => (
-                                    <SelectItem key={d} value={d}>{d === 'otro' ? 'Otro...' : d}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="usuario@ejemplo.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Teléfono Chile</FormLabel>
-                          <div className="flex gap-2 items-center">
-                            <div className="bg-muted px-3 h-10 flex items-center rounded-md text-sm border font-medium">
-                              +56 9
-                            </div>
-                            <FormControl>
-                              <Input placeholder="12345678" maxLength={8} {...field} />
-                            </FormControl>
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Teléfono Chile</FormLabel>
+                        <div className="flex gap-2 items-center">
+                          <div className="bg-muted px-3 h-10 flex items-center rounded-md text-sm border font-medium">
+                            +56 9
                           </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {selectedDomain === 'otro' && (
-                    <FormField
-                      control={form.control}
-                      name="customEmailDomain"
-                      render={({ field }) => (
-                        <FormItem className="max-w-[300px]">
-                          <FormLabel>Especifique dominio</FormLabel>
                           <FormControl>
-                            <Input placeholder="ejemplo.cl" {...field} />
+                            <Input placeholder="12345678" maxLength={8} {...field} />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <FormField
