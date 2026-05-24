@@ -20,7 +20,8 @@ import {
   Stethoscope,
   ClipboardCheck,
   CalendarDays,
-  MapPin
+  MapPin,
+  Home
 } from "lucide-react";
 
 export default function HomePage() {
@@ -35,9 +36,15 @@ export default function HomePage() {
         <section className="relative py-20 lg:py-32 overflow-hidden bg-gradient-to-b from-white to-blue-50/50">
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-bold mb-6">
-                <Heart className="h-4 w-4 fill-secondary" /> Tu bienestar digestivo es nuestra prioridad
+              <div className="flex flex-wrap gap-3 mb-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-bold">
+                  <Heart className="h-4 w-4 fill-secondary" /> Tu bienestar digestivo es nuestra prioridad
+                </div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20">
+                  <Home className="h-4 w-4" /> También a domicilio
+                </div>
               </div>
+              
               <h1 className="text-4xl md:text-6xl font-extrabold text-primary mb-6 leading-tight">
                 ¿Vives con hinchazón o molestias y <span className="text-secondary">no sabes por qué?</span>
               </h1>
@@ -83,7 +90,7 @@ export default function HomePage() {
                     "Sin agujas ni procedimientos dolorosos.",
                     "Solo necesitas soplar en un dispositivo especial.",
                     "Resultados precisos para guiar tu tratamiento.",
-                    "Realizado en un ambiente cómodo y profesional."
+                    "Realizado en nuestra consulta o en la comodidad de tu hogar."
                   ].map((text, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <CheckCircle className="h-6 w-6 text-secondary shrink-0" />
@@ -94,11 +101,11 @@ export default function HomePage() {
               </div>
               <div className="bg-background p-8 rounded-3xl border-2 border-dashed border-secondary/30 flex flex-col items-center text-center">
                 <div className="bg-white p-4 rounded-2xl shadow-xl mb-6">
-                  <Wind className="h-16 w-16 text-secondary" />
+                  <Home className="h-16 w-16 text-secondary" />
                 </div>
-                <h3 className="text-2xl font-bold text-primary mb-4">¿Qué es el SIBO?</h3>
+                <h3 className="text-2xl font-bold text-primary mb-4">Servicio a Domicilio</h3>
                 <p className="text-muted-foreground">
-                  Es el sobrecrecimiento de bacterias en el intestino delgado. Cuando estas bacterias fermentan comida, producen gases (Hidrógeno, Metano o Sulfuro) que causan esa sensación de "globo" en el abdomen, dolor o cambios en tu tránsito intestinal.
+                  Llevamos nuestra tecnología de punta directamente a tu casa. Ideal para quienes buscan máxima comodidad o tienen dificultades para trasladarse, manteniendo la misma precisión clínica que en nuestra consulta.
                 </p>
               </div>
             </div>
@@ -236,7 +243,7 @@ export default function HomePage() {
                   <CalendarDays className="h-8 w-8 text-secondary" />
                 </div>
                 <h4 className="text-xl font-bold text-primary mb-3">2. Agenda tu Test</h4>
-                <p className="text-muted-foreground text-sm">Contáctanos para programar tu cita en nuestra consulta de Las Condes.</p>
+                <p className="text-muted-foreground text-sm">Contáctanos para programar tu cita en nuestra consulta o solicita el <strong>servicio a domicilio</strong>.</p>
               </div>
 
               <div className="flex flex-col items-center text-center group">
@@ -277,10 +284,10 @@ export default function HomePage() {
               </ul>
             </div>
             <div>
-              <h5 className="font-bold mb-6 text-secondary">Contacto</h5>
+              <h5 className="font-bold mb-6 text-secondary">Servicios</h5>
               <ul className="space-y-4 text-primary-foreground/70 text-sm">
-                <li>Preguntas Frecuentes</li>
-                <li>Privacidad de Datos</li>
+                <li>Test a Domicilio</li>
+                <li>Consulta Presencial</li>
                 <li>Convenios Médicos</li>
               </ul>
             </div>
