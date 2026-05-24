@@ -1,13 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REGLAS DE EMERGENCIA - APERTURA TOTAL
-    // Forzando despliegue - Timestamp: 2026-05-24T19:35:00Z
+    // REGLAS DE APERTURA TOTAL - FORZANDO ACTUALIZACIÓN
+    // Timestamp de despliegue: 2026-05-24T20:15:00Z
     
-    match /bookings/{bookingId} {
-      allow read, write: if true;
-    }
-
     match /{document=**} {
       allow read, write: if true;
     }
