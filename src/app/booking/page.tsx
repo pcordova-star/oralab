@@ -35,8 +35,8 @@ const regions = [
   "Biobío", "La Araucanía", "Los Ríos", "Los Lagos", "Aysén", "Magallanes"
 ];
 
-// Lista extendida de comunas comunes en Chile
-const chileanCommunes = [
+// Lista extendida de comunas comunes en Chile (sin duplicados)
+const chileanCommunes = Array.from(new Set([
   "Santiago", "Concepción", "Viña del Mar", "Valparaíso", "Antofagasta", "Temuco", 
   "La Serena", "Rancagua", "Puerto Montt", "Talca", "Arica", "Iquique", 
   "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", 
@@ -45,11 +45,11 @@ const chileanCommunes = [
   "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", 
   "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", 
   "Recoleta", "Renca", "San Bernardo", "San Joaquín", "San Miguel", 
-  "San Ramón", "Vitacura", "Puente Alto", "Colina", "Lampa", "Tiltil", 
+  "San Ramón", "Vitacura", "Colina", "Lampa", "Tiltil", 
   "Pirque", "San José de Maipo", "Buin", "Paine", "Calera de Tango", 
   "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", 
   "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"
-].sort();
+])).sort();
 
 const emailDomains = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "icloud.com", "vtr.net", "otro"];
 
