@@ -23,7 +23,8 @@ import {
   CalendarDays,
   MapPin,
   Package,
-  MessageCircle
+  MessageCircle,
+  Lock
 } from "lucide-react";
 
 export default function HomePage() {
@@ -314,7 +315,12 @@ export default function HomePage() {
             </div>
           </div>
           <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-primary-foreground/50">
-            <p>© 2024 Oralab Clinical Lab. Todos los derechos reservados.</p>
+            <div className="flex items-center gap-2">
+              <p>© 2024 Oralab Clinical Lab. Todos los derechos reservados.</p>
+              <Link href="/login" className="opacity-10 hover:opacity-100 transition-opacity">
+                <Lock className="h-3 w-3" />
+              </Link>
+            </div>
             <div className="flex gap-6">
               <span>Sunvou Medical Electronics Partner</span>
               <span>ISO 13485 Certified</span>

@@ -32,7 +32,9 @@
   },
   "auth": {
     "providers": [
-      "anonymous"
+      "anonymous",
+      "google",
+      "email"
     ]
   },
   "firestore": {

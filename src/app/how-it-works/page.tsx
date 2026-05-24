@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Navbar } from "@/components/navbar";
@@ -16,7 +17,8 @@ import {
   MapPin,
   Package,
   Home,
-  MessageCircle
+  MessageCircle,
+  Lock
 } from "lucide-react";
 import Link from "next/link";
 
@@ -212,7 +214,12 @@ export default function HowItWorksPage() {
             <MapPin className="h-5 w-5 text-secondary" />
             <p className="text-sm opacity-80">Apoquindo 3992, oficina 605, Las Condes. Centro Médico Alcántara.</p>
           </div>
-          <p className="text-primary-foreground/50 text-xs">© 2024 Oralab Clinical Lab. Todos los derechos reservados.</p>
+          <div className="flex items-center justify-center gap-2">
+            <p className="text-primary-foreground/50 text-xs">© 2024 Oralab Clinical Lab. Todos los derechos reservados.</p>
+            <Link href="/login" className="opacity-10 hover:opacity-100 transition-opacity">
+              <Lock className="h-3 w-3" />
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
