@@ -35,13 +35,23 @@ const regions = [
   "Biobío", "La Araucanía", "Los Ríos", "Los Lagos", "Aysén", "Magallanes"
 ];
 
-const commonCommunes = [
-  "Las Condes", "Providencia", "Santiago", "Vitacura", "Lo Barnechea", 
-  "Ñuñoa", "La Reina", "Maipú", "Puente Alto", "La Florida", 
-  "Viña del Mar", "Valparaíso", "Concepción", "Temuco", "Antofagasta"
-];
+// Lista extendida de comunas comunes en Chile
+const chileanCommunes = [
+  "Santiago", "Concepción", "Viña del Mar", "Valparaíso", "Antofagasta", "Temuco", 
+  "La Serena", "Rancagua", "Puerto Montt", "Talca", "Arica", "Iquique", 
+  "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", 
+  "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", 
+  "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", 
+  "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", 
+  "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", 
+  "Recoleta", "Renca", "San Bernardo", "San Joaquín", "San Miguel", 
+  "San Ramón", "Vitacura", "Puente Alto", "Colina", "Lampa", "Tiltil", 
+  "Pirque", "San José de Maipo", "Buin", "Paine", "Calera de Tango", 
+  "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", 
+  "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"
+].sort();
 
-const emailDomains = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "icloud.com"];
+const emailDomains = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "icloud.com", "vtr.net", "otro"];
 
 const bookingSchema = z.object({
   firstName: z.string().min(2, "Requerido"),
@@ -49,6 +59,7 @@ const bookingSchema = z.object({
   lastNameMother: z.string().min(2, "Requerido"),
   emailUser: z.string().min(1, "Requerido"),
   emailDomain: z.string().min(1, "Seleccione"),
+  customEmailDomain: z.string().optional(),
   phone: z.string().length(8, "Deben ser 8 dígitos"),
   address: z.string().min(5, "Dirección requerida"),
   birthDay: z.string().min(1, "Día"),
@@ -63,6 +74,14 @@ const bookingSchema = z.object({
   sex: z.enum(["not_specified", "male", "female"], {
     required_error: "Seleccione una opción",
   }),
+}).refine((data) => {
+  if (data.emailDomain === 'otro' && (!data.customEmailDomain || data.customEmailDomain.length < 3)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Escriba un dominio válido",
+  path: ["customEmailDomain"],
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
@@ -78,6 +97,7 @@ export default function BookingPage() {
       lastNameMother: "",
       emailUser: "",
       emailDomain: "gmail.com",
+      customEmailDomain: "",
       phone: "",
       address: "",
       birthDay: "",
@@ -93,6 +113,8 @@ export default function BookingPage() {
     },
   });
 
+  const selectedDomain = form.watch("emailDomain");
+
   const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
   const months = [
     { v: "01", l: "Enero" }, { v: "02", l: "Febrero" }, { v: "03", l: "Marzo" },
@@ -104,7 +126,8 @@ export default function BookingPage() {
 
   function onSubmit(values: BookingFormValues) {
     setIsSubmitting(true);
-    const fullEmail = `${values.emailUser}@${values.emailDomain}`;
+    const domain = values.emailDomain === 'otro' ? values.customEmailDomain : values.emailDomain;
+    const fullEmail = `${values.emailUser}@${domain}`;
     const fullPhone = `+56 9 ${values.phone}`;
     
     setTimeout(() => {
@@ -185,65 +208,83 @@ export default function BookingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FormLabel>Email</FormLabel>
-                    <div className="flex gap-2 items-center">
-                      <FormField
-                        control={form.control}
-                        name="emailUser"
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input placeholder="usuario" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <span className="text-muted-foreground">@</span>
-                      <FormField
-                        control={form.control}
-                        name="emailDomain"
-                        render={({ field }) => (
-                          <FormItem className="w-[140px]">
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <FormLabel>Email</FormLabel>
+                      <div className="flex gap-2 items-center">
+                        <FormField
+                          control={form.control}
+                          name="emailUser"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
+                                <Input placeholder="usuario" {...field} />
                               </FormControl>
-                              <SelectContent>
-                                {emailDomains.map(d => (
-                                  <SelectItem key={d} value={d}>{d}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <span className="text-muted-foreground">@</span>
+                        <FormField
+                          control={form.control}
+                          name="emailDomain"
+                          render={({ field }) => (
+                            <FormItem className="w-[140px]">
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {emailDomains.map(d => (
+                                    <SelectItem key={d} value={d}>{d === 'otro' ? 'Otro...' : d}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
+
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Teléfono Chile</FormLabel>
+                          <div className="flex gap-2 items-center">
+                            <div className="bg-muted px-3 h-10 flex items-center rounded-md text-sm border font-medium">
+                              +56 9
+                            </div>
+                            <FormControl>
+                              <Input placeholder="12345678" maxLength={8} {...field} />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Teléfono Chile</FormLabel>
-                        <div className="flex gap-2 items-center">
-                          <div className="bg-muted px-3 h-10 flex items-center rounded-md text-sm border font-medium">
-                            +56 9
-                          </div>
+                  {selectedDomain === 'otro' && (
+                    <FormField
+                      control={form.control}
+                      name="customEmailDomain"
+                      render={({ field }) => (
+                        <FormItem className="max-w-[300px]">
+                          <FormLabel>Especifique dominio</FormLabel>
                           <FormControl>
-                            <Input placeholder="12345678" maxLength={8} {...field} />
+                            <Input placeholder="ejemplo.cl" {...field} />
                           </FormControl>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
 
                 <FormField
@@ -421,7 +462,7 @@ export default function BookingPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {commonCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            {chileanCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                           </SelectContent>
                         </Select>
                         <FormMessage />
