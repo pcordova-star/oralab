@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -97,7 +97,12 @@ type BookingFormValues = z.infer<typeof bookingSchema>;
 export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const db = useFirestore();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
@@ -250,12 +255,14 @@ export default function BookingPage() {
                                 <Button
                                   variant={"outline"}
                                   className={cn(
-                                    "w-full pl-3 text-left font-normal bg-white",
+                                    "w-full pl-3 text-left font-normal bg-white h-10",
                                     !field.value && "text-muted-foreground"
                                   )}
                                 >
-                                  {field.value ? (
-                                    format(field.value, "PPP", { locale: es })
+                                  {isMounted && field.value ? (
+                                    <span className="capitalize">
+                                      {format(field.value, "EEEE d 'de' MMMM", { locale: es })}
+                                    </span>
                                   ) : (
                                     <span>Seleccione una fecha</span>
                                   )}
