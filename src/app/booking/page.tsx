@@ -96,12 +96,14 @@ type BookingFormValues = z.infer<typeof bookingSchema>;
 
 export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const db = useFirestore();
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       examType: "Lactulosa",
+      scheduledDate: undefined,
       scheduledTime: "",
       firstName: "",
       lastNameFather: "",
@@ -242,7 +244,7 @@ export default function BookingPage() {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>Día del Examen (Lun-Vie)</FormLabel>
-                          <Popover>
+                          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button
@@ -265,7 +267,10 @@ export default function BookingPage() {
                               <Calendar
                                 mode="single"
                                 selected={field.value}
-                                onSelect={field.onChange}
+                                onSelect={(date) => {
+                                  field.onChange(date);
+                                  setIsCalendarOpen(false);
+                                }}
                                 disabled={(date) =>
                                   isBefore(date, startOfToday()) || isWeekend(date)
                                 }
