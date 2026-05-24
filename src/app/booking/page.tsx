@@ -26,7 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -77,6 +77,7 @@ for (let hour = 8; hour <= 12; hour++) {
 
 const bookingSchema = z.object({
   examType: z.enum(["Lactulosa", "Fructosa", "Lactosa"], { required_error: "Seleccione tipo de examen" }),
+  modality: z.enum(["presential", "home_kit"], { required_error: "Seleccione modalidad" }),
   scheduledDate: z.date({ required_error: "Seleccione una fecha" }),
   scheduledTime: z.string().min(1, "Seleccione una hora"),
   firstName: z.string().min(2, "Requerido"),
@@ -119,6 +120,7 @@ export default function BookingPage() {
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       examType: "Lactulosa",
+      modality: "presential",
       scheduledDate: undefined,
       scheduledTime: "",
       firstName: "",
@@ -141,6 +143,7 @@ export default function BookingPage() {
   });
 
   const selectedRegion = form.watch("region");
+  const selectedModality = form.watch("modality");
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
 
   useEffect(() => {
@@ -160,7 +163,7 @@ export default function BookingPage() {
 
   async function nextStep() {
     let fieldsToValidate: any[] = [];
-    if (step === 1) fieldsToValidate = ["examType"];
+    if (step === 1) fieldsToValidate = ["examType", "modality"];
     if (step === 2) fieldsToValidate = ["scheduledDate", "scheduledTime"];
     
     const isValid = await form.trigger(fieldsToValidate as any);
@@ -189,6 +192,8 @@ export default function BookingPage() {
     y += 10;
     doc.text(`Examen: Test de Aire Espirado (${lastBookingValues.examType})`, margin, y);
     y += 10;
+    doc.text(`Modalidad: ${lastBookingValues.modality === 'home_kit' ? 'A Domicilio (Retiro de Kit)' : 'Presencial'}`, margin, y);
+    y += 10;
     doc.text(`Fecha: ${format(lastBookingValues.scheduledDate, "PPPP", { locale: es })}`, margin, y);
     y += 10;
     doc.text(`Hora: ${lastBookingValues.scheduledTime} hrs`, margin, y);
@@ -200,7 +205,7 @@ export default function BookingPage() {
 
     doc.setFontSize(16);
     doc.setTextColor(28, 104, 182);
-    doc.text("Indicaciones Pre-Examen", margin, y);
+    doc.text(lastBookingValues.modality === 'home_kit' ? "Instrucciones de Retiro e Indicaciones" : "Indicaciones Pre-Examen", margin, y);
     y += 10;
 
     doc.setFontSize(10);
@@ -228,6 +233,7 @@ export default function BookingPage() {
     
     const bookingData = {
       examType: values.examType,
+      modality: values.modality,
       scheduledDate: format(values.scheduledDate, "yyyy-MM-dd"),
       scheduledTime: values.scheduledTime,
       firstName: values.firstName,
@@ -253,9 +259,14 @@ export default function BookingPage() {
       try {
         const aiResponse = await generatePrepInstructions({ examType: values.examType });
         instructions = aiResponse.instructions;
+        if (values.modality === 'home_kit') {
+          instructions = "INSTRUCCIONES DE RETIRO DE KIT:\nUsted ha agendado el retiro de los insumos en nuestra oficina en Las Condes. Una vez retirado, podrá realizar el test en su hogar siguiendo estas indicaciones:\n\n" + instructions;
+        }
       } catch (aiError) {
-        console.warn("AI instructions failed, using static fallback:", aiError);
         instructions = "Por favor, siga estas indicaciones fundamentales para su examen:\n\n1. Ayuno estricto de 12 horas.\n2. El día anterior, siga una dieta blanda (arroz, pollo/pescado a la plancha). Evite legumbres, fibra, frutas y verduras.\n3. No fume ni realice ejercicio intenso 2 horas antes del examen.\n4. No tome antibióticos ni probióticos 4 semanas antes de la prueba.";
+        if (values.modality === 'home_kit') {
+          instructions = "Usted agendó RETIRO DE KIT. Acuda en la fecha y hora seleccionada para recoger sus insumos.\n\n" + instructions;
+        }
       }
       
       setPrepInstructions(instructions);
@@ -291,15 +302,20 @@ export default function BookingPage() {
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="h-10 w-10 text-primary" />
             </div>
-            <CardTitle className="text-3xl font-bold text-primary mb-4">¡Solicitud Enviada!</CardTitle>
+            <CardTitle className="text-3xl font-bold text-primary mb-4">
+              {lastBookingValues?.modality === 'home_kit' ? "¡Retiro Agendado!" : "¡Reserva Confirmada!"}
+            </CardTitle>
             <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-              Hemos procesado tu solicitud para el correo <strong>{lastBookingValues?.email}</strong>. Por favor, descarga tu resumen a continuación.
+              {lastBookingValues?.modality === 'home_kit' 
+                ? `Te esperamos para el retiro de tu kit el día ${format(lastBookingValues.scheduledDate, "d 'de' MMMM", { locale: es })} a las ${lastBookingValues.scheduledTime} hrs.`
+                : `Hemos recibido tu solicitud para el correo ${lastBookingValues?.email}. Por favor, descarga tu resumen a continuación.`
+              }
             </p>
 
             {/* RECORDATORIO DE CUIDADOS */}
             <div className="bg-muted/30 border border-primary/10 rounded-2xl p-6 text-left mb-8 max-w-xl mx-auto">
               <h3 className="flex items-center gap-2 font-bold text-primary mb-3">
-                <AlertCircle className="h-5 w-5" /> Recordatorio de Cuidados Previos
+                <AlertCircle className="h-5 w-5" /> {lastBookingValues?.modality === 'home_kit' ? "Recordatorio de Retiro y Preparación" : "Recordatorio de Cuidados Previos"}
               </h3>
               <div className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                 {prepInstructions}
@@ -344,13 +360,13 @@ export default function BookingPage() {
         <Card className="shadow-lg border-primary/10 overflow-hidden">
           <CardHeader className="bg-primary/5 border-b border-primary/10">
             <CardTitle className="text-2xl text-primary font-bold">
-              {step === 1 && "Selecciona tu Examen"}
-              {step === 2 && "Fecha y Horario"}
+              {step === 1 && "Selecciona Modalidad y Examen"}
+              {step === 2 && (selectedModality === 'home_kit' ? "Fecha y Hora de Retiro" : "Fecha y Hora de Cita")}
               {step === 3 && "Tus Datos Personales"}
             </CardTitle>
             <CardDescription>
-              {step === 1 && "Elige el test indicado por tu médico especialista."}
-              {step === 2 && "Selecciona el día y la hora que más te acomode."}
+              {step === 1 && "Indica si prefieres venir a la clínica o retirar un kit para casa."}
+              {step === 2 && (selectedModality === 'home_kit' ? "Elige cuándo vendrás a buscar tus insumos." : "Elige cuándo vendrás a realizarte el test.")}
               {step === 3 && "Completa la ficha para agendar tu procedimiento."}
             </CardDescription>
           </CardHeader>
@@ -359,20 +375,61 @@ export default function BookingPage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 
                 {step === 1 && (
-                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <FormField
+                      control={form.control}
+                      name="modality"
+                      render={({ field }) => (
+                        <FormItem className="space-y-4">
+                          <FormLabel className="text-lg font-bold">¿Cómo deseas realizar el examen?</FormLabel>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                          >
+                            <div className={cn(
+                              "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                              field.value === "presential" ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50"
+                            )}>
+                              <RadioGroupItem value="presential" id="mod-presential" />
+                              <label htmlFor="mod-presential" className="flex-1 cursor-pointer">
+                                <Building2 className="h-6 w-6 text-primary mb-2" />
+                                <div className="font-bold text-primary">Presencial</div>
+                                <div className="text-xs text-muted-foreground">En nuestra consulta de Las Condes.</div>
+                              </label>
+                            </div>
+                            <div className={cn(
+                              "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                              field.value === "home_kit" ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50"
+                            )}>
+                              <RadioGroupItem value="home_kit" id="mod-home" />
+                              <label htmlFor="mod-home" className="flex-1 cursor-pointer">
+                                <Home className="h-6 w-6 text-primary mb-2" />
+                                <div className="font-bold text-primary">A Domicilio</div>
+                                <div className="text-xs text-muted-foreground">Retiro de kit para realizar en casa.</div>
+                              </label>
+                            </div>
+                          </RadioGroup>
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="examType"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-lg">Tipo de Test de Aire Espirado</FormLabel>
+                        <FormItem className="space-y-4">
+                          <FormLabel className="text-lg font-bold">Tipo de Test de Aire Espirado</FormLabel>
                           <RadioGroup
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                             className="grid gap-4"
                           >
                             {["Lactulosa", "Fructosa", "Lactosa"].map((type) => (
-                              <div key={type} className="flex items-center space-x-3 bg-muted/30 p-4 rounded-xl border hover:border-primary transition-colors cursor-pointer">
+                              <div key={type} className={cn(
+                                "flex items-center space-x-3 p-4 rounded-xl border transition-all cursor-pointer",
+                                field.value === type ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30"
+                              )}>
                                 <RadioGroupItem value={type} id={`exam-${type}`} />
                                 <label htmlFor={`exam-${type}`} className="flex-1 cursor-pointer">
                                   <div className="font-bold text-primary">Test {type}</div>
@@ -381,11 +438,10 @@ export default function BookingPage() {
                               </div>
                             ))}
                           </RadioGroup>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button type="button" onClick={nextStep} className="w-full h-14 text-lg font-bold rounded-xl">
+                    <Button type="button" onClick={nextStep} className="w-full h-14 text-lg font-bold rounded-xl shadow-md transition-all active:scale-95">
                       Siguiente paso <ChevronRight className="ml-2 h-5 w-5" />
                     </Button>
                   </div>
@@ -399,7 +455,7 @@ export default function BookingPage() {
                         name="scheduledDate"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
-                            <FormLabel className="text-lg">Día del Examen (Lunes a Viernes)</FormLabel>
+                            <FormLabel className="text-lg">{selectedModality === 'home_kit' ? "Día de retiro de insumos" : "Día del examen"}</FormLabel>
                             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                               <PopoverTrigger asChild>
                                 <FormControl>
@@ -447,7 +503,7 @@ export default function BookingPage() {
                         name="scheduledTime"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-lg">Bloque Horario Disponible</FormLabel>
+                            <FormLabel className="text-lg">Bloque Horario</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger className="bg-white h-12 text-lg border-2">
@@ -473,7 +529,7 @@ export default function BookingPage() {
                       <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-14 text-lg rounded-xl">
                         Atrás
                       </Button>
-                      <Button type="button" onClick={nextStep} className="flex-2 w-full h-14 text-lg font-bold rounded-xl">
+                      <Button type="button" onClick={nextStep} className="flex-2 w-full h-14 text-lg font-bold rounded-xl shadow-md transition-all active:scale-95">
                         Continuar a mis datos <ChevronRight className="ml-2 h-5 w-5" />
                       </Button>
                     </div>
@@ -758,7 +814,7 @@ export default function BookingPage() {
                       <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-14 text-lg rounded-xl" disabled={isSubmitting}>
                         Atrás
                       </Button>
-                      <Button type="submit" className="flex-2 w-full h-14 text-lg font-bold rounded-xl shadow-lg" disabled={isSubmitting}>
+                      <Button type="submit" className="flex-2 w-full h-14 text-lg font-bold rounded-xl shadow-lg transition-all active:scale-95" disabled={isSubmitting}>
                         {isSubmitting ? "Procesando..." : "Confirmar Reserva"}
                       </Button>
                     </div>
