@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
+  const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Apoquindo+3992+oficina+605+Las+Condes+Santiago+Chile";
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -42,16 +44,24 @@ export default function HomePage() {
               <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
                 Sabemos lo frustrante que es buscar respuestas sin éxito. En <strong>Oralab</strong>, utilizamos una tecnología tan simple como respirar para descubrir qué está pasando realmente en tu interior. 
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap items-center gap-6">
                 <Link href="/how-it-works">
                   <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold shadow-lg bg-primary hover:bg-primary/90 transition-all hover:scale-105">
                     ¿Cómo funciona el test? <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <div className="flex items-center gap-2 text-primary font-medium px-4">
-                  <MapPin className="h-5 w-5 text-secondary" />
-                  <span className="text-sm">Las Condes, RM</span>
-                </div>
+                <a 
+                  href={googleMapsUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center gap-2 text-primary font-medium px-4 py-2 rounded-xl hover:bg-secondary/5 transition-colors group"
+                >
+                  <MapPin className="h-6 w-6 text-secondary shrink-0 group-hover:scale-110 transition-transform" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold leading-tight">Apoquindo 3992, Of. 605</span>
+                    <span className="text-xs text-muted-foreground">Las Condes (Metro Alcántara)</span>
+                  </div>
+                </a>
               </div>
             </div>
           </div>
@@ -259,8 +269,10 @@ export default function HomePage() {
               <h5 className="font-bold mb-6 text-secondary">Ubicación</h5>
               <ul className="space-y-4 text-primary-foreground/70 text-sm">
                 <li className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
-                  <span>Apoquindo 3992, oficina 605, Las Condes<br />Centro Médico Alcántara (a pasos del metro)</span>
+                  <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 hover:text-white transition-colors">
+                    <MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
+                    <span>Apoquindo 3992, oficina 605, Las Condes<br />Centro Médico Alcántara (a pasos del metro)</span>
+                  </a>
                 </li>
               </ul>
             </div>
