@@ -13,7 +13,9 @@ import {
   Info,
   Beaker,
   Stethoscope,
-  MapPin
+  MapPin,
+  Package,
+  Home
 } from "lucide-react";
 import Link from "next/link";
 
@@ -26,7 +28,7 @@ export default function HowItWorksPage() {
     },
     {
       title: "2. Muestra basal",
-      description: "Al llegar al laboratorio, tomarás la primera muestra simplemente soplando en un dispositivo. Esto establece tu punto de partida.",
+      description: "Al iniciar el examen (en nuestra consulta o en tu casa con el kit), tomarás la primera muestra simplemente soplando en un dispositivo. Esto establece tu punto de partida.",
       icon: <Wind className="h-8 w-8 text-secondary" />,
     },
     {
@@ -36,7 +38,7 @@ export default function HowItWorksPage() {
     },
     {
       title: "4. Mediciones periódicas",
-      description: "Soplaremos nuevamente en intervalos regulares (cada 15 a 30 minutos). Durante este tiempo puedes leer o descansar en nuestra sala.",
+      description: "Soplaremos nuevamente en intervalos regulares (cada 15 a 30 minutos). Si estás en nuestra sala, puedes leer o descansar durante las esperas.",
       icon: <Clock className="h-8 w-8 text-secondary" />,
     },
     {
@@ -61,6 +63,23 @@ export default function HowItWorksPage() {
             <p className="text-xl text-primary-foreground/80 max-w-2xl leading-relaxed">
               Es un proceso sencillo, seguro y no invasivo que nos permite "escuchar" lo que ocurre en tu intestino a través de tu respiración.
             </p>
+          </div>
+        </section>
+
+        {/* Home Kit Section */}
+        <section className="py-16 bg-secondary/5">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto bg-white rounded-3xl p-8 shadow-sm border border-secondary/20 flex flex-col md:flex-row items-center gap-8">
+              <div className="bg-secondary/10 p-6 rounded-full shrink-0">
+                <Package className="h-12 w-12 text-secondary" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-primary mb-3">Opción de Test en Casa</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  ¿Prefieres realizar el test a tu ritmo? Puedes retirar los elementos y el kit de toma de muestra en nuestra consulta de Las Condes, realizar el procedimiento en la comodidad de tu hogar y luego traernos de vuelta el material para que realicemos el análisis clínico especializado.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -145,10 +164,10 @@ export default function HowItWorksPage() {
             <h2 className="text-3xl font-bold text-primary mb-12 text-center">Preguntas Frecuentes</h2>
             <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
               {[
-                { q: "¿Es doloroso?", a: "Para nada. Solo requiere soplar suavemente a través de una boquilla desechable. Es tan simple como respirar." },
-                { q: "¿Cuánto tiempo dura?", a: "Dependiendo del tipo de examen (Lactosa, Fructosa o Lactulosa), puede durar entre 90 minutos y 3 horas." },
+                { q: "¿Es doloroso?", a: "Para nada. Solo requiere soplar suavemente a través de una boquilla desechable o bolsa colectora. Es tan simple como respirar." },
+                { q: "¿Cuánto tiempo dura?", a: "Dependiendo del tipo de examen (Lactosa, Fructosa o Lactulosa), puede durar entre 90 minutos y 3 horas de recolección." },
                 { q: "¿Tiene efectos secundarios?", a: "El sustrato es seguro. Algunas personas muy sensibles pueden notar una ligera hinchazón momentánea, similar a comer algo que les cae pesado." },
-                { q: "¿Es seguro para niños?", a: "Sí, es un test no invasivo ideal para pacientes pediátricos que pueden seguir instrucciones básicas de soplido." },
+                { q: "¿Puedo hacerlo en mi casa?", a: "Sí, puedes retirar el kit en nuestra consulta y realizarlo en tu hogar siguiendo nuestro protocolo estricto." },
               ].map((item, idx) => (
                 <div key={idx} className="p-6 rounded-2xl bg-background border border-border">
                   <h4 className="text-lg font-bold text-primary mb-2">{item.q}</h4>

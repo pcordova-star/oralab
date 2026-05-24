@@ -21,7 +21,8 @@ import {
   ClipboardCheck,
   CalendarDays,
   MapPin,
-  Home
+  Home,
+  Package
 } from "lucide-react";
 
 export default function HomePage() {
@@ -41,7 +42,7 @@ export default function HomePage() {
                   <Heart className="h-4 w-4 fill-secondary" /> Tu bienestar digestivo es nuestra prioridad
                 </div>
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20">
-                  <Home className="h-4 w-4" /> También a domicilio
+                  <Package className="h-4 w-4" /> Opción de Test en Casa (ambulatorio)
                 </div>
               </div>
               
@@ -90,7 +91,7 @@ export default function HomePage() {
                     "Sin agujas ni procedimientos dolorosos.",
                     "Solo necesitas soplar en un dispositivo especial.",
                     "Resultados precisos para guiar tu tratamiento.",
-                    "Realizado en nuestra consulta o en la comodidad de tu hogar."
+                    "Realizado en nuestra consulta o bajo modalidad ambulatoria."
                   ].map((text, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <CheckCircle className="h-6 w-6 text-secondary shrink-0" />
@@ -101,11 +102,11 @@ export default function HomePage() {
               </div>
               <div className="bg-background p-8 rounded-3xl border-2 border-dashed border-secondary/30 flex flex-col items-center text-center">
                 <div className="bg-white p-4 rounded-2xl shadow-xl mb-6">
-                  <Home className="h-16 w-16 text-secondary" />
+                  <Package className="h-16 w-16 text-secondary" />
                 </div>
-                <h3 className="text-2xl font-bold text-primary mb-4">Servicio a Domicilio</h3>
+                <h3 className="text-2xl font-bold text-primary mb-4">Modalidad Ambulatoria (En Casa)</h3>
                 <p className="text-muted-foreground">
-                  Llevamos nuestra tecnología de punta directamente a tu casa. Ideal para quienes buscan máxima comodidad o tienen dificultades para trasladarse, manteniendo la misma precisión clínica que en nuestra consulta.
+                  Máxima flexibilidad para tu tiempo: retira el kit de toma de muestra en nuestra consulta de Las Condes, realiza el test cómodamente en tu hogar siguiendo nuestras instrucciones y tráelo de vuelta para su análisis inmediato.
                 </p>
               </div>
             </div>
@@ -243,7 +244,7 @@ export default function HomePage() {
                   <CalendarDays className="h-8 w-8 text-secondary" />
                 </div>
                 <h4 className="text-xl font-bold text-primary mb-3">2. Agenda tu Test</h4>
-                <p className="text-muted-foreground text-sm">Contáctanos para programar tu cita en nuestra consulta o solicita el <strong>servicio a domicilio</strong>.</p>
+                <p className="text-muted-foreground text-sm">Programa tu cita presencial o solicita tu <strong>kit para realizar el test en casa</strong> (ambulatorio).</p>
               </div>
 
               <div className="flex flex-col items-center text-center group">
@@ -286,7 +287,7 @@ export default function HomePage() {
             <div>
               <h5 className="font-bold mb-6 text-secondary">Servicios</h5>
               <ul className="space-y-4 text-primary-foreground/70 text-sm">
-                <li>Test a Domicilio</li>
+                <li>Test Ambulatorio (Kit Casa)</li>
                 <li>Consulta Presencial</li>
                 <li>Convenios Médicos</li>
               </ul>
