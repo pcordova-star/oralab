@@ -1,17 +1,9 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REGLAS DE SEGURIDAD ORALAB
-    // Actualización para corregir error de permisos: 2026-05-24T17:50:00Z
+    // REGLAS ABIERTAS PARA DESARROLLO Y ADMINISTRACIÓN
+    // Última actualización: 2026-05-24T18:00:00Z
     
-    // Permitir acceso total (lectura, listado y escritura) a la colección de reservas.
-    // Esto es crítico para que el panel de recepción pueda consultar las citas del día.
-    match /bookings/{bookingId} {
-      allow read, write: if true;
-    }
-
-    // Regla de respaldo global para garantizar la disponibilidad de otros servicios.
     match /{document=**} {
       allow read, write: if true;
     }
