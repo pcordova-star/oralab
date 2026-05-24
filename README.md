@@ -7,25 +7,28 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 - **Firebase App Hosting** (Despliegue dinámico)
 - **Firestore** (Base de datos en tiempo real)
 - **Genkit** (IA para generación de instrucciones de preparación)
-- **Tailwind CSS & ShadCN UI** (Interfaz moderna y profesional)
+- **Tailwind CSS & ShadCN UI**
 
 ## Guía de Publicación (Hosting)
 
 ### 1. GitHub
-Para subir los cambios a este repositorio:
+Para subir los cambios:
 ```bash
 git add .
-git commit -m "Oralab: Actualización de configuración y reglas"
+git commit -m "Actualización"
 git push origin main
 ```
 
-### 2. Configuración de Dominio (Cloudflare)
-Si usas Cloudflare para `oralab.cl`, configura los registros CNAME apuntando al host de Firebase que aparece en tu consola de **App Hosting** (ej: `studio-xxxx.web.app`). Asegúrate de:
-1. Usar **CNAME Flattening** en el registro `@`.
-2. Mantener la **Nube Gris** (DNS Only) hasta que Firebase active el certificado SSL.
+### 2. Configuración en Firebase App Hosting
+1. Ve a la consola de Firebase -> **App Hosting**.
+2. Crea un nuevo **Backend** conectado a este repositorio.
+3. En la pestaña **Settings -> Domains**, agrega `oralab.cl`.
 
-## Administración
-El panel de administración está disponible en `/login` para el personal autorizado. Permite gestionar el flujo de pacientes (Llegada, Inicio de Test, Finalización).
+### 3. DNS en Cloudflare
+Para `oralab.cl`, configura los registros CNAME apuntando al host de Firebase:
+1. Crea un CNAME para `@` apuntando a `studio-7816109963-74959.web.app`.
+2. Crea un CNAME para `www` apuntando a `studio-7816109963-74959.web.app`.
+3. **IMPORTANTE**: Mantén la **Nube Gris** (DNS Only) hasta que Firebase active el SSL.
 
 ---
 © 2024 Oralab Clinical Lab.
