@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // REGLAS TOTALMENTE ABIERTAS (EMERGENCIA)
-    // Desplegado el: 2024-05-24T21:15:00Z
+    // Forzando actualización: 2024-05-24T21:15:00Z
     match /{document=**} {
       allow read, write: if true;
     }
