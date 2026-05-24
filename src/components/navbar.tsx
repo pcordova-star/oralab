@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -15,7 +14,7 @@ export function Navbar() {
                 <Activity className="h-6 w-6 text-white" />
               </div>
               <span className="text-xl font-bold text-primary tracking-tight">
-                Oralab<span className="text-secondary">Flow</span>
+                Oralab
               </span>
             </Link>
           </div>

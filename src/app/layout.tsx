@@ -4,8 +4,8 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'OralabFlow - Gestión Clínica Inteligente',
-  description: 'Sistema de agendamiento y ejecución de exámenes para Oralab.',
+  title: 'Oralab - Salud Digestiva Avanzada',
+  description: 'Laboratorio clínico especializado en test de aire espirado SIBO y salud digestiva.',
 };
 
 export default function RootLayout({

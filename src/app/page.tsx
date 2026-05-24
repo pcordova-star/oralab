@@ -259,7 +259,7 @@ export default function HomePage() {
                 <div className="bg-secondary p-1.5 rounded-lg">
                   <Activity className="h-6 w-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold tracking-tight">Oralab<span className="text-secondary">Flow</span></span>
+                <span className="text-2xl font-bold tracking-tight">Oralab</span>
               </div>
               <p className="text-primary-foreground/70 max-w-md leading-relaxed">
                 Llevamos la ciencia de vanguardia Sunvou al servicio de los pacientes en Chile. Porque entender lo que pasa en tu interior es el primer paso para vivir mejor.
