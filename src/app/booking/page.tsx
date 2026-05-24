@@ -26,7 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -37,6 +37,8 @@ import { format, isBefore, startOfToday, isWeekend } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
+import { generatePrepInstructions } from "@/ai/flows/generate-prep-instructions";
+import { jsPDF } from "jspdf";
 
 const regions = [
   "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
@@ -104,6 +106,9 @@ export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [prepInstructions, setPrepInstructions] = useState<string>("");
+  const [lastBookingValues, setLastBookingValues] = useState<BookingFormValues | null>(null);
+  
   const db = useFirestore();
 
   useEffect(() => {
@@ -138,7 +143,6 @@ export default function BookingPage() {
   const selectedRegion = form.watch("region");
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
 
-  // Reset commune when region changes
   useEffect(() => {
     if (selectedRegion) {
       form.setValue("commune", "");
@@ -167,7 +171,48 @@ export default function BookingPage() {
     setStep(step - 1);
   }
 
-  function onSubmit(values: BookingFormValues) {
+  async function downloadPDF() {
+    if (!lastBookingValues) return;
+
+    const doc = new jsPDF();
+    const margin = 20;
+    let y = 20;
+
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(28, 104, 182); // Primary color
+    doc.text("Resumen de Reserva - Oralab", margin, y);
+    y += 15;
+
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Paciente: ${lastBookingValues.firstName} ${lastBookingValues.lastNameFather} ${lastBookingValues.lastNameMother}`, margin, y);
+    y += 10;
+    doc.text(`Examen: Test de Aire Espirado (${lastBookingValues.examType})`, margin, y);
+    y += 10;
+    doc.text(`Fecha: ${format(lastBookingValues.scheduledDate, "PPPP", { locale: es })}`, margin, y);
+    y += 10;
+    doc.text(`Hora: ${lastBookingValues.scheduledTime} hrs`, margin, y);
+    y += 15;
+
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, 190, y);
+    y += 15;
+
+    doc.setFontSize(16);
+    doc.setTextColor(28, 104, 182);
+    doc.text("Indicaciones Pre-Examen", margin, y);
+    y += 10;
+
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    const splitText = doc.splitTextToSize(prepInstructions || "Por favor, siga las indicaciones de ayuno y dieta entregadas por nuestro equipo.", 170);
+    doc.text(splitText, margin, y);
+
+    doc.save(`reserva-oralab-${lastBookingValues.firstName}.pdf`);
+  }
+
+  async function onSubmit(values: BookingFormValues) {
     if (!db) {
       toast({
         variant: "destructive",
@@ -203,20 +248,31 @@ export default function BookingPage() {
       createdAt: serverTimestamp(),
     };
 
-    const bookingsRef = collection(db, "bookings");
-    
-    addDocumentNonBlocking(bookingsRef, bookingData)
-      .then(() => {
-        toast({
-          title: "Solicitud enviada correctamente",
-          description: "Nos pondremos en contacto contigo a la brevedad para confirmar tu hora.",
-        });
-        setIsSubmitting(false);
-        setStep(4);
-      })
-      .catch(() => {
-        setIsSubmitting(false);
+    try {
+      // Obtener instrucciones de IA
+      const aiResponse = await generatePrepInstructions({ examType: values.examType });
+      setPrepInstructions(aiResponse.instructions);
+      
+      const bookingsRef = collection(db, "bookings");
+      await addDocumentNonBlocking(bookingsRef, bookingData);
+      
+      setLastBookingValues(values);
+      toast({
+        title: "Solicitud enviada",
+        description: "Tus datos se guardaron y las indicaciones se enviaron a tu correo.",
       });
+      
+      setIsSubmitting(false);
+      setStep(4);
+    } catch (error) {
+      console.error(error);
+      setIsSubmitting(false);
+      toast({
+        variant: "destructive",
+        title: "Error al procesar",
+        description: "Hubo un problema al guardar tu reserva. Reintenta por favor.",
+      });
+    }
   }
 
   if (step === 4) {
@@ -230,10 +286,20 @@ export default function BookingPage() {
             </div>
             <CardTitle className="text-3xl font-bold text-primary mb-4">¡Solicitud Enviada!</CardTitle>
             <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-              Hemos recibido tus datos correctamente. Un especialista de Oralab te contactará por teléfono o email para confirmar la disponibilidad de tu hora.
+              Hemos enviado las indicaciones de preparación a <strong>{lastBookingValues?.email}</strong>. Por favor, revisa tu bandeja de entrada (y la carpeta de spam).
             </p>
+            
+            <div className="flex flex-col gap-4 max-w-sm mx-auto mb-8">
+              <Button onClick={downloadPDF} variant="outline" size="lg" className="rounded-full flex items-center gap-2">
+                <Download className="h-5 w-5" /> Descargar Resumen PDF
+              </Button>
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Mail className="h-4 w-4" /> Correo enviado con instrucciones
+              </div>
+            </div>
+
             <Link href="/">
-              <Button size="lg" className="rounded-full">Volver al inicio</Button>
+              <Button size="lg" className="rounded-full w-full max-w-xs">Volver al inicio</Button>
             </Link>
           </Card>
         </main>
@@ -676,7 +742,7 @@ export default function BookingPage() {
                         Atrás
                       </Button>
                       <Button type="submit" className="flex-2 w-full h-14 text-lg font-bold rounded-xl shadow-lg" disabled={isSubmitting}>
-                        {isSubmitting ? "Enviando..." : "Confirmar Reserva"}
+                        {isSubmitting ? "Procesando..." : "Confirmar Reserva"}
                       </Button>
                     </div>
                   </div>
