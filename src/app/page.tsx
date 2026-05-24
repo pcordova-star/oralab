@@ -3,6 +3,7 @@
 
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { 
   Activity, 
   Wind, 
@@ -45,9 +46,11 @@ export default function HomePage() {
                 <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold shadow-lg bg-primary hover:bg-primary/90 transition-all hover:scale-105">
                   Quiero saber más <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="lg" className="rounded-full h-14 px-8 text-lg font-bold border-2">
-                  ¿Cómo funciona el test?
-                </Button>
+                <Link href="/how-it-works">
+                  <Button variant="outline" size="lg" className="rounded-full h-14 px-8 text-lg font-bold border-2">
+                    ¿Cómo funciona el test?
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
