@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -25,11 +26,16 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ClipboardList } from "lucide-react";
+import { ChevronLeft, ClipboardList, CalendarIcon, Clock } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, isBefore, startOfToday, isWeekend } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const regions = [
   "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
@@ -52,7 +58,20 @@ const chileanCommunes = Array.from(new Set([
   "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"
 ])).sort();
 
+const timeSlots = [];
+for (let hour = 8; hour <= 12; hour++) {
+  for (let min = 0; min < 60; min += 15) {
+    if (hour === 12 && min > 0) break;
+    const h = hour.toString().padStart(2, '0');
+    const m = min.toString().padStart(2, '0');
+    timeSlots.push(`${h}:${m}`);
+  }
+}
+
 const bookingSchema = z.object({
+  examType: z.enum(["SIBO", "HP"], { required_error: "Seleccione tipo de examen" }),
+  scheduledDate: z.date({ required_error: "Seleccione una fecha" }),
+  scheduledTime: z.string().min(1, "Seleccione una hora"),
   firstName: z.string().min(2, "Requerido"),
   lastNameFather: z.string().min(2, "Requerido"),
   lastNameMother: z.string().min(2, "Requerido"),
@@ -82,6 +101,8 @@ export default function BookingPage() {
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
+      examType: "SIBO",
+      scheduledTime: "",
       firstName: "",
       lastNameFather: "",
       lastNameMother: "",
@@ -125,6 +146,9 @@ export default function BookingPage() {
     const birthDate = `${values.birthYear}-${values.birthMonth}-${values.birthDay.padStart(2, '0')}`;
     
     const bookingData = {
+      examType: values.examType,
+      scheduledDate: format(values.scheduledDate, "yyyy-MM-dd"),
+      scheduledTime: values.scheduledTime,
       firstName: values.firstName,
       lastNameFather: values.lastNameFather,
       lastNameMother: values.lastNameMother,
@@ -176,159 +200,103 @@ export default function BookingPage() {
               <CardTitle className="text-2xl text-primary font-bold">Reserva tu Examen</CardTitle>
             </div>
             <CardDescription className="text-base italic">
-              Completa los datos para coordinar tu cita.
+              Paso 1: Selecciona tu examen y horario. Luego completa tus datos.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-8">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nombres</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ej: Juan Pablo" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                {/* Sección 1: Tipo de Test y Horario */}
+                <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-6">
+                  <h3 className="font-bold text-primary flex items-center gap-2 text-lg">
+                    <CalendarIcon className="h-5 w-5" /> Datos de la Cita
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
-                      name="lastNameFather"
+                      name="examType"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Apellido Paterno</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Pérez" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="lastNameMother"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Apellido Materno</FormLabel>
-                          <FormControl>
-                            <Input placeholder="González" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="usuario@ejemplo.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Teléfono Chile</FormLabel>
-                        <div className="flex gap-2 items-center">
-                          <div className="bg-muted px-3 h-10 flex items-center rounded-md text-sm border font-medium">
-                            +56 9
-                          </div>
-                          <FormControl>
-                            <Input placeholder="12345678" maxLength={8} {...field} />
-                          </FormControl>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dirección</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Calle, número, depto" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="space-y-2">
-                  <FormLabel>Fecha de Nacimiento</FormLabel>
-                  <div className="grid grid-cols-3 gap-2">
-                    <FormField
-                      control={form.control}
-                      name="birthDay"
-                      render={({ field }) => (
-                        <FormItem>
+                          <FormLabel>Tipo de Examen</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Día" />
+                              <SelectTrigger className="bg-white">
+                                <SelectValue placeholder="Seleccione examen" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                              <SelectItem value="SIBO">Test Aire Espirado SIBO</SelectItem>
+                              <SelectItem value="HP">Test Aire Espirado H. Pylori</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
                     <FormField
                       control={form.control}
-                      name="birthMonth"
+                      name="scheduledDate"
                       render={({ field }) => (
-                        <FormItem>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Mes" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {months.map(m => <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Día del Examen (Lun-Vie)</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal bg-white",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP", { locale: es })
+                                  ) : (
+                                    <span>Seleccione una fecha</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                  isBefore(date, startOfToday()) || isWeekend(date)
+                                }
+                                initialFocus
+                                locale={es}
+                              />
+                            </PopoverContent>
+                          </Popover>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
                     <FormField
                       control={form.control}
-                      name="birthYear"
+                      name="scheduledTime"
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel>Hora disponible</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Año" />
+                              <SelectTrigger className="bg-white">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 opacity-50" />
+                                  <SelectValue placeholder="Seleccione hora" />
+                                </div>
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
-                              {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                            <SelectContent className="max-h-60">
+                              {timeSlots.map(time => (
+                                <SelectItem key={time} value={time}>{time} hrs</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -338,28 +306,299 @@ export default function BookingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-6">
+                  <h3 className="font-bold text-primary flex items-center gap-2 text-lg">
+                    <ClipboardList className="h-5 w-5" /> Datos del Paciente
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombres</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: Juan Pablo" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="lastNameFather"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Apellido Paterno</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Pérez" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="lastNameMother"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Apellido Materno</FormLabel>
+                            <FormControl>
+                              <Input placeholder="González" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="usuario@ejemplo.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Teléfono Chile</FormLabel>
+                          <div className="flex gap-2 items-center">
+                            <div className="bg-muted px-3 h-10 flex items-center rounded-md text-sm border font-medium">
+                              +56 9
+                            </div>
+                            <FormControl>
+                              <Input placeholder="12345678" maxLength={8} {...field} />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
-                    name="diagnosis"
+                    name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Diagnóstico en la orden</FormLabel>
+                        <FormLabel>Dirección</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: Sospecha de SIBO" {...field} />
+                          <Input placeholder="Calle, número, depto" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  <div className="space-y-2">
+                    <FormLabel>Fecha de Nacimiento</FormLabel>
+                    <div className="grid grid-cols-3 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="birthDay"
+                        render={({ field }) => (
+                          <FormItem>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Día" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="birthMonth"
+                        render={({ field }) => (
+                          <FormItem>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Mes" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {months.map(m => <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="birthYear"
+                        render={({ field }) => (
+                          <FormItem>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Año" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="diagnosis"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Diagnóstico en la orden</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: Sospecha de SIBO" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="weight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Peso aproximado (kg)</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="Ej: 70" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
-                    name="weight"
+                    name="doctor"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Peso aproximado (kg)</FormLabel>
+                        <FormLabel>Médico que emite la orden</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="Ej: 70" {...field} />
+                          <Input placeholder="Nombre del médico" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="country"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>País</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Chile">Chile</SelectItem>
+                              <SelectItem value="Otro">Otro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="region"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Región</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="commune"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Comuna</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {chileanCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="sex"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Sexo asignado al nacer</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-2"
+                          >
+                            <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border">
+                              <RadioGroupItem value="not_specified" id="sex-none" />
+                              <label htmlFor="sex-none" className="text-sm font-medium leading-none cursor-pointer flex-1">No especifica</label>
+                            </div>
+                            <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border">
+                              <RadioGroupItem value="male" id="sex-male" />
+                              <label htmlFor="sex-male" className="text-sm font-medium leading-none cursor-pointer flex-1">Masculino</label>
+                            </div>
+                            <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border">
+                              <RadioGroupItem value="female" id="sex-female" />
+                              <label htmlFor="sex-female" className="text-sm font-medium leading-none cursor-pointer flex-1">Femenino</label>
+                            </div>
+                          </RadioGroup>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -367,116 +606,7 @@ export default function BookingPage() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="doctor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Médico que emite la orden</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nombre del médico" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>País</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Chile">Chile</SelectItem>
-                            <SelectItem value="Otro">Otro</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="region"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Región</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="commune"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Comuna</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {chileanCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="sex"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>Sexo asignado al nacer</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex flex-col space-y-2"
-                        >
-                          <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border">
-                            <RadioGroupItem value="not_specified" id="sex-none" />
-                            <label htmlFor="sex-none" className="text-sm font-medium leading-none cursor-pointer flex-1">No especifica</label>
-                          </div>
-                          <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border">
-                            <RadioGroupItem value="male" id="sex-male" />
-                            <label htmlFor="sex-male" className="text-sm font-medium leading-none cursor-pointer flex-1">Masculino</label>
-                          </div>
-                          <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border">
-                            <RadioGroupItem value="female" id="sex-female" />
-                            <label htmlFor="sex-female" className="text-sm font-medium leading-none cursor-pointer flex-1">Femenino</label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button type="submit" className="w-full h-14 text-lg font-bold rounded-xl" disabled={isSubmitting}>
+                <Button type="submit" className="w-full h-14 text-lg font-bold rounded-xl shadow-lg hover:scale-[1.02] transition-transform" disabled={isSubmitting}>
                   {isSubmitting ? "Enviando solicitud..." : "Agendar Cita"}
                 </Button>
               </form>

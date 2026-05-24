@@ -20,10 +20,13 @@
         "region": { "type": "string" },
         "commune": { "type": "string" },
         "sex": { "type": "string", "enum": ["not_specified", "male", "female"] },
+        "examType": { "type": "string", "enum": ["SIBO", "HP"] },
+        "scheduledDate": { "type": "string", "format": "date" },
+        "scheduledTime": { "type": "string" },
         "status": { "type": "string", "enum": ["pending", "contacted", "scheduled", "completed"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["firstName", "lastNameFather", "email", "phone", "status"]
+      "required": ["firstName", "lastNameFather", "email", "phone", "examType", "scheduledDate", "scheduledTime", "status"]
     }
   },
   "auth": {
