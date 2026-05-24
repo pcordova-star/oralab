@@ -22,8 +22,6 @@ import {
   Search, 
   Calendar as CalendarIcon, 
   Clock, 
-  User, 
-  Phone, 
   Mail, 
   Filter, 
   Trash2, 
@@ -31,7 +29,8 @@ import {
   Home,
   Building2,
   LogOut,
-  RefreshCcw
+  RefreshCcw,
+  Phone
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -94,6 +93,18 @@ export default function ReceptionPage() {
       toast({ variant: "destructive", title: "Error al actualizar" });
     }
   }
+
+  // Función segura para formatear la fecha y evitar errores de RangeError
+  const safeFormatDate = (dateStr: string) => {
+    if (!dateStr) return "N/A";
+    try {
+      const date = new Date(dateStr + 'T00:00:00');
+      if (isNaN(date.getTime())) return "Fecha Inválida";
+      return format(date, 'dd MMM, yyyy', { locale: es });
+    } catch (e) {
+      return "Error";
+    }
+  };
 
   if (isUserLoading || !user) {
     return (
@@ -222,7 +233,7 @@ export default function ReceptionPage() {
                         <div className="flex flex-col text-sm">
                           <span className="flex items-center gap-1 font-medium">
                             <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-                            {format(new Date(b.scheduledDate + 'T00:00:00'), 'dd MMM, yyyy', { locale: es })}
+                            {safeFormatDate(b.scheduledDate)}
                           </span>
                           <span className="flex items-center gap-1 text-muted-foreground">
                             <Clock className="h-3 w-3" /> {b.scheduledTime} hrs
