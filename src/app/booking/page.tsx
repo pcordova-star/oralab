@@ -53,7 +53,7 @@ const communesByRegion: Record<string, string[]> = {
   "Atacama": ["Copiapó", "Caldera", "Tierra Amarilla", "Chañaral", "Diego de Almagro", "Vallenar", "Alto del Carmen", "Freirina", "Huasco"],
   "Coquimbo": ["La Serena", "Coquimbo", "Andacollo", "La Higuera", "Paiguano", "Vicuña", "Illapel", "Canela", "Los Vilos", "Salamanca", "Ovalle", "Combarbalá", "Monte Patria", "Punitaqui", "Río Hurtado"],
   "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández", "San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo", "Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales", "Los Andes", "Calle Larga", "Rinconada", "San Esteban", "San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María", "Quilpué", "Limache", "Olmué", "Villa Alemana", "La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
-  "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Puente Alto", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
+  "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
   "O'Higgins": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente", "Pichilemu", "La Estrella", "Litueche", "Marchihue", "Navidad", "Paredones", "San Fernando", "Chépica", "Chimbarongo", "Lolol", "Nancagua", "Palmilla", "Peralillo", "Placilla", "Pumanque", "Santa Cruz"],
   "Maule": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael", "Cauquenes", "Chanco", "Pelluhue", "Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén", "Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"],
   "Ñuble": ["Chillán", "Bulnes", "Cobquecura", "Coelemu", "Coihueco", "Chillán Viejo", "El Carmen", "Ninhue", "Ñiquén", "Pemuco", "Pinto", "Portezuelo", "Quillón", "Quirihue", "Ránquil", "San Carlos", "San Fabián", "San Ignacio", "San Nicolás", "Treguaco", "Yungay"],
@@ -178,9 +178,8 @@ export default function BookingPage() {
     const margin = 20;
     let y = 20;
 
-    // Header
     doc.setFontSize(22);
-    doc.setTextColor(28, 104, 182); // Primary color
+    doc.setTextColor(28, 104, 182); 
     doc.text("Resumen de Reserva - Oralab", margin, y);
     y += 15;
 
@@ -206,7 +205,8 @@ export default function BookingPage() {
 
     doc.setFontSize(10);
     doc.setTextColor(60, 60, 60);
-    const splitText = doc.splitTextToSize(prepInstructions || "Por favor, siga las indicaciones de ayuno y dieta entregadas por nuestro equipo.", 170);
+    const textToPrint = prepInstructions || "1. Ayuno de 12 horas.\n2. Dieta blanda el día anterior (sin fibra, sin legumbres).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
+    const splitText = doc.splitTextToSize(textToPrint, 170);
     doc.text(splitText, margin, y);
 
     doc.save(`reserva-oralab-${lastBookingValues.firstName}.pdf`);
@@ -249,9 +249,17 @@ export default function BookingPage() {
     };
 
     try {
-      // Obtener instrucciones de IA
-      const aiResponse = await generatePrepInstructions({ examType: values.examType });
-      setPrepInstructions(aiResponse.instructions);
+      // Fallback para instrucciones si la IA falla (Quota exhausted)
+      let instructions = "";
+      try {
+        const aiResponse = await generatePrepInstructions({ examType: values.examType });
+        instructions = aiResponse.instructions;
+      } catch (aiError) {
+        console.warn("AI instructions failed, using static fallback:", aiError);
+        instructions = "Por favor, siga estas indicaciones fundamentales para su examen:\n\n1. Ayuno estricto de 12 horas.\n2. El día anterior, siga una dieta blanda (arroz, pollo/pescado a la plancha). Evite legumbres, fibra, frutas y verduras.\n3. No fume ni realice ejercicio intenso 2 horas antes del examen.\n4. No tome antibióticos ni probióticos 4 semanas antes de la prueba.";
+      }
+      
+      setPrepInstructions(instructions);
       
       const bookingsRef = collection(db, "bookings");
       await addDocumentNonBlocking(bookingsRef, bookingData);
@@ -259,7 +267,7 @@ export default function BookingPage() {
       setLastBookingValues(values);
       toast({
         title: "Solicitud enviada",
-        description: "Tus datos se guardaron y las indicaciones se enviaron a tu correo.",
+        description: "Tus datos se guardaron y las indicaciones se generaron con éxito.",
       });
       
       setIsSubmitting(false);
@@ -286,7 +294,7 @@ export default function BookingPage() {
             </div>
             <CardTitle className="text-3xl font-bold text-primary mb-4">¡Solicitud Enviada!</CardTitle>
             <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-              Hemos enviado las indicaciones de preparación a <strong>{lastBookingValues?.email}</strong>. Por favor, revisa tu bandeja de entrada (y la carpeta de spam).
+              Hemos procesado tu solicitud para el correo <strong>{lastBookingValues?.email}</strong>. Por favor, descarga tu resumen a continuación.
             </p>
             
             <div className="flex flex-col gap-4 max-w-sm mx-auto mb-8">
@@ -294,7 +302,7 @@ export default function BookingPage() {
                 <Download className="h-5 w-5" /> Descargar Resumen PDF
               </Button>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Mail className="h-4 w-4" /> Correo enviado con instrucciones
+                <CheckCircle2 className="h-4 w-4 text-green-500" /> Datos guardados correctamente
               </div>
             </div>
 
