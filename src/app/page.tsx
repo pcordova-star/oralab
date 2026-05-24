@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Navbar } from "@/components/navbar";
@@ -100,7 +101,7 @@ export default function HomePage() {
               <div className="flex-1 text-center md:text-left">
                 <h3 className="text-2xl font-bold text-primary mb-2">Da el primer paso con tu médico</h3>
                 <p className="text-lg text-muted-foreground mb-4">
-                  Realizamos diversos exámenes médicos para evaluar tu sistema digestivo: <strong>Test de Hidrógeno y Metano Espirado con Lactosa, Fructosa y Lactulosa</strong>. Si te identificas con estos síntomas, solicita a tu especialista o gastroenterólogo el test de aire espirado de tecnología Sunvou. Un diagnóstico preciso es la clave para un tratamiento efectivo.
+                  Realizamos diversos exámenes médicos para evaluar tu sistema digestivo: <strong>Test de Hidrógeno y Metano Espirado con Lactosa, Fructosa y Lactulosa</strong>. Si te identificas con estos síntomas, solicita a tu especialista o gastroenterólogo el test de aire espirado. Un diagnóstico preciso es la clave para un tratamiento efectivo.
                 </p>
                 <div className="flex items-center justify-center md:justify-start gap-2 text-secondary font-bold">
                   <ClipboardCheck className="h-5 w-5" />
@@ -210,8 +211,10 @@ export default function HomePage() {
                 <div className="w-16 h-16 rounded-full bg-white border-4 border-secondary flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-110">
                   <ClipboardCheck className="h-8 w-8 text-secondary" />
                 </div>
-                <h4 className="text-xl font-bold text-primary mb-3">1. Consulta Especializada</h4>
-                <p className="text-muted-foreground text-sm">Habla con tu gastroenterólogo sobre tus síntomas y solicita el Test Sunvou de Oralab.</p>
+                <div className="flex flex-col">
+                  <h4 className="text-xl font-bold text-primary mb-3">1. Consulta Especializada</h4>
+                  <p className="text-muted-foreground text-sm">Habla con tu gastroenterólogo sobre tus síntomas y solicita el Test de Aire Espirado.</p>
+                </div>
               </div>
 
               <div className="flex flex-col items-center text-center group">
