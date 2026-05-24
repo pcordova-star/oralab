@@ -1,7 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REGLAS ABIERTAS PARA PRODUCCIÓN - ACTUALIZADO: 2024-05-25T04:15:00Z
+    // REGLAS ABIERTAS PARA PRODUCCIÓN - ACTUALIZADO: 2024-05-25T05:30:00Z
+    // Estas reglas permiten que cualquier persona lea o escriba en la base de datos.
     match /{document=**} {
       allow read, write: if true;
     }
