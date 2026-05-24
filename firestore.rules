@@ -1,9 +1,13 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REGLAS ABIERTAS PARA DESARROLLO Y ADMINISTRACIÓN
-    // Última actualización: 2026-05-24T18:00:00Z
+    // REGLAS DE EMERGENCIA - APERTURA TOTAL
+    // Forzando despliegue - Timestamp: 2026-05-24T19:35:00Z
     
+    match /bookings/{bookingId} {
+      allow read, write: if true;
+    }
+
     match /{document=**} {
       allow read, write: if true;
     }
