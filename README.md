@@ -3,36 +3,35 @@
 
 Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializado en tests de aire espirado.
 
-## Estado de Configuración DNS (Verificado)
+## Estado de Despliegue (Firebase App Hosting)
 
-La configuración en Cloudflare es **CORRECTA**. El sitio está listo para la validación de Firebase.
+Si ves el error **"Backend Not Found"**, no te preocupes. Significa que el DNS ya apunta a Google, pero Firebase aún está procesando el certificado SSL o el primer "Rollout".
 
-### Registros DNS Configurados:
-1. **Registro A**: `oralab.cl` -> `35.219.200.4` (**DNS Only / Nube Gris**)
-2. **CNAME _acme-challenge**: Para validación SSL de Google (**DNS Only / Nube Gris**)
-3. **CNAME www**: Redirección a dominio principal (**DNS Only / Nube Gris**)
-4. **TXT fah-claim**: Validación de propiedad para App Hosting (**DNS Only**)
+### Pasos para Activar el Sitio:
+1. **Push al repositorio**: Ejecuta los comandos de Git de abajo.
+2. **Revisar Rollouts**: Entra a [Firebase Console](https://console.firebase.google.com/) -> App Hosting -> Tu Backend -> **Rollouts**. Asegúrate de que la versión actual esté "Published".
+3. **Validación de Dominio**: En la pestaña **Settings -> Domains**, el estado debe decir **Active**.
 
-## Guía de Desarrollo
+## Guía de Desarrollo (Comandos Git)
 
-Para guardar y subir los cambios realizados en el proyecto, utiliza los siguientes comandos:
+Para subir las últimas mejoras (Home animado, visualizador técnico y estadísticas clínicas), ejecuta:
 
 ```bash
 # 1. Preparar los archivos
 git add .
 
 # 2. Crear un commit con las mejoras realizadas
-git commit -m "Mejoras en el Home: Animaciones avanzadas, visualizador de informe técnico y narrativa clínica para pacientes"
+git commit -m "Mejoras finales Home: Animaciones tecnológicas, visualizador de informe técnico y narrativa clínica para pacientes"
 
-# 3. Subir al repositorio
+# 3. Subir al repositorio (Esto activará automáticamente una nueva versión en App Hosting)
 git push origin main
 ```
 
-## Características Recientes
-- **Home de Alta Fidelidad**: Implementación de animaciones con Framer Motion y diseño moderno (Glassmorphism).
-- **Enfoque Clínico**: Narrativa equilibrada entre el rigor técnico (Sunvou®) y la educación al paciente.
-- **Visualizador de Informe**: Gráfico interactivo de biomarcadores (H2, CH4, H2S) para demostración técnica.
-- **Resumen PDF**: Funcionalidad de descarga de indicaciones pre-cita generadas con IA.
+## Características de la Versión Actual
+- **Home de Alta Fidelidad**: Animaciones avanzadas con Framer Motion (Tech Scanner y Bio-blobs).
+- **Enfoque Clínico**: Narrativa que equilibra el rigor técnico (Sunvou®) con la educación al paciente recién diagnosticado.
+- **Visualizador de Informe**: Gráfico interactivo de biomarcadores (H2, CH4, H2S) para interpretación médica.
+- **Estadísticas Educativas**: Sección para pacientes sobre prevalencia de SIBO e intolerancias.
 
 ---
 © 2024 Oralab Clinical Lab.
