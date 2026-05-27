@@ -7,13 +7,12 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 
 Si ves el error **"Backend Not Found"**, significa que el DNS ya apunta a Google, pero Firebase aún está procesando el primer despliegue o la validación del dominio.
 
-### Configuración de Dominio WWW (Cloudflare)
-Para que `www.oralab.cl` funcione correctamente junto al dominio raíz:
-1. **En Firebase Console**: Ve a App Hosting -> Configuración -> Dominios y agrega `www.oralab.cl`.
-2. **En Cloudflare**:
-   - Asegúrate de tener el registro `CNAME` con nombre `www` apuntando a `oralab.cl`.
-   - Mantén el **Proxy Status** en "DNS Only" (nube gris) hasta que Firebase marque el dominio como "Activo".
-   - Verifica que existan los registros `TXT` con el valor `fah-claim` proporcionado por Firebase para ambos registros (`@` y `www`).
+### Solución al error NXDOMAIN en www.oralab.cl
+Si `oralab.cl` funciona pero `www.oralab.cl` da error de "sitio no encontrado", verifica lo siguiente en **Cloudflare**:
+
+1. **Registro CNAME**: Asegúrate de tener un registro tipo `CNAME` con nombre `www` y contenido `@` (o `oralab.cl`).
+2. **Proxy Status**: Para la validación inicial de Firebase, asegúrate de que la nube esté en **Gris (DNS Only)**. Firebase necesita ver tu servidor DNS directamente para validar el certificado SSL.
+3. **Validación en Firebase**: En Firebase Console -> App Hosting -> Configuración -> Dominios, el dominio `www.oralab.cl` debe aparecer como **"Activo"**. Si no lo has agregado allí, Firebase no sabrá cómo recibir el tráfico de `www`.
 
 ## Gestión de Administrador
 - **Acceso**: `/login`
