@@ -2,7 +2,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REGLAS ABIERTAS PARA PRODUCCIÓN - ACTUALIZADO: 2024-05-26T14:45:00Z
+    // REGLAS ABIERTAS PARA PRODUCCIÓN - ACTUALIZADO: 2024-05-26T17:10:00Z
     // Nota: Acceso total permitido mientras se completa la propagación del dominio y pruebas de App Hosting.
     match /{document=**} {
       allow read, write: if true;

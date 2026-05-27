@@ -13,6 +13,11 @@ La configuración en Cloudflare es **CORRECTA**. El sitio está listo para la va
 3. **CNAME www**: Redirección a dominio principal (**DNS Only / Nube Gris**)
 4. **TXT fah-claim**: Validación de propiedad para App Hosting (**DNS Only**)
 
+### Herramientas de Verificación:
+- [DNS Checker - Registro A](https://dnschecker.org/#A/oralab.cl)
+- [What My DNS](https://www.whatsmydns.net/#A/oralab.cl)
+- [Google Dig](https://toolbox.googleapps.com/apps/dig/#A/oralab.cl)
+
 **IMPORTANTE**: No activar la nube naranja (Proxy) hasta que el panel de Firebase indique que el dominio está en estado **"Active"**.
 
 ## Despliegue en Firebase App Hosting
