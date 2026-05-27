@@ -21,16 +21,16 @@ La configuración actual es CORRECTA:
 
 ## Guía de Desarrollo (Comandos Git)
 
-Para subir cambios y activar un nuevo despliegue (Rollout) en Firebase:
+Ejecuta estos comandos para subir tus cambios y activar un nuevo despliegue en Firebase:
 
 ```bash
 # 1. Preparar los archivos
 git add .
 
 # 2. Confirmar cambios con descripción técnica
-git commit -m "Actualización: Logo único, narrativa clínica y corrección de hidratación"
+git commit -m "Mejora: Logo personalizado, narrativa clínica y estabilidad de sesión"
 
-# 3. Subir a GitHub (esto activa App Hosting)
+# 3. Subir a GitHub (esto activa App Hosting automáticamente)
 git push origin main
 ```
 
