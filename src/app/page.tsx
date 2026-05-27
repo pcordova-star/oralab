@@ -264,13 +264,6 @@ export default function HomePage() {
                     </Button>
                   </Link>
                 </motion.div>
-
-                <motion.div variants={fadeIn} className="flex items-center justify-center lg:justify-start gap-4 pt-4 border-t border-primary/10">
-                  <UserRoundCheck className="h-6 w-6 text-primary" />
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Oralab proporciona el soporte tecnológico para el examen solicitado por tu <span className="text-primary font-bold">médico tratante</span>.
-                  </p>
-                </motion.div>
               </motion.div>
 
               <motion.div 
