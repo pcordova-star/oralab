@@ -3,36 +3,36 @@
 
 Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializado en tests de aire espirado.
 
-## Tecnologías Utilizadas
-- **Next.js 15** (App Router)
-- **Firebase App Hosting** (Despliegue dinámico)
-- **Firestore** (Base de datos en tiempo real)
-- **Genkit** (IA para generación de instrucciones)
-- **Tailwind CSS & ShadCN UI**
+## Guía de Configuración DNS (Cloudflare)
 
-## Guía de Publicación (Hosting)
+Para que el dominio `oralab.cl` funcione con Firebase App Hosting, sigue esta configuración exacta en Cloudflare:
 
-### 1. GitHub
-Para subir los cambios:
-```bash
-git add .
-git commit -m "Actualización"
-git push origin main
-```
+1. **A Record (@)**:
+   - Name: `@`
+   - Content: `35.219.200.4` (o la IP que te dé Firebase)
+   - Proxy Status: **DNS ONLY (Nube Gris)** <- CRÍTICO
 
-### 2. Configuración en Firebase App Hosting
-1. Ve a la consola de Firebase -> **App Hosting**.
-2. Crea un nuevo **Backend** conectado a tu repositorio de GitHub.
-3. En el **Paso 4 (Variables de Entorno)**, agrega:
-   - **Clave**: `GOOGLE_GENAI_API_KEY`
-   - **Valor**: Tu API Key de Google AI Studio (necesaria para las instrucciones personalizadas por IA).
-4. En la pestaña **Settings -> Domains**, agrega `oralab.cl`.
+2. **CNAME Record (www)**:
+   - Name: `www`
+   - Content: `@`
+   - Proxy Status: **DNS ONLY (Nube Gris)**
 
-### 3. DNS en Cloudflare
-Para `oralab.cl`, configura los registros CNAME:
-1. Crea un CNAME para `@` apuntando a `studio-7816109963-74959.web.app`.
-2. Crea un CNAME para `www` apuntando a `studio-7816109963-74959.web.app`.
-3. **IMPORTANTE**: Mantén la **Nube Gris** (DNS Only) hasta que Firebase active el SSL y el estado sea "Active".
+3. **TXT Record (fah-claim)**:
+   - Este es para validar la propiedad del dominio.
+   - Proxy Status: **DNS ONLY**
+
+4. **CNAME Record (_acme-challenge)**:
+   - Usado para el certificado SSL.
+   - Proxy Status: **DNS ONLY (Nube Gris)**
+
+**IMPORTANTE**: Una vez que en la consola de Firebase el estado del dominio cambie a **"Active"**, puedes volver a Cloudflare y activar las nubes naranjas (Proxied) para mayor seguridad.
+
+## Despliegue en Firebase App Hosting
+
+1. Conecta este repositorio en la consola de Firebase.
+2. En el paso de variables de entorno, agrega:
+   - `GOOGLE_GENAI_API_KEY`: Tu llave de Google AI Studio.
+3. El despliegue automático se activará con cada `git push origin main`.
 
 ---
 © 2024 Oralab Clinical Lab.
