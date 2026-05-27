@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth, useUser } from "@/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
-import { Lock, Mail, ArrowRight, Activity } from "lucide-react";
+import { Lock, Mail, ArrowRight, Activity, UserPlus } from "lucide-react";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
 
@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
@@ -51,10 +52,41 @@ export default function LoginPage() {
       router.push("/reception");
     } catch (error: any) {
       console.error(error);
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        toast({
+          variant: "destructive",
+          title: "Error de acceso",
+          description: "Credenciales inválidas. Si es tu primera vez, usa el botón de crear cuenta abajo.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Ocurrió un error al intentar iniciar sesión.",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleCreateAdmin() {
+    if (!auth || email !== ADMIN_EMAIL) return;
+    
+    setIsLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      toast({
+        title: "Cuenta Creada",
+        description: "Se ha creado la cuenta administrativa exitosamente.",
+      });
+      router.push("/reception");
+    } catch (error: any) {
+      console.error(error);
       toast({
         variant: "destructive",
-        title: "Error de acceso",
-        description: "Credenciales inválidas o error de red.",
+        title: "Error al crear cuenta",
+        description: error.message || "No se pudo crear la cuenta inicial.",
       });
     } finally {
       setIsLoading(false);
@@ -103,14 +135,30 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              <Button 
-                type="submit" 
-                className="w-full h-12 text-lg font-bold rounded-xl" 
-                disabled={isLoading}
-              >
-                {isLoading ? "Validando..." : "Entrar al Sistema"}
-                {!isLoading && <ArrowRight className="ml-2 h-5 w-5" />}
-              </Button>
+              
+              <div className="flex flex-col gap-3">
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 text-lg font-bold rounded-xl" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Validando..." : "Entrar al Sistema"}
+                  {!isLoading && <ArrowRight className="ml-2 h-5 w-5" />}
+                </Button>
+
+                {email === ADMIN_EMAIL && (
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    className="w-full h-10 text-sm font-medium rounded-xl border-dashed border-primary/40 text-primary hover:bg-primary/5"
+                    onClick={handleCreateAdmin}
+                    disabled={isLoading || password.length < 6}
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    ¿Primer acceso? Crear cuenta Admin
+                  </Button>
+                )}
+              </div>
             </form>
           </CardContent>
         </Card>

@@ -15,27 +15,23 @@ Si ves el error **"Backend Not Found"**, significa que el DNS ya apunta a Google
 ## Gestión de Administrador
 - **Acceso**: `/login`
 - **Email Admin**: `admin@oralab.cl`
+- **Configuración Inicial**: Si es la primera vez que accedes, escribe el email `admin@oralab.cl`, una contraseña (mínimo 6 caracteres) y haz clic en el botón inferior **"¿Primer acceso? Crear cuenta Admin"**.
 - **Funcionalidad**: Gestión de citas, cambios de estado (Llegó, Iniciado, Completado) y eliminación de registros.
 
 ## Guía de Desarrollo (Comandos Git)
 
-Para subir las últimas mejoras de robustez y diseño, ejecuta:
+Para subir las últimas mejoras, ejecuta:
 
 ```bash
-# 1. Preparar los archivos
 git add .
-
-# 2. Crear un commit con las mejoras realizadas
-git commit -m "Robustez de Admin: Corrección de hidratación, ordenamiento en memoria y validación de rol"
-
-# 3. Subir al repositorio
+git commit -m "Admin Setup: Habilitada creación de cuenta administrativa inicial y corrección de flujos"
 git push origin main
 ```
 
 ## Características Técnicas
 - **Home de Alta Fidelidad**: Animaciones Framer Motion (Tech Scanner).
 - **Informe Interactivo**: Gráfico multigas (H2, CH4, H2S) para interpretación médica.
-- **Consultas Optimizadas**: Ordenamiento en memoria para evitar errores de índices de Firestore.
+- **Robustez Administrativa**: Ordenamiento en memoria y validación de rol estricta.
 
 ---
 © 2024 Oralab Clinical Lab.
