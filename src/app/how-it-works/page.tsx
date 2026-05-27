@@ -3,22 +3,17 @@
 
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { 
   Wind, 
   Clock, 
   Coffee, 
   ChevronRight, 
-  CheckCircle2, 
   ArrowLeft,
-  Info,
   Beaker,
   Stethoscope,
   MapPin,
   Package,
-  Home,
   MessageCircle,
-  Lock,
   ClipboardCheck,
   UserRound,
   Microscope
@@ -32,27 +27,27 @@ export default function HowItWorksPage() {
   const steps = [
     {
       title: "1. Preparación y Dieta",
-      description: "Siguiendo las indicaciones de su médico y nuestro protocolo clínico, deberá realizar una dieta blanda 24 horas antes y un ayuno de 12 horas para asegurar una línea base de gases estable.",
+      description: "Siguiendo el protocolo clínico, el paciente debe realizar una dieta blanda 24 horas antes y un ayuno de 12 horas para asegurar una línea base de gases estable.",
       icon: <Coffee className="h-8 w-8 text-secondary" />,
     },
     {
       title: "2. Medición Basal",
-      description: "Al iniciar el procedimiento, se recolecta una muestra basal de aliento para cuantificar la producción endógena de gases antes de cualquier estímulo.",
+      description: "Al iniciar el procedimiento, se recolecta una muestra de aliento para cuantificar la producción endógena de gases previa al estímulo.",
       icon: <Wind className="h-8 w-8 text-secondary" />,
     },
     {
       title: "3. Administración del Sustrato",
-      description: "Se administra el sustrato específico (Lactulosa, Fructosa o Lactosa) indicado en su orden médica, el cual será fermentado por la microbiota en caso de malabsorción o sobrecrecimiento.",
+      description: "Se administra el sustrato específico (Lactulosa, Fructosa o Lactosa) indicado en su orden médica para evaluar su fermentación por la microbiota.",
       icon: <Beaker className="h-8 w-8 text-secondary" />,
     },
     {
       title: "4. Registro de Curva",
-      description: "Se realizan mediciones seriadas cada 15 a 30 minutos para trazar la curva de producción de Hidrógeno, Metano y Sulfuro, permitiendo identificar el lugar y tipo de fermentación.",
+      description: "Se realizan mediciones seriadas en intervalos definidos para trazar la curva de evolución de Hidrógeno, Metano y Sulfuro.",
       icon: <Clock className="h-8 w-8 text-secondary" />,
     },
     {
-      title: "5. Informe para Especialista",
-      description: "Generamos un reporte clínico con gráficas de evolución de gases. Este documento es la herramienta que su gastroenterólogo utilizará para diagnosticar SIBO, IMO o intolerancias.",
+      title: "5. Informe Técnico",
+      description: "Generamos un reporte con gráficas de evolución. Este documento técnico es la herramienta para la interpretación de su especialista.",
       icon: <ClipboardCheck className="h-8 w-8 text-secondary" />,
     },
   ];
@@ -74,9 +69,9 @@ export default function HowItWorksPage() {
               <Link href="/" className="inline-flex items-center text-secondary hover:text-secondary/80 mb-8 font-bold transition-colors">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Volver al inicio
               </Link>
-              <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">Protocolo Clínico de <br /><span className="text-secondary">Aire Espirado</span></h1>
+              <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">Protocolo de <br /><span className="text-secondary">Aire Espirado</span></h1>
               <p className="text-xl text-primary-foreground/80 max-w-2xl leading-relaxed font-medium">
-                Un procedimiento estandarizado internacionalmente bajo el Consenso Norteamericano de Aire Espirado para asistir a su especialista en el diagnóstico preciso.
+                Procedimiento estandarizado bajo el Consenso Norteamericano de Aire Espirado para asistir en el diagnóstico de patologías gastrointestinales.
               </p>
             </motion.div>
           </div>
@@ -95,9 +90,9 @@ export default function HowItWorksPage() {
                 <Package className="h-12 w-12 text-secondary" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-primary mb-3">Modalidad Ambulatoria (Kit en Casa)</h3>
+                <h3 className="text-2xl font-black text-primary mb-3">Modalidad Retiro de Kit</h3>
                 <p className="text-muted-foreground leading-relaxed text-lg">
-                  Bajo estricta supervisión de protocolo, el paciente puede retirar el material de recolección en nuestra sede para realizar el test en su entorno, asegurando que las muestras lleguen a nuestro laboratorio para el análisis multigas profesional.
+                  El paciente puede optar por el retiro de insumos para la recolección de muestras en su hogar siguiendo estrictamente el protocolo técnico, para luego ser analizadas en nuestro laboratorio.
                 </p>
               </div>
             </motion.div>
@@ -109,7 +104,7 @@ export default function HowItWorksPage() {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-16 space-y-4">
-                <h2 className="text-3xl md:text-5xl font-black text-primary italic">Fases del Procedimiento Clínico</h2>
+                <h2 className="text-3xl md:text-5xl font-black text-primary italic">Etapas del Procedimiento</h2>
                 <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full" />
               </div>
               
@@ -146,33 +141,33 @@ export default function HowItWorksPage() {
             <div className="glass-panel !bg-primary rounded-[3rem] p-8 md:p-16 shadow-2xl border-none relative">
               <div className="grid lg:grid-cols-2 gap-16 items-center relative z-10">
                 <div className="text-white">
-                  <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">Fundamento Clínico del Test</h2>
+                  <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">Fundamento de la Medición</h2>
                   <p className="text-lg opacity-80 mb-8 leading-relaxed">
-                    La malabsorción de carbohidratos o el sobrecrecimiento bacteriano (SIBO) provocan que las bacterias fermenten sustratos, liberando gases que se difunden al torrente sanguíneo y se eliminan por los pulmones. Medir estos gases es la forma más precisa y menos invasiva de "ver" la actividad metabólica de su intestino.
+                    La fermentación de sustratos por parte de la microbiota intestinal produce gases que se difunden al torrente sanguíneo y se eliminan vía pulmonar. La cuantificación de estos gases es un indicador técnico de la actividad metabólica intraluminal.
                   </p>
                   <div className="space-y-6">
                     <div className="flex items-start gap-4 bg-white/10 p-4 rounded-2xl border border-white/10">
                       <div className="bg-secondary/20 p-2 rounded-lg mt-1">
                         <UserRound className="h-5 w-5 text-secondary" />
                       </div>
-                      <p className="font-bold text-white/90 italic">Validado internacionalmente para el diagnóstico diferencial de SIBO, IMO y Malabsorción.</p>
+                      <p className="font-bold text-white/90 italic">Metodología técnica para el diagnóstico diferencial de SIBO e intolerancias.</p>
                     </div>
                     <div className="flex items-start gap-4 bg-white/10 p-4 rounded-2xl border border-white/10">
                       <div className="bg-secondary/20 p-2 rounded-lg mt-1">
                         <Stethoscope className="h-5 w-5 text-secondary" />
                       </div>
-                      <p className="font-bold text-white/90 italic">Tecnología recomendada por el American College of Gastroenterology.</p>
+                      <p className="font-bold text-white/90 italic">Tecnología alineada con las guías del American College of Gastroenterology.</p>
                     </div>
                   </div>
                 </div>
                 <div className="relative flex justify-center">
-                  <div className="aspect-square w-64 md:w-80 bg-secondary/10 rounded-full flex items-center justify-center p-12 border-4 border-dashed border-secondary/30 animate-pulse-subtle">
+                  <div className="aspect-square w-64 md:w-80 bg-secondary/10 rounded-full flex items-center justify-center p-12 border-4 border-dashed border-secondary/30">
                     <Microscope className="h-32 w-32 text-secondary" />
                   </div>
                   <div className="absolute -bottom-10 -right-10 bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/20 hidden md:block">
                     <div className="text-center">
-                      <p className="text-4xl font-black text-secondary">100%</p>
-                      <p className="text-xs font-bold text-white uppercase tracking-widest">Rigor Clínico</p>
+                      <p className="text-4xl font-black text-secondary">Sunvou®</p>
+                      <p className="text-xs font-bold text-white uppercase tracking-widest">Tecnología de Punta</p>
                     </div>
                   </div>
                 </div>
@@ -191,20 +186,20 @@ export default function HowItWorksPage() {
               className="max-w-3xl mx-auto"
             >
               <Stethoscope className="h-16 w-16 text-secondary mx-auto mb-8 animate-float" />
-              <h2 className="text-3xl md:text-6xl font-black text-primary mb-6">Apoyamos el diagnóstico de su especialista</h2>
+              <h2 className="text-3xl md:text-6xl font-black text-primary mb-6">Apoyo técnico para su médico tratante</h2>
               <p className="text-xl text-muted-foreground mb-10 leading-relaxed font-medium">
-                Si cuenta con una orden médica para un test de aire espirado, Oralab le brinda la tecnología multigas más avanzada de Chile para su realización.
+                Oralab proporciona la tecnología y el rigor técnico necesario para realizar el test de aire espirado solicitado por su especialista.
               </p>
               <div className="flex flex-wrap justify-center gap-6">
                 <Link href="/booking">
                   <Button size="lg" className="rounded-full h-16 px-10 text-xl font-black bg-primary hover:bg-secondary hover:text-white transition-all shadow-xl hover:scale-105">
-                    Reservar Cita Médica
+                    Reservar Examen
                   </Button>
                 </Link>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" size="lg" className="rounded-full h-16 px-10 text-xl font-bold border-2 border-primary text-primary hover:bg-primary/5">
                     <MessageCircle className="h-6 w-6 mr-3" />
-                    Consultas por WhatsApp
+                    Consultas Técnicas
                   </Button>
                 </a>
               </div>

@@ -14,20 +14,16 @@ import {
   Zap,
   Beaker,
   AlertCircle,
-  Globe,
   Award,
   Search,
   CheckCircle,
-  Heart,
   Stethoscope,
   ClipboardCheck,
   CalendarDays,
   MapPin,
-  Package,
   MessageCircle,
   Lock,
   ChevronRight,
-  Wind,
   Sparkles,
   UserRoundCheck
 } from "lucide-react";
@@ -77,7 +73,7 @@ export default function HomePage() {
               >
                 <motion.div variants={fadeIn} className="flex flex-wrap gap-3">
                   <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20 backdrop-blur-sm">
-                    <Stethoscope className="h-4 w-4" /> Apoyo Diagnóstico Gastroenterológico
+                    <Stethoscope className="h-4 w-4" /> Apoyo Diagnóstico Especializado
                   </span>
                   <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-bold border border-secondary/20 backdrop-blur-sm">
                     <Sparkles className="h-4 w-4" /> Tecnología Sunvou® Certificada
@@ -85,17 +81,17 @@ export default function HomePage() {
                 </motion.div>
                 
                 <motion.h1 variants={fadeIn} className="text-5xl md:text-7xl font-black text-primary leading-[1.1]">
-                  Precisión clínica para tu <span className="text-gradient">especialista</span>.
+                  Precisión técnica para el diagnóstico <span className="text-gradient">médico</span>.
                 </motion.h1>
                 
                 <motion.p variants={fadeIn} className="text-xl text-muted-foreground max-w-xl leading-relaxed">
-                  Facilitamos el diagnóstico de SIBO e intolerancias con tecnología de estándar internacional. Entrega resultados certeros a tu médico para un tratamiento efectivo.
+                  Laboratorio especializado en la medición de gases espirados bajo protocolos clínicos internacionales. Resultados técnicos para asistir en la conducta terapéutica de su especialista.
                 </motion.p>
                 
                 <motion.div variants={fadeIn} className="flex flex-wrap items-center gap-6">
                   <Link href="/booking">
                     <Button size="lg" className="rounded-full h-16 px-10 text-lg font-bold shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 group">
-                      Agendar Examen Clínico <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      Agendar Examen <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
                   <Link href="/how-it-works">
@@ -108,7 +104,7 @@ export default function HomePage() {
                 <motion.div variants={fadeIn} className="flex items-center gap-4 pt-4 border-t border-primary/10">
                   <UserRoundCheck className="h-6 w-6 text-primary" />
                   <p className="text-sm font-medium text-muted-foreground">
-                    Recomendado por los principales <span className="text-primary font-bold">Gastroenterólogos</span> del país.
+                    Herramienta diagnóstica para el apoyo de su <span className="text-primary font-bold">médico tratante</span>.
                   </p>
                 </motion.div>
               </motion.div>
@@ -130,7 +126,6 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent" />
                 </div>
                 
-                {/* Floating Cards */}
                 <motion.div 
                   animate={{ y: [0, -15, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -141,8 +136,8 @@ export default function HomePage() {
                       <ClipboardCheck className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Validación</p>
-                      <p className="text-lg font-black text-primary">Médica</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Rigor</p>
+                      <p className="text-lg font-black text-primary">Científico</p>
                     </div>
                   </div>
                 </motion.div>
@@ -157,7 +152,7 @@ export default function HomePage() {
                       <Search className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Detección</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Análisis</p>
                       <p className="text-lg font-black text-primary">Multigas</p>
                     </div>
                   </div>
@@ -171,19 +166,19 @@ export default function HomePage() {
         <section className="py-32 bg-white relative overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black text-primary">Sintomatología Clínica</h2>
+              <h2 className="text-4xl md:text-5xl font-black text-primary">Indicaciones Clínicas</h2>
               <div className="h-1.5 w-24 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
-              <p className="text-xl text-muted-foreground">Si su médico sospecha de un desbalance en su microbiota o intolerancias alimentarias, la medición de gases es el gold standard no invasivo.</p>
+              <p className="text-xl text-muted-foreground">La medición de gases espirados es un método no invasivo para identificar desbalances en la microbiota o intolerancias específicas.</p>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {[
-                { name: "Hinchazón", icon: <Zap />, color: "bg-blue-50 text-blue-600" },
-                { name: "Diarrea", icon: <Activity />, color: "bg-emerald-50 text-emerald-600" },
-                { name: "Constipación", icon: <AlertCircle />, color: "bg-amber-50 text-amber-600" },
-                { name: "Dolor Abdom.", icon: <Search />, color: "bg-purple-50 text-purple-600" },
-                { name: "Reflujo", icon: <Beaker />, color: "bg-pink-50 text-pink-600" },
-                { name: "Fatiga", icon: <ShieldCheck />, color: "bg-indigo-50 text-indigo-600" },
+                { name: "Meteorismo", icon: <Zap />, color: "bg-blue-50 text-blue-600" },
+                { name: "Alteraciones", icon: <Activity />, color: "bg-emerald-50 text-emerald-600" },
+                { name: "Estreñimiento", icon: <AlertCircle />, color: "bg-amber-50 text-amber-600" },
+                { name: "Malestar Abd.", icon: <Search />, color: "bg-purple-50 text-purple-600" },
+                { name: "Dispepsia", icon: <Beaker />, color: "bg-pink-50 text-pink-600" },
+                { name: "Fatiga Crónica", icon: <ShieldCheck />, color: "bg-indigo-50 text-indigo-600" },
               ].map((item, idx) => (
                 <motion.div 
                   key={idx}
@@ -193,7 +188,7 @@ export default function HomePage() {
                   <div className={`p-4 rounded-2xl mb-4 transition-transform group-hover:scale-110 ${item.color}`}>
                     {item.icon}
                   </div>
-                  <span className="text-sm font-bold text-primary group-hover:text-secondary transition-colors">{item.name}</span>
+                  <span className="text-sm font-bold text-primary group-hover:text-secondary transition-colors text-center">{item.name}</span>
                 </motion.div>
               ))}
             </div>
@@ -212,10 +207,10 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   className="text-4xl md:text-6xl font-black mb-8 leading-tight italic"
                 >
-                  "El rigor <span className="text-secondary">científico</span> al servicio de su médico"
+                  "Rigor técnico al servicio de la <span className="text-secondary">gastroenterología</span>"
                 </motion.h2>
                 <p className="text-xl opacity-80 mb-12 leading-relaxed">
-                  No es solo un test; es un informe clínico detallado. Nuestra tecnología Sunvou® permite detectar Hidrógeno, Metano y Sulfuro de Hidrógeno simultáneamente, brindando el panorama completo que su especialista necesita para un diagnóstico diferencial de SIBO o IMO.
+                  Nuestra metodología Sunvou® permite cuantificar Hidrógeno, Metano y Sulfuro de Hidrógeno de forma simultánea. Este análisis multigas proporciona información detallada sobre la actividad metabólica intraluminal para el diagnóstico diferencial.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-8">
                   <div className="flex gap-4">
@@ -224,7 +219,7 @@ export default function HomePage() {
                     </div>
                     <div>
                       <h4 className="font-bold text-lg">Informe Clínico</h4>
-                      <p className="text-sm opacity-60">Resultados expresados en gráficas listas para interpretación médica.</p>
+                      <p className="text-sm opacity-60">Resultados cuantificados y graficados para interpretación médica.</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
@@ -233,7 +228,7 @@ export default function HomePage() {
                     </div>
                     <div>
                       <h4 className="font-bold text-lg">Certificación IVD</h4>
-                      <p className="text-sm opacity-60">Dispositivos médicos validados para diagnóstico in vitro.</p>
+                      <p className="text-sm opacity-60">Dispositivos validados para diagnóstico médico in-vitro.</p>
                     </div>
                   </div>
                 </div>
@@ -255,7 +250,7 @@ export default function HomePage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
                   <div className="absolute bottom-6 left-6 right-6 text-center">
-                    <p className="text-sm font-bold uppercase tracking-widest text-secondary">Precisión Molecular para Gastroenterología</p>
+                    <p className="text-sm font-bold uppercase tracking-widest text-secondary">Precisión Molecular Sunvou®</p>
                   </div>
                 </div>
               </motion.div>
@@ -267,27 +262,27 @@ export default function HomePage() {
         <section className="py-32 bg-background relative">
           <div className="container mx-auto px-4">
             <div className="text-center mb-24">
-              <h2 className="text-4xl md:text-5xl font-black text-primary mb-6">Proceso de Diagnóstico</h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Un flujo coordinado para asegurar que su especialista reciba la mejor información.</p>
+              <h2 className="text-4xl md:text-5xl font-black text-primary mb-6">Procedimiento de Examen</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Flujo estandarizado para la obtención de muestras de aire espirado bajo rigor clínico.</p>
             </div>
             
             <div className="grid md:grid-cols-3 gap-12">
               {[
                 { 
                   title: "1. Agendamiento", 
-                  desc: "Con la orden de su médico, elija modalidad presencial o kit para el hogar con protocolo estricto.", 
+                  desc: "Selección de modalidad y examen conforme a la indicación de su orden médica.", 
                   icon: <CalendarDays className="h-10 w-10" />,
                   link: "/booking"
                 },
                 { 
                   title: "2. Recolección", 
-                  desc: "Procedimiento no invasivo de recolección de aire bajo estándares clínicos internacionales.", 
+                  desc: "Mediciones seriadas de gases siguiendo el protocolo de dieta y preparación.", 
                   icon: <Activity className="h-10 w-10" />,
                   link: "/how-it-works"
                 },
                 { 
                   title: "3. Entrega de Informe", 
-                  desc: "Reciba su informe detallado para que su gastroenterólogo defina la mejor conducta terapéutica.", 
+                  desc: "Reporte técnico detallado para que su especialista defina el diagnóstico y tratamiento.", 
                   icon: <ClipboardCheck className="h-10 w-10" />
                 },
               ].map((step, idx) => (
@@ -328,20 +323,20 @@ export default function HomePage() {
 
             <div className="relative z-10 text-center space-y-8">
               <h2 className="text-4xl md:text-7xl font-black text-white leading-tight">
-                Entregue respuestas a su especialista.
+                Herramientas técnicas para el diagnóstico.
               </h2>
               <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto leading-relaxed">
-                Agenda hoy su examen de aire espirado y obtenga el respaldo clínico que su salud digestiva necesita.
+                Agenda su examen con orden médica y obtenga el respaldo técnico que su salud digestiva requiere.
               </p>
               <div className="flex flex-wrap justify-center gap-6 pt-8">
                 <Link href="/booking">
                   <Button size="lg" className="rounded-full h-20 px-12 text-2xl font-black shadow-2xl bg-white text-primary hover:bg-secondary hover:text-white transition-all hover:scale-105 active:scale-95">
-                    Agendar Reserva
+                    Agendar Examen
                   </Button>
                 </Link>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   <Button size="lg" className="rounded-full h-20 px-10 text-xl font-bold border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-md">
-                    <MessageCircle className="h-6 w-6 mr-3" /> Consultas Médicas
+                    <MessageCircle className="h-6 w-6 mr-3" /> Consultas Técnicas
                   </Button>
                 </a>
               </div>
@@ -361,7 +356,7 @@ export default function HomePage() {
                 <span className="text-3xl font-black text-primary tracking-tighter italic">Oralab</span>
               </Link>
               <p className="text-muted-foreground text-lg max-w-md leading-relaxed">
-                Laboratorio clínico especializado en Salud Digestiva Avanzada. Partner oficial de tecnología Sunvou® en Chile.
+                Laboratorio clínico especializado en Salud Digestiva Avanzada. Partner técnico de tecnología Sunvou® en Chile.
               </p>
             </div>
             <div>
@@ -378,7 +373,7 @@ export default function HomePage() {
               <ul className="space-y-4 text-lg">
                 <li><Link href="/booking" className="text-muted-foreground hover:text-secondary transition-colors font-medium">Reserva de Examen</Link></li>
                 <li><Link href="/how-it-works" className="text-muted-foreground hover:text-secondary transition-colors font-medium">Protocolos de Test</Link></li>
-                <li><Link href="/login" className="text-muted-foreground/30 hover:text-primary transition-colors inline-flex items-center gap-2"><Lock className="h-4 w-4" /> Panel Médico</Link></li>
+                <li><Link href="/login" className="text-muted-foreground/30 hover:text-primary transition-colors inline-flex items-center gap-2"><Lock className="h-4 w-4" /> Panel Administrativo</Link></li>
               </ul>
             </div>
           </div>
