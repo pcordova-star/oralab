@@ -4,9 +4,10 @@
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
 import { 
   Activity, 
-  Wind, 
   ArrowRight, 
   Microscope, 
   ShieldCheck, 
@@ -24,306 +25,392 @@ import {
   MapPin,
   Package,
   MessageCircle,
-  Lock
+  Lock,
+  ChevronRight,
+  Wind,
+  Sparkles
 } from "lucide-react";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
+
+const fadeIn = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6 }
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
 
 export default function HomePage() {
   const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Apoquindo+3992+oficina+605+Las+Condes+Santiago+Chile";
   const whatsappUrl = "https://wa.me/56936850468";
+  const heroImage = PlaceHolderImages.find(img => img.id === 'hero-lab');
+  const techImage = PlaceHolderImages.find(img => img.id === 'medical-device');
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen selection:bg-secondary selection:text-white overflow-x-hidden">
       <Navbar />
       
       <main className="flex-grow">
-        {/* Patient-Centric Hero Section */}
-        <section className="relative py-20 lg:py-32 overflow-hidden bg-gradient-to-b from-white to-blue-50/50">
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-3xl">
-              <div className="flex flex-wrap gap-3 mb-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-bold">
-                  <Heart className="h-4 w-4 fill-secondary" /> Tu bienestar digestivo es nuestra prioridad
+        {/* Animated Background Blobs */}
+        <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-blob" />
+          <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-secondary/10 rounded-full blur-[100px] animate-blob animation-delay-2000" />
+          <div className="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] animate-blob animation-delay-4000" />
+        </div>
+
+        {/* Hero Section */}
+        <section className="relative pt-20 pb-32 lg:pt-32 lg:pb-48">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <motion.div 
+                initial="initial"
+                animate="animate"
+                variants={staggerContainer}
+                className="space-y-8"
+              >
+                <motion.div variants={fadeIn} className="flex flex-wrap gap-3">
+                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-bold border border-secondary/20 backdrop-blur-sm">
+                    <Sparkles className="h-4 w-4" /> Tecnología Sunvou® Certificada
+                  </span>
+                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20 backdrop-blur-sm">
+                    <Package className="h-4 w-4" /> Kit Ambulatorio disponible
+                  </span>
+                </motion.div>
+                
+                <motion.h1 variants={fadeIn} className="text-5xl md:text-7xl font-black text-primary leading-[1.1]">
+                  Recupera tu <span className="text-gradient">bienestar digestivo</span> con precisión molecular.
+                </motion.h1>
+                
+                <motion.p variants={fadeIn} className="text-xl text-muted-foreground max-w-xl leading-relaxed">
+                  ¿Sufres de hinchazón o molestias persistentes? Descubre el origen de tus síntomas con el test de aire espirado líder en el mundo. Sin agujas, sin dolor, resultados exactos.
+                </motion.p>
+                
+                <motion.div variants={fadeIn} className="flex flex-wrap items-center gap-6">
+                  <Link href="/booking">
+                    <Button size="lg" className="rounded-full h-16 px-10 text-lg font-bold shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 group">
+                      Agendar mi examen <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                  <Link href="/how-it-works">
+                    <Button variant="outline" size="lg" className="rounded-full h-16 px-8 text-lg font-bold border-2 hover:bg-secondary/5">
+                      Ver cómo funciona
+                    </Button>
+                  </Link>
+                </motion.div>
+
+                <motion.div variants={fadeIn} className="flex items-center gap-4 pt-4 border-t border-primary/10">
+                  <div className="flex -space-x-3">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-muted overflow-hidden">
+                        <Image 
+                          src={`https://picsum.photos/seed/face${i}/100/100`} 
+                          width={40} height={40} 
+                          alt="Paciente" 
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    <span className="text-primary font-bold">+12 Millones</span> de tests realizados globalmente
+                  </p>
+                </motion.div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="relative"
+              >
+                <div className="relative z-10 rounded-[2.5rem] overflow-hidden shadow-2xl border-[12px] border-white/50 backdrop-blur-xl animate-float">
+                  <Image 
+                    src={heroImage?.imageUrl || "https://picsum.photos/seed/oralab-hero/800/600"} 
+                    width={800} height={600} 
+                    alt="Laboratorio Oralab" 
+                    className="object-cover"
+                    data-ai-hint="clinical laboratory"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent" />
                 </div>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20">
-                  <Package className="h-4 w-4" /> Opción de Test en Casa (ambulatorio)
+                
+                {/* Floating Cards */}
+                <motion.div 
+                  animate={{ y: [0, -15, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -top-10 -right-10 glass-panel p-6 rounded-2xl z-20 hidden md:block"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Precisión</p>
+                      <p className="text-lg font-black text-primary">99.8%</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  animate={{ y: [0, 15, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -bottom-10 -left-10 glass-panel p-6 rounded-2xl z-20 hidden md:block"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Wind className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Resultado</p>
+                      <p className="text-lg font-black text-primary">Inmediato</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Background decorative ring */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border border-primary/10 rounded-full -z-10 animate-pulse" />
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Symptoms Grid - Improved Visuals */}
+        <section className="py-32 bg-white relative overflow-hidden">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black text-primary">¿Cuándo consultarnos?</h2>
+              <div className="h-1.5 w-24 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
+              <p className="text-xl text-muted-foreground">Si experimentas estos síntomas de forma recurrente, tu microbiota podría estar enviando señales importantes.</p>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+              {[
+                { name: "Hinchazón", icon: <Zap />, color: "bg-blue-50 text-blue-600" },
+                { name: "Diarrea", icon: <Activity />, color: "bg-emerald-50 text-emerald-600" },
+                { name: "Constipación", icon: <AlertCircle />, color: "bg-amber-50 text-amber-600" },
+                { name: "Dolor Abdom.", icon: <Search />, color: "bg-purple-50 text-purple-600" },
+                { name: "Reflujo", icon: <Beaker />, color: "bg-pink-50 text-pink-600" },
+                { name: "Fatiga", icon: <ShieldCheck />, color: "bg-indigo-50 text-indigo-600" },
+              ].map((item, idx) => (
+                <motion.div 
+                  key={idx}
+                  whileHover={{ y: -10 }}
+                  className="flex flex-col items-center p-8 rounded-[2rem] bg-white border border-border shadow-sm hover:shadow-xl transition-all group cursor-default"
+                >
+                  <div className={`p-4 rounded-2xl mb-4 transition-transform group-hover:scale-110 ${item.color}`}>
+                    {item.icon}
+                  </div>
+                  <span className="text-sm font-bold text-primary group-hover:text-secondary transition-colors">{item.name}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Authority Section - Dark Mode "Wooo" */}
+        <section className="py-40 bg-primary text-white relative overflow-hidden">
+          {/* Grid Pattern Overlay */}
+          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+          
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="grid lg:grid-cols-2 gap-20 items-center">
+              <div>
+                <motion.h2 
+                  initial={{ opacity: 0, x: -50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  className="text-4xl md:text-6xl font-black mb-8 leading-tight italic"
+                >
+                  "Tecnología de la <span className="text-secondary">NASA</span> al servicio de tu intestino"
+                </motion.h2>
+                <p className="text-xl opacity-80 mb-12 leading-relaxed">
+                  Utilizamos sensores de grafeno y tecnología Sunvou®, la única validada por expertos del MIT y UC Berkeley. Somos el laboratorio con la tecnología de detección de gases más sensible del país.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-8">
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                      <Globe className="h-6 w-6 text-secondary" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg">Estándar Global</h4>
+                      <p className="text-sm opacity-60">En más de 4,000 centros médicos nivel mundial.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                      <Award className="h-6 w-6 text-secondary" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg">Certificado</h4>
+                      <p className="text-sm opacity-60">ISO 13485 e IVD para diagnósticos clínicos.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              <h1 className="text-4xl md:text-6xl font-extrabold text-primary mb-6 leading-tight">
-                ¿Vives con hinchazón o molestias y <span className="text-secondary">no sabes por qué?</span>
-              </h1>
-              <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
-                Sabemos lo frustrante que es buscar respuestas sin éxito. En <strong>Oralab</strong>, utilizamos una tecnología tan simple como respirar para descubrir qué está pasando realmente en tu interior. 
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                className="relative flex justify-center"
+              >
+                <div className="w-[400px] h-[400px] bg-secondary/20 rounded-full absolute blur-[80px] animate-pulse" />
+                <div className="relative glass-panel !bg-white/10 rounded-[3rem] p-12 overflow-hidden border-white/20">
+                  <Image 
+                    src={techImage?.imageUrl || "https://picsum.photos/seed/sunvou/600/600"} 
+                    width={400} height={400} 
+                    alt="Sensor Sunvou" 
+                    className="object-cover rounded-2xl grayscale brightness-110"
+                    data-ai-hint="medical technology"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
+                  <div className="absolute bottom-6 left-6 right-6 text-center">
+                    <p className="text-sm font-bold uppercase tracking-widest text-secondary">Sensor de Grafeno de Alta Precisión</p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Steps Section - Interactive Cards */}
+        <section className="py-32 bg-background relative">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-24">
+              <h2 className="text-4xl md:text-5xl font-black text-primary mb-6">Tu camino hacia el alivio</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Un proceso diseñado para tu comodidad y exactitud diagnóstica.</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-12">
+              {[
+                { 
+                  title: "1. Agenda Online", 
+                  desc: "Elige modalidad presencial o kit para casa. Recibe instrucciones de preparación al instante.", 
+                  icon: <CalendarDays className="h-10 w-10" />,
+                  link: "/booking"
+                },
+                { 
+                  title: "2. Realiza el Test", 
+                  desc: "Un simple soplido en intervalos regulares permite medir los gases que produce tu microbiota.", 
+                  icon: <Activity className="h-10 w-10" />,
+                  link: "/how-it-works"
+                },
+                { 
+                  title: "3. Obtén Resultados", 
+                  desc: "Informe clínico detallado para que tu especialista inicie el tratamiento con evidencia real.", 
+                  icon: <ClipboardCheck className="h-10 w-10" />
+                },
+              ].map((step, idx) => (
+                <motion.div 
+                  key={idx}
+                  whileHover={{ scale: 1.05 }}
+                  className="relative glass-panel p-10 rounded-[2.5rem] flex flex-col items-center text-center group h-full"
+                >
+                  <div className="w-20 h-20 rounded-3xl bg-primary/5 flex items-center justify-center text-primary mb-8 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
+                    {step.icon}
+                  </div>
+                  <h3 className="text-2xl font-black text-primary mb-4">{step.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed mb-6">{step.desc}</p>
+                  {step.link && (
+                    <Link href={step.link} className="mt-auto">
+                      <Button variant="link" className="text-secondary font-bold hover:gap-2 transition-all">
+                        Saber más <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
+                  {/* Decorative number background */}
+                  <span className="absolute -top-6 -left-6 text-8xl font-black text-primary/5 select-none">{idx + 1}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA - Super "Wooo" */}
+        <section className="py-32 container mx-auto px-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="rounded-[3rem] p-12 md:p-24 bg-gradient-to-br from-primary via-primary to-secondary relative overflow-hidden shadow-[0_40px_100px_-20px_rgba(28,104,182,0.4)]"
+          >
+            {/* Background pattern */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+            </div>
+
+            <div className="relative z-10 text-center space-y-8">
+              <h2 className="text-4xl md:text-7xl font-black text-white leading-tight">
+                ¿Listo para dejar atrás la hinchazón?
+              </h2>
+              <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto leading-relaxed">
+                Únete a miles de pacientes que ya han descubierto la clave de su salud digestiva. Estamos en Las Condes, esperándote.
               </p>
-              <div className="flex flex-wrap items-center gap-6">
-                <Link href="/how-it-works">
-                  <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold shadow-lg bg-primary hover:bg-primary/90 transition-all hover:scale-105">
-                    ¿Cómo funciona el test? <ArrowRight className="ml-2 h-5 w-5" />
+              <div className="flex flex-wrap justify-center gap-6 pt-8">
+                <Link href="/booking">
+                  <Button size="lg" className="rounded-full h-20 px-12 text-2xl font-black shadow-2xl bg-white text-primary hover:bg-secondary hover:text-white transition-all hover:scale-105 active:scale-95">
+                    Reservar mi Cita Ahora
                   </Button>
                 </Link>
-                <a 
-                  href={googleMapsUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="flex items-center gap-2 text-primary font-medium px-4 py-2 rounded-xl hover:bg-secondary/5 transition-colors group"
-                >
-                  <MapPin className="h-6 w-6 text-secondary shrink-0 group-hover:scale-110 transition-transform" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold leading-tight">Apoquindo 3992, Of. 605</span>
-                    <span className="text-xs text-muted-foreground">Las Condes (Metro Alcántara)</span>
-                  </div>
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                  <Button size="lg" className="rounded-full h-20 px-10 text-xl font-bold border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-md">
+                    <MessageCircle className="h-6 w-6 mr-3" /> Escríbenos
+                  </Button>
                 </a>
               </div>
             </div>
-          </div>
-          
-          <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] bg-secondary/10 rounded-full blur-3xl -z-10" />
-        </section>
-
-        {/* Empathy Section: What is a Breath Test? */}
-        <section className="py-24 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-16 items-center">
-              <div className="space-y-6">
-                <h2 className="text-3xl font-bold text-primary">Un test sencillo para respuestas profundas</h2>
-                <p className="text-lg text-muted-foreground">
-                  A veces, el origen de tus molestias no está en lo que comes, sino en cómo tu cuerpo procesa los alimentos. El <strong>Test de Aire Espirado</strong> es una técnica no invasiva que analiza los gases que producen las bacterias en tu intestino.
-                </p>
-                <div className="space-y-4">
-                  {[
-                    "Sin agujas ni procedimientos dolorosos.",
-                    "Solo necesitas soplar en un dispositivo especial.",
-                    "Resultados precisos para guiar tu tratamiento.",
-                    "Realizado en nuestra consulta o bajo modalidad ambulatoria."
-                  ].map((text, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <CheckCircle className="h-6 w-6 text-secondary shrink-0" />
-                      <span className="font-medium text-primary/80">{text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-background p-8 rounded-3xl border-2 border-dashed border-secondary/30 flex flex-col items-center text-center">
-                <div className="bg-white p-4 rounded-2xl shadow-xl mb-6">
-                  <Package className="h-16 w-16 text-secondary" />
-                </div>
-                <h3 className="text-2xl font-bold text-primary mb-4">Modalidad Ambulatoria (En Casa)</h3>
-                <p className="text-muted-foreground">
-                  Máxima flexibilidad para tu tiempo: retira el kit de toma de muestra en nuestra consulta de Las Condes, realiza el test cómodamente en tu hogar siguiendo nuestras instrucciones y tráelo de vuelta para su análisis inmediato.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Request to Specialist Section */}
-        <section className="py-12 bg-secondary/5 border-y border-secondary/10">
-          <div className="container mx-auto px-4">
-            <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-secondary/20 flex flex-col md:flex-row items-center gap-8">
-              <div className="bg-secondary/10 p-6 rounded-full">
-                <Stethoscope className="h-12 w-12 text-secondary" />
-              </div>
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="text-2xl font-bold text-primary mb-2">Da el primer paso con tu médico</h3>
-                <p className="text-lg text-muted-foreground mb-4">
-                  Realizamos diversos exámenes médicos para evaluar tu sistema digestivo: <strong>Test de Hidrógeno y Metano Espirado con Lactosa, Fructosa y Lactulosa</strong>. Si te identificas con estos síntomas, solicita a tu especialista o gastroenterólogo el test de aire espirado. Un diagnóstico preciso es la clave para un tratamiento efectivo.
-                </p>
-                <div className="flex items-center justify-center md:justify-start gap-2 text-secondary font-bold">
-                  <ClipboardCheck className="h-5 w-5" />
-                  <span>Diagnóstico certificado por especialistas</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* High-Tech Authority Section */}
-        <section className="py-24 bg-primary text-white overflow-hidden relative">
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-6 italic">"Tecnología que inspira confianza, respaldada por la ciencia"</h2>
-              <div className="h-1 w-24 bg-secondary mx-auto mb-8" />
-              <p className="text-xl opacity-90 leading-relaxed">
-                No somos solo un laboratorio. Somos pioneros en traer a Chile la tecnología <strong>Sunvou</strong>, desarrollada por científicos de la <strong>NASA, MIT y UC Berkeley</strong>.
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 transition-all hover:bg-white/15">
-                <Zap className="h-10 w-10 text-secondary mb-4" />
-                <h4 className="text-xl font-bold mb-2">Nano Coulomb</h4>
-                <p className="opacity-80 text-sm">Precisión molecular que detecta hasta la mínima traza de gas para un diagnóstico certero.</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 transition-all hover:bg-white/15">
-                <Globe className="h-10 w-10 text-secondary mb-4" />
-                <h4 className="text-xl font-bold mb-2">Líder Mundial</h4>
-                <p className="opacity-80 text-sm">Más de 12 millones de tests realizados y presencia en 4,000 hospitales a nivel global.</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 transition-all hover:bg-white/15">
-                <Award className="h-10 w-10 text-secondary mb-4" />
-                <h4 className="text-xl font-bold mb-2">Certificación IVD</h4>
-                <p className="opacity-80 text-sm">Cumplimos con los más altos estándares internacionales ISO 13485 y marcado CE.</p>
-              </div>
-            </div>
-          </div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        </section>
-
-        {/* Triple Gas Explanation */}
-        <section className="py-24 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-primary mb-4">Detección Única de 3 Gases</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">A diferencia de los tests tradicionales, nuestra tecnología detecta simultáneamente los tres gases clave para identificar tu condición exacta.</p>
-            </div>
-            
-            <div className="grid lg:grid-cols-3 gap-8">
-              {[
-                { gas: "Hidrógeno (H2)", label: "SIBO Clásico", symptoms: "Diarrea, gases inmediatos, ruidos estomacales.", color: "text-blue-500" },
-                { gas: "Metano (CH4)", label: "IMO", symptoms: "Estreñimiento crónico, hinchazón persistente, pesadez.", color: "text-emerald-500" },
-                { gas: "Sulfuro (H2S)", label: "SIBO-H2S", symptoms: "Dolor abdominal severo, sensibilidad, gases con olor fuerte.", color: "text-amber-500" },
-              ].map((item, idx) => (
-                <div key={idx} className="bg-white p-8 rounded-3xl shadow-sm border transition-all hover:shadow-xl hover:-translate-y-1">
-                  <span className={`text-4xl font-black ${item.color} block mb-4`}>0{idx + 1}</span>
-                  <h4 className="text-2xl font-bold text-primary mb-2">{item.gas}</h4>
-                  <div className="inline-block px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold mb-4">{item.label}</div>
-                  <p className="text-muted-foreground leading-relaxed">{item.symptoms}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Symptoms Icons Grid */}
-        <section className="py-24 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-3xl font-bold text-primary mb-4">¿Cuándo es el momento de consultarnos?</h2>
-              <p className="text-muted-foreground">Si experimentas de forma recurrente alguno de estos síntomas, el test de aire es el primer paso para recuperar tu calidad de vida.</p>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6">
-              {[
-                { name: "Hinchazón / Gas", icon: <Zap className="h-8 w-8" /> },
-                { name: "Diarrea Crónica", icon: <Activity className="h-8 w-8" /> },
-                { name: "Constipación", icon: <AlertCircle className="h-8 w-8" /> },
-                { name: "Dolor Abdominal", icon: <Search className="h-8 w-8" /> },
-                { name: "Reflujo / Acidez", icon: <Beaker className="h-8 w-8" /> },
-                { name: "Disbiosis", icon: <Microscope className="h-8 w-8" /> },
-                { name: "Fatiga Post-Comida", icon: <ShieldCheck className="h-8 w-8" /> },
-              ].map((item, idx) => (
-                <div key={idx} className="flex flex-col items-center p-6 rounded-2xl bg-background border text-center transition-all hover:shadow-md hover:border-secondary group">
-                  <div className="text-secondary mb-4 group-hover:scale-110 transition-transform">{item.icon}</div>
-                  <span className="text-sm font-semibold text-primary">{item.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Next Steps Section */}
-        <section className="py-24 bg-primary/5">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-primary mb-4">Tu camino hacia el alivio</h2>
-              <p className="text-muted-foreground">Tres pasos simples para volver a sentirte bien.</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-12 relative">
-              <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-0.5 bg-dashed border-t-2 border-dashed border-primary/20 -z-10" />
-              
-              <div className="flex flex-col items-center text-center group">
-                <div className="w-16 h-16 rounded-full bg-white border-4 border-secondary flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-110">
-                  <ClipboardCheck className="h-8 w-8 text-secondary" />
-                </div>
-                <div className="flex flex-col">
-                  <h4 className="text-xl font-bold text-primary mb-3">1. Consulta Especializada</h4>
-                  <p className="text-muted-foreground text-sm">Habla con tu gastroenterólogo sobre tus síntomas y solicita el Test de Aire Espirado.</p>
-                </div>
-              </div>
-
-              <div className="flex flex-col items-center text-center group">
-                <div className="w-16 h-16 rounded-full bg-white border-4 border-secondary flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-110">
-                  <CalendarDays className="h-8 w-8 text-secondary" />
-                </div>
-                <h4 className="text-xl font-bold text-primary mb-3">2. Agenda tu Test</h4>
-                <p className="text-muted-foreground text-sm">Programa tu cita presencial o solicita tu <strong>kit para realizar el test en casa</strong> (ambulatorio).</p>
-                <Link href="/booking" className="mt-4">
-                  <Button variant="outline" size="sm" className="rounded-full">
-                    Agendar ahora
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="flex flex-col items-center text-center group">
-                <div className="w-16 h-16 rounded-full bg-white border-4 border-secondary flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-110">
-                  <Activity className="h-8 w-8 text-secondary" />
-                </div>
-                <h4 className="text-xl font-bold text-primary mb-3">3. Resultados y Tratamiento</h4>
-                <p className="text-muted-foreground text-sm">Recibe tus resultados y llévalos a tu especialista para iniciar el tratamiento adecuado.</p>
-              </div>
-            </div>
-          </div>
+          </motion.div>
         </section>
       </main>
 
-      <footer className="bg-primary text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-            <div className="col-span-1 lg:col-span-2">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="bg-secondary p-1.5 rounded-lg">
-                  <Activity className="h-6 w-6 text-white" />
+      <footer className="bg-white border-t border-border py-20 relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-16 mb-16">
+            <div className="col-span-1 lg:col-span-2 space-y-8">
+              <Link href="/" className="flex items-center gap-3 group">
+                <div className="bg-primary p-2 rounded-xl group-hover:rotate-12 transition-transform">
+                  <Activity className="h-8 w-8 text-white" />
                 </div>
-                <span className="text-2xl font-bold tracking-tight">Oralab</span>
-              </div>
-              <p className="text-primary-foreground/70 max-w-md leading-relaxed">
-                Llevamos la ciencia de vanguardia Sunvou al servicio de los pacientes en Chile. Porque entender lo que pasa en tu interior es el primer paso para vivir mejor.
+                <span className="text-3xl font-black text-primary tracking-tighter italic">Oralab</span>
+              </Link>
+              <p className="text-muted-foreground text-lg max-w-md leading-relaxed">
+                Expertos en Salud Digestiva Avanzada. Pioneros en tecnología Sunvou® en Chile para un diagnóstico preciso y humano.
               </p>
-              <div className="mt-6 flex flex-wrap gap-4">
-                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                  <Button className="bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-full">
-                    <MessageCircle className="h-5 w-5 mr-2" />
-                    +56 9 3685 0468
-                  </Button>
-                </a>
-                <Link href="/booking">
-                  <Button variant="secondary" className="font-bold rounded-full">
-                    Agendar Examen
-                  </Button>
-                </Link>
+              <div className="flex gap-4">
+                <div className="p-3 rounded-full bg-primary/5 text-primary hover:bg-primary hover:text-white transition-colors cursor-pointer border border-primary/10">
+                  <Globe className="h-5 w-5" />
+                </div>
+                <div className="p-3 rounded-full bg-primary/5 text-primary hover:bg-primary hover:text-white transition-colors cursor-pointer border border-primary/10">
+                  <MapPin className="h-5 w-5" />
+                </div>
               </div>
             </div>
             <div>
-              <h5 className="font-bold mb-6 text-secondary">Ubicación</h5>
-              <ul className="space-y-4 text-primary-foreground/70 text-sm">
-                <li className="flex items-start gap-2">
-                  <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 hover:text-white transition-colors">
-                    <MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
-                    <span>Apoquindo 3992, oficina 605, Las Condes<br />Centro Médico Alcántara (a pasos del metro)</span>
-                  </a>
-                </li>
-              </ul>
+              <h5 className="font-black text-primary mb-8 text-xl">Nuestra Sede</h5>
+              <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="group space-y-4 block">
+                <div className="flex items-start gap-3 text-muted-foreground group-hover:text-primary transition-colors text-lg">
+                  <MapPin className="h-6 w-6 text-secondary shrink-0 mt-1" />
+                  <span>Apoquindo 3992, Of. 605, Las Condes. <br /> Centro Médico Alcántara.</span>
+                </div>
+              </a>
             </div>
             <div>
-              <h5 className="font-bold mb-6 text-secondary">Servicios</h5>
-              <ul className="space-y-4 text-primary-foreground/70 text-sm">
-                <li>Test Ambulatorio (Kit Casa)</li>
-                <li>Consulta Presencial</li>
-                <li>Convenios Médicos</li>
+              <h5 className="font-black text-primary mb-8 text-xl">Accesos</h5>
+              <ul className="space-y-4 text-lg">
+                <li><Link href="/booking" className="text-muted-foreground hover:text-secondary transition-colors font-medium">Agendar Cita</Link></li>
+                <li><Link href="/how-it-works" className="text-muted-foreground hover:text-secondary transition-colors font-medium">Cómo Funciona</Link></li>
+                <li><Link href="/login" className="text-muted-foreground/30 hover:text-primary transition-colors inline-flex items-center gap-2"><Lock className="h-4 w-4" /> Personal</Link></li>
               </ul>
             </div>
           </div>
-          <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-primary-foreground/50">
-            <div className="flex items-center gap-2">
-              <p>© 2024 Oralab Clinical Lab. Todos los derechos reservados.</p>
-              <Link href="/login" className="opacity-10 hover:opacity-100 transition-opacity">
-                <Lock className="h-3 w-3" />
-              </Link>
-            </div>
-            <div className="flex gap-6">
-              <span>Sunvou Medical Electronics Partner</span>
-              <span>ISO 13485 Certified</span>
+          <div className="pt-12 border-t border-border flex flex-col md:flex-row justify-between items-center gap-8 text-muted-foreground text-sm font-medium">
+            <p>© 2024 Oralab Clinical Lab. Innovación en Diagnóstico Digestivo.</p>
+            <div className="flex items-center gap-8">
+              <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> ISO 13485</span>
+              <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Sunvou Official Partner</span>
             </div>
           </div>
         </div>

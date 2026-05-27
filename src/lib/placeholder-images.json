@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-lab",
+      "description": "Científico trabajando en laboratorio moderno con microscopio",
+      "imageUrl": "https://picsum.photos/seed/oralab-hero/800/600",
+      "imageHint": "clinical laboratory"
+    },
+    {
+      "id": "medical-device",
+      "description": "Tecnología médica avanzada Sunvou",
+      "imageUrl": "https://picsum.photos/seed/sunvou/600/600",
+      "imageHint": "medical technology"
+    },
+    {
+      "id": "health-check",
+      "description": "Paciente recibiendo atención médica",
+      "imageUrl": "https://picsum.photos/seed/patient/800/600",
+      "imageHint": "patient care"
+    }
+  ]
 }
