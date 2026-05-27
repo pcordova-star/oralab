@@ -5,7 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Activity, 
   ArrowRight, 
@@ -25,7 +25,8 @@ import {
   Lock,
   ChevronRight,
   Sparkles,
-  UserRoundCheck
+  UserRoundCheck,
+  Wind
 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
@@ -43,11 +44,78 @@ const staggerContainer = {
   }
 };
 
+// Componente de Animación Tecnológica Multigas
+const TechScannerAnimation = () => {
+  return (
+    <div className="relative w-full aspect-square max-w-[450px] flex items-center justify-center">
+      {/* Anillos Giratorios */}
+      <motion.div 
+        animate={{ rotate: 360 }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute w-full h-full border-2 border-dashed border-secondary/20 rounded-full"
+      />
+      <motion.div 
+        animate={{ rotate: -360 }}
+        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        className="absolute w-[80%] h-[80%] border border-white/10 rounded-full"
+      />
+      <motion.div 
+        animate={{ rotate: 360 }}
+        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+        className="absolute w-[60%] h-[60%] border border-secondary/30 rounded-full"
+      />
+
+      {/* Núcleo Pulsante */}
+      <motion.div 
+        animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute w-32 h-32 bg-secondary/20 rounded-full blur-2xl"
+      />
+      <div className="relative z-10 bg-white/5 backdrop-blur-xl p-8 rounded-full border border-white/20 shadow-2xl">
+        <Wind className="h-16 w-16 text-secondary animate-pulse" />
+      </div>
+
+      {/* Partículas de Gases (H2, CH4, H2S) */}
+      {[
+        { label: "H₂", color: "text-blue-400", delay: 0 },
+        { label: "CH₄", color: "text-emerald-400", delay: 2 },
+        { label: "H₂S", color: "text-amber-400", delay: 4 },
+      ].map((gas, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0 }}
+          animate={{ 
+            opacity: [0, 1, 0],
+            y: [20, -100],
+            x: [0, (i - 1) * 40],
+            scale: [0.5, 1, 0.5]
+          }}
+          transition={{ 
+            duration: 4, 
+            delay: gas.delay, 
+            repeat: Infinity, 
+            ease: "easeOut" 
+          }}
+          className={`absolute font-black text-xl ${gas.color} pointer-events-none`}
+        >
+          {gas.label}
+        </motion.div>
+      ))}
+
+      {/* Línea de Escaneo */}
+      <motion.div 
+        animate={{ top: ["0%", "100%", "0%"] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        className="absolute w-full h-px bg-gradient-to-r from-transparent via-secondary to-transparent z-20 opacity-50"
+      />
+    </div>
+  );
+};
+
 export default function HomePage() {
   const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Apoquindo+3992+oficina+605+Las+Condes+Santiago+Chile";
   const whatsappUrl = "https://wa.me/56936850468";
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-lab');
-  const techImage = PlaceHolderImages.find(img => img.id === 'medical-device');
 
   return (
     <div className="flex flex-col min-h-screen selection:bg-secondary selection:text-white overflow-x-hidden">
@@ -73,7 +141,7 @@ export default function HomePage() {
               >
                 <motion.div variants={fadeIn} className="flex flex-wrap gap-3">
                   <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20 backdrop-blur-sm">
-                    <Stethoscope className="h-4 w-4" /> Respaldo Médico Especializado
+                    <Stethoscope className="h-4 w-4" /> Laboratorio Especializado
                   </span>
                   <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-bold border border-secondary/20 backdrop-blur-sm">
                     <Sparkles className="h-4 w-4" /> Tecnología Sunvou® Certificada
@@ -81,11 +149,11 @@ export default function HomePage() {
                 </motion.div>
                 
                 <motion.h1 variants={fadeIn} className="text-5xl md:text-7xl font-black text-primary leading-[1.1]">
-                  Respuestas claras para tu salud <span className="text-gradient">digestiva</span>.
+                  Respuestas precisas para tu salud <span className="text-gradient">digestiva</span>.
                 </motion.h1>
                 
                 <motion.p variants={fadeIn} className="text-xl text-muted-foreground max-w-xl leading-relaxed">
-                  Realizamos tests de aire espirado con la mayor precisión técnica. Un examen sencillo y no invasivo que ayuda a tu médico a encontrar el origen de tu malestar.
+                  Realizamos tests de aire espirado con la mayor precisión técnica. Un examen no invasivo que proporciona datos clave a tu médico tratante.
                 </motion.p>
                 
                 <motion.div variants={fadeIn} className="flex flex-wrap items-center gap-6">
@@ -96,7 +164,7 @@ export default function HomePage() {
                   </Link>
                   <Link href="/how-it-works">
                     <Button variant="outline" size="lg" className="rounded-full h-16 px-8 text-lg font-bold border-2 hover:bg-secondary/5">
-                      ¿Cómo es el examen?
+                      Protocolo del Test
                     </Button>
                   </Link>
                 </motion.div>
@@ -104,7 +172,7 @@ export default function HomePage() {
                 <motion.div variants={fadeIn} className="flex items-center gap-4 pt-4 border-t border-primary/10">
                   <UserRoundCheck className="h-6 w-6 text-primary" />
                   <p className="text-sm font-medium text-muted-foreground">
-                    Trabajamos en conjunto con tu <span className="text-primary font-bold">médico especialista</span> para un diagnóstico certero.
+                    Oralab proporciona la tecnología necesaria para el diagnóstico solicitado por su <span className="text-primary font-bold">médico especialista</span>.
                   </p>
                 </motion.div>
               </motion.div>
@@ -136,8 +204,8 @@ export default function HomePage() {
                       <ClipboardCheck className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Resultados</p>
-                      <p className="text-lg font-black text-primary">Confiables</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Informe</p>
+                      <p className="text-lg font-black text-primary">Técnico</p>
                     </div>
                   </div>
                 </motion.div>
@@ -168,7 +236,7 @@ export default function HomePage() {
             <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
               <h2 className="text-4xl md:text-5xl font-black text-primary">¿Por qué realizar este test?</h2>
               <div className="h-1.5 w-24 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
-              <p className="text-xl text-muted-foreground">Si presentas molestias frecuentes, el test de aire espirado ayuda a identificar si se deben a una intolerancia alimentaria o a un desbalance bacteriano (SIBO).</p>
+              <p className="text-xl text-muted-foreground">Si presenta molestias frecuentes, el test de aire espirado ayuda a su médico a identificar si se deben a una intolerancia alimentaria o a un desbalance bacteriano (SIBO).</p>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
@@ -207,10 +275,10 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   className="text-4xl md:text-6xl font-black mb-8 leading-tight italic"
                 >
-                  "Precisión clínica para entender tu <span className="text-secondary">organismo</span>"
+                  Precisión clínica para entender tu <span className="text-secondary">organismo</span>
                 </motion.h2>
                 <p className="text-xl opacity-80 mb-12 leading-relaxed">
-                  Utilizamos la tecnología Sunvou®, líder mundial que permite medir tres gases clave de forma simultánea (Hidrógeno, Metano y Sulfuro). Para ti, esto significa un examen más corto y preciso; para tu médico, significa contar con la información más completa para darte el tratamiento adecuado.
+                  Utilizamos la tecnología Sunvou®, líder mundial que permite medir tres gases clave de forma simultánea (Hidrógeno, Metano y Sulfuro). Para usted, esto significa un examen más preciso y cómodo; para su médico, significa contar con la información técnica necesaria para definir su tratamiento.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-8">
                   <div className="flex gap-4">
@@ -218,8 +286,8 @@ export default function HomePage() {
                       <Microscope className="h-6 w-6 text-secondary" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-lg">Informe Especializado</h4>
-                      <p className="text-sm opacity-60">Resultados claros y gráficos diseñados para la interpretación de tu médico.</p>
+                      <h4 className="font-bold text-lg">Informe Técnico</h4>
+                      <p className="text-sm opacity-60">Resultados detallados y gráficas de evolución diseñadas para la interpretación de su especialista.</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
@@ -227,8 +295,8 @@ export default function HomePage() {
                       <Award className="h-6 w-6 text-secondary" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-lg">Tecnología de Punta</h4>
-                      <p className="text-sm opacity-60">Equipamiento de última generación validado internacionalmente.</p>
+                      <h4 className="font-bold text-lg">Metodología Sunvou®</h4>
+                      <p className="text-sm opacity-60">Cuantificación multigas simultánea alineada con estándares internacionales de gastroenterología.</p>
                     </div>
                   </div>
                 </div>
@@ -239,18 +307,11 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 className="relative flex justify-center"
               >
-                <div className="w-[400px] h-[400px] bg-secondary/20 rounded-full absolute blur-[80px] animate-pulse" />
-                <div className="relative glass-panel !bg-white/10 rounded-[3rem] p-12 overflow-hidden border-white/20">
-                  <Image 
-                    src={techImage?.imageUrl || "https://picsum.photos/seed/sunvou/600/600"} 
-                    width={400} height={400} 
-                    alt="Sensor Sunvou" 
-                    className="object-cover rounded-2xl grayscale brightness-110"
-                    data-ai-hint="medical technology"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
-                  <div className="absolute bottom-6 left-6 right-6 text-center">
-                    <p className="text-sm font-bold uppercase tracking-widest text-secondary">Análisis Molecular de Alta Precisión</p>
+                <div className="w-full max-w-md bg-secondary/10 rounded-[3rem] p-12 overflow-hidden border border-white/10 relative group">
+                  <TechScannerAnimation />
+                  <div className="absolute bottom-6 left-6 right-6 text-center z-30">
+                    <p className="text-xs font-black uppercase tracking-widest text-secondary mb-1">Módulo de Análisis Molecular</p>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Detección simultánea H2 · CH4 · H2S</p>
                   </div>
                 </div>
               </motion.div>
@@ -262,27 +323,27 @@ export default function HomePage() {
         <section className="py-32 bg-background relative">
           <div className="container mx-auto px-4">
             <div className="text-center mb-24">
-              <h2 className="text-4xl md:text-5xl font-black text-primary mb-6">Tu camino a la recuperación</h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Un proceso guiado y profesional desde tu reserva hasta la entrega de resultados.</p>
+              <h2 className="text-4xl md:text-5xl font-black text-primary mb-6">Proceso de atención profesional</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Un flujo estandarizado desde su reserva hasta la entrega del informe para su médico.</p>
             </div>
             
             <div className="grid md:grid-cols-3 gap-12">
               {[
                 { 
                   title: "1. Reserva", 
-                  desc: "Elige tu examen según la orden de tu médico y selecciona el horario que más te acomode.", 
+                  desc: "Seleccione el examen según su orden médica y el horario que más le acomode.", 
                   icon: <CalendarDays className="h-10 w-10" />,
                   link: "/booking"
                 },
                 { 
-                  title: "2. Realización", 
-                  desc: "Un proceso sencillo de soplido bajo estrictos protocolos de seguridad y comodidad.", 
+                  title: "2. Procedimiento", 
+                  desc: "Recolección de muestras de aire bajo estrictos protocolos técnicos de seguridad.", 
                   icon: <Activity className="h-10 w-10" />,
                   link: "/how-it-works"
                 },
                 { 
-                  title: "3. Resultados", 
-                  desc: "Recibe un informe técnico detallado para que tu gastroenterólogo defina los pasos a seguir.", 
+                  title: "3. Informe Final", 
+                  desc: "Entrega de reporte clínico para que su gastroenterólogo defina los pasos a seguir.", 
                   icon: <ClipboardCheck className="h-10 w-10" />
                 },
               ].map((step, idx) => (
@@ -299,7 +360,7 @@ export default function HomePage() {
                   {step.link && (
                     <Link href={step.link} className="mt-auto">
                       <Button variant="link" className="text-secondary font-bold hover:gap-2 transition-all">
-                        Más información <ChevronRight className="h-4 w-4" />
+                        Ver protocolo clínico <ChevronRight className="h-4 w-4" />
                       </Button>
                     </Link>
                   )}
@@ -323,10 +384,10 @@ export default function HomePage() {
 
             <div className="relative z-10 text-center space-y-8">
               <h2 className="text-4xl md:text-7xl font-black text-white leading-tight">
-                Recupera tu bienestar hoy mismo.
+                Comprometidos con su salud digestiva.
               </h2>
               <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto leading-relaxed">
-                Agenda tu examen con orden médica y obtén la precisión técnica que tu salud digestiva necesita.
+                Agende su examen con orden médica y cuente con el respaldo técnico que su especialista requiere.
               </p>
               <div className="flex flex-wrap justify-center gap-6 pt-8">
                 <Link href="/booking">
@@ -336,7 +397,7 @@ export default function HomePage() {
                 </Link>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   <Button size="lg" className="rounded-full h-20 px-10 text-xl font-bold border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-md">
-                    <MessageCircle className="h-6 w-6 mr-3" /> Consultar a un Experto
+                    <MessageCircle className="h-6 w-6 mr-3" /> Consultas Técnicas
                   </Button>
                 </a>
               </div>
@@ -372,8 +433,8 @@ export default function HomePage() {
               <h5 className="font-black text-primary mb-8 text-xl">Enlaces de Interés</h5>
               <ul className="space-y-4 text-lg">
                 <li><Link href="/booking" className="text-muted-foreground hover:text-secondary transition-colors font-medium">Reservar mi Examen</Link></li>
-                <li><Link href="/how-it-works" className="text-muted-foreground hover:text-secondary transition-colors font-medium">¿Cómo prepararme?</Link></li>
-                <li><Link href="/login" className="text-muted-foreground/30 hover:text-primary transition-colors inline-flex items-center gap-2"><Lock className="h-4 w-4" /> Acceso Staff</Link></li>
+                <li><Link href="/how-it-works" className="text-muted-foreground hover:text-secondary transition-colors font-medium">Protocolo Clínico</Link></li>
+                <li><Link href="/login" className="text-muted-foreground/30 hover:text-primary transition-colors inline-flex items-center gap-2"><Lock className="h-4 w-4" /> Acceso Personal</Link></li>
               </ul>
             </div>
           </div>
