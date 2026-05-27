@@ -74,11 +74,11 @@ const ClinicalReportVisualizer = () => {
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
       className="relative w-full glass-panel rounded-[2.5rem] p-4 md:p-8 shadow-2xl border-primary/10 overflow-hidden bg-white/70"
     >
       <div className="flex flex-col gap-6">
-        {/* Encabezado del Informe */}
         <div className="flex justify-between items-start border-b border-primary/10 pb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -92,8 +92,7 @@ const ClinicalReportVisualizer = () => {
           </div>
         </div>
 
-        {/* Gráfico Multigas */}
-        <div className="h-[250px] w-full">
+        <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={reportData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -119,7 +118,6 @@ const ClinicalReportVisualizer = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Tabla de Biomarcadores */}
         <div className="overflow-hidden rounded-xl border border-primary/5">
           <Table>
             <TableHeader className="bg-primary/5">
@@ -147,7 +145,6 @@ const ClinicalReportVisualizer = () => {
           </Table>
         </div>
 
-        {/* Footer Técnico */}
         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-primary/10">
           <div className="bg-primary/5 p-3 rounded-xl border border-primary/10">
             <p className="text-[10px] font-black text-primary uppercase mb-1 flex items-center gap-1">
@@ -167,20 +164,13 @@ const ClinicalReportVisualizer = () => {
           </div>
         </div>
       </div>
-      
-      {/* Elementos decorativos de escaneo */}
-      <motion.div 
-        animate={{ top: ["0%", "100%", "0%"] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-        className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent pointer-events-none"
-      />
     </motion.div>
   );
 };
 
 const TechScannerAnimation = () => {
   return (
-    <div className="relative w-full aspect-square max-w-[450px] flex items-center justify-center">
+    <div className="relative w-full aspect-square max-w-[400px] flex items-center justify-center mx-auto">
       <motion.div 
         animate={{ rotate: 360 }}
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -228,14 +218,13 @@ export default function HomePage() {
       
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative pt-20 pb-32 lg:pt-32 lg:pb-48 overflow-hidden">
-          {/* Animated Background Blobs */}
+        <section className="relative pt-20 pb-20 lg:pt-32 lg:pb-32 overflow-hidden">
           <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
             <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-blob" />
             <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-secondary/10 rounded-full blur-[100px] animate-blob animation-delay-2000" />
           </div>
 
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-4 text-center lg:text-left">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <motion.div 
                 initial="initial"
@@ -243,7 +232,7 @@ export default function HomePage() {
                 variants={staggerContainer}
                 className="space-y-8"
               >
-                <motion.div variants={fadeIn} className="flex flex-wrap gap-3">
+                <motion.div variants={fadeIn} className="flex flex-wrap justify-center lg:justify-start gap-3">
                   <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20 backdrop-blur-sm">
                     <Stethoscope className="h-4 w-4" /> Laboratorio Especializado
                   </span>
@@ -253,14 +242,14 @@ export default function HomePage() {
                 </motion.div>
                 
                 <motion.h1 variants={fadeIn} className="text-5xl md:text-7xl font-black text-primary leading-[1.1]">
-                  Respuestas precisas para tu salud <span className="text-gradient italic">digestiva</span>.
+                  Soporte tecnológico <br />para tu salud <span className="text-gradient italic">digestiva</span>.
                 </motion.h1>
                 
-                <motion.p variants={fadeIn} className="text-xl text-muted-foreground max-w-xl leading-relaxed">
-                  Realizamos tests de aire espirado con rigor técnico. Un procedimiento no invasivo diseñado para asistir en el diagnóstico de su médico especialista.
+                <motion.p variants={fadeIn} className="text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                  Realizamos tests de aire espirado con precisión técnica. Un procedimiento clínico diseñado para asistir en el diagnóstico de tu especialista.
                 </motion.p>
                 
-                <motion.div variants={fadeIn} className="flex flex-wrap items-center gap-6">
+                <motion.div variants={fadeIn} className="flex flex-wrap items-center justify-center lg:justify-start gap-6">
                   <Link href="/booking">
                     <Button size="lg" className="rounded-full h-16 px-10 text-lg font-bold shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 group">
                       Agendar mi Examen <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -273,49 +262,44 @@ export default function HomePage() {
                   </Link>
                 </motion.div>
 
-                <motion.div variants={fadeIn} className="flex items-center gap-4 pt-4 border-t border-primary/10">
+                <motion.div variants={fadeIn} className="flex items-center justify-center lg:justify-start gap-4 pt-4 border-t border-primary/10">
                   <UserRoundCheck className="h-6 w-6 text-primary" />
                   <p className="text-sm font-medium text-muted-foreground">
-                    Oralab proporciona el soporte tecnológico para el examen solicitado por su <span className="text-primary font-bold">médico tratante</span>.
+                    Oralab proporciona el soporte tecnológico para el examen solicitado por tu <span className="text-primary font-bold">médico tratante</span>.
                   </p>
                 </motion.div>
               </motion.div>
 
               <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="relative"
+                className="relative hidden lg:block"
               >
-                <ClinicalReportVisualizer />
-                
-                <motion.div 
-                  animate={{ y: [0, -15, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -top-10 -right-4 glass-panel p-4 rounded-2xl z-20 hidden md:block bg-white/80"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-600">
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Registro</p>
-                      <p className="text-sm font-black text-primary">Multigas</p>
-                    </div>
-                  </div>
-                </motion.div>
+                <div className="relative z-10 p-4">
+                   <div className="aspect-video bg-white/40 backdrop-blur-sm rounded-[3rem] border border-white/40 flex items-center justify-center overflow-hidden shadow-2xl">
+                      <Microscope className="h-48 w-48 text-primary/10 absolute -bottom-10 -right-10 rotate-12" />
+                      <div className="relative text-center space-y-4">
+                        <div className="bg-primary/10 p-6 rounded-full inline-block mb-4">
+                           <Activity className="h-16 w-16 text-primary animate-pulse" />
+                        </div>
+                        <h4 className="text-2xl font-black text-primary">Diagnóstico de Precisión</h4>
+                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Protocolos Sunvou®</p>
+                      </div>
+                   </div>
+                </div>
               </motion.div>
             </div>
           </div>
         </section>
 
-        {/* Symptoms Section */}
-        <section className="py-32 bg-white relative">
+        {/* Clinical Indicators Section */}
+        <section className="py-24 bg-white relative">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
               <h2 className="text-4xl md:text-5xl font-black text-primary italic">Indicadores Clínicos</h2>
               <div className="h-1.5 w-24 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
-              <p className="text-xl text-muted-foreground">El test de aire espirado es una herramienta técnica fundamental para que su médico identifique el origen de síntomas recurrentes.</p>
+              <p className="text-xl text-muted-foreground">El test de aire espirado es una herramienta técnica fundamental para que tu médico identifique el origen de síntomas recurrentes.</p>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
@@ -343,7 +327,7 @@ export default function HomePage() {
         </section>
 
         {/* Science Section */}
-        <section className="py-40 bg-primary text-white relative overflow-hidden">
+        <section className="py-24 bg-primary text-white relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
           
           <div className="container mx-auto px-4 relative z-10">
@@ -352,12 +336,13 @@ export default function HomePage() {
                 <motion.h2 
                   initial={{ opacity: 0, x: -50 }}
                   whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
                   className="text-4xl md:text-6xl font-black mb-8 leading-tight italic"
                 >
                   Rigor técnico al servicio de la <span className="text-secondary">gastroenterología</span>
                 </motion.h2>
                 <p className="text-xl opacity-80 mb-12 leading-relaxed">
-                  Nuestra metodología Sunvou® permite cuantificar Hidrógeno, Metano y Sulfuro de Hidrógeno de forma simultánea. Este análisis multigas proporciona información detallada sobre la actividad metabólica intraluminal para el diagnóstico diferencial solicitado por su especialista.
+                  Nuestra metodología Sunvou® permite cuantificar Hidrógeno, Metano y Sulfuro de Hidrógeno de forma simultánea. Este análisis multigas proporciona información detallada sobre la actividad metabólica intraluminal para el diagnóstico diferencial solicitado por tu especialista.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-8">
                   <div className="flex gap-4">
@@ -366,7 +351,7 @@ export default function HomePage() {
                     </div>
                     <div>
                       <h4 className="font-bold text-lg">Informe Especializado</h4>
-                      <p className="text-sm opacity-60">Resultados cuantificables diseñados para la interpretación de su gastroenterólogo.</p>
+                      <p className="text-sm opacity-60">Resultados cuantificables diseñados para la interpretación de tu gastroenterólogo.</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
@@ -384,9 +369,10 @@ export default function HomePage() {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                className="relative flex justify-center"
+                viewport={{ once: true }}
+                className="relative"
               >
-                <div className="w-full max-w-md bg-secondary/10 rounded-[3rem] p-12 overflow-hidden border border-white/10 relative group">
+                <div className="w-full max-w-md mx-auto bg-secondary/10 rounded-[3rem] p-12 overflow-hidden border border-white/10 relative group">
                   <TechScannerAnimation />
                   <div className="absolute bottom-6 left-6 right-6 text-center z-30">
                     <p className="text-xs font-black uppercase tracking-widest text-secondary mb-1">Análisis Multigas Simultáneo</p>
@@ -398,54 +384,50 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Steps Section */}
-        <section className="py-32 bg-background relative">
+        {/* Technical Report Section */}
+        <section className="py-24 bg-background">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-24">
-              <h2 className="text-4xl md:text-5xl font-black text-primary mb-6">Proceso de Atención</h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Un flujo profesional diseñado para garantizar la validez técnica de sus resultados.</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-12">
-              {[
-                { 
-                  title: "1. Reserva", 
-                  desc: "Seleccione el examen indicado en su orden médica y el horario de su preferencia.", 
-                  icon: <CalendarDays className="h-10 w-10" />,
-                  link: "/booking"
-                },
-                { 
-                  title: "2. Procedimiento", 
-                  desc: "Recolección de muestras de aire bajo estrictos protocolos clínicos de seguridad.", 
-                  icon: <Activity className="h-10 w-10" />,
-                  link: "/how-it-works"
-                },
-                { 
-                  title: "3. Entrega de Informe", 
-                  desc: "Resultados técnicos disponibles para que su especialista defina los pasos a seguir.", 
-                  icon: <ClipboardCheck className="h-10 w-10" />
-                },
-              ].map((step, idx) => (
-                <motion.div 
-                  key={idx}
-                  whileHover={{ scale: 1.05 }}
-                  className="relative glass-panel p-10 rounded-[2.5rem] flex flex-col items-center text-center group h-full bg-white/50"
-                >
-                  <div className="w-20 h-20 rounded-3xl bg-primary/5 flex items-center justify-center text-primary mb-8 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
-                    {step.icon}
+            <div className="grid lg:grid-cols-2 gap-16 items-start">
+               <div className="space-y-8">
+                  <div className="inline-block p-4 rounded-3xl bg-primary/5 text-primary border border-primary/10">
+                    <FileText className="h-8 w-8" />
                   </div>
-                  <h3 className="text-2xl font-black text-primary mb-4">{step.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed mb-6 font-medium">{step.desc}</p>
-                  {step.link && (
-                    <Link href={step.link} className="mt-auto">
-                      <Button variant="link" className="text-secondary font-bold hover:gap-2 transition-all">
-                        Ver protocolo clínico <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  )}
-                  <span className="absolute -top-6 -left-6 text-8xl font-black text-primary/5 select-none">{idx + 1}</span>
-                </motion.div>
-              ))}
+                  <h2 className="text-4xl md:text-5xl font-black text-primary italic leading-tight">Visualización técnica de resultados</h2>
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    Un informe técnico de Oralab no solo entrega valores; entrega una representación gráfica de la evolución de biomarcadores que permite al especialista identificar patrones clínicos como el SIBO o intolerancias específicas.
+                  </p>
+                  
+                  <ul className="space-y-4">
+                    {[
+                      { t: "Detección de Sulfuro de Hidrógeno (H₂S)", d: "Única tecnología capaz de identificar SIBO sulfuroso." },
+                      { t: "Control de CO₂ Alveolar", d: "Asegura que la muestra sea de aire pulmonar válido." },
+                      { t: "Curva Multivariante", d: "Hidrógeno y Metano correlacionados con síntomas en tiempo real." }
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-border">
+                        <CheckCircle className="h-6 w-6 text-secondary shrink-0" />
+                        <div>
+                          <p className="font-bold text-primary">{item.t}</p>
+                          <p className="text-sm text-muted-foreground">{item.d}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+               </div>
+
+               <div className="relative">
+                  <ClinicalReportVisualizer />
+                  <div className="absolute -bottom-6 -right-6 glass-panel p-6 rounded-3xl z-20 bg-white border-primary/10 shadow-xl hidden md:block">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-secondary/10 p-3 rounded-2xl text-secondary">
+                        <TrendingUp className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estatístico</p>
+                        <p className="text-sm font-black text-primary">Interpretación Sunvou®</p>
+                      </div>
+                    </div>
+                  </div>
+               </div>
             </div>
           </div>
         </section>
@@ -455,6 +437,7 @@ export default function HomePage() {
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             className="rounded-[3rem] p-12 md:p-24 bg-gradient-to-br from-primary via-primary to-secondary relative overflow-hidden shadow-2xl"
           >
             <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -529,3 +512,4 @@ export default function HomePage() {
     </div>
   );
 }
+
