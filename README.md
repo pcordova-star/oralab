@@ -7,10 +7,11 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 
 Si ves el error **"Backend Not Found"**, significa que el DNS ya apunta a Google, pero Firebase aún está procesando el primer despliegue.
 
-### Pasos para Activar el Sitio:
-1. **Push al repositorio**: Ejecuta los comandos de Git de abajo.
-2. **Revisar Rollouts**: Entra a [Firebase Console](https://console.firebase.google.com/) -> App Hosting -> Tu Backend -> **Rollouts**.
-3. **Validación de Dominio**: En la pestaña **Settings -> Domains**, el estado debe decir **Active**.
+### Configuración de Dominio WWW
+Actualmente, el dominio raíz `oralab.cl` está activo. Para que `www.oralab.cl` funcione:
+1. Entra a **Firebase Console** -> App Hosting -> Backend -> **Configuración** -> **Dominios**.
+2. Haz clic en **"Agregar un dominio personalizado"**.
+3. Ingresa `www.oralab.cl` y sigue los pasos de verificación DNS.
 
 ## Gestión de Administrador
 - **Acceso**: `/login`
@@ -31,7 +32,7 @@ git push origin main
 ## Características Técnicas
 - **Home de Alta Fidelidad**: Animaciones Framer Motion (Tech Scanner).
 - **Informe Interactivo**: Gráfico multigas (H2, CH4, H2S) para interpretación médica.
-- **Robustez Administrativa**: Ordenamiento en memoria y validación de rol estricta.
+- **Robustez Administrativa**: Ordenamiento en memoria para evitar errores de índices y validación de rol estricta.
 
 ---
 © 2024 Oralab Clinical Lab.
