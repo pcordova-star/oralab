@@ -1,8 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REGLAS TEMPORALES PARA DESARROLLO Y PRUEBAS
-    // Permite lectura y escritura a cualquier usuario para depurar el error de "insufficient permissions"
+    // REGLAS ABIERTAS PARA DESARROLLO Y DEPURACIÓN
+    // Permite lectura y escritura a cualquier usuario sin restricciones.
     match /{document=**} {
       allow read, write: if true;
     }
