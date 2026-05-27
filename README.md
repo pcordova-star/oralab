@@ -31,4 +31,4 @@ Para `oralab.cl`, configura los registros CNAME apuntando al host de Firebase:
 3. **IMPORTANTE**: Mantén la **Nube Gris** (DNS Only) hasta que Firebase active el SSL.
 
 ---
-© 2024 Oralab Clinical Lab.
+© 2024 Oralab Clinical Lab.# oralab
