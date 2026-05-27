@@ -5,34 +5,30 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 
 ## Estado de Despliegue (Firebase App Hosting)
 
-Si ves el error **"Backend Not Found"**, significa que el DNS ya apunta a Google, pero Firebase aún está procesando el primer despliegue.
+Si ves el error **"Backend Not Found"**, significa que el DNS ya apunta a Google, pero Firebase aún está procesando el primer despliegue o la validación del dominio.
 
-### Configuración de Dominio WWW
-Actualmente, el dominio raíz `oralab.cl` está activo. Para que `www.oralab.cl` funcione:
-1. Entra a **Firebase Console** -> App Hosting -> Backend -> **Configuración** -> **Dominios**.
-2. Haz clic en **"Agregar un dominio personalizado"**.
-3. Ingresa `www.oralab.cl` y sigue los pasos de verificación DNS.
+### Configuración de Dominio WWW (Cloudflare)
+Para que `www.oralab.cl` funcione correctamente junto al dominio raíz:
+1. **En Firebase Console**: Ve a App Hosting -> Configuración -> Dominios y agrega `www.oralab.cl`.
+2. **En Cloudflare**:
+   - Asegúrate de tener el registro `CNAME` con nombre `www` apuntando a `oralab.cl`.
+   - Mantén el **Proxy Status** en "DNS Only" (nube gris) hasta que Firebase marque el dominio como "Activo".
+   - Verifica que existan los registros `TXT` con el valor `fah-claim` proporcionado por Firebase para ambos registros (`@` y `www`).
 
 ## Gestión de Administrador
 - **Acceso**: `/login`
 - **Email Admin**: `admin@oralab.cl`
-- **Configuración Inicial**: Si es la primera vez que accedes, escribe el email `admin@oralab.cl`, una contraseña (mínimo 6 caracteres) y haz clic en el botón inferior **"¿Primer acceso? Crear cuenta Admin"**.
-- **Funcionalidad**: Gestión de citas, cambios de estado (Llegó, Iniciado, Completado) y eliminación de registros.
+- **Configuración Inicial**: Si es la primera vez que accedes, escribe el email `admin@oralab.cl`, una contraseña y usa el botón **"¿Primer acceso? Crear cuenta Admin"**.
 
 ## Guía de Desarrollo (Comandos Git)
 
-Para subir las últimas mejoras, ejecuta:
+Para subir cambios y activar un nuevo despliegue:
 
 ```bash
 git add .
-git commit -m "Admin Setup: Habilitada creación de cuenta administrativa inicial y corrección de flujos"
+git commit -m "Descripción de tus mejoras"
 git push origin main
 ```
-
-## Características Técnicas
-- **Home de Alta Fidelidad**: Animaciones Framer Motion (Tech Scanner).
-- **Informe Interactivo**: Gráfico multigas (H2, CH4, H2S) para interpretación médica.
-- **Robustez Administrativa**: Ordenamiento en memoria para evitar errores de índices y validación de rol estricta.
 
 ---
 © 2024 Oralab Clinical Lab.
