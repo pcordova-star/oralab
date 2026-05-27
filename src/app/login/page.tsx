@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Navbar } from "@/components/navbar";
+import { Navbar, Logo } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,7 +18,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
@@ -94,13 +93,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/30">
+    <div className="flex flex-col min-h-screen bg-muted/30 font-body">
       <Navbar />
       <main className="flex-grow flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-2xl border-primary/10">
-          <CardHeader className="text-center space-y-2">
-            <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
-              <Activity className="h-8 w-8 text-primary" />
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto scale-125">
+              <Logo />
             </div>
             <CardTitle className="text-2xl font-bold text-primary">Acceso Personal</CardTitle>
             <CardDescription>

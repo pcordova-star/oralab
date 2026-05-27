@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Navbar } from "@/components/navbar";
+import { Navbar, Logo } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -167,7 +167,7 @@ const TechScannerAnimation = () => {
         transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
         className="absolute w-[80%] h-[80%] border border-white/10 rounded-full"
       />
-      <div className="relative z-10 bg-white/5 backdrop-blur-xl p-8 rounded-full border border-white/20 shadow-2xl">
+      <div className="relative z-10 bg-white/5 backdrop-blur-xl p-8 rounded-full border border-white/20 shadow-2xl flex items-center justify-center">
         <Wind className="h-16 w-16 text-secondary animate-pulse" />
       </div>
       {[
@@ -199,7 +199,7 @@ export default function HomePage() {
   const whatsappUrl = "https://wa.me/56936850468";
 
   return (
-    <div className="flex flex-col min-h-screen selection:bg-secondary selection:text-white overflow-x-hidden">
+    <div className="flex flex-col min-h-screen selection:bg-secondary selection:text-white overflow-x-hidden font-body">
       <Navbar />
       
       <main className="flex-grow">
@@ -257,10 +257,12 @@ export default function HomePage() {
               >
                 <div className="relative z-10 p-4">
                    <div className="aspect-video bg-white/40 backdrop-blur-sm rounded-[3rem] border border-white/40 flex items-center justify-center overflow-hidden shadow-2xl">
-                      <Microscope className="h-48 w-48 text-primary/10 absolute -bottom-10 -right-10 rotate-12" />
+                      <div className="absolute -bottom-10 -right-10 opacity-5 rotate-12 scale-150">
+                        <Logo />
+                      </div>
                       <div className="relative text-center space-y-4">
-                        <div className="bg-primary/10 p-6 rounded-full inline-block mb-4">
-                           <Activity className="h-16 w-16 text-primary animate-pulse" />
+                        <div className="bg-primary/10 p-8 rounded-full inline-block mb-4">
+                           <Wind className="h-16 w-16 text-primary animate-pulse" />
                         </div>
                         <h4 className="text-2xl font-black text-primary">Diagnóstico de Precisión</h4>
                         <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Protocolos Sunvou®</p>
@@ -291,32 +293,28 @@ export default function HomePage() {
                   label: "No es solo estrés", 
                   desc: "Hasta el 78% de personas con síntomas de Colon Irritable tienen en realidad un sobrecrecimiento de bacterias (SIBO) que puede ser tratado.", 
                   icon: <Users className="h-8 w-8" />,
-                  color: "border-blue-100 bg-blue-50/30",
-                  hint: "SIBO vs SII"
+                  color: "border-blue-100 bg-blue-50/30"
                 },
                 { 
                   stat: "30%", 
                   label: "Más allá de lo básico", 
                   desc: "Los tests antiguos suelen dar 'falsos negativos'. Nuestra tecnología detecta gases (Metano y Sulfuro) que otros equipos pasan por alto.", 
                   icon: <BarChart3 className="h-8 w-8" />,
-                  color: "border-emerald-100 bg-emerald-50/30",
-                  hint: "Precisión Multigas"
+                  color: "border-emerald-100 bg-emerald-50/30"
                 },
                 { 
                   stat: "1 de 5", 
                   label: "Tus síntomas tienen explicación", 
                   desc: "Cerca del 20% de los adultos sufren intolerancias a la lactosa o fructosa sin saberlo. Este test confirma si tu dieta es la causa.", 
                   icon: <PieChartIcon className="h-8 w-8" />,
-                  color: "border-amber-100 bg-amber-50/30",
-                  hint: "Intolerancias"
+                  color: "border-amber-100 bg-amber-50/30"
                 },
                 { 
                   stat: "180", 
                   label: "Un mapa para tu médico", 
                   desc: "En 3 horas de seguimiento, generamos la curva metabólica que tu médico necesita para darte el tratamiento exacto que tu cuerpo requiere.", 
                   icon: <ClipboardCheck className="h-8 w-8" />,
-                  color: "border-purple-100 bg-purple-50/30",
-                  hint: "Tratamiento dirigido"
+                  color: "border-purple-100 bg-purple-50/30"
                 },
               ].map((item, idx) => (
                 <motion.div 
@@ -484,7 +482,7 @@ export default function HomePage() {
               <div className="flex flex-wrap justify-center gap-6 pt-8">
                 <Link href="/booking">
                   <Button size="lg" className="rounded-full h-20 px-12 text-2xl font-black shadow-2xl bg-white text-primary hover:bg-secondary hover:text-white transition-all hover:scale-105 active:scale-95">
-                    Reservar Cita
+                    Reservar Cita Now
                   </Button>
                 </Link>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
@@ -502,11 +500,8 @@ export default function HomePage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-16 mb-16">
             <div className="col-span-1 lg:col-span-2 space-y-8">
-              <Link href="/" className="flex items-center gap-3 group">
-                <div className="bg-primary p-2 rounded-xl group-hover:rotate-12 transition-transform">
-                  <Activity className="h-8 w-8 text-white" />
-                </div>
-                <span className="text-3xl font-black text-primary tracking-tighter italic">Oralab</span>
+              <Link href="/">
+                <Logo />
               </Link>
               <p className="text-muted-foreground text-lg max-w-md leading-relaxed">
                 Laboratorio clínico especializado en Salud Digestiva. Partner tecnológico Sunvou® para el apoyo al diagnóstico gastroenterológico en Chile.
