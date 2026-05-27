@@ -12,6 +12,8 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { Lock, Mail, ArrowRight, Activity } from "lucide-react";
 
+const ADMIN_EMAIL = "admin@oralab.cl";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +23,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isUserLoading && user) {
+    if (!isUserLoading && user && user.email === ADMIN_EMAIL) {
       router.push("/reception");
     }
   }, [user, isUserLoading, router]);
@@ -29,6 +31,15 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     if (!auth) return;
+
+    if (email !== ADMIN_EMAIL) {
+      toast({
+        variant: "destructive",
+        title: "Acceso denegado",
+        description: "Solo cuentas administrativas pueden acceder a este panel.",
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -43,7 +54,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Error de acceso",
-        description: "Credenciales inválidas. Verifica tu correo y contraseña.",
+        description: "Credenciales inválidas o error de red.",
       });
     } finally {
       setIsLoading(false);

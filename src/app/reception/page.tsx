@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, deleteDoc, doc, updateDoc, where } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { collection, query, deleteDoc, doc, updateDoc, where } from "firebase/firestore";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,29 +20,23 @@ import {
 } from "@/components/ui/table";
 import { 
   Search, 
-  Calendar as CalendarIcon, 
-  Clock, 
-  Mail, 
-  Filter, 
-  Trash2, 
-  CheckCircle,
-  Home,
-  Building2,
   LogOut,
   RefreshCcw,
   Phone,
   UserCheck,
-  PlayCircle,
-  Flag,
-  CalendarDays,
+  Trash2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CalendarDays,
+  AlertTriangle
 } from "lucide-react";
 import { format, addDays, subDays, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { getAuth, signOut } from "firebase/auth";
 import { cn } from "@/lib/utils";
+
+const ADMIN_EMAIL = "admin@oralab.cl";
 
 export default function ReceptionPage() {
   const { user, isUserLoading } = useUser();
@@ -52,15 +46,20 @@ export default function ReceptionPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Solución para errores de hidratación: Solo establecer la fecha en el cliente
+  // Evitar errores de hidratación estableciendo la fecha solo en el cliente
   useEffect(() => {
     setIsMounted(true);
     setSelectedDate(startOfToday());
   }, []);
 
+  // Validación de acceso Admin
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push("/login");
+    } else if (user && user.email !== ADMIN_EMAIL) {
+      // Si está logueado pero no es el admin, cerramos sesión y mandamos a login
+      const auth = getAuth();
+      signOut(auth).then(() => router.push("/login"));
     }
   }, [user, isUserLoading, router]);
 
@@ -68,15 +67,20 @@ export default function ReceptionPage() {
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!db || !dateString) return null;
-    // IMPORTANTE: Asegúrate de que la colección se llame "bookings" en Firestore
+    // Simplificamos la consulta (quitamos orderBy) para evitar error de índice manual en Firestore
+    // Ordenaremos los resultados en memoria para mayor confiabilidad.
     return query(
       collection(db, "bookings"), 
-      where("scheduledDate", "==", dateString),
-      orderBy("scheduledTime", "asc")
+      where("scheduledDate", "==", dateString)
     );
   }, [db, dateString]);
 
-  const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsQuery);
+  const { data: rawBookings, isLoading: isBookingsLoading, error: bookingsError } = useCollection(bookingsQuery);
+
+  // Ordenar en memoria por hora para evitar depender de índices compuestos de Firestore
+  const bookings = rawBookings ? [...rawBookings].sort((a, b) => 
+    (a.scheduledTime || "").localeCompare(b.scheduledTime || "")
+  ) : [];
 
   const filteredBookings = bookings?.filter(b => 
     b.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -140,7 +144,7 @@ export default function ReceptionPage() {
   const safeFormatDate = (dateStr: string) => {
     if (!dateStr) return "Cargando...";
     try {
-      const date = new Date(dateStr + 'T00:00:00');
+      const date = new Date(dateStr + 'T12:00:00'); // T12 para evitar desfases de zona horaria
       return format(date, 'EEEE d MMMM', { locale: es });
     } catch (e) {
       return "Error de fecha";
@@ -152,8 +156,29 @@ export default function ReceptionPage() {
       <div className="flex h-screen items-center justify-center bg-muted/30">
         <div className="flex flex-col items-center gap-4">
           <RefreshCcw className="h-10 w-10 animate-spin text-primary" />
-          <p className="font-bold text-muted-foreground">Cargando panel...</p>
+          <p className="font-bold text-muted-foreground">Autenticando administrador...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (bookingsError) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-muted/30 p-4">
+        <Card className="max-w-md w-full border-destructive/50">
+          <CardHeader className="text-center">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <CardTitle className="text-destructive">Error al cargar datos</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-sm text-muted-foreground mb-6">
+              Hubo un problema con la consulta a la base de datos.
+            </p>
+            <Button onClick={() => window.location.reload()} className="w-full">
+              Reintentar
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -206,38 +231,30 @@ export default function ReceptionPage() {
         {/* MÉTRICAS RÁPIDAS */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">Agendados</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Agendados</p>
               <div className="text-3xl font-bold text-primary">{bookings?.length || 0}</div>
             </CardContent>
           </Card>
           <Card className="bg-white border-l-4 border-l-blue-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">En Espera</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-1">En Espera</p>
               <div className="text-3xl font-bold text-blue-600">
                 {bookings?.filter(b => b.status === 'arrived').length || 0}
               </div>
             </CardContent>
           </Card>
           <Card className="bg-white border-l-4 border-l-amber-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">En Test</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-1">En Test</p>
               <div className="text-3xl font-bold text-amber-600">
                 {bookings?.filter(b => b.status === 'in_progress').length || 0}
               </div>
             </CardContent>
           </Card>
           <Card className="bg-white border-l-4 border-l-green-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">Completados</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Completados</p>
               <div className="text-3xl font-bold text-green-600">
                 {bookings?.filter(b => b.status === 'completed').length || 0}
               </div>
