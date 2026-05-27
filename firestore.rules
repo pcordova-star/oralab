@@ -1,9 +1,8 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REGLAS ABIERTAS PARA PRODUCCIÓN - ACTUALIZADO: 2024-05-26T17:10:00Z
-    // Nota: Acceso total permitido mientras se completa la propagación del dominio y pruebas de App Hosting.
+    // REGLAS TEMPORALES PARA DESARROLLO Y PRUEBAS
+    // Permite lectura y escritura a cualquier usuario para depurar el error de "insufficient permissions"
     match /{document=**} {
       allow read, write: if true;
     }

@@ -49,7 +49,14 @@ export default function ReceptionPage() {
   const db = useFirestore();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDate, setSelectedDate] = useState(startOfToday());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Solución para errores de hidratación: Solo establecer la fecha en el cliente
+  useEffect(() => {
+    setIsMounted(true);
+    setSelectedDate(startOfToday());
+  }, []);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -57,10 +64,11 @@ export default function ReceptionPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const dateString = format(selectedDate, 'yyyy-MM-dd');
+  const dateString = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : "";
 
   const bookingsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !dateString) return null;
+    // IMPORTANTE: Asegúrate de que la colección se llame "bookings" en Firestore
     return query(
       collection(db, "bookings"), 
       where("scheduledDate", "==", dateString),
@@ -130,21 +138,21 @@ export default function ReceptionPage() {
   };
 
   const safeFormatDate = (dateStr: string) => {
-    if (!dateStr) return "N/A";
+    if (!dateStr) return "Cargando...";
     try {
       const date = new Date(dateStr + 'T00:00:00');
       return format(date, 'EEEE d MMMM', { locale: es });
     } catch (e) {
-      return "Error";
+      return "Error de fecha";
     }
   };
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || !isMounted) {
     return (
       <div className="flex h-screen items-center justify-center bg-muted/30">
         <div className="flex flex-col items-center gap-4">
           <RefreshCcw className="h-10 w-10 animate-spin text-primary" />
-          <p className="font-bold text-muted-foreground">Verificando acceso...</p>
+          <p className="font-bold text-muted-foreground">Cargando panel...</p>
         </div>
       </div>
     );
@@ -172,14 +180,24 @@ export default function ReceptionPage() {
         {/* NAVEGACIÓN DE DÍA */}
         <Card className="mb-8 bg-white shadow-sm border-primary/10">
           <CardContent className="p-4 flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={() => setSelectedDate(subDays(selectedDate, 1))}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => selectedDate && setSelectedDate(subDays(selectedDate, 1))}
+              disabled={!selectedDate}
+            >
               <ChevronLeft className="h-6 w-6" />
             </Button>
             <div className="flex flex-col items-center">
               <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Agenda para el día</span>
               <span className="text-xl font-black text-primary capitalize">{safeFormatDate(dateString)}</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => selectedDate && setSelectedDate(addDays(selectedDate, 1))}
+              disabled={!selectedDate}
+            >
               <ChevronRight className="h-6 w-6" />
             </Button>
           </CardContent>
@@ -197,7 +215,7 @@ export default function ReceptionPage() {
           </Card>
           <Card className="bg-white border-l-4 border-l-blue-500">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">En Espera (Llegaron)</CardTitle>
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">En Espera</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-600">
@@ -207,7 +225,7 @@ export default function ReceptionPage() {
           </Card>
           <Card className="bg-white border-l-4 border-l-amber-500">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">En Procedimiento</CardTitle>
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">En Test</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-amber-600">
@@ -217,7 +235,7 @@ export default function ReceptionPage() {
           </Card>
           <Card className="bg-white border-l-4 border-l-green-500">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">Completados Hoy</CardTitle>
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase">Completados</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-600">
@@ -249,9 +267,9 @@ export default function ReceptionPage() {
                 <TableRow className="bg-muted/5">
                   <TableHead className="font-bold">Hora</TableHead>
                   <TableHead className="font-bold">Paciente</TableHead>
-                  <TableHead className="font-bold">Examen / Modalidad</TableHead>
-                  <TableHead className="font-bold">Estado Actual</TableHead>
-                  <TableHead className="text-right font-bold">Gestión de Flujo</TableHead>
+                  <TableHead className="font-bold">Examen</TableHead>
+                  <TableHead className="font-bold">Estado</TableHead>
+                  <TableHead className="text-right font-bold">Gestión</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -285,19 +303,13 @@ export default function ReceptionPage() {
                           <Badge variant="outline" className="bg-secondary/5 text-secondary border-secondary/20 w-fit">
                             Test {b.examType}
                           </Badge>
-                          {b.modality === 'home_kit' ? (
-                            <span className="flex items-center gap-1 text-secondary font-medium text-[10px] uppercase tracking-tighter">
-                              <Home className="h-3 w-3" /> Solo Retiro de Kit
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-primary font-medium text-[10px] uppercase tracking-tighter">
-                              <Building2 className="h-3 w-3" /> Presencial en Clínica
-                            </span>
-                          )}
+                          <span className="text-[10px] uppercase tracking-tighter opacity-70">
+                            {b.modality === 'home_kit' ? 'Retiro de Kit' : 'Presencial'}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn("font-bold px-3 py-1", getStatusBadgeClass(b.status))}>
+                        <Badge className={cn("font-bold", getStatusBadgeClass(b.status))}>
                           {getStatusLabel(b.status)}
                         </Badge>
                       </TableCell>
@@ -307,43 +319,37 @@ export default function ReceptionPage() {
                             <Button 
                               size="sm" 
                               variant="default"
-                              className="bg-blue-600 hover:bg-blue-700 font-bold gap-1 rounded-full"
+                              className="bg-blue-600 hover:bg-blue-700 font-bold rounded-full"
                               onClick={() => updateStatus(b.id, 'arrived')}
                             >
-                              <UserCheck className="h-4 w-4" /> Marcar Llegada / Pago
+                              Llegó
                             </Button>
                           )}
                           
                           {b.status === 'arrived' && (
                             <Button 
                               size="sm" 
-                              className="bg-amber-500 hover:bg-amber-600 text-white font-bold gap-1 rounded-full animate-pulse-subtle"
+                              className="bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-full animate-pulse-subtle"
                               onClick={() => updateStatus(b.id, 'in_progress')}
                             >
-                              <PlayCircle className="h-4 w-4" /> Iniciar Test
+                              Iniciar
                             </Button>
                           )}
 
                           {b.status === 'in_progress' && (
                             <Button 
                               size="sm" 
-                              className="bg-green-600 hover:bg-green-700 text-white font-bold gap-1 rounded-full"
+                              className="bg-green-600 hover:bg-green-700 text-white font-bold rounded-full"
                               onClick={() => updateStatus(b.id, 'completed')}
                             >
-                              <Flag className="h-4 w-4" /> Finalizar Test
+                              Terminar
                             </Button>
-                          )}
-
-                          {b.status === 'completed' && (
-                            <div className="flex items-center text-green-600 font-bold text-xs gap-1">
-                              <CheckCircle className="h-4 w-4" /> Procedimiento Terminado
-                            </div>
                           )}
 
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full"
+                            className="text-red-400 hover:text-red-600 rounded-full"
                             onClick={() => handleDelete(b.id)}
                           >
                             <Trash2 className="h-4 w-4" />
