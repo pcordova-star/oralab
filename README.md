@@ -13,18 +13,26 @@ La configuración en Cloudflare es **CORRECTA**. El sitio está listo para la va
 3. **CNAME www**: Redirección a dominio principal (**DNS Only / Nube Gris**)
 4. **TXT fah-claim**: Validación de propiedad para App Hosting (**DNS Only**)
 
-### Herramientas de Verificación:
-- [DNS Checker - Registro A](https://dnschecker.org/#A/oralab.cl)
-- [What My DNS](https://www.whatsmydns.net/#A/oralab.cl)
-- [Google Dig](https://toolbox.googleapps.com/apps/dig/#A/oralab.cl)
+## Guía de Desarrollo
 
-**IMPORTANTE**: No activar la nube naranja (Proxy) hasta que el panel de Firebase indique que el dominio está en estado **"Active"**.
+Para guardar y subir los cambios realizados en el proyecto, utiliza los siguientes comandos:
 
-## Despliegue en Firebase App Hosting
+```bash
+# 1. Preparar los archivos
+git add .
 
-1. Repositorio: `https://github.com/pcordova-star/oralab`
-2. Variables de Entorno Críticas:
-   - `GOOGLE_GENAI_API_KEY`: Necesaria para la generación de instrucciones con IA.
+# 2. Crear un commit con las mejoras realizadas
+git commit -m "Mejoras en el Home: Animaciones avanzadas, visualizador de informe técnico y narrativa clínica para pacientes"
+
+# 3. Subir al repositorio
+git push origin main
+```
+
+## Características Recientes
+- **Home de Alta Fidelidad**: Implementación de animaciones con Framer Motion y diseño moderno (Glassmorphism).
+- **Enfoque Clínico**: Narrativa equilibrada entre el rigor técnico (Sunvou®) y la educación al paciente.
+- **Visualizador de Informe**: Gráfico interactivo de biomarcadores (H2, CH4, H2S) para demostración técnica.
+- **Resumen PDF**: Funcionalidad de descarga de indicaciones pre-cita generadas con IA.
 
 ---
 © 2024 Oralab Clinical Lab.
