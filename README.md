@@ -1,3 +1,4 @@
+
 # Oralab - Salud Digestiva Avanzada
 
 Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializado en tests de aire espirado.
@@ -24,7 +25,7 @@ git push origin main
 2. Crea un nuevo **Backend** conectado a tu repositorio de GitHub.
 3. En el **Paso 4 (Variables de Entorno)**, agrega:
    - **Clave**: `GOOGLE_GENAI_API_KEY`
-   - **Valor**: Tu API Key de Google AI Studio.
+   - **Valor**: Tu API Key de Google AI Studio (necesaria para las instrucciones personalizadas por IA).
 4. En la pestaña **Settings -> Domains**, agrega `oralab.cl`.
 
 ### 3. DNS en Cloudflare

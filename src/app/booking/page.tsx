@@ -58,7 +58,7 @@ const communesByRegion: Record<string, string[]> = {
   "Maule": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael", "Cauquenes", "Chanco", "Pelluhue", "Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén", "Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"],
   "Ñuble": ["Chillán", "Bulnes", "Cobquecura", "Coelemu", "Coihueco", "Chillán Viejo", "El Carmen", "Ninhue", "Ñiquén", "Pemuco", "Pinto", "Portezuelo", "Quillón", "Quirihue", "Ránquil", "San Carlos", "San Fabián", "San Ignacio", "San Nicolás", "Treguaco", "Yungay"],
   "Biobío": ["Concepción", "Coronel", "Chiguayante", "Florida", "Hualpén", "Hualqui", "Lota", "Penco", "San Pedro de la Paz", "Santa Juana", "Talcahuano", "Tomé", "Lebu", "Arauco", "Cañete", "Contulmo", "Curanilahue", "Los Álamos", "Tirúa", "Los Ángeles", "Antuco", "Cabrero", "Laja", "Mulchén", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa Bárbara", "Tucapel", "Yumbel", "Alto Biobío"],
-  "La Araucanía": ["Temuco", "Carahue", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre las Casas", "Perquenco", "Pitrufquén", "Pucón", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica", "Cholchol", "Angol", "Collipulli", "Curacautín", "Ercilla", "Lonquimay", "Los Sauces", "Lumaco", "Purén", "Renaico", "Traiguén", "Victoria"],
+  "La Araucanía": ["Temuco", "Carahue", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre las Casas", "Perquenco", "Pitrufquén", "Pucón", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica", "Cholchol", "Angol", "Collipulli", "Curacaví", "Ercilla", "Lonquimay", "Los Sauces", "Lumaco", "Purén", "Renaico", "Traiguén", "Victoria"],
   "Los Ríos": ["Valdivia", "Corral", "Lanco", "Los Lagos", "Máfil", "Mariquina", "Paillaco", "Panguipulli", "La Unión", "Futrono", "Lago Ranco", "Río Bueno"],
   "Los Lagos": ["Puerto Montt", "Calbuco", "Cochamó", "Fresia", "Frutillar", "Los Muermos", "Llanquihue", "Maullín", "Puerto Varas", "Castro", "Ancud", "Chonchi", "Curaco de Vélez", "Dalcahue", "Puqueldón", "Queilén", "Quellón", "Quemchi", "Quinchao", "Osorno", "Puerto Octay", "Purranque", "Puyehue", "Río Negro", "San Juan de la Costa", "San Pablo", "Chaitén", "Futaleufú", "Hualaihué", "Palena"],
   "Aysén": ["Coyhaique", "Lago Verde", "Aysén", "Cisnes", "Guaitecas", "Cochrane", "O'Higgins", "Tortel", "Chile Chico", "Río Ibáñez"],
@@ -259,14 +259,13 @@ export default function BookingPage() {
       try {
         const aiResponse = await generatePrepInstructions({ examType: values.examType });
         instructions = aiResponse.instructions;
-        if (values.modality === 'home_kit') {
-          instructions = "INSTRUCCIONES DE RETIRO DE KIT:\nUsted ha agendado el retiro de los insumos en nuestra oficina en Las Condes. Una vez retirado, podrá realizar el test en su hogar siguiendo estas indicaciones:\n\n" + instructions;
-        }
       } catch (aiError) {
-        instructions = "Por favor, siga estas indicaciones fundamentales para su examen:\n\n1. Ayuno estricto de 12 horas.\n2. El día anterior, siga una dieta blanda (arroz, pollo/pescado a la plancha). Evite legumbres, fibra, frutas y verduras.\n3. No fume ni realice ejercicio intenso 2 horas antes del examen.\n4. No tome antibióticos ni probióticos 4 semanas antes de la prueba.";
-        if (values.modality === 'home_kit') {
-          instructions = "Usted agendó RETIRO DE KIT. Acuda en la fecha y hora seleccionada para recoger sus insumos.\n\n" + instructions;
-        }
+        console.warn("AI generation failed or key missing, using fallback instructions.");
+        instructions = "Por favor, siga estas indicaciones fundamentales:\n\n1. Ayuno estricto de 12 horas.\n2. El día anterior, siga una dieta blanda (arroz, pollo/pescado a la plancha). Evite legumbres, fibra, frutas y verduras.\n3. No fume ni realice ejercicio intenso 2 horas antes del examen.\n4. No tome antibióticos ni probióticos 4 semanas antes de la prueba.";
+      }
+
+      if (values.modality === 'home_kit') {
+        instructions = "INSTRUCCIONES DE RETIRO DE KIT:\nUsted ha agendado el retiro de los insumos en nuestra oficina en Las Condes. Una vez retirado, podrá realizar el test en su hogar siguiendo estas indicaciones:\n\n" + instructions;
       }
       
       setPrepInstructions(instructions);
@@ -277,7 +276,7 @@ export default function BookingPage() {
       setLastBookingValues(values);
       toast({
         title: "Solicitud enviada",
-        description: "Tus datos se guardaron y las indicaciones se generaron con éxito.",
+        description: "Tus datos se guardaron con éxito.",
       });
       
       setIsSubmitting(false);
@@ -312,7 +311,6 @@ export default function BookingPage() {
               }
             </p>
 
-            {/* RECORDATORIO DE CUIDADOS */}
             <div className="bg-muted/30 border border-primary/10 rounded-2xl p-6 text-left mb-8 max-w-xl mx-auto">
               <h3 className="flex items-center gap-2 font-bold text-primary mb-3">
                 <AlertCircle className="h-5 w-5" /> {lastBookingValues?.modality === 'home_kit' ? "Recordatorio de Retiro y Preparación" : "Recordatorio de Cuidados Previos"}
