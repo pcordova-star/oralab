@@ -27,7 +27,10 @@ import {
   UserRoundCheck,
   Wind,
   TrendingUp,
-  FileText
+  FileText,
+  Users,
+  PieChart as PieChartIcon,
+  BarChart3
 } from "lucide-react";
 import { 
   LineChart, 
@@ -293,33 +296,60 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Clinical Indicators Section */}
+        {/* Clinical Statistics Section */}
         <section className="py-24 bg-white relative">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black text-primary italic">Indicadores Clínicos</h2>
+              <h2 className="text-4xl md:text-5xl font-black text-primary italic">Salud Digestiva en Cifras</h2>
               <div className="h-1.5 w-24 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
-              <p className="text-xl text-muted-foreground">El test de aire espirado es una herramienta técnica fundamental para que tu médico identifique el origen de síntomas recurrentes.</p>
+              <p className="text-xl text-muted-foreground">La importancia del diagnóstico preciso radica en la alta prevalencia de trastornos funcionales no diagnosticados.</p>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
-                { name: "Meteorismo (Gases)", icon: <Zap />, color: "bg-blue-50 text-blue-600" },
-                { name: "Hinchazón Abdominal", icon: <Activity />, color: "bg-emerald-50 text-emerald-600" },
-                { name: "Alteración del Tránsito", icon: <AlertCircle />, color: "bg-amber-50 text-amber-600" },
-                { name: "Malestar Digestivo", icon: <Search />, color: "bg-purple-50 text-purple-600" },
-                { name: "Digestión Difícil", icon: <Beaker />, color: "bg-pink-50 text-pink-600" },
-                { name: "Pesadez Postprandial", icon: <ShieldCheck />, color: "bg-indigo-50 text-indigo-600" },
+                { 
+                  stat: "78%", 
+                  label: "Casos de SII con SIBO", 
+                  desc: "Hasta el 78% de pacientes con Intestino Irritable presentan Sobrecrecimiento Bacteriano subyacente.", 
+                  icon: <Users className="h-6 w-6" />,
+                  color: "border-blue-100 bg-blue-50/30"
+                },
+                { 
+                  stat: "30%", 
+                  label: "Falsos Negativos", 
+                  desc: "Sin la medición de Metano y Sulfuro, 1 de cada 3 tests convencionales puede dar un falso negativo.", 
+                  icon: <BarChart3 className="h-6 w-6" />,
+                  color: "border-emerald-100 bg-emerald-50/30"
+                },
+                { 
+                  stat: "1 de 5", 
+                  label: "Intolerancia Crónica", 
+                  desc: "Aproximadamente el 20% de la población adulta padece intolerancias a la Lactosa o Fructosa no detectadas.", 
+                  icon: <PieChartIcon className="h-6 w-6" />,
+                  color: "border-amber-100 bg-amber-50/30"
+                },
+                { 
+                  stat: "180", 
+                  label: "Minutos para Claridad", 
+                  desc: "Un protocolo estandarizado de 3 horas proporciona la curva metabólica completa para el especialista.", 
+                  icon: <ClipboardCheck className="h-6 w-6" />,
+                  color: "border-purple-100 bg-purple-50/30"
+                },
               ].map((item, idx) => (
                 <motion.div 
                   key={idx}
-                  whileHover={{ y: -10 }}
-                  className="flex flex-col items-center p-8 rounded-[2rem] bg-white border border-border shadow-sm hover:shadow-xl transition-all group cursor-default"
+                  whileHover={{ y: -5 }}
+                  className={cn(
+                    "p-8 rounded-[2rem] border transition-all shadow-sm flex flex-col items-center text-center group",
+                    item.color
+                  )}
                 >
-                  <div className={`p-4 rounded-2xl mb-4 transition-transform group-hover:scale-110 ${item.color}`}>
+                  <div className="mb-4 text-primary group-hover:scale-110 transition-transform">
                     {item.icon}
                   </div>
-                  <span className="text-sm font-bold text-primary group-hover:text-secondary transition-colors text-center">{item.name}</span>
+                  <span className="text-4xl font-black text-primary mb-2">{item.stat}</span>
+                  <span className="text-sm font-black text-primary/80 uppercase tracking-widest mb-3">{item.label}</span>
+                  <p className="text-sm text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
@@ -512,4 +542,3 @@ export default function HomePage() {
     </div>
   );
 }
-
