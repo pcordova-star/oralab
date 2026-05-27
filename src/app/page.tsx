@@ -30,7 +30,9 @@ import {
   FileText,
   Users,
   PieChart as PieChartIcon,
-  BarChart3
+  BarChart3,
+  Info,
+  HelpCircle
 } from "lucide-react";
 import { 
   LineChart, 
@@ -146,25 +148,6 @@ const ClinicalReportVisualizer = () => {
               ))}
             </TableBody>
           </Table>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-primary/10">
-          <div className="bg-primary/5 p-3 rounded-xl border border-primary/10">
-            <p className="text-[10px] font-black text-primary uppercase mb-1 flex items-center gap-1">
-              <ShieldCheck className="h-3 w-3" /> Ventaja Tecnológica
-            </p>
-            <p className="text-[9px] font-medium leading-tight text-muted-foreground">
-              Medición de <span className="font-bold text-amber-600">Sulfuro (H₂S)</span> para detectar SIBO de gases sulfurosos.
-            </p>
-          </div>
-          <div className="bg-secondary/5 p-3 rounded-xl border border-secondary/10">
-            <p className="text-[10px] font-black text-secondary uppercase mb-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" /> Soporte Clínico
-            </p>
-            <p className="text-[9px] font-medium leading-tight text-muted-foreground">
-              Alineado con el Consenso Norteamericano de Aire Espirado.
-            </p>
-          </div>
         </div>
       </div>
     </motion.div>
@@ -289,44 +272,51 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Clinical Statistics Section */}
+        {/* Clinical Statistics Section for New Patients */}
         <section className="py-24 bg-white relative">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black text-primary italic">Salud Digestiva en Cifras</h2>
+              <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold">EDUCACIÓN AL PACIENTE</Badge>
+              <h2 className="text-4xl md:text-5xl font-black text-primary italic leading-tight">¿Por qué mi especialista me solicitó este test?</h2>
               <div className="h-1.5 w-24 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
-              <p className="text-xl text-muted-foreground">La importancia del diagnóstico preciso radica en la alta prevalencia de trastornos funcionales no diagnosticados.</p>
+              <p className="text-xl text-muted-foreground font-medium">
+                Entender lo que sucede en tu interior es el primer paso para recuperar tu bienestar. Estas cifras explican por qué un diagnóstico preciso es fundamental.
+              </p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 { 
                   stat: "78%", 
-                  label: "Casos de SII con SIBO", 
-                  desc: "Hasta el 78% de pacientes con Intestino Irritable presentan Sobrecrecimiento Bacteriano subyacente.", 
-                  icon: <Users className="h-6 w-6" />,
-                  color: "border-blue-100 bg-blue-50/30"
+                  label: "No es solo estrés", 
+                  desc: "Hasta el 78% de personas con síntomas de Colon Irritable tienen en realidad un sobrecrecimiento de bacterias (SIBO) que puede ser tratado.", 
+                  icon: <Users className="h-8 w-8" />,
+                  color: "border-blue-100 bg-blue-50/30",
+                  hint: "SIBO vs SII"
                 },
                 { 
                   stat: "30%", 
-                  label: "Falsos Negativos", 
-                  desc: "Sin la medición de Metano y Sulfuro, 1 de cada 3 tests convencionales puede dar un falso negativo.", 
-                  icon: <BarChart3 className="h-6 w-6" />,
-                  color: "border-emerald-100 bg-emerald-50/30"
+                  label: "Más allá de lo básico", 
+                  desc: "Los tests antiguos suelen dar 'falsos negativos'. Nuestra tecnología detecta gases (Metano y Sulfuro) que otros equipos pasan por alto.", 
+                  icon: <BarChart3 className="h-8 w-8" />,
+                  color: "border-emerald-100 bg-emerald-50/30",
+                  hint: "Precisión Multigas"
                 },
                 { 
                   stat: "1 de 5", 
-                  label: "Intolerancia Crónica", 
-                  desc: "Aproximadamente el 20% de la población adulta padece intolerancias a la Lactosa o Fructosa no detectadas.", 
-                  icon: <PieChartIcon className="h-6 w-6" />,
-                  color: "border-amber-100 bg-amber-50/30"
+                  label: "Tus síntomas tienen explicación", 
+                  desc: "Cerca del 20% de los adultos sufren intolerancias a la lactosa o fructosa sin saberlo. Este test confirma si tu dieta es la causa.", 
+                  icon: <PieChartIcon className="h-8 w-8" />,
+                  color: "border-amber-100 bg-amber-50/30",
+                  hint: "Intolerancias"
                 },
                 { 
                   stat: "180", 
-                  label: "Minutos para Claridad", 
-                  desc: "Un protocolo estandarizado de 3 horas proporciona la curva metabólica completa para el especialista.", 
-                  icon: <ClipboardCheck className="h-6 w-6" />,
-                  color: "border-purple-100 bg-purple-50/30"
+                  label: "Un mapa para tu médico", 
+                  desc: "En 3 horas de seguimiento, generamos la curva metabólica que tu médico necesita para darte el tratamiento exacto que tu cuerpo requiere.", 
+                  icon: <ClipboardCheck className="h-8 w-8" />,
+                  color: "border-purple-100 bg-purple-50/30",
+                  hint: "Tratamiento dirigido"
                 },
               ].map((item, idx) => (
                 <motion.div 
@@ -337,15 +327,32 @@ export default function HomePage() {
                     item.color
                   )}
                 >
-                  <div className="mb-4 text-primary group-hover:scale-110 transition-transform">
+                  <div className="mb-6 text-primary group-hover:scale-110 transition-transform bg-white p-4 rounded-2xl shadow-sm">
                     {item.icon}
                   </div>
                   <span className="text-4xl font-black text-primary mb-2">{item.stat}</span>
-                  <span className="text-sm font-black text-primary/80 uppercase tracking-widest mb-3">{item.label}</span>
+                  <span className="text-base font-black text-primary/80 uppercase tracking-widest mb-4 leading-tight">{item.label}</span>
                   <p className="text-sm text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-16 max-w-4xl mx-auto bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10 flex flex-col md:flex-row items-center gap-8"
+            >
+              <div className="bg-white p-4 rounded-full shrink-0 shadow-md">
+                <HelpCircle className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-primary mb-2">¿Es tu primera vez con este test?</h4>
+                <p className="text-muted-foreground leading-relaxed">
+                  Es un procedimiento <strong>no invasivo</strong>. Solo necesitas soplar en un equipo especializado después de ingerir una solución dulce. A través de tu aliento, podemos "leer" lo que las bacterias están haciendo en tu intestino, permitiendo que tu médico te recete el antibiótico o dieta correcta en lugar de solo tratar los síntomas.
+                </p>
+              </div>
+            </motion.div>
           </div>
         </section>
 
