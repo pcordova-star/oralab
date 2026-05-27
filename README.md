@@ -7,23 +7,24 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 
 Para que el dominio `oralab.cl` funcione con Firebase App Hosting, sigue esta configuración exacta en Cloudflare:
 
-1. **A Record (@)**:
-   - Name: `@`
-   - Content: `35.219.200.4` (o la IP que te dé Firebase)
-   - Proxy Status: **DNS ONLY (Nube Gris)** <- CRÍTICO
+### 1. Registro A (Dominio Principal)
+- **Tipo**: `A`
+- **Nombre**: `@`
+- **Contenido**: `35.219.200.4` (Verifica la IP en tu consola de Firebase)
+- **Proxy Status**: **DNS ONLY (Nube Gris)** <- CRÍTICO
 
-2. **CNAME Record (www)**:
-   - Name: `www`
-   - Content: `@`
-   - Proxy Status: **DNS ONLY (Nube Gris)**
+### 2. Registro CNAME (www)
+- **Tipo**: `CNAME`
+- **Nombre**: `www`
+- **Contenido**: `oralab.cl`
+- **Proxy Status**: **DNS ONLY (Nube Gris)**
 
-3. **TXT Record (fah-claim)**:
-   - Este es para validar la propiedad del dominio.
-   - Proxy Status: **DNS ONLY**
-
-4. **CNAME Record (_acme-challenge)**:
-   - Usado para el certificado SSL.
-   - Proxy Status: **DNS ONLY (Nube Gris)**
+### 3. Registro CNAME de Validación (SSL)
+Este es el registro que aparece en tu captura de pantalla:
+- **Tipo**: `CNAME`
+- **Nombre**: `_acme-challenge_3vy6hxc24yw4ws5e` (Sin el dominio al final y sin el punto final)
+- **Contenido**: `6c9ac2ff-9ac6-40b5-b1a7-dd727fce4cfb.7.authorize.certificatemanager.goog.` (Aquí sí puedes dejar el punto final)
+- **Proxy Status**: **DNS ONLY (Nube Gris)** <- OBLIGATORIO
 
 **IMPORTANTE**: Una vez que en la consola de Firebase el estado del dominio cambie a **"Active"**, puedes volver a Cloudflare y activar las nubes naranjas (Proxied) para mayor seguridad.
 
