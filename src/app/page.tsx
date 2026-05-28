@@ -236,13 +236,13 @@ export default function HomePage() {
                 </motion.h1>
                 
                 <motion.p variants={fadeIn} className="text-base md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                  Realizamos tests de aire espirado con precisión técnica. Un procedimiento clínico diseñado para asistir en el diagnóstico de tu especialista.
+                  Especialistas en tests de aire espirado para <strong>SIBO, IMO, HIMO e Intolerancias</strong>. Un procedimiento clínico de alta precisión diseñado para asistir en el diagnóstico de tu especialista.
                 </motion.p>
                 
                 <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 md:gap-6">
                   <Link href="/booking" className="w-full sm:w-auto">
                     <Button size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 md:px-10 text-base md:text-lg font-bold shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 group">
-                      Agendar mi Examen <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      Reservar Cita <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
                   <Link href="/how-it-works" className="w-full sm:w-auto">
