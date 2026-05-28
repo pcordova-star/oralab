@@ -26,34 +26,34 @@ export default function HowItWorksPage() {
 
   const steps = [
     {
-      title: "1. Preparación y Dieta",
-      description: "Siguiendo el protocolo clínico, el paciente debe realizar una dieta blanda 24 horas antes y un ayuno de 12 horas para asegurar una línea base de gases estable.",
+      title: "1. Preparación previa",
+      description: "El éxito del test comienza en casa. Deberás seguir una dieta sencilla el día anterior (dieta blanda) y un ayuno de 12 horas para que tu sistema digestivo esté en reposo absoluto al momento del examen.",
       icon: <Coffee className="h-8 w-8 text-secondary" />,
     },
     {
-      title: "2. Medición Basal",
-      description: "Al iniciar el procedimiento, se recolecta una muestra de aliento para cuantificar la producción endógena de gases previa al estímulo.",
+      title: "2. Primera medición",
+      description: "Al llegar, realizaremos una primera toma de aliento (basal). Esto nos sirve para conocer el estado de tu organismo antes de comenzar el estudio propiamente tal.",
       icon: <Wind className="h-8 w-8 text-secondary" />,
     },
     {
-      title: "3. Administración del Sustrato",
-      description: "Se administra el sustrato específico (Lactulosa, Fructosa o Lactosa) indicado en su orden médica para evaluar su fermentación por la microbiota.",
+      title: "3. Toma del sustrato",
+      description: "Beberás una solución líquida específica (Lactosa, Fructosa o Lactulosa, según lo indicado por tu médico). Es una bebida dulce que las bacterias de tu intestino procesarán durante el test.",
       icon: <Beaker className="h-8 w-8 text-secondary" />,
     },
     {
-      title: "4. Registro de Curva",
-      description: "Se realizan mediciones seriadas en intervalos definidos para trazar la curva de evolución de Hidrógeno, Metano y Sulfuro.",
+      title: "4. Seguimiento del proceso",
+      description: "Durante las siguientes 2 a 3 horas, tomaremos muestras de tu aliento en intervalos regulares. Es un proceso tranquilo y sin dolor donde solo deberás soplar suavemente en un equipo especializado.",
       icon: <Clock className="h-8 w-8 text-secondary" />,
     },
     {
-      title: "5. Informe Técnico",
-      description: "Generamos un reporte con gráficas de evolución. Este documento técnico es la herramienta para la interpretación de su especialista.",
+      title: "5. Informe para tu médico",
+      description: "Generamos un reporte detallado con gráficos que muestran cómo reaccionó tu cuerpo. Este documento es el 'mapa' que tu médico usará para darte el tratamiento exacto que necesitas.",
       icon: <ClipboardCheck className="h-8 w-8 text-secondary" />,
     },
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background font-body">
       <Navbar />
       
       <main className="flex-grow">
@@ -69,9 +69,9 @@ export default function HowItWorksPage() {
               <Link href="/" className="inline-flex items-center text-secondary hover:text-secondary/80 mb-8 font-bold transition-colors">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Volver al inicio
               </Link>
-              <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">Protocolo de <br /><span className="text-secondary">Aire Espirado</span></h1>
+              <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">Entiende tu <br /><span className="text-secondary">Procedimiento</span></h1>
               <p className="text-xl text-primary-foreground/80 max-w-2xl leading-relaxed font-medium">
-                Procedimiento estandarizado bajo el Consenso Norteamericano de Aire Espirado para asistir en el diagnóstico de patologías gastrointestinales.
+                Realizarse un test de aire espirado es un proceso sencillo y no invasivo. Aquí te explicamos paso a paso cómo lo haremos juntos.
               </p>
             </motion.div>
           </div>
@@ -90,9 +90,9 @@ export default function HowItWorksPage() {
                 <Package className="h-12 w-12 text-secondary" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-primary mb-3">Modalidad Retiro de Kit</h3>
-                <p className="text-muted-foreground leading-relaxed text-lg">
-                  El paciente puede optar por el retiro de insumos para la recolección de muestras en su hogar siguiendo estrictamente el protocolo técnico, para luego ser analizadas en nuestro laboratorio.
+                <h3 className="text-2xl font-black text-primary mb-3">Opción de Test en Casa</h3>
+                <p className="text-muted-foreground leading-relaxed text-lg font-medium">
+                  Si no puedes venir a la clínica, puedes retirar un kit con todos los insumos y las instrucciones detalladas para recolectar tus muestras cómodamente en tu hogar y luego traerlas para su análisis.
                 </p>
               </div>
             </motion.div>
@@ -104,7 +104,7 @@ export default function HowItWorksPage() {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-16 space-y-4">
-                <h2 className="text-3xl md:text-5xl font-black text-primary italic">Etapas del Procedimiento</h2>
+                <h2 className="text-3xl md:text-5xl font-black text-primary italic">Paso a paso del examen</h2>
                 <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full" />
               </div>
               
@@ -135,28 +135,28 @@ export default function HowItWorksPage() {
           </div>
         </section>
 
-        {/* Fundamental Science Section */}
+        {/* Simple Science Section */}
         <section className="py-24 bg-background overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="glass-panel !bg-primary rounded-[3rem] p-8 md:p-16 shadow-2xl border-none relative">
               <div className="grid lg:grid-cols-2 gap-16 items-center relative z-10">
                 <div className="text-white">
-                  <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">Fundamento de la Medición</h2>
-                  <p className="text-lg opacity-80 mb-8 leading-relaxed">
-                    La fermentación de sustratos por parte de la microbiota intestinal produce gases que se difunden al torrente sanguíneo y se eliminan vía pulmonar. La cuantificación de estos gases es un indicador técnico de la actividad metabólica intraluminal.
+                  <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">¿Por qué soplamos?</h2>
+                  <p className="text-lg opacity-80 mb-8 leading-relaxed font-medium">
+                    Cuando las bacterias de tu intestino fermentan ciertos alimentos, producen gases que pasan a tu sangre y finalmente salen por tus pulmones. Al medir tu aliento, podemos "leer" lo que está pasando en tu sistema digestivo sin necesidad de procedimientos invasivos.
                   </p>
                   <div className="space-y-6">
                     <div className="flex items-start gap-4 bg-white/10 p-4 rounded-2xl border border-white/10">
                       <div className="bg-secondary/20 p-2 rounded-lg mt-1">
                         <UserRound className="h-5 w-5 text-secondary" />
                       </div>
-                      <p className="font-bold text-white/90 italic">Metodología técnica para el diagnóstico diferencial de SIBO e intolerancias.</p>
+                      <p className="font-bold text-white/90 italic">Es la forma más amable y precisa de detectar intolerancias o sobrecrecimiento bacteriano (SIBO).</p>
                     </div>
                     <div className="flex items-start gap-4 bg-white/10 p-4 rounded-2xl border border-white/10">
                       <div className="bg-secondary/20 p-2 rounded-lg mt-1">
                         <Stethoscope className="h-5 w-5 text-secondary" />
                       </div>
-                      <p className="font-bold text-white/90 italic">Tecnología alineada con las guías del American College of Gastroenterology.</p>
+                      <p className="font-bold text-white/90 italic">Usamos tecnología de punta certificada para asegurar resultados confiables para tu médico.</p>
                     </div>
                   </div>
                 </div>
@@ -186,20 +186,20 @@ export default function HowItWorksPage() {
               className="max-w-3xl mx-auto"
             >
               <Stethoscope className="h-16 w-16 text-secondary mx-auto mb-8 animate-float" />
-              <h2 className="text-3xl md:text-6xl font-black text-primary mb-6">Apoyo técnico para su médico tratante</h2>
+              <h2 className="text-3xl md:text-6xl font-black text-primary mb-6">Estamos para acompañarte</h2>
               <p className="text-xl text-muted-foreground mb-10 leading-relaxed font-medium">
-                Oralab proporciona la tecnología y el rigor técnico necesario para realizar el test de aire espirado solicitado por su especialista.
+                Si tienes dudas sobre la preparación o el día del examen, nuestro equipo técnico está disponible para resolver todas tus inquietudes.
               </p>
               <div className="flex flex-wrap justify-center gap-6">
                 <Link href="/booking">
                   <Button size="lg" className="rounded-full h-16 px-10 text-xl font-black bg-primary hover:bg-secondary hover:text-white transition-all shadow-xl hover:scale-105">
-                    Reservar Examen
+                    Agendar mi Test
                   </Button>
                 </Link>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" size="lg" className="rounded-full h-16 px-10 text-xl font-bold border-2 border-primary text-primary hover:bg-primary/5">
                     <MessageCircle className="h-6 w-6 mr-3" />
-                    Consultas Técnicas
+                    Consultar por WhatsApp
                   </Button>
                 </a>
               </div>
@@ -215,7 +215,7 @@ export default function HowItWorksPage() {
                <MapPin className="h-5 w-5 text-secondary" />
                <p className="text-sm font-bold opacity-80 uppercase tracking-widest">Apoquindo 3992, Las Condes. Chile.</p>
             </div>
-            <p className="text-primary-foreground/50 text-xs font-medium">© 2024 Oralab Clinical Lab. Diagnóstico especializado Sunvou®.</p>
+            <p className="text-primary-foreground/50 text-xs font-medium">© 2024 Oralab Clinical Lab. Tecnología especializada Sunvou®.</p>
           </div>
         </div>
       </footer>
