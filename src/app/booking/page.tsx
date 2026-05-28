@@ -26,7 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Beaker, Wind } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -292,6 +292,27 @@ export default function BookingPage() {
     }
   }
 
+  const examOptions = [
+    { 
+      id: "Lactulosa", 
+      label: "Test Lactulosa", 
+      sublabel: "Diagnóstico SIBO / IMO", 
+      desc: "Principal test para sobrecrecimiento bacteriano y metanógenos."
+    },
+    { 
+      id: "Fructosa", 
+      label: "Test Fructosa", 
+      sublabel: "Malabsorción de Fructosa", 
+      desc: "Identifica dificultades digestivas con azúcares de frutas."
+    },
+    { 
+      id: "Lactosa", 
+      label: "Test Lactosa", 
+      sublabel: "Malabsorción de Lactosa", 
+      desc: "Confirma la intolerancia a la azúcar de lácteos."
+    },
+  ];
+
   if (step === 4) {
     return (
       <div className="flex flex-col min-h-screen bg-background pb-12">
@@ -423,15 +444,20 @@ export default function BookingPage() {
                             defaultValue={field.value}
                             className="grid gap-4"
                           >
-                            {["Lactulosa", "Fructosa", "Lactosa"].map((type) => (
-                              <div key={type} className={cn(
-                                "flex items-center space-x-3 p-4 rounded-xl border transition-all cursor-pointer",
-                                field.value === type ? "border-primary bg-primary/5" : "border-muted hover:border-primary/30"
+                            {examOptions.map((opt) => (
+                              <div key={opt.id} className={cn(
+                                "flex items-center space-x-4 p-5 rounded-xl border-2 transition-all cursor-pointer",
+                                field.value === opt.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-muted hover:border-primary/30"
                               )}>
-                                <RadioGroupItem value={type} id={`exam-${type}`} />
-                                <label htmlFor={`exam-${type}`} className="flex-1 cursor-pointer">
-                                  <div className="font-bold text-primary">Test {type}</div>
-                                  <div className="text-xs text-muted-foreground">Procedimiento no invasivo especializado.</div>
+                                <RadioGroupItem value={opt.id} id={`exam-${opt.id}`} className="shrink-0" />
+                                <label htmlFor={`exam-${opt.id}`} className="flex-1 cursor-pointer">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <div className="font-black text-primary text-lg">{opt.label}</div>
+                                    <div className="text-[10px] font-black uppercase tracking-widest bg-secondary/10 text-secondary px-2 py-0.5 rounded-full border border-secondary/20">
+                                      {opt.sublabel}
+                                    </div>
+                                  </div>
+                                  <div className="text-sm text-muted-foreground font-medium leading-tight">{opt.desc}</div>
                                 </label>
                               </div>
                             ))}
