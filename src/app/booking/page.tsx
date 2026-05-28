@@ -296,8 +296,8 @@ export default function BookingPage() {
     { 
       id: "Lactulosa", 
       label: "Test Lactulosa", 
-      sublabel: "Diagnóstico SIBO / IMO", 
-      desc: "Principal test para sobrecrecimiento bacteriano y metanógenos."
+      sublabel: "Diagnóstico SIBO / IMO / HIMO", 
+      desc: "Principal test para sobrecrecimiento bacteriano y metanógenos (SIBO e IMO)."
     },
     { 
       id: "Fructosa", 
