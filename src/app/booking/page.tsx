@@ -38,7 +38,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { generatePrepInstructions } from "@/ai/flows/generate-prep-instructions";
-import { jsPDF } from "jsPDF";
+import { jsPDF } from "jspdf";
 
 const regions = [
   "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
