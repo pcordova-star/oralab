@@ -26,7 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Beaker, Wind } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Beaker, Wind, Stethoscope } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -38,7 +38,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { generatePrepInstructions } from "@/ai/flows/generate-prep-instructions";
-import { jsPDF } from "jspdf";
+import { jsPDF } from "jsPDF";
 
 const regions = [
   "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
@@ -296,19 +296,19 @@ export default function BookingPage() {
     { 
       id: "Lactulosa", 
       label: "Test Lactulosa", 
-      sublabel: "Diagnóstico SIBO / IMO / HIMO", 
-      desc: "Principal test para sobrecrecimiento bacteriano y metanógenos (SIBO e IMO)."
+      sublabel: "SIBO / IMO / HIMO", 
+      desc: "Principal test para sobrecrecimiento bacteriano (SIBO) y metanógenos (IMO/HIMO)."
     },
     { 
       id: "Fructosa", 
       label: "Test Fructosa", 
-      sublabel: "Malabsorción de Fructosa", 
+      sublabel: "Malabsorción Fructosa", 
       desc: "Identifica dificultades digestivas con azúcares de frutas."
     },
     { 
       id: "Lactosa", 
       label: "Test Lactosa", 
-      sublabel: "Malabsorción de Lactosa", 
+      sublabel: "Malabsorción Lactosa", 
       desc: "Confirma la intolerancia a la azúcar de lácteos."
     },
   ];
@@ -743,9 +743,20 @@ export default function BookingPage() {
                       name="doctor"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Médico solicitante</FormLabel>
+                          <div className="flex items-center justify-between">
+                            <FormLabel>Médico solicitante</FormLabel>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7 text-[10px] font-black uppercase tracking-tight text-secondary hover:text-secondary/80 px-2 border border-secondary/20 rounded-full"
+                              onClick={() => field.onChange("Autoconsulta para derivación")}
+                            >
+                              <Stethoscope className="mr-1 h-3 w-3" /> ¿Sin orden? Haz Autoconsulta
+                            </Button>
+                          </div>
                           <FormControl>
-                            <Input placeholder="Nombre del médico" {...field} />
+                            <Input placeholder="Nombre del médico o 'Autoconsulta'" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
