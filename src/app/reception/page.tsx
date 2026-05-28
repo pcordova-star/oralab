@@ -19,6 +19,20 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
   Search, 
   LogOut,
   RefreshCcw,
@@ -28,15 +42,32 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarDays,
-  AlertTriangle
+  AlertTriangle,
+  Calendar as CalendarIcon,
+  XCircle,
+  Clock,
+  Pencil
 } from "lucide-react";
 import { format, addDays, subDays, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { getAuth, signOut } from "firebase/auth";
 import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
+
+const timeSlots = [];
+for (let hour = 8; hour <= 12; hour++) {
+  for (let min = 0; min < 60; min += 15) {
+    if (hour === 12 && min > 0) break;
+    const h = hour.toString().padStart(2, '0');
+    const m = min.toString().padStart(2, '0');
+    timeSlots.push(`${h}:${m}`);
+  }
+}
 
 export default function ReceptionPage() {
   const { user, isUserLoading } = useUser();
@@ -45,19 +76,21 @@ export default function ReceptionPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  
+  // Estado para reprogramación
+  const [editingBooking, setEditingBooking] = useState<any>(null);
+  const [newDate, setNewDate] = useState<Date | undefined>(undefined);
+  const [newTime, setNewTime] = useState<string>("");
 
-  // Evitar errores de hidratación estableciendo la fecha solo en el cliente
   useEffect(() => {
     setIsMounted(true);
     setSelectedDate(startOfToday());
   }, []);
 
-  // Validación de acceso Admin
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push("/login");
     } else if (user && user.email !== ADMIN_EMAIL) {
-      // Si está logueado pero no es el admin, cerramos sesión y mandamos a login
       const auth = getAuth();
       signOut(auth).then(() => router.push("/login"));
     }
@@ -67,8 +100,6 @@ export default function ReceptionPage() {
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!db || !dateString) return null;
-    // Simplificamos la consulta (quitamos orderBy) para evitar error de índice manual en Firestore
-    // Ordenaremos los resultados en memoria para mayor confiabilidad.
     return query(
       collection(db, "bookings"), 
       where("scheduledDate", "==", dateString)
@@ -77,7 +108,6 @@ export default function ReceptionPage() {
 
   const { data: rawBookings, isLoading: isBookingsLoading, error: bookingsError } = useCollection(bookingsQuery);
 
-  // Ordenar en memoria por hora para evitar depender de índices compuestos de Firestore
   const bookings = rawBookings ? [...rawBookings].sort((a, b) => 
     (a.scheduledTime || "").localeCompare(b.scheduledTime || "")
   ) : [];
@@ -96,29 +126,38 @@ export default function ReceptionPage() {
     }
   }
 
-  async function handleDelete(bookingId: string) {
+  async function handleCancel(bookingId: string) {
     if (!db) return;
-    if (confirm("¿Estás seguro de eliminar esta reserva?")) {
-      try {
-        await deleteDoc(doc(db, "bookings", bookingId));
-        toast({ title: "Reserva eliminada" });
-      } catch (error) {
-        toast({ variant: "destructive", title: "Error al eliminar" });
-      }
+    if (confirm("¿Marcar esta reserva como cancelada? (No se borrará del historial)")) {
+      updateDocumentNonBlocking(doc(db, "bookings", bookingId), { status: 'cancelled' });
+      toast({ title: "Reserva cancelada" });
     }
+  }
+
+  async function handleReschedule() {
+    if (!db || !editingBooking || !newDate || !newTime) return;
+    
+    const nextData = {
+      scheduledDate: format(newDate, "yyyy-MM-dd"),
+      scheduledTime: newTime,
+      status: 'rescheduled'
+    };
+
+    updateDocumentNonBlocking(doc(db, "bookings", editingBooking.id), nextData);
+    toast({ 
+      title: "Cita reprogramada", 
+      description: `Nueva fecha: ${format(newDate, "dd/MM")} a las ${newTime} hrs` 
+    });
+    setEditingBooking(null);
   }
 
   async function updateStatus(bookingId: string, nextStatus: string) {
     if (!db) return;
-    try {
-      await updateDoc(doc(db, "bookings", bookingId), { status: nextStatus });
-      toast({ 
-        title: "Estado actualizado", 
-        description: `Paciente marcado como: ${getStatusLabel(nextStatus)}` 
-      });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Error al actualizar estado" });
-    }
+    updateDocumentNonBlocking(doc(db, "bookings", bookingId), { status: nextStatus });
+    toast({ 
+      title: "Estado actualizado", 
+      description: `Paciente marcado como: ${getStatusLabel(nextStatus)}` 
+    });
   }
 
   const getStatusLabel = (status: string) => {
@@ -127,6 +166,8 @@ export default function ReceptionPage() {
       case 'arrived': return 'Llegó (En espera)';
       case 'in_progress': return 'Test Iniciado';
       case 'completed': return 'Finalizado';
+      case 'cancelled': return 'Cancelado';
+      case 'rescheduled': return 'Reprogramado';
       default: return status;
     }
   };
@@ -137,6 +178,8 @@ export default function ReceptionPage() {
       case 'arrived': return 'status-badge-arrived';
       case 'in_progress': return 'status-badge-in_progress';
       case 'completed': return 'status-badge-completed';
+      case 'cancelled': return 'status-badge-cancelled';
+      case 'rescheduled': return 'status-badge-rescheduled';
       default: return '';
     }
   };
@@ -144,7 +187,7 @@ export default function ReceptionPage() {
   const safeFormatDate = (dateStr: string) => {
     if (!dateStr) return "Cargando...";
     try {
-      const date = new Date(dateStr + 'T12:00:00'); // T12 para evitar desfases de zona horaria
+      const date = new Date(dateStr + 'T12:00:00');
       return format(date, 'EEEE d MMMM', { locale: es });
     } catch (e) {
       return "Error de fecha";
@@ -162,42 +205,21 @@ export default function ReceptionPage() {
     );
   }
 
-  if (bookingsError) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-muted/30 p-4">
-        <Card className="max-w-md w-full border-destructive/50">
-          <CardHeader className="text-center">
-            <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <CardTitle className="text-destructive">Error al cargar datos</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-6">
-              Hubo un problema con la consulta a la base de datos.
-            </p>
-            <Button onClick={() => window.location.reload()} className="w-full">
-              Reintentar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col min-h-screen bg-muted/30">
+    <div className="flex flex-col min-h-screen bg-muted/30 pb-20">
       <Navbar />
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-              <UserCheck className="h-8 w-8" /> Panel de Administración
+              <UserCheck className="h-8 w-8" /> Gestión de Recepción
             </h1>
-            <p className="text-muted-foreground">Gestión de flujo de pacientes y sala de procedimientos.</p>
+            <p className="text-muted-foreground">Flujo de pacientes y trazabilidad de citas.</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleLogout} className="rounded-full border-red-200 text-red-600 hover:bg-red-50">
-              <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
+              <LogOut className="mr-2 h-4 w-4" /> Salir
             </Button>
           </div>
         </div>
@@ -214,7 +236,7 @@ export default function ReceptionPage() {
               <ChevronLeft className="h-6 w-6" />
             </Button>
             <div className="flex flex-col items-center">
-              <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Agenda para el día</span>
+              <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Agenda Diaria</span>
               <span className="text-xl font-black text-primary capitalize">{safeFormatDate(dateString)}</span>
             </div>
             <Button 
@@ -228,38 +250,32 @@ export default function ReceptionPage() {
           </CardContent>
         </Card>
 
-        {/* MÉTRICAS RÁPIDAS */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white">
-            <CardContent className="p-6">
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Agendados</p>
-              <div className="text-3xl font-bold text-primary">{bookings?.length || 0}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white border-l-4 border-l-blue-500">
-            <CardContent className="p-6">
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-1">En Espera</p>
-              <div className="text-3xl font-bold text-blue-600">
-                {bookings?.filter(b => b.status === 'arrived').length || 0}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white border-l-4 border-l-amber-500">
-            <CardContent className="p-6">
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-1">En Test</p>
-              <div className="text-3xl font-bold text-amber-600">
-                {bookings?.filter(b => b.status === 'in_progress').length || 0}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white border-l-4 border-l-green-500">
-            <CardContent className="p-6">
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Completados</p>
-              <div className="text-3xl font-bold text-green-600">
-                {bookings?.filter(b => b.status === 'completed').length || 0}
-              </div>
-            </CardContent>
-          </Card>
+        {/* MÉTRICAS */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+          <Card className="bg-white"><CardContent className="p-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase">Agendados</p>
+            <div className="text-2xl font-bold text-primary">{bookings?.length || 0}</div>
+          </CardContent></Card>
+          <Card className="bg-white border-l-4 border-l-blue-500"><CardContent className="p-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase">En Espera</p>
+            <div className="text-2xl font-bold text-blue-600">{bookings?.filter(b => b.status === 'arrived').length || 0}</div>
+          </CardContent></Card>
+          <Card className="bg-white border-l-4 border-l-amber-500"><CardContent className="p-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase">En Test</p>
+            <div className="text-2xl font-bold text-amber-600">{bookings?.filter(b => b.status === 'in_progress').length || 0}</div>
+          </CardContent></Card>
+          <Card className="bg-white border-l-4 border-l-green-500"><CardContent className="p-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase">Completados</p>
+            <div className="text-2xl font-bold text-green-600">{bookings?.filter(b => b.status === 'completed').length || 0}</div>
+          </CardContent></Card>
+          <Card className="bg-white border-l-4 border-l-red-400"><CardContent className="p-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase">Cancelados</p>
+            <div className="text-2xl font-bold text-red-500">{bookings?.filter(b => b.status === 'cancelled').length || 0}</div>
+          </CardContent></Card>
+          <Card className="bg-white border-l-4 border-l-purple-400"><CardContent className="p-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase">Reprogr.</p>
+            <div className="text-2xl font-bold text-purple-600">{bookings?.filter(b => b.status === 'rescheduled').length || 0}</div>
+          </CardContent></Card>
         </div>
 
         <Card className="bg-white shadow-sm border-primary/10 overflow-hidden">
@@ -267,14 +283,11 @@ export default function ReceptionPage() {
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Buscar paciente en el día..." 
+                placeholder="Buscar paciente por nombre o email..." 
                 className="pl-10 rounded-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-            </div>
-            <div className="text-xs font-bold text-muted-foreground bg-white px-4 py-2 rounded-full border">
-              Total hoy: {filteredBookings?.length || 0}
             </div>
           </div>
 
@@ -286,91 +299,66 @@ export default function ReceptionPage() {
                   <TableHead className="font-bold">Paciente</TableHead>
                   <TableHead className="font-bold">Examen</TableHead>
                   <TableHead className="font-bold">Estado</TableHead>
-                  <TableHead className="text-right font-bold">Gestión</TableHead>
+                  <TableHead className="text-right font-bold">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isBookingsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">Cargando agenda...</TableCell>
-                  </TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-8">Cargando...</TableCell></TableRow>
                 ) : filteredBookings?.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                      <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                      No hay citas para este día.
-                    </TableCell>
-                  </TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-12 text-muted-foreground">No hay registros hoy.</TableCell></TableRow>
                 ) : (
                   filteredBookings?.map((b) => (
-                    <TableRow key={b.id} className={cn("transition-colors", b.status === 'in_progress' && "bg-amber-50/50")}>
-                      <TableCell className="font-black text-primary">
-                        {b.scheduledTime} hrs
-                      </TableCell>
+                    <TableRow key={b.id} className={cn("transition-colors", b.status === 'cancelled' && "opacity-50 bg-slate-50")}>
+                      <TableCell className="font-black text-primary">{b.scheduledTime} hrs</TableCell>
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-bold text-primary">{b.firstName} {b.lastNameFather}</span>
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Phone className="h-3 w-3" /> {b.phone}
-                          </span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" /> {b.phone}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <Badge variant="outline" className="bg-secondary/5 text-secondary border-secondary/20 w-fit">
-                            Test {b.examType}
-                          </Badge>
-                          <span className="text-[10px] uppercase tracking-tighter opacity-70">
-                            {b.modality === 'home_kit' ? 'Retiro de Kit' : 'Presencial'}
-                          </span>
-                        </div>
+                        <Badge variant="outline" className="bg-secondary/5 text-secondary border-secondary/20">Test {b.examType}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn("font-bold", getStatusBadgeClass(b.status))}>
-                          {getStatusLabel(b.status)}
-                        </Badge>
+                        <Badge className={cn("font-bold", getStatusBadgeClass(b.status))}>{getStatusLabel(b.status)}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           {b.status === 'pending' && (
-                            <Button 
-                              size="sm" 
-                              variant="default"
-                              className="bg-blue-600 hover:bg-blue-700 font-bold rounded-full"
-                              onClick={() => updateStatus(b.id, 'arrived')}
-                            >
-                              Llegó
-                            </Button>
+                            <Button size="sm" className="bg-blue-600 font-bold rounded-full" onClick={() => updateStatus(b.id, 'arrived')}>Llegó</Button>
+                          )}
+                          {b.status === 'arrived' && (
+                            <Button size="sm" className="bg-amber-500 text-white font-bold rounded-full" onClick={() => updateStatus(b.id, 'in_progress')}>Iniciar</Button>
+                          )}
+                          {b.status === 'in_progress' && (
+                            <Button size="sm" className="bg-green-600 text-white font-bold rounded-full" onClick={() => updateStatus(b.id, 'completed')}>Finalizar</Button>
                           )}
                           
-                          {b.status === 'arrived' && (
+                          <div className="flex border-l pl-2 ml-2 gap-1">
                             <Button 
-                              size="sm" 
-                              className="bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-full animate-pulse-subtle"
-                              onClick={() => updateStatus(b.id, 'in_progress')}
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-muted-foreground hover:text-primary"
+                              onClick={() => {
+                                setEditingBooking(b);
+                                setNewDate(new Date(b.scheduledDate + 'T12:00:00'));
+                                setNewTime(b.scheduledTime);
+                              }}
                             >
-                              Iniciar
+                              <Pencil className="h-4 w-4" />
                             </Button>
-                          )}
-
-                          {b.status === 'in_progress' && (
-                            <Button 
-                              size="sm" 
-                              className="bg-green-600 hover:bg-green-700 text-white font-bold rounded-full"
-                              onClick={() => updateStatus(b.id, 'completed')}
-                            >
-                              Terminar
-                            </Button>
-                          )}
-
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-red-400 hover:text-red-600 rounded-full"
-                            onClick={() => handleDelete(b.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                            {b.status !== 'cancelled' && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-red-400 hover:text-red-600"
+                                onClick={() => handleCancel(b.id)}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -381,6 +369,55 @@ export default function ReceptionPage() {
           </div>
         </Card>
       </main>
+
+      {/* DIALOG DE REPROGRAMACIÓN */}
+      <Dialog open={!!editingBooking} onOpenChange={() => setEditingBooking(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Reprogramar Cita</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Paciente: {editingBooking?.firstName} {editingBooking?.lastNameFather}
+            </p>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold">Nueva Fecha</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left font-normal h-12">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {newDate ? format(newDate, "PPP", { locale: es }) : "Elegir fecha"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar 
+                    mode="single" 
+                    selected={newDate} 
+                    onSelect={setNewDate} 
+                    locale={es}
+                    disabled={(date) => date < startOfToday()}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold">Nueva Hora</label>
+              <Select value={newTime} onValueChange={setNewTime}>
+                <SelectTrigger className="h-12">
+                  <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><SelectValue /></div>
+                </SelectTrigger>
+                <SelectContent>
+                  {timeSlots.map(t => <SelectItem key={t} value={t}>{t} hrs</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingBooking(null)}>Cancelar</Button>
+            <Button onClick={handleReschedule} className="font-bold">Guardar Cambios</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

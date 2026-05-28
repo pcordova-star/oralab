@@ -24,7 +24,7 @@
         "modality": { "type": "string", "enum": ["presential", "home_kit"] },
         "scheduledDate": { "type": "string", "format": "date" },
         "scheduledTime": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "arrived", "in_progress", "completed"] },
+        "status": { "type": "string", "enum": ["pending", "arrived", "in_progress", "completed", "cancelled", "rescheduled"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["firstName", "lastNameFather", "email", "phone", "examType", "modality", "scheduledDate", "scheduledTime", "status"]
