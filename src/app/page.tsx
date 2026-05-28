@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Navbar, Logo } from "@/components/navbar";
@@ -236,7 +235,7 @@ export default function HomePage() {
                 </motion.h1>
                 
                 <motion.p variants={fadeIn} className="text-base md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                  Especialistas en tests de aire espirado para <strong>SIBO, IMO, HIMO e Intolerancias</strong>. Un procedimiento clínico de alta precisión diseñado para asistir en el diagnóstico de tu especialista.
+                  Especialistas en tests de aire espirado para <strong>SIBO, IMO e Intolerancias</strong>. Un procedimiento clínico de alta precisión diseñado para asistir en el diagnóstico de tu especialista.
                 </motion.p>
                 
                 <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 md:gap-6">
