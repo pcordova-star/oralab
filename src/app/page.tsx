@@ -81,23 +81,23 @@ const ClinicalReportVisualizer = () => {
       initial={{ opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
-      className="relative w-full glass-panel rounded-[2.5rem] p-4 md:p-8 shadow-2xl border-primary/10 overflow-hidden bg-white/70"
+      className="relative w-full glass-panel rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-8 shadow-2xl border-primary/10 overflow-hidden bg-white/70"
     >
       <div className="flex flex-col gap-6">
-        <div className="flex justify-between items-start border-b border-primary/10 pb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 border-b border-primary/10 pb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Badge variant="secondary" className="bg-secondary/10 text-secondary border-secondary/20 font-black">SUNVOU® CERTIFIED</Badge>
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">ID: ORL-2024-0526</span>
             </div>
-            <h3 className="text-xl font-black text-primary italic">Resumen Técnico de Biomarcadores</h3>
+            <h3 className="text-lg md:text-xl font-black text-primary italic">Resumen Técnico de Biomarcadores</h3>
           </div>
-          <div className="text-right">
+          <div className="text-left sm:text-right">
             <Badge className="bg-red-500 text-white border-none animate-pulse">POSITIVO SIBO (H₂)</Badge>
           </div>
         </div>
 
-        <div className="h-[300px] w-full">
+        <div className="h-[250px] md:h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={reportData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -123,7 +123,7 @@ const ClinicalReportVisualizer = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-primary/5">
+        <div className="overflow-x-auto rounded-xl border border-primary/5">
           <Table>
             <TableHeader className="bg-primary/5">
               <TableRow>
@@ -156,7 +156,7 @@ const ClinicalReportVisualizer = () => {
 
 const TechScannerAnimation = () => {
   return (
-    <div className="relative w-full aspect-square max-w-[400px] flex items-center justify-center mx-auto">
+    <div className="relative w-full aspect-square max-w-[300px] md:max-w-[400px] flex items-center justify-center mx-auto">
       <motion.div 
         animate={{ rotate: 360 }}
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -167,8 +167,8 @@ const TechScannerAnimation = () => {
         transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
         className="absolute w-[80%] h-[80%] border border-white/10 rounded-full"
       />
-      <div className="relative z-10 bg-white/5 backdrop-blur-xl p-8 rounded-full border border-white/20 shadow-2xl flex items-center justify-center">
-        <Wind className="h-16 w-16 text-secondary animate-pulse" />
+      <div className="relative z-10 bg-white/5 backdrop-blur-xl p-6 md:p-8 rounded-full border border-white/20 shadow-2xl flex items-center justify-center">
+        <Wind className="h-10 w-10 md:h-16 md:w-16 text-secondary animate-pulse" />
       </div>
       {[
         { label: "H₂", color: "text-blue-400", delay: 0 },
@@ -185,7 +185,7 @@ const TechScannerAnimation = () => {
             scale: [0.5, 1, 0.5]
           }}
           transition={{ duration: 4, delay: gas.delay, repeat: Infinity, ease: "easeOut" }}
-          className={`absolute font-black text-xl ${gas.color} pointer-events-none`}
+          className={`absolute font-black text-lg md:text-xl ${gas.color} pointer-events-none`}
         >
           {gas.label}
         </motion.div>
@@ -204,45 +204,45 @@ export default function HomePage() {
       
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative pt-20 pb-20 lg:pt-32 lg:pb-32 overflow-hidden">
+        <section className="relative pt-10 pb-16 md:pt-20 md:pb-20 lg:pt-32 lg:pb-32 overflow-hidden">
           <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-blob" />
-            <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-secondary/10 rounded-full blur-[100px] animate-blob animation-delay-2000" />
+            <div className="absolute top-[-10%] left-[-10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-primary/10 rounded-full blur-[80px] md:blur-[120px] animate-blob" />
+            <div className="absolute top-[20%] right-[-5%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-secondary/10 rounded-full blur-[70px] md:blur-[100px] animate-blob animation-delay-2000" />
           </div>
 
           <div className="container mx-auto px-4 text-center lg:text-left">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <motion.div 
                 initial="initial"
                 animate="animate"
                 variants={staggerContainer}
-                className="space-y-8"
+                className="space-y-6 md:space-y-8"
               >
-                <motion.div variants={fadeIn} className="flex flex-wrap justify-center lg:justify-start gap-3">
-                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20 backdrop-blur-sm">
-                    <Stethoscope className="h-4 w-4" /> Laboratorio Especializado
+                <motion.div variants={fadeIn} className="flex flex-wrap justify-center lg:justify-start gap-2 md:gap-3">
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary/10 text-primary text-xs md:text-sm font-bold border border-primary/20 backdrop-blur-sm">
+                    <Stethoscope className="h-3.5 w-3.5 md:h-4 md:w-4" /> Laboratorio Especializado
                   </span>
-                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-bold border border-secondary/20 backdrop-blur-sm">
-                    <Sparkles className="h-4 w-4" /> Tecnología Sunvou®
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-secondary/10 text-secondary text-xs md:text-sm font-bold border border-secondary/20 backdrop-blur-sm">
+                    <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" /> Tecnología Sunvou®
                   </span>
                 </motion.div>
                 
-                <motion.h1 variants={fadeIn} className="text-5xl md:text-7xl font-black text-primary leading-[1.1]">
+                <motion.h1 variants={fadeIn} className="text-4xl md:text-5xl lg:text-7xl font-black text-primary leading-[1.1]">
                   Soporte tecnológico <br />para tu salud <span className="text-gradient italic">digestiva</span>.
                 </motion.h1>
                 
-                <motion.p variants={fadeIn} className="text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                <motion.p variants={fadeIn} className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
                   Realizamos tests de aire espirado con precisión técnica. Un procedimiento clínico diseñado para asistir en el diagnóstico de tu especialista.
                 </motion.p>
                 
-                <motion.div variants={fadeIn} className="flex flex-wrap items-center justify-center lg:justify-start gap-6">
-                  <Link href="/booking">
-                    <Button size="lg" className="rounded-full h-16 px-10 text-lg font-bold shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 group">
+                <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 md:gap-6">
+                  <Link href="/booking" className="w-full sm:w-auto">
+                    <Button size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 md:px-10 text-lg font-bold shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 group">
                       Agendar mi Examen <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
-                  <Link href="/how-it-works">
-                    <Button variant="outline" size="lg" className="rounded-full h-16 px-8 text-lg font-bold border-2 hover:bg-secondary/5">
+                  <Link href="/how-it-works" className="w-full sm:w-auto">
+                    <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 text-lg font-bold border-2 hover:bg-secondary/5">
                       Protocolo Clínico
                     </Button>
                   </Link>
@@ -274,45 +274,45 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Clinical Statistics Section for New Patients */}
-        <section className="py-24 bg-white relative">
+        {/* Clinical Statistics Section */}
+        <section className="py-16 md:py-24 bg-white relative">
           <div className="container mx-auto px-4">
-            <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+            <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
               <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold">EDUCACIÓN AL PACIENTE</Badge>
-              <h2 className="text-4xl md:text-5xl font-black text-primary italic leading-tight">¿Por qué mi especialista me solicitó este test?</h2>
+              <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">¿Por qué mi especialista me solicitó este test?</h2>
               <div className="h-1.5 w-24 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
-              <p className="text-xl text-muted-foreground font-medium">
-                Entender lo que sucede en tu interior es el primer paso para recuperar tu bienestar. Estas cifras explican por qué un diagnóstico preciso es fundamental.
+              <p className="text-lg md:text-xl text-muted-foreground font-medium">
+                Entender lo que sucede en tu interior es el primer paso para recuperar tu bienestar.
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
               {[
                 { 
                   stat: "78%", 
                   label: "No es solo estrés", 
-                  desc: "Hasta el 78% de personas con síntomas de Colon Irritable tienen en realidad un sobrecrecimiento de bacterias (SIBO) que puede ser tratado.", 
+                  desc: "Hasta el 78% de personas con síntomas de Colon Irritable tienen en realidad un sobrecrecimiento de bacterias (SIBO).", 
                   icon: <Users className="h-8 w-8" />,
                   color: "border-blue-100 bg-blue-50/30"
                 },
                 { 
                   stat: "30%", 
                   label: "Más allá de lo básico", 
-                  desc: "Los tests antiguos suelen dar 'falsos negativos'. Nuestra tecnología detecta gases (Metano y Sulfuro) que otros equipos pasan por alto.", 
+                  desc: "Nuestra tecnología detecta gases (Metano y Sulfuro) que otros equipos pasan por alto.", 
                   icon: <BarChart3 className="h-8 w-8" />,
                   color: "border-emerald-100 bg-emerald-50/30"
                 },
                 { 
                   stat: "1 de 5", 
                   label: "Tus síntomas tienen explicación", 
-                  desc: "Cerca del 20% de los adultos sufren intolerancias a la lactosa o fructosa sin saberlo. Este test confirma si tu dieta es la causa.", 
+                  desc: "Cerca del 20% de los adultos sufren intolerancias a la lactosa o fructosa sin saberlo.", 
                   icon: <PieChartIcon className="h-8 w-8" />,
                   color: "border-amber-100 bg-amber-50/30"
                 },
                 { 
                   stat: "180", 
                   label: "Un mapa para tu médico", 
-                  desc: "En 3 horas de seguimiento, generamos la curva metabólica que tu médico necesita para darte el tratamiento exacto que tu cuerpo requiere.", 
+                  desc: "En 3 horas de seguimiento, generamos la curva metabólica que tu médico necesita.", 
                   icon: <ClipboardCheck className="h-8 w-8" />,
                   color: "border-purple-100 bg-purple-50/30"
                 },
@@ -321,16 +321,16 @@ export default function HomePage() {
                   key={idx}
                   whileHover={{ y: -5 }}
                   className={cn(
-                    "p-8 rounded-[2rem] border transition-all shadow-sm flex flex-col items-center text-center group",
+                    "p-6 md:p-8 rounded-[2rem] border transition-all shadow-sm flex flex-col items-center text-center group",
                     item.color
                   )}
                 >
-                  <div className="mb-6 text-primary group-hover:scale-110 transition-transform bg-white p-4 rounded-2xl shadow-sm">
+                  <div className="mb-4 md:mb-6 text-primary group-hover:scale-110 transition-transform bg-white p-3 md:p-4 rounded-2xl shadow-sm">
                     {item.icon}
                   </div>
-                  <span className="text-4xl font-black text-primary mb-2">{item.stat}</span>
-                  <span className="text-base font-black text-primary/80 uppercase tracking-widest mb-4 leading-tight">{item.label}</span>
-                  <p className="text-sm text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
+                  <span className="text-3xl md:text-4xl font-black text-primary mb-1 md:mb-2">{item.stat}</span>
+                  <span className="text-sm md:text-base font-black text-primary/80 uppercase tracking-widest mb-3 md:mb-4 leading-tight">{item.label}</span>
+                  <p className="text-xs md:text-sm text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
@@ -339,15 +339,15 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mt-16 max-w-4xl mx-auto bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10 flex flex-col md:flex-row items-center gap-8"
+              className="mt-12 md:mt-16 max-w-4xl mx-auto bg-primary/5 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-primary/10 flex flex-col md:flex-row items-center gap-6 md:gap-8"
             >
               <div className="bg-white p-4 rounded-full shrink-0 shadow-md">
-                <HelpCircle className="h-8 w-8 text-primary" />
+                <HelpCircle className="h-6 w-6 md:h-8 md:w-8 text-primary" />
               </div>
               <div>
-                <h4 className="text-xl font-bold text-primary mb-2">¿Es tu primera vez con este test?</h4>
-                <p className="text-muted-foreground leading-relaxed">
-                  Es un procedimiento <strong>no invasivo</strong>. Solo necesitas soplar en un equipo especializado después de ingerir una solución dulce. A través de tu aliento, podemos "leer" lo que las bacterias están haciendo en tu intestino, permitiendo que tu médico te recete el antibiótico o dieta correcta en lugar de solo tratar los síntomas.
+                <h4 className="text-lg md:text-xl font-bold text-primary mb-2">¿Es tu primera vez con este test?</h4>
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                  Es un procedimiento <strong>no invasivo</strong>. Solo necesitas soplar en un equipo especializado después de ingerir una solución dulce. A través de tu aliento, podemos "leer" lo que las bacterias están haciendo en tu intestino.
                 </p>
               </div>
             </motion.div>
@@ -355,40 +355,40 @@ export default function HomePage() {
         </section>
 
         {/* Science Section */}
-        <section className="py-24 bg-primary text-white relative overflow-hidden">
+        <section className="py-16 md:py-24 bg-primary text-white relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
           
           <div className="container mx-auto px-4 relative z-10">
-            <div className="grid lg:grid-cols-2 gap-20 items-center">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div>
                 <motion.h2 
                   initial={{ opacity: 0, x: -50 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  className="text-4xl md:text-6xl font-black mb-8 leading-tight italic"
+                  className="text-3xl md:text-5xl lg:text-6xl font-black mb-6 md:mb-8 leading-tight italic"
                 >
                   Rigor técnico al servicio de la <span className="text-secondary">gastroenterología</span>
                 </motion.h2>
-                <p className="text-xl opacity-80 mb-12 leading-relaxed">
-                  Nuestra metodología Sunvou® permite cuantificar Hidrógeno, Metano y Sulfuro de Hidrógeno de forma simultánea. Este análisis multigas proporciona información detallada sobre la actividad metabólica intraluminal para el diagnóstico diferencial solicitado por tu especialista.
+                <p className="text-lg md:text-xl opacity-80 mb-8 md:mb-12 leading-relaxed">
+                  Nuestra metodología Sunvou® permite cuantificar Hidrógeno, Metano y Sulfuro de Hidrógeno de forma simultánea. Este análisis multigas proporciona información detallada para el diagnóstico diferencial.
                 </p>
-                <div className="grid sm:grid-cols-2 gap-8">
+                <div className="grid sm:grid-cols-2 gap-6 md:gap-8">
                   <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                      <Microscope className="h-6 w-6 text-secondary" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                      <Microscope className="h-5 w-5 md:h-6 md:w-6 text-secondary" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-lg">Informe Especializado</h4>
-                      <p className="text-sm opacity-60">Resultados cuantificables diseñados para la interpretación de tu gastroenterólogo.</p>
+                      <h4 className="font-bold text-base md:text-lg">Informe Especializado</h4>
+                      <p className="text-xs md:text-sm opacity-60">Resultados cuantificables diseñados para interpretación médica.</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                      <Award className="h-6 w-6 text-secondary" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                      <Award className="h-5 w-5 md:h-6 md:w-6 text-secondary" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-lg">Precisión Sunvou®</h4>
-                      <p className="text-sm opacity-60">Tecnología alineada con los estándares internacionales de medición multigas.</p>
+                      <h4 className="font-bold text-base md:text-lg">Precisión Sunvou®</h4>
+                      <p className="text-xs md:text-sm opacity-60">Tecnología alineada con estándares internacionales.</p>
                     </div>
                   </div>
                 </div>
@@ -400,11 +400,11 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 className="relative"
               >
-                <div className="w-full max-w-md mx-auto bg-secondary/10 rounded-[3rem] p-12 overflow-hidden border border-white/10 relative group">
+                <div className="w-full max-w-sm md:max-w-md mx-auto bg-secondary/10 rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 overflow-hidden border border-white/10 relative group">
                   <TechScannerAnimation />
                   <div className="absolute bottom-6 left-6 right-6 text-center z-30">
-                    <p className="text-xs font-black uppercase tracking-widest text-secondary mb-1">Análisis Multigas Simultáneo</p>
-                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">H₂ · CH₄ · H₂S</p>
+                    <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-secondary mb-1">Análisis Multigas Simultáneo</p>
+                    <p className="text-[8px] md:text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">H₂ · CH₄ · H₂S</p>
                   </div>
                 </div>
               </motion.div>
@@ -413,45 +413,45 @@ export default function HomePage() {
         </section>
 
         {/* Technical Report Section */}
-        <section className="py-24 bg-background">
+        <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-2 gap-16 items-start">
-               <div className="space-y-8">
-                  <div className="inline-block p-4 rounded-3xl bg-primary/5 text-primary border border-primary/10">
-                    <FileText className="h-8 w-8" />
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+               <div className="space-y-6 md:space-y-8">
+                  <div className="inline-block p-3 md:p-4 rounded-2xl md:rounded-3xl bg-primary/5 text-primary border border-primary/10">
+                    <FileText className="h-6 w-6 md:h-8 md:w-8" />
                   </div>
-                  <h2 className="text-4xl md:text-5xl font-black text-primary italic leading-tight">Visualización técnica de resultados</h2>
-                  <p className="text-lg text-muted-foreground leading-relaxed">
-                    Un informe técnico de Oralab no solo entrega valores; entrega una representación gráfica de la evolución de biomarcadores que permite al especialista identificar patrones clínicos como el SIBO o intolerancias específicas.
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-primary italic leading-tight">Visualización técnica de resultados</h2>
+                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                    Un informe técnico de Oralab entrega una representación gráfica que permite al especialista identificar patrones clínicos como el SIBO o intolerancias.
                   </p>
                   
-                  <ul className="space-y-4">
+                  <ul className="space-y-3 md:space-y-4">
                     {[
-                      { t: "Detección de Sulfuro de Hidrógeno (H₂S)", d: "Única tecnología capaz de identificar SIBO sulfuroso." },
-                      { t: "Control de CO₂ Alveolar", d: "Asegura que la muestra sea de aire pulmonar válido." },
-                      { t: "Curva Multivariante", d: "Hidrógeno y Metano correlacionados con síntomas en tiempo real." }
+                      { t: "Detección de Sulfuro de Hidrógeno (H₂S)", d: "Identifica SIBO sulfuroso." },
+                      { t: "Control de CO₂ Alveolar", d: "Asegura muestra de aire válida." },
+                      { t: "Curva Multivariante", d: "Gases correlacionados con síntomas." }
                     ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-border">
-                        <CheckCircle className="h-6 w-6 text-secondary shrink-0" />
+                      <li key={i} className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-2xl bg-white border border-border">
+                        <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-secondary shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-bold text-primary">{item.t}</p>
-                          <p className="text-sm text-muted-foreground">{item.d}</p>
+                          <p className="font-bold text-sm md:text-base text-primary">{item.t}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground">{item.d}</p>
                         </div>
                       </li>
                     ))}
                   </ul>
                </div>
 
-               <div className="relative">
+               <div className="relative mt-8 lg:mt-0">
                   <ClinicalReportVisualizer />
-                  <div className="absolute -bottom-6 -right-6 glass-panel p-6 rounded-3xl z-20 bg-white border-primary/10 shadow-xl hidden md:block">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-secondary/10 p-3 rounded-2xl text-secondary">
-                        <TrendingUp className="h-6 w-6" />
+                  <div className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 glass-panel p-4 md:p-6 rounded-2xl md:rounded-3xl z-20 bg-white border-primary/10 shadow-xl hidden sm:block">
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className="bg-secondary/10 p-2 md:p-3 rounded-xl md:rounded-2xl text-secondary">
+                        <TrendingUp className="h-5 w-5 md:h-6 md:w-6" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estatístico</p>
-                        <p className="text-sm font-black text-primary">Interpretación Sunvou®</p>
+                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estatístico</p>
+                        <p className="text-xs md:text-sm font-black text-primary">Interpretación Sunvou®</p>
                       </div>
                     </div>
                   </div>
@@ -461,33 +461,33 @@ export default function HomePage() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-32 container mx-auto px-4">
+        <section className="py-16 md:py-32 container mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="rounded-[3rem] p-12 md:p-24 bg-gradient-to-br from-primary via-primary to-secondary relative overflow-hidden shadow-2xl"
+            className="rounded-[2rem] md:rounded-[3rem] p-8 md:p-16 lg:p-24 bg-gradient-to-br from-primary via-primary to-secondary relative overflow-hidden shadow-2xl"
           >
             <div className="absolute inset-0 opacity-10 pointer-events-none">
               <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
             </div>
 
-            <div className="relative z-10 text-center space-y-8">
-              <h2 className="text-4xl md:text-7xl font-black text-white leading-tight">
+            <div className="relative z-10 text-center space-y-6 md:space-y-8">
+              <h2 className="text-3xl md:text-5xl lg:text-7xl font-black text-white leading-tight">
                 Comprometidos con el soporte al diagnóstico médico.
               </h2>
-              <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto leading-relaxed font-medium">
-                Agende su procedimiento con orden médica y cuente con el respaldo tecnológico que su especialista requiere.
+              <p className="text-lg md:text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto leading-relaxed font-medium">
+                Agende su procedimiento con orden médica y cuente con el respaldo tecnológico necesario.
               </p>
-              <div className="flex flex-wrap justify-center gap-6 pt-8">
-                <Link href="/booking">
-                  <Button size="lg" className="rounded-full h-20 px-12 text-2xl font-black shadow-2xl bg-white text-primary hover:bg-secondary hover:text-white transition-all hover:scale-105 active:scale-95">
+              <div className="flex flex-col sm:flex-row justify-center gap-4 md:gap-6 pt-4 md:pt-8">
+                <Link href="/booking" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto rounded-full h-16 md:h-20 px-10 md:px-12 text-xl md:text-2xl font-black shadow-2xl bg-white text-primary hover:bg-secondary hover:text-white transition-all hover:scale-105 active:scale-95">
                     Reservar Cita
                   </Button>
                 </Link>
-                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                  <Button size="lg" className="rounded-full h-20 px-10 text-xl font-bold border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-md">
-                    <MessageCircle className="h-6 w-6 mr-3" /> Consultas Técnicas
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto rounded-full h-16 md:h-20 px-8 md:px-10 text-lg md:text-xl font-bold border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-md">
+                    <MessageCircle className="h-5 w-5 md:h-6 md:w-6 mr-3" /> Consultas Técnicas
                   </Button>
                 </a>
               </div>
@@ -496,38 +496,38 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer className="bg-white border-t border-border py-20 relative overflow-hidden">
+      <footer className="bg-white border-t border-border py-12 md:py-20 relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-16 mb-16">
-            <div className="col-span-1 lg:col-span-2 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16 mb-12 md:mb-16">
+            <div className="col-span-1 lg:col-span-2 space-y-6 md:space-y-8">
               <Link href="/">
                 <Logo />
               </Link>
-              <p className="text-muted-foreground text-lg max-w-md leading-relaxed">
-                Laboratorio clínico especializado en Salud Digestiva. Partner tecnológico Sunvou® para el apoyo al diagnóstico gastroenterológico en Chile.
+              <p className="text-muted-foreground text-base md:text-lg max-w-md leading-relaxed">
+                Laboratorio clínico especializado en Salud Digestiva. Partner tecnológico Sunvou® en Chile.
               </p>
             </div>
             <div>
-              <h5 className="font-black text-primary mb-8 text-xl">Sede Las Condes</h5>
+              <h5 className="font-black text-primary mb-6 md:mb-8 text-lg md:text-xl">Sede Las Condes</h5>
               <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="group space-y-4 block">
-                <div className="flex items-start gap-3 text-muted-foreground group-hover:text-primary transition-colors text-lg">
-                  <MapPin className="h-6 w-6 text-secondary shrink-0 mt-1" />
+                <div className="flex items-start gap-3 text-muted-foreground group-hover:text-primary transition-colors text-base md:text-lg">
+                  <MapPin className="h-5 w-5 md:h-6 md:w-6 text-secondary shrink-0 mt-1" />
                   <span>Apoquindo 3992, Of. 605, Las Condes. <br /> Centro Médico Alcántara.</span>
                 </div>
               </a>
             </div>
             <div>
-              <h5 className="font-black text-primary mb-8 text-xl">Gestión Clínica</h5>
-              <ul className="space-y-4 text-lg">
+              <h5 className="font-black text-primary mb-6 md:mb-8 text-lg md:text-xl">Gestión Clínica</h5>
+              <ul className="space-y-3 md:space-y-4 text-base md:text-lg">
                 <li><Link href="/booking" className="text-muted-foreground hover:text-secondary transition-colors font-medium">Reservar Examen</Link></li>
                 <li><Link href="/how-it-works" className="text-muted-foreground hover:text-secondary transition-colors font-medium">Protocolo Técnico</Link></li>
-                <li><Link href="/login" className="text-muted-foreground/30 hover:text-primary transition-colors inline-flex items-center gap-2"><Lock className="h-4 w-4" /> Acceso Personal</Link></li>
+                <li><Link href="/login" className="text-muted-foreground/30 hover:text-primary transition-colors inline-flex items-center gap-2 text-xs"><Lock className="h-3 w-3" /> Acceso Personal</Link></li>
               </ul>
             </div>
           </div>
-          <div className="pt-12 border-t border-border flex flex-col md:flex-row justify-between items-center gap-8 text-muted-foreground text-sm font-medium">
+          <div className="pt-8 md:pt-12 border-t border-border flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 text-muted-foreground text-xs font-medium text-center md:text-left">
             <p>© 2024 Oralab Clinical Lab. Diagnóstico especializado Sunvou®.</p>
-            <div className="flex items-center gap-8">
+            <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8">
               <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Certificación IVD</span>
               <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Tecnología Sunvou®</span>
             </div>
