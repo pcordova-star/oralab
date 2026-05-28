@@ -26,10 +26,10 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Beaker, Wind, Stethoscope, MessageCircle, HelpCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Beaker, Wind, Stethoscope, MessageCircle, HelpCircle, MapPin, Globe } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
-import { collection, serverTimestamp } from "firebase/firestore";
+import { collection, serverTimestamp, doc } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -179,56 +179,127 @@ export default function BookingPage() {
 
     const doc = new jsPDF();
     const margin = 20;
-    let y = 20;
+    let y = 15;
 
-    doc.setFontSize(22);
-    doc.setTextColor(28, 104, 182); 
-    doc.text("Resumen de Reserva - Oralab", margin, y);
-    y += 15;
+    // Colores corporativos
+    const primaryRGB = [28, 104, 182];
+    const secondaryRGB = [25, 204, 204];
 
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Paciente: ${lastBookingValues.firstName} ${lastBookingValues.lastNameFather} ${lastBookingValues.lastNameMother}`, margin, y);
-    y += 10;
-    doc.text(`Examen: Test de Aire Espirado (${lastBookingValues.examType})`, margin, y);
-    y += 10;
-    doc.text(`Modalidad: ${lastBookingValues.modality === 'home_kit' ? 'A Domicilio (Retiro de Kit)' : 'Presencial'}`, margin, y);
-    y += 10;
-    doc.text(`Fecha: ${format(lastBookingValues.scheduledDate, "PPPP", { locale: es })}`, margin, y);
-    y += 10;
-    doc.text(`Hora: ${lastBookingValues.scheduledTime} hrs`, margin, y);
-    y += 15;
-
-    doc.setLineWidth(0.5);
-    doc.line(margin, y, 190, y);
-    y += 15;
-
-    doc.setFontSize(16);
-    doc.setTextColor(28, 104, 182);
-    doc.text(lastBookingValues.modality === 'home_kit' ? "Instrucciones de Retiro e Indicaciones" : "Indicaciones Pre-Examen", margin, y);
-    y += 10;
+    // Cabecera Corporativa
+    doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(26);
+    doc.setFont("helvetica", "bold");
+    doc.text("Oralab", margin, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Breath Diagnostics", margin, 32);
 
     doc.setFontSize(10);
+    doc.text(`Fecha Emisión: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 145, 25);
+    doc.text("ID Reserva: ORL-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 145, 30);
+
+    y = 55;
+
+    // Título de Documento
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("CONFIRMACIÓN DE RESERVA CLÍNICA", margin, y);
+    y += 15;
+
+    // Información del Paciente (Recuadro Gris)
+    doc.setFillColor(245, 247, 249);
+    doc.setDrawColor(230, 235, 240);
+    doc.roundedRect(margin, y, 170, 45, 3, 3, 'FD');
+    
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("DATOS DEL PACIENTE", margin + 5, y + 10);
+    
     doc.setTextColor(60, 60, 60);
-    const textToPrint = prepInstructions || "1. Ayuno de 12 horas.\n2. Dieta blanda el día anterior (sin fibra, sin legumbres).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
-    const splitText = doc.splitTextToSize(textToPrint, 170);
-    doc.text(splitText, margin, y);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Nombre Completo: ${lastBookingValues.firstName} ${lastBookingValues.lastNameFather} ${lastBookingValues.lastNameMother}`, margin + 5, y + 20);
+    doc.text(`Email: ${lastBookingValues.email}`, margin + 5, y + 28);
+    doc.text(`Teléfono: +56 9 ${lastBookingValues.phone}`, margin + 5, y + 36);
     
-    y += (splitText.length * 5) + 20;
-    
-    // Gestión de cita en PDF
-    doc.setLineWidth(0.1);
-    doc.line(margin, y, 190, y);
-    y += 10;
-    doc.setFontSize(14);
-    doc.setTextColor(28, 104, 182);
-    doc.text("¿Deseas cancelar o reprogramar?", margin, y);
+    doc.text(`Peso: ${lastBookingValues.weight} kg`, 130, y + 20);
+    doc.text(`Médico: ${lastBookingValues.doctor}`, 130, y + 28);
+    y += 55;
+
+    // Detalles de la Cita
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("DETALLE DEL PROCEDIMIENTO", margin, y);
     y += 8;
-    doc.setFontSize(10);
-    doc.setTextColor(60, 60, 60);
-    doc.text("Para modificar tu hora, por favor contáctanos vía WhatsApp al +56 9 3685 0468 o envía un correo a contacto@oralab.cl indicando tu nombre y RUT.", margin, y, { maxWidth: 170 });
 
-    doc.save(`reserva-oralab-${lastBookingValues.firstName}.pdf`);
+    doc.setDrawColor(secondaryRGB[0], secondaryRGB[1], secondaryRGB[2]);
+    doc.setLineWidth(1);
+    doc.line(margin, y, 190, y);
+    y += 10;
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.text(`Examen: Test de Aire Espirado (${lastBookingValues.examType})`, margin, y);
+    y += 8;
+    doc.text(`Modalidad: ${lastBookingValues.modality === 'home_kit' ? 'RETIRO DE KIT (En consulta)' : 'CITA PRESENCIAL'}`, margin, y);
+    y += 8;
+    
+    doc.setFillColor(secondaryRGB[0], secondaryRGB[1], secondaryRGB[2]);
+    doc.rect(margin, y, 100, 15, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${format(lastBookingValues.scheduledDate, "EEEE d 'de' MMMM", { locale: es }).toUpperCase()} - ${lastBookingValues.scheduledTime} HRS`, margin + 5, y + 10);
+    y += 25;
+
+    // Instrucciones de Preparación
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("INDICACIONES FUNDAMENTALES", margin, y);
+    y += 8;
+
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    const instructions = prepInstructions || "1. Ayuno de 12 horas.\n2. Dieta blanda el día anterior (sin fibra, sin legumbres).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
+    const splitInstructions = doc.splitTextToSize(instructions, 170);
+    doc.text(splitInstructions, margin, y);
+    y += (splitInstructions.length * 5) + 15;
+
+    // Gestión de Cita
+    doc.setFillColor(255, 244, 244);
+    doc.roundedRect(margin, y, 170, 25, 2, 2, 'F');
+    doc.setTextColor(200, 0, 0);
+    doc.setFont("helvetica", "bold");
+    doc.text("¿Deseas cancelar o reprogramar?", margin + 5, y + 8);
+    doc.setTextColor(100, 50, 50);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text("Para modificar tu cita, avísanos con al menos 24 hrs de antelación vía WhatsApp al +56 9 3685 0468.", margin + 5, y + 16);
+    y += 35;
+
+    // Pie de Página
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFillColor(245, 247, 249);
+    doc.rect(0, pageHeight - 30, 210, 30, 'F');
+    
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(8);
+    doc.text("Apoquindo 3992, Of. 605, Las Condes, Santiago.", margin, pageHeight - 15);
+    doc.text("contacto@oralab.cl | www.oralab.cl", margin, pageHeight - 10);
+    
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFont("helvetica", "bold");
+    doc.text("Tecnología Especializada Sunvou®", 140, pageHeight - 12);
+
+    doc.save(`Reserva_Oralab_${lastBookingValues.firstName}_${lastBookingValues.lastNameFather}.pdf`);
   }
 
   async function onSubmit(values: BookingFormValues) {
@@ -357,7 +428,6 @@ export default function BookingPage() {
               </div>
             </div>
 
-            {/* SECCIÓN DE GESTIÓN DE CITA */}
             <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-6 text-left mb-8 max-w-xl mx-auto">
               <h3 className="flex items-center gap-2 font-bold text-blue-700 mb-2">
                 <HelpCircle className="h-5 w-5" /> ¿Necesitas cancelar o reprogramar?
@@ -376,11 +446,11 @@ export default function BookingPage() {
             </div>
             
             <div className="flex flex-col gap-4 max-w-sm mx-auto mb-8">
-              <Button onClick={downloadPDF} variant="outline" size="lg" className="rounded-full flex items-center gap-2">
-                <Download className="h-5 w-5" /> Descargar Resumen PDF
+              <Button onClick={downloadPDF} variant="outline" size="lg" className="rounded-full flex items-center gap-2 bg-primary/5 hover:bg-primary hover:text-white transition-all">
+                <Download className="h-5 w-5" /> Descargar Resumen Oficial PDF
               </Button>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-green-500" /> Datos guardados correctamente en sistema
+                <CheckCircle2 className="h-4 w-4 text-green-500" /> Documento válido para presentación médica
               </div>
             </div>
 
