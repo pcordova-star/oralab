@@ -26,7 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Beaker, Wind, Stethoscope } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Beaker, Wind, Stethoscope, MessageCircle, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -213,6 +213,20 @@ export default function BookingPage() {
     const textToPrint = prepInstructions || "1. Ayuno de 12 horas.\n2. Dieta blanda el día anterior (sin fibra, sin legumbres).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
     const splitText = doc.splitTextToSize(textToPrint, 170);
     doc.text(splitText, margin, y);
+    
+    y += (splitText.length * 5) + 20;
+    
+    // Gestión de cita en PDF
+    doc.setLineWidth(0.1);
+    doc.line(margin, y, 190, y);
+    y += 10;
+    doc.setFontSize(14);
+    doc.setTextColor(28, 104, 182);
+    doc.text("¿Deseas cancelar o reprogramar?", margin, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text("Para modificar tu hora, por favor contáctanos vía WhatsApp al +56 9 3685 0468 o envía un correo a contacto@oralab.cl indicando tu nombre y RUT.", margin, y, { maxWidth: 170 });
 
     doc.save(`reserva-oralab-${lastBookingValues.firstName}.pdf`);
   }
@@ -314,6 +328,8 @@ export default function BookingPage() {
   ];
 
   if (step === 4) {
+    const whatsappUrl = "https://wa.me/56936850468";
+    
     return (
       <div className="flex flex-col min-h-screen bg-background pb-12">
         <Navbar />
@@ -332,12 +348,30 @@ export default function BookingPage() {
               }
             </p>
 
-            <div className="bg-muted/30 border border-primary/10 rounded-2xl p-6 text-left mb-8 max-w-xl mx-auto">
+            <div className="bg-muted/30 border border-primary/10 rounded-2xl p-6 text-left mb-6 max-w-xl mx-auto">
               <h3 className="flex items-center gap-2 font-bold text-primary mb-3">
                 <AlertCircle className="h-5 w-5" /> {lastBookingValues?.modality === 'home_kit' ? "Recordatorio de Retiro y Preparación" : "Recordatorio de Cuidados Previos"}
               </h3>
               <div className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                 {prepInstructions}
+              </div>
+            </div>
+
+            {/* SECCIÓN DE GESTIÓN DE CITA */}
+            <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-6 text-left mb-8 max-w-xl mx-auto">
+              <h3 className="flex items-center gap-2 font-bold text-blue-700 mb-2">
+                <HelpCircle className="h-5 w-5" /> ¿Necesitas cancelar o reprogramar?
+              </h3>
+              <p className="text-sm text-blue-800/80 mb-4">
+                Si no puedes asistir, por favor infórmanos con al menos 24 horas de antelación para liberar el cupo. Puedes solicitar una nueva fecha directamente vía WhatsApp.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-bold text-blue-700 hover:underline">
+                  <MessageCircle className="h-4 w-4" /> WhatsApp Soporte
+                </a>
+                <a href="mailto:contacto@oralab.cl" className="flex items-center gap-2 text-sm font-bold text-blue-700 hover:underline">
+                  <Mail className="h-4 w-4" /> contacto@oralab.cl
+                </a>
               </div>
             </div>
             
