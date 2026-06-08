@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -16,17 +17,79 @@ import {
   Settings,
   Activity,
   ArrowRight,
-  Database
+  Database,
+  Mail,
+  User,
+  Building2,
+  Send
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { toast } from "@/hooks/use-toast";
+
+const contactSchema = z.object({
+  name: z.string().min(2, "Nombre requerido"),
+  email: z.string().email("Email inválido"),
+  institution: z.string().min(2, "Institución requerida"),
+  message: z.string().min(10, "El mensaje debe ser más detallado"),
+});
+
+type ContactFormValues = z.infer<typeof contactSchema>;
 
 export default function SunvouPage() {
   const medicalDeviceImg = PlaceHolderImages.find(img => img.id === 'medical-device');
-  const labHeroImg = PlaceHolderImages.find(img => img.id === 'hero-lab');
   const whatsappUrl = "https://wa.me/56936850468";
+  const [isSending, setIsSending] = useState(false);
+
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      institution: "",
+      message: "",
+    },
+  });
+
+  async function onContactSubmit(values: ContactFormValues) {
+    setIsSending(true);
+    
+    // Simulamos el envío al servidor (donde estaría configurado el correo pcordova@oralab.cl)
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      toast({
+        title: "¡Solicitud Enviada!",
+        description: "Hemos recibido tu mensaje. Un especialista se contactará contigo a la brevedad.",
+      });
+      
+      form.reset();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo enviar la solicitud. Por favor intenta por WhatsApp.",
+      });
+    } finally {
+      setIsSending(false);
+    }
+  }
 
   const features = [
     {
@@ -79,11 +142,11 @@ export default function SunvouPage() {
                   Llevamos la vanguardia tecnológica de Sunvou Global a las clínicas y laboratorios de Chile. El analizador DA7349 redefine el estándar en el diagnóstico de SIBO e IMO.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                  <Link href="#contact-form">
                     <Button size="lg" className="rounded-full h-16 px-10 text-xl font-black bg-secondary hover:bg-secondary/90 shadow-xl">
                       Solicitar Cotización Técnica
                     </Button>
-                  </a>
+                  </Link>
                 </div>
               </motion.div>
               
@@ -146,66 +209,138 @@ export default function SunvouPage() {
           </div>
         </section>
 
-        {/* Technical Specification Section */}
-        <section className="py-24 bg-muted/20">
-          <div className="container mx-auto px-4">
-            <div className="glass-panel !bg-white rounded-[3rem] p-8 md:p-16 shadow-2xl border-primary/5 flex flex-col lg:flex-row items-center gap-16">
-              <div className="lg:w-1/2 space-y-8">
-                <div className="space-y-4">
-                  <Badge variant="outline" className="text-secondary border-secondary font-bold px-4 py-1">ESPECIFICACIONES TÉCNICAS</Badge>
-                  <h2 className="text-3xl md:text-5xl font-black text-primary leading-tight">El estándar de oro en Diagnóstico de Aire.</h2>
+        {/* Contact Form Section */}
+        <section id="contact-form" className="py-24 bg-background relative overflow-hidden">
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div className="space-y-8">
+                <div className="inline-block p-4 rounded-3xl bg-secondary/10 text-secondary border border-secondary/20">
+                  <Mail className="h-8 w-8" />
                 </div>
+                <h2 className="text-4xl md:text-5xl font-black text-primary italic leading-tight">Implementa Sunvou en tu Centro Médico</h2>
+                <p className="text-xl text-muted-foreground leading-relaxed">
+                  Completa el formulario y nuestro equipo comercial te enviará una propuesta técnica detallada y los beneficios de ser un centro asociado Oralab.
+                </p>
                 
-                <div className="space-y-6">
-                  {[
-                    "Muestreo automático de gases de extremo aliento.",
-                    "Análisis simultáneo en menos de 180 segundos.",
-                    "Vida útil del analizador superior a 5 años.",
-                    "Conectividad USB para gestión de base de datos de pacientes.",
-                    "Bajo costo de mantenimiento y consumibles."
-                  ].map((text, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
-                      <p className="font-bold text-primary/80 italic">{text}</p>
-                    </div>
-                  ))}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 text-primary font-bold italic">
+                    <CheckCircle2 className="h-6 w-6 text-secondary" /> Capacitación Clínica Certificada
+                  </div>
+                  <div className="flex items-center gap-4 text-primary font-bold italic">
+                    <CheckCircle2 className="h-6 w-6 text-secondary" /> Soporte Técnico en Chile
+                  </div>
+                  <div className="flex items-center gap-4 text-primary font-bold italic">
+                    <CheckCircle2 className="h-6 w-6 text-secondary" /> Entrega Inmediata de Insumos
+                  </div>
                 </div>
+              </div>
 
-                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                  <Button size="lg" className="rounded-full h-14 px-8 text-lg font-bold group">
-                    Descargar Ficha Técnica <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </a>
-              </div>
-              
-              <div className="lg:w-1/2 relative">
-                <div className="aspect-square bg-primary/5 rounded-[3rem] flex items-center justify-center p-12 border-4 border-dashed border-primary/10">
-                   <div className="text-center space-y-4">
-                      <Microscope className="h-32 w-32 text-primary mx-auto opacity-20" />
-                      <div className="space-y-2">
-                        <p className="text-4xl font-black text-primary italic">Sunvou Chile</p>
-                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.3em]">Official Partner</p>
+              <Card className="bg-white rounded-[2.5rem] shadow-2xl border-none p-4 md:p-8">
+                <CardContent className="pt-6">
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onContactSubmit)} className="space-y-6">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-bold">Nombre Completo</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                  <Input placeholder="Ej: Dr. Ricardo Pérez" className="pl-10 h-12 rounded-xl" {...field} />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-bold">Correo Electrónico</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                  <Input placeholder="ejemplo@clinica.cl" className="pl-10 h-12 rounded-xl" {...field} />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
-                   </div>
-                </div>
-              </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="institution"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-bold">Institución / Clínica / Laboratorio</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                <Input placeholder="Nombre de tu centro de salud" className="pl-10 h-12 rounded-xl" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="message"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-bold">Consulta o Requerimiento</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Cuéntanos sobre tu interés en la tecnología Sunvou..." 
+                                className="min-h-[120px] rounded-xl resize-none"
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button 
+                        type="submit" 
+                        disabled={isSending}
+                        className="w-full h-14 rounded-xl text-lg font-black bg-primary hover:bg-secondary transition-all shadow-lg active:scale-95"
+                      >
+                        {isSending ? (
+                          <span className="flex items-center gap-2">Procesando...</span>
+                        ) : (
+                          <span className="flex items-center gap-2">Enviar Solicitud <Send className="h-5 w-5" /></span>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
 
-        {/* Lead Capture Section */}
+        {/* Lead Capture Section (WhatsApp) */}
         <section className="py-24 bg-primary text-white text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/10 rounded-full blur-[100px]" />
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto space-y-8">
-              <h2 className="text-3xl md:text-6xl font-black italic">¿Interesado en implementar esta tecnología?</h2>
+              <h2 className="text-3xl md:text-6xl font-black italic">¿Prefieres contacto directo?</h2>
               <p className="text-xl opacity-80 font-medium">
-                Proveemos equipos, capacitación clínica y soporte técnico especializado para centros de salud en todo Chile.
+                Atención técnica inmediata vía WhatsApp para resolver dudas sobre equipos y protocolos.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-6">
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
                   <Button size="lg" className="w-full sm:w-auto rounded-full h-16 px-12 text-xl font-black bg-secondary hover:bg-white hover:text-primary transition-all shadow-2xl">
-                    <MessageCircle className="h-6 w-6 mr-2" /> Consultar por WhatsApp
+                    <MessageCircle className="h-6 w-6 mr-2" /> WhatsApp Especialista
                   </Button>
                 </a>
               </div>
