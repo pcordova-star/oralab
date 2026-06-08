@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, serverTimestamp, orderBy, doc, deleteDoc } from "firebase/firestore";
-import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Plus, Download, Trash2, ArrowLeft, Building2, User, Mail, Phone, ShoppingCart, Calculator, Package, ShieldCheck } from "lucide-react";
+import { FileText, Plus, Download, Trash2, ArrowLeft, Building2, User, Mail, Phone, ShoppingCart, Calculator, Package, ShieldCheck, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { jsPDF } from "jspdf";
@@ -48,6 +48,7 @@ export default function QuotationsPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
 
   // Form State
   const [clientName, setClientName] = useState("");
@@ -92,7 +93,7 @@ export default function QuotationsPage() {
   const calculateIVA = () => calculateNetTotal() * IVA_RATE;
   const calculateGrossTotal = () => calculateNetTotal() * (1 + IVA_RATE);
 
-  const handleGenerateQuotation = async () => {
+  const handleSaveQuotation = async () => {
     if (!db || !clientName || !clientEmail || items.length === 0 || items.some(i => !i.description)) {
       toast({ variant: "destructive", title: "Error", description: "Completa los datos del cliente y asegúrate de tener ítems válidos." });
       return;
@@ -106,23 +107,40 @@ export default function QuotationsPage() {
       clientPhone,
       items,
       total: netTotal,
-      createdAt: serverTimestamp(),
       notes,
     };
 
     try {
-      const quotationsRef = collection(db, "quotations");
-      await addDocumentNonBlocking(quotationsRef, quotationData);
+      if (editingQuoteId) {
+        const quoteRef = doc(db, "quotations", editingQuoteId);
+        updateDocumentNonBlocking(quoteRef, { ...quotationData, updatedAt: serverTimestamp() });
+        toast({ title: "Cotización actualizada", description: "Los cambios se han guardado correctamente." });
+      } else {
+        const quotationsRef = collection(db, "quotations");
+        addDocumentNonBlocking(quotationsRef, { ...quotationData, createdAt: serverTimestamp() });
+        toast({ title: "Cotización creada", description: "Se ha registrado la nueva cotización exitosamente." });
+      }
       
-      toast({ title: "Cotización creada", description: "Se ha registrado la cotización exitosamente." });
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo guardar la cotización." });
+      toast({ variant: "destructive", title: "Error", description: "No se pudo procesar la cotización." });
     }
   };
 
+  const handleEditOpen = (quote: any) => {
+    setEditingQuoteId(quote.id);
+    setClientName(quote.clientName || "");
+    setClientCompany(quote.clientCompany || "");
+    setClientEmail(quote.clientEmail || "");
+    setClientPhone(quote.clientPhone || "");
+    setItems(quote.items || []);
+    setNotes(quote.notes || DEFAULT_NOTES);
+    setIsDialogOpen(true);
+  };
+
   const resetForm = () => {
+    setEditingQuoteId(null);
     setClientName("");
     setClientCompany("");
     setClientEmail("");
@@ -153,7 +171,7 @@ export default function QuotationsPage() {
 
     doc.setFontSize(10);
     doc.text(`Fecha: ${format(new Date(), "dd/MM/yyyy")}`, 145, 25);
-    doc.text(`Cotización: SUN-${Math.random().toString(36).substr(2, 6).toUpperCase()}`, 145, 30);
+    doc.text(`Cotización: SUN-${quote.id.substr(0, 6).toUpperCase()}`, 145, 30);
 
     y = 55;
 
@@ -260,7 +278,7 @@ export default function QuotationsPage() {
     if (!db || !confirm("¿Eliminar esta cotización del registro?")) return;
     try {
       await deleteDoc(doc(db, "quotations", id));
-      toast({ title: "Eliminado", description: "Cotización eliminada." });
+      toast({ title: "Eliminado", description: "Cotización eliminada correctamente." });
     } catch (e) {
       toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar." });
     }
@@ -281,19 +299,24 @@ export default function QuotationsPage() {
             <h1 className="text-3xl font-black text-primary flex items-center gap-3 italic">
               <FileText className="h-8 w-8 text-secondary" /> Cotizaciones Sunvou Chile
             </h1>
-            <p className="text-muted-foreground font-medium">Panel comercial de representación oficial.</p>
+            <p className="text-muted-foreground font-medium">Gestión comercial y representación oficial.</p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}>
             <DialogTrigger asChild>
               <Button onClick={resetForm} className="rounded-full bg-secondary hover:bg-secondary/90 font-black h-12 px-6 shadow-lg">
-                <Plus className="mr-2 h-5 w-5" /> Generar Propuesta
+                <Plus className="mr-2 h-5 w-5" /> Nueva Propuesta
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black text-primary italic">Nueva Cotización Sunvou</DialogTitle>
-                <CardDescription>Los ítems se cargan con margen comercial del 100%. Incluye garantía de 2 años.</CardDescription>
+                <DialogTitle className="text-2xl font-black text-primary italic">
+                  {editingQuoteId ? "Editar Cotización Sunvou" : "Nueva Cotización Sunvou"}
+                </DialogTitle>
+                <CardDescription>Configura los ítems y condiciones comerciales para el cliente.</CardDescription>
               </DialogHeader>
               
               <div className="grid gap-6 py-4">
@@ -393,7 +416,9 @@ export default function QuotationsPage() {
 
               <DialogFooter>
                 <Button variant="outline" className="rounded-full" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
-                <Button onClick={handleGenerateQuotation} className="bg-primary font-black px-8 rounded-full shadow-lg">Emitir Cotización Oficial</Button>
+                <Button onClick={handleSaveQuotation} className="bg-primary font-black px-8 rounded-full shadow-lg">
+                  {editingQuoteId ? "Guardar Cambios" : "Emitir Cotización"}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -445,12 +470,21 @@ export default function QuotationsPage() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="rounded-full text-primary hover:bg-primary/10"
+                            onClick={() => handleEditOpen(q)}
+                            title="Editar"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
                             variant="outline" 
                             size="sm" 
                             className="rounded-full border-primary/20 text-primary hover:bg-primary hover:text-white transition-all font-bold shadow-sm"
                             onClick={() => downloadQuotationPDF(q)}
                           >
-                            <Download className="mr-1 h-3.5 w-3.5" /> Descargar PDF
+                            <Download className="mr-1 h-3.5 w-3.5" /> PDF
                           </Button>
                           <Button 
                             variant="ghost" 
