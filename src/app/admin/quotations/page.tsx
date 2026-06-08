@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, serverTimestamp, orderBy, doc, deleteDoc } from "firebase/firestore";
+import { collection, query, serverTimestamp, orderBy, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,26 +14,34 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Plus, Download, Trash2, ArrowLeft, Building2, User, Mail, Phone, ShoppingCart, Calculator, Package, ShieldCheck, Pencil } from "lucide-react";
+import { 
+  FileText, Plus, Download, Trash2, ArrowLeft, Building2, User, Mail, 
+  Phone, ShoppingCart, Calculator, Package, ShieldCheck, Pencil, 
+  DollarSign, Send, CheckCircle, XCircle, Clock 
+} from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { jsPDF } from "jspdf";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
 const IVA_RATE = 0.19;
-const USD_TO_CLP = 950; // Tasa de cambio referencial para insumos médicos
+const DEFAULT_USD_RATE = 950;
+const COMMERCIAL_MARKUP = 2; // +100% markup
 
-// Insumos Sunvou (Precios distribuidor USD -> CLP -> +100% recargo comercial)
-const DEFAULT_SUNVOU_ITEMS = [
-  { description: "Analizador Breath Diagnostics Sunvou-DA7349 (H2/CH4/H2S/CO2)", quantity: 1, unitPrice: 5000 * USD_TO_CLP * 2 },
-  { description: "Sensor Hidrógeno SV-eH2-03 (Incluye 300 boquillas y sensor)", quantity: 1, unitPrice: 900 * USD_TO_CLP * 2 },
-  { description: "Sensor Metano SV-eCH4-03 (Incluye 300 boquillas y sensor)", quantity: 1, unitPrice: 1350 * USD_TO_CLP * 2 },
-  { description: "Sensor Sulfuro de Hidrógeno SV-eH2S-03 (Incluye boquillas y sensor)", quantity: 1, unitPrice: 1350 * USD_TO_CLP * 2 },
-  { description: "Kit de Muestreo SV-OSKB (1 pieza Y + 4 Bolsas)", quantity: 1, unitPrice: 2 * USD_TO_CLP * 2 },
-  { description: "Kit de Muestreo SV-OSKB (1 pieza Y + 7 Bolsas)", quantity: 1, unitPrice: 3.5 * USD_TO_CLP * 2 },
-  { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", quantity: 1, unitPrice: 0 }
+// Catálogo Base Sunvou (Precios fábrica USD)
+const SUNVOU_CATALOG = [
+  { description: "Analizador Breath Diagnostics Sunvou-DA7349 (H2/CH4/H2S/CO2)", unitPriceUSD: 5000 },
+  { description: "Sensor Hidrógeno SV-eH2-03 (Incluye 300 boquillas y sensor)", unitPriceUSD: 900 },
+  { description: "Sensor Metano SV-eCH4-03 (Incluye 300 boquillas y sensor)", unitPriceUSD: 1350 },
+  { description: "Sensor Sulfuro de Hidrógeno SV-eH2S-03 (Incluye boquillas y sensor)", unitPriceUSD: 1350 },
+  { description: "Kit de Muestreo SV-OSKB (1 pieza Y + 4 Bolsas)", unitPriceUSD: 2 },
+  { description: "Kit de Muestreo SV-OSKB (1 pieza Y + 7 Bolsas)", unitPriceUSD: 3.5 },
+  { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
 const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Garantía: 2 años para sensores y 5 años para analizador DA7349.\n- Forma de pago: 50% contra orden de compra y 50% en la entrega (vía transferencia bancaria).\n- Entrega: Sujeta a disponibilidad de stock (aprox. 15-20 días hábiles).";
@@ -41,7 +50,10 @@ interface QuotationItem {
   description: string;
   quantity: number;
   unitPrice: number;
+  unitPriceUSD?: number;
 }
+
+type QuotationStatus = 'pending' | 'sent' | 'accepted' | 'rejected';
 
 export default function QuotationsPage() {
   const { user, isUserLoading } = useUser();
@@ -50,6 +62,10 @@ export default function QuotationsPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
+
+  // CRM State
+  const [exchangeRate, setExchangeRate] = useState(DEFAULT_USD_RATE);
+  const [status, setStatus] = useState<QuotationStatus>('pending');
 
   // Form State
   const [clientName, setClientName] = useState("");
@@ -61,7 +77,7 @@ export default function QuotationsPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    setItems([...DEFAULT_SUNVOU_ITEMS]);
+    resetForm();
   }, []);
 
   useEffect(() => {
@@ -78,6 +94,21 @@ export default function QuotationsPage() {
   }, [db]);
 
   const { data: quotations, isLoading: isQuotesLoading } = useCollection(quotationsQuery);
+
+  const applyExchangeRate = (rate: number) => {
+    const updatedItems = items.map(item => {
+      if (item.unitPriceUSD !== undefined) {
+        return { ...item, unitPrice: item.unitPriceUSD * rate * COMMERCIAL_MARKUP };
+      }
+      return item;
+    });
+    setItems(updatedItems);
+  };
+
+  const handleRateChange = (newRate: number) => {
+    setExchangeRate(newRate);
+    applyExchangeRate(newRate);
+  };
 
   const addItem = () => setItems([...items, { description: "", quantity: 1, unitPrice: 0 }]);
   
@@ -110,25 +141,37 @@ export default function QuotationsPage() {
       items,
       total: netTotal,
       notes,
+      exchangeRate,
+      status,
     };
 
     try {
       if (editingQuoteId) {
         const quoteRef = doc(db, "quotations", editingQuoteId);
         updateDocumentNonBlocking(quoteRef, { ...quotationData, updatedAt: serverTimestamp() });
-        toast({ title: "Cotización actualizada", description: "Los cambios se han guardado correctamente." });
+        toast({ title: "Cotización actualizada", description: "Los cambios se han guardado en el CRM." });
       } else {
         const quotationsRef = collection(db, "quotations");
         addDocumentNonBlocking(quotationsRef, { ...quotationData, createdAt: serverTimestamp() });
-        toast({ title: "Cotización creada", description: "Se ha registrado la nueva cotización exitosamente." });
+        toast({ title: "Cotización creada", description: "Propuesta registrada exitosamente." });
       }
       
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo procesar la cotización." });
+      toast({ variant: "destructive", title: "Error", description: "No se pudo procesar la operación." });
     }
-  };
+  }
+
+  const updateStatus = async (id: string, newStatus: QuotationStatus) => {
+    if (!db) return;
+    try {
+      await updateDoc(doc(db, "quotations", id), { status: newStatus, updatedAt: serverTimestamp() });
+      toast({ title: "Estado actualizado", description: `La propuesta ha sido marcada como ${getStatusLabel(newStatus)}.` });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "No se pudo actualizar el estado." });
+    }
+  }
 
   const handleEditOpen = (quote: any) => {
     setEditingQuoteId(quote.id);
@@ -138,6 +181,8 @@ export default function QuotationsPage() {
     setClientPhone(quote.clientPhone || "");
     setItems(quote.items || []);
     setNotes(quote.notes || DEFAULT_NOTES);
+    setExchangeRate(quote.exchangeRate || DEFAULT_USD_RATE);
+    setStatus(quote.status || 'pending');
     setIsDialogOpen(true);
   };
 
@@ -147,8 +192,35 @@ export default function QuotationsPage() {
     setClientCompany("");
     setClientEmail("");
     setClientPhone("");
-    setItems([...DEFAULT_SUNVOU_ITEMS]);
+    setExchangeRate(DEFAULT_USD_RATE);
+    setStatus('pending');
+    setItems(SUNVOU_CATALOG.map(c => ({
+      description: c.description,
+      quantity: 1,
+      unitPriceUSD: c.unitPriceUSD,
+      unitPrice: c.unitPriceUSD * DEFAULT_USD_RATE * COMMERCIAL_MARKUP
+    })));
     setNotes(DEFAULT_NOTES);
+  };
+
+  const getStatusLabel = (s: string) => {
+    switch (s) {
+      case 'pending': return 'Borrador';
+      case 'sent': return 'Enviada';
+      case 'accepted': return 'Aceptada';
+      case 'rejected': return 'Rechazada';
+      default: return s;
+    }
+  };
+
+  const getStatusBadge = (s: string) => {
+    switch (s) {
+      case 'pending': return <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 uppercase font-black text-[9px]"><Clock className="h-3 w-3 mr-1" /> Borrador</Badge>;
+      case 'sent': return <Badge variant="outline" className="bg-blue-50 text-blue-500 border-blue-200 uppercase font-black text-[9px]"><Send className="h-3 w-3 mr-1" /> Enviada</Badge>;
+      case 'accepted': return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 uppercase font-black text-[9px]"><CheckCircle className="h-3 w-3 mr-1" /> Aceptada</Badge>;
+      case 'rejected': return <Badge variant="outline" className="bg-red-50 text-red-500 border-red-200 uppercase font-black text-[9px]"><XCircle className="h-3 w-3 mr-1" /> Rechazada</Badge>;
+      default: return <Badge>{s}</Badge>;
+    }
   };
 
   const downloadQuotationPDF = (quote: any) => {
@@ -173,14 +245,14 @@ export default function QuotationsPage() {
 
     doc.setFontSize(10);
     doc.text(`Fecha: ${format(new Date(), "dd/MM/yyyy")}`, 145, 25);
-    doc.text(`Cotización: SUN-${quote.id.substr(0, 6).toUpperCase()}`, 145, 30);
+    doc.text(`Propuesta: SUN-${quote.id.substr(0, 6).toUpperCase()}`, 145, 30);
 
     y = 55;
 
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.text("COTIZACIÓN COMERCIAL", margin, y);
+    doc.text("PROPUESTA TÉCNICO-COMERCIAL", margin, y);
     y += 15;
 
     // Datos del Cliente
@@ -191,13 +263,13 @@ export default function QuotationsPage() {
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text("DATOS DEL DESTINATARIO", margin + 5, y + 10);
+    doc.text("DESTINATARIO", margin + 5, y + 10);
     
     doc.setTextColor(60, 60, 60);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text(`Nombre: ${quote.clientName}`, margin + 5, y + 20);
-    doc.text(`Empresa: ${quote.clientCompany || 'Particular'}`, margin + 5, y + 28);
+    doc.text(`Institución: ${quote.clientCompany || 'Particular'}`, margin + 5, y + 28);
     
     doc.text(`Email: ${quote.clientEmail}`, 110, y + 20);
     doc.text(`Teléfono: ${quote.clientPhone || 'No registrado'}`, 110, y + 28);
@@ -207,14 +279,14 @@ export default function QuotationsPage() {
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text("DETALLE DE PROPUESTA (VALORES NETOS)", margin, y);
+    doc.text("DETALLE DE EQUIPAMIENTO E INSUMOS", margin, y);
     y += 8;
 
     doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.rect(margin, y, 170, 10, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
-    doc.text("Descripción del Equipo / Servicio", margin + 5, y + 7);
+    doc.text("Descripción del Producto", margin + 5, y + 7);
     doc.text("Cant.", 140, y + 7);
     doc.text("Unitario", 160, y + 7);
     y += 10;
@@ -239,7 +311,7 @@ export default function QuotationsPage() {
 
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(10);
-    doc.text(`TOTAL NETO:`, 130, y);
+    doc.text(`SUBTOTAL NETO:`, 130, y);
     doc.text(`$${Math.round(netTotal).toLocaleString()}`, 170, y, { align: 'right' });
     y += 7;
     doc.text(`IVA (19%):`, 130, y);
@@ -257,7 +329,7 @@ export default function QuotationsPage() {
     if (quote.notes) {
       doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
       doc.setFontSize(11);
-      doc.text("OBSERVACIONES Y CONDICIONES", margin, y);
+      doc.text("CONDICIONES COMERCIALES Y LOGÍSTICA", margin, y);
       y += 8;
       doc.setTextColor(80, 80, 80);
       doc.setFontSize(9);
@@ -272,9 +344,9 @@ export default function QuotationsPage() {
     doc.setTextColor(150, 150, 150);
     doc.setFontSize(8);
     doc.text("Representante Exclusivo Sunvou Breath Diagnostics en Chile.", margin, pageHeight - 15);
-    doc.text("contacto@oralab.cl | www.oralab.cl", margin, pageHeight - 10);
+    doc.text("Tasa de cambio aplicada: $" + (quote.exchangeRate || DEFAULT_USD_RATE) + " CLP/USD", margin, pageHeight - 10);
 
-    doc.save(`Cotizacion_Sunvou_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
+    doc.save(`Sunvou_Propuesta_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
 
   const handleDelete = async (id: string) => {
@@ -300,7 +372,7 @@ export default function QuotationsPage() {
               <ArrowLeft className="mr-1 h-3 w-3" /> Volver a Recepción
             </Link>
             <h1 className="text-3xl font-black text-primary flex items-center gap-3 italic">
-              <FileText className="h-8 w-8 text-secondary" /> Cotizaciones Sunvou Chile
+              <FileText className="h-8 w-8 text-secondary" /> CRM Sunvou Chile
             </h1>
             <p className="text-muted-foreground font-medium">Gestión comercial y representación oficial Sunvou®.</p>
           </div>
@@ -319,10 +391,45 @@ export default function QuotationsPage() {
                 <DialogTitle className="text-2xl font-black text-primary italic">
                   {editingQuoteId ? "Editar Cotización Sunvou" : "Nueva Cotización Sunvou"}
                 </DialogTitle>
-                <CardDescription>Configura los ítems y condiciones comerciales según la tabla técnica Sunvou.</CardDescription>
+                <CardDescription>Ajusta la tasa de cambio y el estado comercial de la propuesta.</CardDescription>
               </DialogHeader>
               
               <div className="grid gap-6 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                  <div className="space-y-2">
+                    <Label className="font-black text-[10px] uppercase flex items-center gap-1 text-primary">
+                      <DollarSign className="h-3 w-3" /> Tasa del día (USD/CLP)
+                    </Label>
+                    <Input 
+                      type="number" 
+                      value={exchangeRate} 
+                      onChange={(e) => handleRateChange(parseInt(e.target.value) || 0)}
+                      className="bg-white font-black text-lg text-primary"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-black text-[10px] uppercase flex items-center gap-1 text-primary">
+                      <Clock className="h-3 w-3" /> Estado Comercial
+                    </Label>
+                    <Select value={status} onValueChange={(v) => setStatus(v as QuotationStatus)}>
+                      <SelectTrigger className="bg-white h-11">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Borrador</SelectItem>
+                        <SelectItem value="sent">Enviada</SelectItem>
+                        <SelectItem value="accepted">Aceptada</SelectItem>
+                        <SelectItem value="rejected">Rechazada</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end">
+                    <p className="text-[10px] font-bold text-muted-foreground italic mb-2">
+                      *Los precios de catálogo se ajustarán automáticamente al cambiar la tasa.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b pb-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -350,7 +457,7 @@ export default function QuotationsPage() {
                   <div className="flex items-center justify-between">
                     <Label className="font-black text-lg text-primary flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Detalle de Insumos y Equipos</Label>
                     <Button variant="outline" size="sm" onClick={addItem} className="text-primary font-bold border-primary/20 rounded-full">
-                      <Plus className="mr-1 h-4 w-4" /> Ítem Personalizado
+                      <Plus className="mr-1 h-4 w-4" /> Ítem Especial
                     </Button>
                   </div>
                   
@@ -381,7 +488,7 @@ export default function QuotationsPage() {
                             <span className="absolute left-2 top-2.5 text-muted-foreground font-bold text-xs">$</span>
                             <Input 
                               type="number" 
-                              className="pl-6 bg-white font-bold"
+                              className="pl-6 bg-white font-black text-primary"
                               value={item.unitPrice} 
                               onChange={(e) => updateItem(index, 'unitPrice', parseInt(e.target.value) || 0)}
                             />
@@ -430,29 +537,31 @@ export default function QuotationsPage() {
         <Card className="bg-white shadow-xl border-primary/10 overflow-hidden rounded-[2rem]">
           <CardHeader className="bg-primary/5 border-b flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-xl text-primary font-bold">Historial de Propuestas Sunvou</CardTitle>
-              <p className="text-xs text-muted-foreground font-medium">Registro histórico de cotizaciones enviadas.</p>
+              <CardTitle className="text-xl text-primary font-bold">Embudo de Ventas Sunvou</CardTitle>
+              <p className="text-xs text-muted-foreground font-medium">Historial y trazabilidad de propuestas comerciales.</p>
             </div>
           </CardHeader>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/10">
+                  <TableHead className="font-black text-[10px] uppercase">Estado</TableHead>
                   <TableHead className="font-black text-[10px] uppercase">Fecha</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase">Destinatario / Clínica</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase text-right">Monto Neto</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase">Cliente / Clínica</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase text-right">Tasa</TableHead>
                   <TableHead className="font-black text-[10px] uppercase text-right">Total IVA Inc.</TableHead>
-                  <TableHead className="text-right font-black text-[10px] uppercase">Acciones</TableHead>
+                  <TableHead className="text-right font-black text-[10px] uppercase">Gestión</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isQuotesLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-12">Buscando cotizaciones...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-12">Buscando propuestas...</TableCell></TableRow>
                 ) : quotations?.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium">No hay cotizaciones registradas aún.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-20 text-muted-foreground font-medium">No hay cotizaciones registradas aún.</TableCell></TableRow>
                 ) : (
                   quotations?.map((q) => (
                     <TableRow key={q.id} className="hover:bg-primary/5 transition-colors group">
+                      <TableCell>{getStatusBadge(q.status)}</TableCell>
                       <TableCell className="font-bold text-xs">
                         {q.createdAt?.seconds ? format(new Date(q.createdAt.seconds * 1000), "dd/MM/yy") : "Reciente"}
                       </TableCell>
@@ -462,8 +571,8 @@ export default function QuotationsPage() {
                           <span className="text-[10px] font-bold text-muted-foreground uppercase">{q.clientCompany || "Particular"}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-medium text-muted-foreground">
-                        ${Math.round(q.total || 0).toLocaleString()}
+                      <TableCell className="text-right font-medium text-muted-foreground text-xs">
+                        ${q.exchangeRate || DEFAULT_USD_RATE}
                       </TableCell>
                       <TableCell className="text-right">
                         <span className="font-black text-primary text-lg">
@@ -472,10 +581,35 @@ export default function QuotationsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <div className="flex border-r pr-2 mr-2 gap-1">
+                            {q.status !== 'accepted' && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 text-green-500 hover:bg-green-50 rounded-full"
+                                onClick={() => updateStatus(q.id, 'accepted')}
+                                title="Marcar como Aceptada"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {q.status === 'pending' && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 text-blue-500 hover:bg-blue-50 rounded-full"
+                                onClick={() => updateStatus(q.id, 'sent')}
+                                title="Marcar como Enviada"
+                              >
+                                <Send className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                          
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="rounded-full text-primary hover:bg-primary/10"
+                            className="rounded-full text-primary hover:bg-primary/10 h-8 w-8"
                             onClick={() => handleEditOpen(q)}
                             title="Editar"
                           >
@@ -492,7 +626,7 @@ export default function QuotationsPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="text-red-300 hover:text-red-600 rounded-full"
+                            className="text-red-300 hover:text-red-600 rounded-full h-8 w-8"
                             onClick={() => handleDelete(q.id)}
                           >
                             <Trash2 className="h-4 w-4" />

@@ -38,6 +38,8 @@
         "clientCompany": { "type": "string" },
         "clientEmail": { "type": "string", "format": "email" },
         "clientPhone": { "type": "string" },
+        "exchangeRate": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "sent", "accepted", "rejected"] },
         "items": {
           "type": "array",
           "items": {
@@ -45,7 +47,8 @@
             "properties": {
               "description": { "type": "string" },
               "quantity": { "type": "number" },
-              "unitPrice": { "type": "number" }
+              "unitPrice": { "type": "number" },
+              "unitPriceUSD": { "type": "number" }
             }
           }
         },
@@ -53,7 +56,7 @@
         "notes": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["clientName", "clientEmail", "items", "total", "createdAt"]
+      "required": ["clientName", "clientEmail", "items", "total", "status", "exchangeRate", "createdAt"]
     }
   },
   "auth": {
