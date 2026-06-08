@@ -8,7 +8,6 @@ export function Logo() {
   return (
     <div className="flex items-center gap-2 group">
       <div className="relative flex items-center justify-center w-10 h-10">
-        {/* Isotipo único: Una 'O' que representa aire/flujo y ciencia */}
         <svg 
           viewBox="0 0 40 40" 
           className="w-full h-full transform group-hover:rotate-12 transition-transform duration-300"
@@ -51,17 +50,21 @@ export function Navbar() {
             <Logo />
           </Link>
           
-          <div className="flex items-center gap-4">
-            <div className="hidden lg:flex items-center gap-6 mr-6">
-              <Link href="/sunvou" className="text-sm font-black text-primary hover:text-secondary uppercase tracking-widest transition-colors">
-                Tecnología Sunvou
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="hidden md:flex items-center gap-2 lg:gap-6 mr-2">
+              <Link href="/sunvou">
+                <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-black text-primary hover:text-secondary uppercase tracking-widest">
+                  Tecnología Sunvou
+                </Button>
               </Link>
-              <Link href="/how-it-works" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors">
-                Cómo funciona
+              <Link href="/how-it-works">
+                <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-bold text-muted-foreground hover:text-primary">
+                  Cómo funciona
+                </Button>
               </Link>
             </div>
             <Link href="/booking">
-              <Button variant="primary" size="sm" className="rounded-full font-bold shadow-sm">
+              <Button size="sm" className="rounded-full font-bold shadow-sm bg-primary hover:bg-primary/90 text-xs md:text-sm">
                 Agendar Examen
               </Button>
             </Link>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Navbar, Logo } from "@/components/navbar";
@@ -31,7 +32,8 @@ import {
   PieChart as PieChartIcon,
   BarChart3,
   Info,
-  HelpCircle
+  HelpCircle,
+  Building2
 } from "lucide-react";
 import { 
   LineChart, 
@@ -238,15 +240,20 @@ export default function HomePage() {
                   Especialistas en tests de aire espirado para <strong>SIBO, IMO e Intolerancias</strong>. Un procedimiento clínico de alta precisión diseñado para asistir en el diagnóstico de tu especialista.
                 </motion.p>
                 
-                <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 md:gap-6">
+                <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 md:gap-4">
                   <Link href="/booking" className="w-full sm:w-auto">
                     <Button size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 md:px-10 text-base md:text-lg font-bold shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 group">
                       Reservar Cita <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
+                  <Link href="/sunvou" className="w-full sm:w-auto">
+                    <Button variant="secondary" size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 text-base md:text-lg font-bold shadow-lg hover:scale-105 transition-all">
+                      <Building2 className="mr-2 h-5 w-5" /> Representación Sunvou
+                    </Button>
+                  </Link>
                   <Link href="/how-it-works" className="w-full sm:w-auto">
                     <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 text-base md:text-lg font-bold border-2 hover:bg-secondary/5">
-                      Protocolo Clínico
+                      Protocolo
                     </Button>
                   </Link>
                 </motion.div>
@@ -274,6 +281,33 @@ export default function HomePage() {
                 </div>
               </motion.div>
             </div>
+          </div>
+        </section>
+
+        {/* Represtantion Banner Section */}
+        <section className="py-12 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-8"
+            >
+              <div className="flex items-center gap-6">
+                <div className="bg-secondary/10 p-4 rounded-3xl">
+                  <Award className="h-10 w-10 text-secondary" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-primary italic">Partner Oficial Sunvou® en Chile</h3>
+                  <p className="text-muted-foreground font-medium">Representación exclusiva para clínicas, laboratorios e instituciones médicas.</p>
+                </div>
+              </div>
+              <Link href="/sunvou">
+                <Button size="lg" className="rounded-full h-14 px-8 font-black bg-primary hover:bg-secondary hover:text-white transition-all">
+                  Ver Oferta Institucional <ChevronRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+            </motion.div>
           </div>
         </section>
 
