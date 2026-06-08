@@ -15,13 +15,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Plus, Download, Trash2, ArrowLeft, Building2, User, Mail, Phone, ShoppingCart } from "lucide-react";
+import { FileText, Plus, Download, Trash2, ArrowLeft, Building2, User, Mail, Phone, ShoppingCart, Calculator } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { jsPDF } from "jspdf";
 import Link from "next/link";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
+const IVA_RATE = 0.19;
 
 interface QuotationItem {
   description: string;
@@ -77,7 +78,9 @@ export default function QuotationsPage() {
     }
   };
 
-  const calculateTotal = () => items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+  const calculateNetTotal = () => items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+  const calculateIVA = () => calculateNetTotal() * IVA_RATE;
+  const calculateGrossTotal = () => calculateNetTotal() * (1 + IVA_RATE);
 
   const handleGenerateQuotation = async () => {
     if (!db || !clientName || !clientEmail || items.some(i => !i.description)) {
@@ -85,16 +88,16 @@ export default function QuotationsPage() {
       return;
     }
 
-    const total = calculateTotal();
+    const netTotal = calculateNetTotal();
     const quotationData = {
       clientName,
       clientCompany,
       clientEmail,
       clientPhone,
       items,
-      total,
-      notes,
+      total: netTotal, // We store the net as base
       createdAt: serverTimestamp(),
+      notes,
     };
 
     try {
@@ -124,10 +127,8 @@ export default function QuotationsPage() {
     const margin = 20;
     let y = 15;
 
-    // Colores corporativos (Oralab/Sunvou)
     const primaryRGB = [28, 104, 182];
-    const secondaryRGB = [25, 204, 204];
-
+    
     // Cabecera
     doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.rect(0, 0, 210, 40, 'F');
@@ -147,7 +148,6 @@ export default function QuotationsPage() {
 
     y = 55;
 
-    // Título
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
@@ -178,7 +178,7 @@ export default function QuotationsPage() {
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text("DETALLE DE PROPUESTA", margin, y);
+    doc.text("DETALLE DE PROPUESTA (VALORES NETOS)", margin, y);
     y += 8;
 
     doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
@@ -192,19 +192,35 @@ export default function QuotationsPage() {
 
     doc.setTextColor(60, 60, 60);
     doc.setFont("helvetica", "normal");
-    quote.items.forEach((item: any, i: number) => {
+    quote.items.forEach((item: any) => {
       doc.text(item.description, margin + 5, y + 7);
       doc.text(item.quantity.toString(), 140, y + 7);
-      doc.text(`$${item.unitPrice.toLocaleString()}`, 160, y + 7);
+      doc.text(`$${Math.round(item.unitPrice).toLocaleString()}`, 160, y + 7);
       y += 10;
       doc.line(margin, y, margin + 170, y);
     });
 
-    y += 5;
+    y += 10;
+    
+    // Desglose de Totales
+    const netTotal = quote.total;
+    const iva = netTotal * IVA_RATE;
+    const grossTotal = netTotal * (1 + IVA_RATE);
+
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(10);
+    doc.text(`TOTAL NETO:`, 130, y);
+    doc.text(`$${Math.round(netTotal).toLocaleString()}`, 170, y, { align: 'right' });
+    y += 7;
+    doc.text(`IVA (19%):`, 130, y);
+    doc.text(`$${Math.round(iva).toLocaleString()}`, 170, y, { align: 'right' });
+    y += 10;
+    
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(`TOTAL NETO: $${quote.total.toLocaleString()}`, 130, y + 7);
+    doc.text(`TOTAL (IVA INC.):`, 115, y);
+    doc.text(`$${Math.round(grossTotal).toLocaleString()}`, 170, y, { align: 'right' });
     y += 20;
 
     // Notas
@@ -218,10 +234,8 @@ export default function QuotationsPage() {
       doc.setFont("helvetica", "normal");
       const splitNotes = doc.splitTextToSize(quote.notes, 170);
       doc.text(splitNotes, margin, y);
-      y += (splitNotes.length * 5) + 15;
     }
 
-    // Pie de página
     const pageHeight = doc.internal.pageSize.height;
     doc.setFillColor(245, 247, 249);
     doc.rect(0, pageHeight - 30, 210, 30, 'F');
@@ -256,9 +270,9 @@ export default function QuotationsPage() {
               <ArrowLeft className="mr-1 h-3 w-3" /> Volver a Recepción
             </Link>
             <h1 className="text-3xl font-black text-primary flex items-center gap-3 italic">
-              <FileText className="h-8 w-8 text-secondary" /> Panel de Cotizaciones Sunvou
+              <FileText className="h-8 w-8 text-secondary" /> Cotizaciones Sunvou Chile
             </h1>
-            <p className="text-muted-foreground font-medium">Gestión comercial para representantes oficiales.</p>
+            <p className="text-muted-foreground font-medium">Gestión comercial y propuestas para clínicas.</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -269,8 +283,8 @@ export default function QuotationsPage() {
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black text-primary italic">Generar Propuesta Sunvou</DialogTitle>
-                <CardDescription>Completa los datos para el envío de presupuesto oficial.</CardDescription>
+                <DialogTitle className="text-2xl font-black text-primary italic">Generar Propuesta Comercial</DialogTitle>
+                <CardDescription>Cálculo automático de IVA (19%) incluido.</CardDescription>
               </DialogHeader>
               
               <div className="grid gap-6 py-4">
@@ -281,7 +295,7 @@ export default function QuotationsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold flex items-center gap-1"><Building2 className="h-3 w-3" /> Clínica / Empresa</Label>
-                    <Input placeholder="Ej: Centro Médico San Pablo" value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} />
+                    <Input placeholder="Ej: Clínica Las Condes" value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} />
                   </div>
                 </div>
 
@@ -298,7 +312,7 @@ export default function QuotationsPage() {
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b pb-2">
-                    <Label className="font-black text-lg text-primary flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Ítems de Cotización</Label>
+                    <Label className="font-black text-lg text-primary flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Detalle Netos</Label>
                     <Button variant="ghost" size="sm" onClick={addItem} className="text-secondary font-bold">
                       <Plus className="mr-1 h-4 w-4" /> Agregar ítem
                     </Button>
@@ -319,15 +333,15 @@ export default function QuotationsPage() {
                         <Input 
                           type="number" 
                           value={item.quantity} 
-                          onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value))}
+                          onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
                         />
                       </div>
                       <div className="col-span-6 md:col-span-3 space-y-1">
-                        <Label className="text-[10px] font-bold uppercase">Unitario ($)</Label>
+                        <Label className="text-[10px] font-bold uppercase">Unit. Neto ($)</Label>
                         <Input 
                           type="number" 
                           value={item.unitPrice} 
-                          onChange={(e) => updateItem(index, 'unitPrice', parseInt(e.target.value))}
+                          onChange={(e) => updateItem(index, 'unitPrice', parseInt(e.target.value) || 0)}
                         />
                       </div>
                       <div className="col-span-2 md:col-span-1">
@@ -338,8 +352,13 @@ export default function QuotationsPage() {
                     </div>
                   ))}
                   
-                  <div className="text-right pt-2">
-                    <span className="text-xl font-black text-primary">Total: ${calculateTotal().toLocaleString()}</span>
+                  <div className="bg-primary/5 p-6 rounded-2xl space-y-2 text-right">
+                    <div className="text-sm font-bold text-muted-foreground">Subtotal Neto: ${Math.round(calculateNetTotal()).toLocaleString()}</div>
+                    <div className="text-sm font-bold text-muted-foreground">IVA (19%): ${Math.round(calculateIVA()).toLocaleString()}</div>
+                    <div className="text-2xl font-black text-primary flex items-center justify-end gap-2 italic">
+                      <Calculator className="h-6 w-6 text-secondary" />
+                      TOTAL IVA INC: ${Math.round(calculateGrossTotal()).toLocaleString()}
+                    </div>
                   </div>
                 </div>
 
@@ -356,7 +375,7 @@ export default function QuotationsPage() {
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
-                <Button onClick={handleGenerateQuotation} className="bg-primary font-bold">Guardar y Cerrar</Button>
+                <Button onClick={handleGenerateQuotation} className="bg-primary font-bold">Emitir Cotización</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -364,7 +383,7 @@ export default function QuotationsPage() {
 
         <Card className="bg-white shadow-xl border-primary/10 overflow-hidden rounded-[2rem]">
           <CardHeader className="bg-primary/5 border-b">
-            <CardTitle className="text-xl text-primary font-bold">Historial de Cotizaciones Emitidas</CardTitle>
+            <CardTitle className="text-xl text-primary font-bold">Historial de Propuestas Sunvou</CardTitle>
           </CardHeader>
           <div className="overflow-x-auto">
             <Table>
@@ -372,20 +391,21 @@ export default function QuotationsPage() {
                 <TableRow className="bg-muted/10">
                   <TableHead className="font-black text-[10px] uppercase">Fecha</TableHead>
                   <TableHead className="font-black text-[10px] uppercase">Cliente / Empresa</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase">Monto Total</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase text-right">Monto Neto</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase text-right">Total IVA Inc.</TableHead>
                   <TableHead className="text-right font-black text-[10px] uppercase">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isQuotesLoading ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-12">Cargando cotizaciones...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-12">Cargando...</TableCell></TableRow>
                 ) : quotations?.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-20 text-muted-foreground font-medium">No se han emitido cotizaciones aún.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium">No se han emitido propuestas aún.</TableCell></TableRow>
                 ) : (
                   quotations?.map((q) => (
                     <TableRow key={q.id} className="hover:bg-primary/5 transition-colors">
                       <TableCell className="font-medium text-xs">
-                        {q.createdAt?.seconds ? format(new Date(q.createdAt.seconds * 1000), "dd/MM/yyyy") : "Reciente"}
+                        {q.createdAt?.seconds ? format(new Date(q.createdAt.seconds * 1000), "dd/MM/yy") : "Reciente"}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
@@ -393,8 +413,13 @@ export default function QuotationsPage() {
                           <span className="text-[10px] font-bold text-muted-foreground uppercase">{q.clientCompany || "Particular"}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="font-black text-primary text-lg">
-                        ${q.total?.toLocaleString()}
+                      <TableCell className="text-right font-medium text-muted-foreground">
+                        ${Math.round(q.total || 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="font-black text-primary text-lg">
+                          ${Math.round((q.total || 0) * (1 + IVA_RATE)).toLocaleString()}
+                        </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
