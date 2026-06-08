@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -35,7 +34,7 @@ const DEFAULT_SUNVOU_ITEMS = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", quantity: 1, unitPrice: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días. Forma de pago: Transferencia bancaria o tarjeta de crédito. Incluye soporte técnico remoto gratuito y garantía de fábrica por 2 años.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días. Forma de pago: 50% contra orden de compra y 50% en la entrega (vía transferencia bancaria). Incluye soporte técnico remoto gratuito y garantía de fábrica por 2 años.";
 
 interface QuotationItem {
   description: string;
@@ -373,7 +372,7 @@ export default function QuotationsPage() {
                   
                   <div className="bg-primary/5 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="text-left w-full md:w-auto">
-                      <Label className="font-bold block mb-1 flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-secondary" /> Notas y Condiciones (Garantía 2 años)</Label>
+                      <Label className="font-bold block mb-1 flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-secondary" /> Notas y Condiciones comerciales</Label>
                       <Textarea 
                         className="bg-white min-h-[80px] w-full md:w-[400px]"
                         value={notes}
