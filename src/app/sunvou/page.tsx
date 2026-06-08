@@ -42,6 +42,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
+import { useFirestore } from "@/firebase";
+import { collection, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const contactSchema = z.object({
   name: z.string().min(2, "Nombre requerido"),
@@ -56,6 +59,7 @@ export default function SunvouPage() {
   const medicalDeviceImg = PlaceHolderImages.find(img => img.id === 'medical-device');
   const whatsappUrl = "https://wa.me/56936850468";
   const [isSending, setIsSending] = useState(false);
+  const db = useFirestore();
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -68,15 +72,24 @@ export default function SunvouPage() {
   });
 
   async function onContactSubmit(values: ContactFormValues) {
+    if (!db) return;
     setIsSending(true);
     
-    // Simulamos el envío al servidor (donde estaría configurado el correo pcordova@oralab.cl)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 1. Guardamos el lead en Firestore para respaldo
+      const leadsRef = collection(db, "leads");
+      await addDocumentNonBlocking(leadsRef, {
+        ...values,
+        createdAt: serverTimestamp()
+      });
+
+      // 2. Simulamos el éxito del envío al correo pcordova@oralab.cl
+      // Nota: En un entorno real, aquí se llamaría a una Server Action que use un servicio de email (Resend/SendGrid)
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
-        title: "¡Solicitud Enviada!",
-        description: "Hemos recibido tu mensaje. Un especialista se contactará contigo a la brevedad.",
+        title: "¡Solicitud Recibida!",
+        description: "Tu consulta ha sido enviada con éxito. Un especialista te contactará pronto.",
       });
       
       form.reset();
@@ -84,7 +97,7 @@ export default function SunvouPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo enviar la solicitud. Por favor intenta por WhatsApp.",
+        description: "No pudimos procesar tu solicitud. Por favor intenta vía WhatsApp.",
       });
     } finally {
       setIsSending(false);

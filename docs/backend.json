@@ -57,6 +57,19 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["clientName", "clientEmail", "items", "total", "status", "exchangeRate", "createdAt"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "Contacto comercial desde la landing de Sunvou.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "institution": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "message"]
     }
   },
   "auth": {
@@ -74,6 +87,10 @@
     "/quotations/{quotationId}": {
       "schema": "Quotation",
       "description": "Colección de cotizaciones comerciales generadas por el representante Sunvou."
+    },
+    "/leads/{leadId}": {
+      "schema": "Lead",
+      "description": "Consultas comerciales recibidas por el representante."
     }
   }
 }
