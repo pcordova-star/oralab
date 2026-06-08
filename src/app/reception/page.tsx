@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { 
   Table, 
   TableBody, 
@@ -46,7 +47,8 @@ import {
   Calendar as CalendarIcon,
   XCircle,
   Clock,
-  Pencil
+  Pencil,
+  FileText
 } from "lucide-react";
 import { format, addDays, subDays, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -77,7 +79,6 @@ export default function ReceptionPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   
-  // Estado para reprogramación
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
   const [newTime, setNewTime] = useState<string>("");
@@ -218,13 +219,17 @@ export default function ReceptionPage() {
             <p className="text-muted-foreground">Flujo de pacientes y trazabilidad de citas.</p>
           </div>
           <div className="flex gap-2">
+            <Link href="/admin/quotations">
+              <Button variant="outline" className="rounded-full border-secondary text-secondary hover:bg-secondary/5">
+                <FileText className="mr-2 h-4 w-4" /> Cotizaciones Sunvou
+              </Button>
+            </Link>
             <Button variant="outline" onClick={handleLogout} className="rounded-full border-red-200 text-red-600 hover:bg-red-50">
               <LogOut className="mr-2 h-4 w-4" /> Salir
             </Button>
           </div>
         </div>
 
-        {/* NAVEGACIÓN DE DÍA */}
         <Card className="mb-8 bg-white shadow-sm border-primary/10">
           <CardContent className="p-4 flex items-center justify-between">
             <Button 
@@ -250,7 +255,6 @@ export default function ReceptionPage() {
           </CardContent>
         </Card>
 
-        {/* MÉTRICAS */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
           <Card className="bg-white"><CardContent className="p-4">
             <p className="text-[10px] font-bold text-muted-foreground uppercase">Agendados</p>
@@ -370,7 +374,6 @@ export default function ReceptionPage() {
         </Card>
       </main>
 
-      {/* DIALOG DE REPROGRAMACIÓN */}
       <Dialog open={!!editingBooking} onOpenChange={() => setEditingBooking(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

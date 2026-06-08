@@ -28,6 +28,32 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["firstName", "lastNameFather", "email", "phone", "examType", "modality", "scheduledDate", "scheduledTime", "status"]
+    },
+    "Quotation": {
+      "title": "Quotation",
+      "description": "Representa una cotización comercial de equipos o servicios Sunvou.",
+      "type": "object",
+      "properties": {
+        "clientName": { "type": "string" },
+        "clientCompany": { "type": "string" },
+        "clientEmail": { "type": "string", "format": "email" },
+        "clientPhone": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": { "type": "string" },
+              "quantity": { "type": "number" },
+              "unitPrice": { "type": "number" }
+            }
+          }
+        },
+        "total": { "type": "number" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientName", "clientEmail", "items", "total", "createdAt"]
     }
   },
   "auth": {
@@ -41,6 +67,10 @@
     "/bookings/{bookingId}": {
       "schema": "Booking",
       "description": "Colección de solicitudes de reserva gestionadas por el administrador."
+    },
+    "/quotations/{quotationId}": {
+      "schema": "Quotation",
+      "description": "Colección de cotizaciones comerciales generadas por el representante Sunvou."
     }
   }
 }
