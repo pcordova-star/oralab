@@ -22,19 +22,20 @@ import Link from "next/link";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
 const IVA_RATE = 0.19;
+const USD_TO_CLP = 950; // Tasa de cambio referencial para insumos médicos
 
-// Insumos Sunvou (Precios distribuidor + 100% recargo comercial)
+// Insumos Sunvou (Precios distribuidor USD -> CLP -> +100% recargo comercial)
 const DEFAULT_SUNVOU_ITEMS = [
-  { description: "Analizador Sunvou Breath Diagnostics (H2/CH4/H2S/CO2)", quantity: 1, unitPrice: 5800000 },
-  { description: "Set de Sensores Electromecánicos de Repuesto Sunvou", quantity: 1, unitPrice: 1200000 },
-  { description: "Kit Boquillas con Filtro Antimicrobiano (Pack 100)", quantity: 1, unitPrice: 240000 },
-  { description: "Cilindro Gas de Calibración Mezcla Cuádruple Sunvou", quantity: 1, unitPrice: 480000 },
-  { description: "Sustrato Lactulosa 15g (Caja 10 dosis)", quantity: 1, unitPrice: 85000 },
-  { description: "Regulador de Presión para Cilindro de Gas", quantity: 1, unitPrice: 150000 },
+  { description: "Analizador Breath Diagnostics Sunvou-DA7349 (H2/CH4/H2S/CO2)", quantity: 1, unitPrice: 5000 * USD_TO_CLP * 2 },
+  { description: "Sensor Hidrógeno SV-eH2-03 (Incluye 300 boquillas y sensor)", quantity: 1, unitPrice: 900 * USD_TO_CLP * 2 },
+  { description: "Sensor Metano SV-eCH4-03 (Incluye 300 boquillas y sensor)", quantity: 1, unitPrice: 1350 * USD_TO_CLP * 2 },
+  { description: "Sensor Sulfuro de Hidrógeno SV-eH2S-03 (Incluye boquillas y sensor)", quantity: 1, unitPrice: 1350 * USD_TO_CLP * 2 },
+  { description: "Kit de Muestreo SV-OSKB (1 pieza Y + 4 Bolsas)", quantity: 1, unitPrice: 2 * USD_TO_CLP * 2 },
+  { description: "Kit de Muestreo SV-OSKB (1 pieza Y + 7 Bolsas)", quantity: 1, unitPrice: 3.5 * USD_TO_CLP * 2 },
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", quantity: 1, unitPrice: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días. Forma de pago: 50% contra orden de compra y 50% en la entrega (vía transferencia bancaria). Incluye soporte técnico remoto gratuito y garantía de fábrica por 2 años.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Garantía: 2 años para sensores y 5 años para analizador DA7349.\n- Forma de pago: 50% contra orden de compra y 50% en la entrega (vía transferencia bancaria).\n- Entrega: Sujeta a disponibilidad de stock (aprox. 15-20 días hábiles).";
 
 interface QuotationItem {
   description: string;
@@ -55,11 +56,12 @@ export default function QuotationsPage() {
   const [clientCompany, setClientCompany] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
-  const [items, setItems] = useState<QuotationItem[]>([...DEFAULT_SUNVOU_ITEMS]);
+  const [items, setItems] = useState<QuotationItem[]>([]);
   const [notes, setNotes] = useState(DEFAULT_NOTES);
 
   useEffect(() => {
     setIsMounted(true);
+    setItems([...DEFAULT_SUNVOU_ITEMS]);
   }, []);
 
   useEffect(() => {
@@ -220,10 +222,11 @@ export default function QuotationsPage() {
     doc.setTextColor(60, 60, 60);
     doc.setFont("helvetica", "normal");
     quote.items.forEach((item: any) => {
-      doc.text(item.description, margin + 5, y + 7);
+      const splitDesc = doc.splitTextToSize(item.description, 110);
+      doc.text(splitDesc, margin + 5, y + 7);
       doc.text(item.quantity.toString(), 140, y + 7);
       doc.text(`$${Math.round(item.unitPrice).toLocaleString()}`, 160, y + 7);
-      y += 10;
+      y += (splitDesc.length * 5) + 5;
       doc.line(margin, y, margin + 170, y);
     });
 
@@ -299,7 +302,7 @@ export default function QuotationsPage() {
             <h1 className="text-3xl font-black text-primary flex items-center gap-3 italic">
               <FileText className="h-8 w-8 text-secondary" /> Cotizaciones Sunvou Chile
             </h1>
-            <p className="text-muted-foreground font-medium">Gestión comercial y representación oficial.</p>
+            <p className="text-muted-foreground font-medium">Gestión comercial y representación oficial Sunvou®.</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -316,7 +319,7 @@ export default function QuotationsPage() {
                 <DialogTitle className="text-2xl font-black text-primary italic">
                   {editingQuoteId ? "Editar Cotización Sunvou" : "Nueva Cotización Sunvou"}
                 </DialogTitle>
-                <CardDescription>Configura los ítems y condiciones comerciales para el cliente.</CardDescription>
+                <CardDescription>Configura los ítems y condiciones comerciales según la tabla técnica Sunvou.</CardDescription>
               </DialogHeader>
               
               <div className="grid gap-6 py-4">
@@ -397,7 +400,7 @@ export default function QuotationsPage() {
                     <div className="text-left w-full md:w-auto">
                       <Label className="font-bold block mb-1 flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-secondary" /> Notas y Condiciones comerciales</Label>
                       <Textarea 
-                        className="bg-white min-h-[80px] w-full md:w-[400px]"
+                        className="bg-white min-h-[100px] w-full md:w-[400px]"
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                       />
