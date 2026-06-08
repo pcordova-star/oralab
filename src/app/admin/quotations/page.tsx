@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Plus, Download, Trash2, ArrowLeft, Building2, User, Mail, Phone, ShoppingCart, Calculator, Package } from "lucide-react";
+import { FileText, Plus, Download, Trash2, ArrowLeft, Building2, User, Mail, Phone, ShoppingCart, Calculator, Package, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { jsPDF } from "jspdf";
@@ -24,15 +24,18 @@ import Link from "next/link";
 const ADMIN_EMAIL = "admin@oralab.cl";
 const IVA_RATE = 0.19;
 
-// Insumos por defecto Sunvou (Precios distribuidor + 100% recargo)
+// Insumos Sunvou (Precios distribuidor + 100% recargo comercial)
 const DEFAULT_SUNVOU_ITEMS = [
   { description: "Analizador Sunvou Breath Diagnostics (H2/CH4/H2S/CO2)", quantity: 1, unitPrice: 5800000 },
+  { description: "Set de Sensores Electromecánicos de Repuesto Sunvou", quantity: 1, unitPrice: 1200000 },
   { description: "Kit Boquillas con Filtro Antimicrobiano (Pack 100)", quantity: 1, unitPrice: 240000 },
   { description: "Cilindro Gas de Calibración Mezcla Cuádruple Sunvou", quantity: 1, unitPrice: 480000 },
   { description: "Sustrato Lactulosa 15g (Caja 10 dosis)", quantity: 1, unitPrice: 85000 },
   { description: "Regulador de Presión para Cilindro de Gas", quantity: 1, unitPrice: 150000 },
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", quantity: 1, unitPrice: 0 }
 ];
+
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días. Forma de pago: Transferencia bancaria o tarjeta de crédito. Incluye soporte técnico remoto gratuito y garantía de fábrica por 2 años.";
 
 interface QuotationItem {
   description: string;
@@ -53,7 +56,7 @@ export default function QuotationsPage() {
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [items, setItems] = useState<QuotationItem[]>([...DEFAULT_SUNVOU_ITEMS]);
-  const [notes, setNotes] = useState("Vigencia de cotización: 15 días. Forma de pago: Transferencia bancaria o tarjeta de crédito. Incluye soporte técnico remoto gratuito por 1 año.");
+  const [notes, setNotes] = useState(DEFAULT_NOTES);
 
   useEffect(() => {
     setIsMounted(true);
@@ -126,7 +129,7 @@ export default function QuotationsPage() {
     setClientEmail("");
     setClientPhone("");
     setItems([...DEFAULT_SUNVOU_ITEMS]);
-    setNotes("Vigencia de cotización: 15 días. Forma de pago: Transferencia bancaria o tarjeta de crédito. Incluye soporte técnico remoto gratuito por 1 año.");
+    setNotes(DEFAULT_NOTES);
   };
 
   const downloadQuotationPDF = (quote: any) => {
@@ -291,7 +294,7 @@ export default function QuotationsPage() {
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-black text-primary italic">Nueva Cotización Sunvou</DialogTitle>
-                <CardDescription>Los ítems se cargan con margen comercial del 100%. Elimina los que no necesites.</CardDescription>
+                <CardDescription>Los ítems se cargan con margen comercial del 100%. Incluye garantía de 2 años.</CardDescription>
               </DialogHeader>
               
               <div className="grid gap-6 py-4">
@@ -370,7 +373,7 @@ export default function QuotationsPage() {
                   
                   <div className="bg-primary/5 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="text-left w-full md:w-auto">
-                      <Label className="font-bold block mb-1">Notas y Condiciones</Label>
+                      <Label className="font-bold block mb-1 flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-secondary" /> Notas y Condiciones (Garantía 2 años)</Label>
                       <Textarea 
                         className="bg-white min-h-[80px] w-full md:w-[400px]"
                         value={notes}
