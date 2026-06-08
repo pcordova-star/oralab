@@ -76,15 +76,13 @@ export default function SunvouPage() {
     setIsSending(true);
     
     try {
-      // 1. Guardamos el lead en Firestore para respaldo
       const leadsRef = collection(db, "leads");
       await addDocumentNonBlocking(leadsRef, {
         ...values,
         createdAt: serverTimestamp()
       });
 
-      // 2. Simulamos el éxito del envío al correo pcordova@oralab.cl
-      // Nota: En un entorno real, aquí se llamaría a una Server Action que use un servicio de email (Resend/SendGrid)
+      // Simulación de envío exitoso. El lead ya queda guardado en Firestore.
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
@@ -150,7 +148,7 @@ export default function SunvouPage() {
                 <h1 className="text-4xl md:text-6xl font-black leading-tight italic">
                   Tecnología Sunvou® <br />
                   <span className="text-secondary">Diagnóstico de Clase Mundial</span>
-                </h1 >
+                </h1>
                 <p className="text-xl opacity-80 max-w-xl leading-relaxed">
                   Llevamos la vanguardia tecnológica de Sunvou Global a las clínicas y laboratorios de Chile. El analizador DA7349 redefine el estándar en el diagnóstico de SIBO e IMO.
                 </p>
@@ -171,12 +169,12 @@ export default function SunvouPage() {
               >
                 <div className="glass-panel !bg-white/5 rounded-[3rem] p-4 border-white/10">
                   <Image 
-                    src={medicalDeviceImg?.imageUrl || ""} 
-                    alt="Sunvou Device" 
+                    src={medicalDeviceImg?.imageUrl || "/equipo.png"} 
+                    alt="Analizador Breath Diagnostics Sunvou DA7349" 
                     width={600} 
                     height={600} 
-                    className="rounded-[2.5rem] shadow-2xl"
-                    data-ai-hint="medical device"
+                    className="rounded-[2.5rem] shadow-2xl object-cover"
+                    priority
                   />
                   <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-3xl shadow-xl border border-primary/5 hidden md:block">
                     <div className="text-center">
@@ -351,7 +349,7 @@ export default function SunvouPage() {
                 Atención técnica inmediata vía WhatsApp para resolver dudas sobre equipos y protocolos.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-6">
-                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:auto">
                   <Button size="lg" className="w-full sm:w-auto rounded-full h-16 px-12 text-xl font-black bg-secondary hover:bg-white hover:text-primary transition-all shadow-2xl">
                     <MessageCircle className="h-6 w-6 mr-2" /> WhatsApp Especialista
                   </Button>

@@ -1,0 +1,23 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-lab",
+      "description": "Científico trabajando en laboratorio moderno con microscopio",
+      "imageUrl": "https://picsum.photos/seed/oralab-hero/800/600",
+      "imageHint": "clinical laboratory"
+    },
+    {
+      "id": "medical-device",
+      "description": "Analizador Breath Diagnostics Sunvou DA7349",
+      "imageUrl": "/equipo.png",
+      "imageHint": "sunvou equipment"
+    },
+    {
+      "id": "health-check",
+      "description": "Paciente recibiendo atención médica",
+      "imageUrl": "https://picsum.photos/seed/patient/800/600",
+      "imageHint": "patient care"
+    }
+  ]
+}
