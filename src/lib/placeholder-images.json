@@ -8,9 +8,9 @@
     },
     {
       "id": "medical-device",
-      "description": "Tecnología médica avanzada Sunvou",
-      "imageUrl": "https://picsum.photos/seed/sunvou/600/600",
-      "imageHint": "medical technology"
+      "description": "Analizador Breath Diagnostics Sunvou DA7349",
+      "imageUrl": "/equipo.png",
+      "imageHint": "sunvou equipment"
     },
     {
       "id": "health-check",
