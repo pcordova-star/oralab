@@ -208,11 +208,6 @@ export default function SunvouPage() {
                     <MessageCircle className="h-6 w-6 mr-2" /> Consultar por WhatsApp
                   </Button>
                 </a>
-                <Link href="/admin/quotations" className="w-full sm:w-auto">
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full h-16 px-12 text-xl font-bold border-2 border-white/30 bg-white/10 backdrop-blur-md">
-                    Acceso Portal CRM
-                  </Button>
-                </Link>
               </div>
             </div>
           </div>
