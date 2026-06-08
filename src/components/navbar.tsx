@@ -52,8 +52,13 @@ export function Navbar() {
           </Link>
           
           <div className="flex items-center gap-4">
-            <div className="hidden md:block text-sm font-medium text-muted-foreground italic mr-4">
-              Salud Digestiva Avanzada
+            <div className="hidden lg:flex items-center gap-6 mr-6">
+              <Link href="/sunvou" className="text-sm font-black text-primary hover:text-secondary uppercase tracking-widest transition-colors">
+                Tecnología Sunvou
+              </Link>
+              <Link href="/how-it-works" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors">
+                Cómo funciona
+              </Link>
             </div>
             <Link href="/booking">
               <Button variant="primary" size="sm" className="rounded-full font-bold shadow-sm">
