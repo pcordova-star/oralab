@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Plus, Download, Trash2, ArrowLeft, Building2, User, Mail, Phone, ShoppingCart, Calculator } from "lucide-react";
+import { FileText, Plus, Download, Trash2, ArrowLeft, Building2, User, Mail, Phone, ShoppingCart, Calculator, Package } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { jsPDF } from "jspdf";
@@ -23,6 +23,16 @@ import Link from "next/link";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
 const IVA_RATE = 0.19;
+
+// Insumos por defecto Sunvou (Precios distribuidor + 100% recargo)
+const DEFAULT_SUNVOU_ITEMS = [
+  { description: "Analizador Sunvou Breath Diagnostics (H2/CH4/H2S/CO2)", quantity: 1, unitPrice: 5800000 },
+  { description: "Kit Boquillas con Filtro Antimicrobiano (Pack 100)", quantity: 1, unitPrice: 240000 },
+  { description: "Cilindro Gas de Calibración Mezcla Cuádruple Sunvou", quantity: 1, unitPrice: 480000 },
+  { description: "Sustrato Lactulosa 15g (Caja 10 dosis)", quantity: 1, unitPrice: 85000 },
+  { description: "Regulador de Presión para Cilindro de Gas", quantity: 1, unitPrice: 150000 },
+  { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", quantity: 1, unitPrice: 0 }
+];
 
 interface QuotationItem {
   description: string;
@@ -42,8 +52,8 @@ export default function QuotationsPage() {
   const [clientCompany, setClientCompany] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
-  const [items, setItems] = useState<QuotationItem[]>([{ description: "", quantity: 1, unitPrice: 0 }]);
-  const [notes, setNotes] = useState("");
+  const [items, setItems] = useState<QuotationItem[]>([...DEFAULT_SUNVOU_ITEMS]);
+  const [notes, setNotes] = useState("Vigencia de cotización: 15 días. Forma de pago: Transferencia bancaria o tarjeta de crédito. Incluye soporte técnico remoto gratuito por 1 año.");
 
   useEffect(() => {
     setIsMounted(true);
@@ -73,9 +83,7 @@ export default function QuotationsPage() {
   };
 
   const removeItem = (index: number) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
-    }
+    setItems(items.filter((_, i) => i !== index));
   };
 
   const calculateNetTotal = () => items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
@@ -83,8 +91,8 @@ export default function QuotationsPage() {
   const calculateGrossTotal = () => calculateNetTotal() * (1 + IVA_RATE);
 
   const handleGenerateQuotation = async () => {
-    if (!db || !clientName || !clientEmail || items.some(i => !i.description)) {
-      toast({ variant: "destructive", title: "Error", description: "Completa todos los campos obligatorios." });
+    if (!db || !clientName || !clientEmail || items.length === 0 || items.some(i => !i.description)) {
+      toast({ variant: "destructive", title: "Error", description: "Completa los datos del cliente y asegúrate de tener ítems válidos." });
       return;
     }
 
@@ -95,7 +103,7 @@ export default function QuotationsPage() {
       clientEmail,
       clientPhone,
       items,
-      total: netTotal, // We store the net as base
+      total: netTotal,
       createdAt: serverTimestamp(),
       notes,
     };
@@ -108,7 +116,6 @@ export default function QuotationsPage() {
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
-      console.error(error);
       toast({ variant: "destructive", title: "Error", description: "No se pudo guardar la cotización." });
     }
   };
@@ -118,8 +125,8 @@ export default function QuotationsPage() {
     setClientCompany("");
     setClientEmail("");
     setClientPhone("");
-    setItems([{ description: "", quantity: 1, unitPrice: 0 }]);
-    setNotes("");
+    setItems([...DEFAULT_SUNVOU_ITEMS]);
+    setNotes("Vigencia de cotización: 15 días. Forma de pago: Transferencia bancaria o tarjeta de crédito. Incluye soporte técnico remoto gratuito por 1 año.");
   };
 
   const downloadQuotationPDF = (quote: any) => {
@@ -272,125 +279,137 @@ export default function QuotationsPage() {
             <h1 className="text-3xl font-black text-primary flex items-center gap-3 italic">
               <FileText className="h-8 w-8 text-secondary" /> Cotizaciones Sunvou Chile
             </h1>
-            <p className="text-muted-foreground font-medium">Gestión comercial y propuestas para clínicas.</p>
+            <p className="text-muted-foreground font-medium">Panel comercial de representación oficial.</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-full bg-secondary hover:bg-secondary/90 font-black h-12 px-6 shadow-lg">
-                <Plus className="mr-2 h-5 w-5" /> Nueva Cotización
+              <Button onClick={resetForm} className="rounded-full bg-secondary hover:bg-secondary/90 font-black h-12 px-6 shadow-lg">
+                <Plus className="mr-2 h-5 w-5" /> Generar Propuesta
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black text-primary italic">Generar Propuesta Comercial</DialogTitle>
-                <CardDescription>Cálculo automático de IVA (19%) incluido.</CardDescription>
+                <DialogTitle className="text-2xl font-black text-primary italic">Nueva Cotización Sunvou</DialogTitle>
+                <CardDescription>Los ítems se cargan con margen comercial del 100%. Elimina los que no necesites.</CardDescription>
               </DialogHeader>
               
               <div className="grid gap-6 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold flex items-center gap-1"><User className="h-3 w-3" /> Nombre del Cliente</Label>
-                    <Input placeholder="Ej: Dr. Roberto Gómez" value={clientName} onChange={(e) => setClientName(e.target.value)} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b pb-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-1"><User className="h-3 w-3" /> Cliente Destinatario</Label>
+                      <Input placeholder="Ej: Dr. Roberto Gómez" value={clientName} onChange={(e) => setClientName(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-1"><Building2 className="h-3 w-3" /> Institución / Clínica</Label>
+                      <Input placeholder="Ej: Clínica Las Condes" value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold flex items-center gap-1"><Building2 className="h-3 w-3" /> Clínica / Empresa</Label>
-                    <Input placeholder="Ej: Clínica Las Condes" value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold flex items-center gap-1"><Mail className="h-3 w-3" /> Email</Label>
-                    <Input type="email" placeholder="cliente@correo.com" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold flex items-center gap-1"><Phone className="h-3 w-3" /> Teléfono</Label>
-                    <Input placeholder="+56 9 ..." value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} />
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-1"><Mail className="h-3 w-3" /> Email de contacto</Label>
+                      <Input type="email" placeholder="cliente@correo.com" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-1"><Phone className="h-3 w-3" /> Teléfono</Label>
+                      <Input placeholder="+56 9 ..." value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} />
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b pb-2">
-                    <Label className="font-black text-lg text-primary flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Detalle Netos</Label>
-                    <Button variant="ghost" size="sm" onClick={addItem} className="text-secondary font-bold">
-                      <Plus className="mr-1 h-4 w-4" /> Agregar ítem
+                  <div className="flex items-center justify-between">
+                    <Label className="font-black text-lg text-primary flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Detalle de Insumos y Equipos</Label>
+                    <Button variant="outline" size="sm" onClick={addItem} className="text-primary font-bold border-primary/20 rounded-full">
+                      <Plus className="mr-1 h-4 w-4" /> Ítem Personalizado
                     </Button>
                   </div>
                   
-                  {items.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 items-end bg-muted/20 p-3 rounded-xl border">
-                      <div className="col-span-12 md:col-span-6 space-y-1">
-                        <Label className="text-[10px] font-bold uppercase">Descripción</Label>
-                        <Input 
-                          placeholder="Ej: Analizador Sunvou H2/CH4" 
-                          value={item.description} 
-                          onChange={(e) => updateItem(index, 'description', e.target.value)}
-                        />
+                  <div className="space-y-2">
+                    {items.map((item, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-2 items-center bg-muted/20 p-3 rounded-xl border border-primary/5 hover:border-primary/20 transition-all">
+                        <div className="col-span-12 md:col-span-6 space-y-1">
+                          <Input 
+                            placeholder="Descripción del ítem..." 
+                            className="bg-white"
+                            value={item.description} 
+                            onChange={(e) => updateItem(index, 'description', e.target.value)}
+                          />
+                        </div>
+                        <div className="col-span-4 md:col-span-2 space-y-1">
+                          <div className="relative">
+                            <Package className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input 
+                              type="number" 
+                              className="pl-7 bg-white"
+                              value={item.quantity} 
+                              onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-span-6 md:col-span-3 space-y-1">
+                          <div className="relative">
+                            <span className="absolute left-2 top-2.5 text-muted-foreground font-bold text-xs">$</span>
+                            <Input 
+                              type="number" 
+                              className="pl-6 bg-white font-bold"
+                              value={item.unitPrice} 
+                              onChange={(e) => updateItem(index, 'unitPrice', parseInt(e.target.value) || 0)}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-span-2 md:col-span-1 text-right">
+                          <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="text-red-400 hover:text-red-600 hover:bg-red-50">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="col-span-4 md:col-span-2 space-y-1">
-                        <Label className="text-[10px] font-bold uppercase">Cant.</Label>
-                        <Input 
-                          type="number" 
-                          value={item.quantity} 
-                          onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                        />
-                      </div>
-                      <div className="col-span-6 md:col-span-3 space-y-1">
-                        <Label className="text-[10px] font-bold uppercase">Unit. Neto ($)</Label>
-                        <Input 
-                          type="number" 
-                          value={item.unitPrice} 
-                          onChange={(e) => updateItem(index, 'unitPrice', parseInt(e.target.value) || 0)}
-                        />
-                      </div>
-                      <div className="col-span-2 md:col-span-1">
-                        <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="text-red-500 hover:bg-red-50">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                   
-                  <div className="bg-primary/5 p-6 rounded-2xl space-y-2 text-right">
-                    <div className="text-sm font-bold text-muted-foreground">Subtotal Neto: ${Math.round(calculateNetTotal()).toLocaleString()}</div>
-                    <div className="text-sm font-bold text-muted-foreground">IVA (19%): ${Math.round(calculateIVA()).toLocaleString()}</div>
-                    <div className="text-2xl font-black text-primary flex items-center justify-end gap-2 italic">
-                      <Calculator className="h-6 w-6 text-secondary" />
-                      TOTAL IVA INC: ${Math.round(calculateGrossTotal()).toLocaleString()}
+                  <div className="bg-primary/5 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="text-left w-full md:w-auto">
+                      <Label className="font-bold block mb-1">Notas y Condiciones</Label>
+                      <Textarea 
+                        className="bg-white min-h-[80px] w-full md:w-[400px]"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                      />
+                    </div>
+                    <div className="text-right space-y-1 w-full md:w-auto">
+                      <div className="text-xs font-bold text-muted-foreground uppercase">Subtotal Neto: ${Math.round(calculateNetTotal()).toLocaleString()}</div>
+                      <div className="text-xs font-bold text-muted-foreground uppercase">IVA (19%): ${Math.round(calculateIVA()).toLocaleString()}</div>
+                      <div className="text-2xl font-black text-primary flex items-center justify-end gap-2 italic">
+                        <Calculator className="h-6 w-6 text-secondary" />
+                        TOTAL IVA INC: ${Math.round(calculateGrossTotal()).toLocaleString()}
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="font-bold">Notas Adicionales / Condiciones</Label>
-                  <Textarea 
-                    placeholder="Ej: Validez por 15 días, incluye capacitación, garantía de 1 año..." 
-                    className="h-24"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
                 </div>
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
-                <Button onClick={handleGenerateQuotation} className="bg-primary font-bold">Emitir Cotización</Button>
+                <Button variant="outline" className="rounded-full" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                <Button onClick={handleGenerateQuotation} className="bg-primary font-black px-8 rounded-full shadow-lg">Emitir Cotización Oficial</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
 
         <Card className="bg-white shadow-xl border-primary/10 overflow-hidden rounded-[2rem]">
-          <CardHeader className="bg-primary/5 border-b">
-            <CardTitle className="text-xl text-primary font-bold">Historial de Propuestas Sunvou</CardTitle>
+          <CardHeader className="bg-primary/5 border-b flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-xl text-primary font-bold">Historial de Propuestas Sunvou</CardTitle>
+              <p className="text-xs text-muted-foreground font-medium">Registro histórico de cotizaciones enviadas.</p>
+            </div>
           </CardHeader>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/10">
                   <TableHead className="font-black text-[10px] uppercase">Fecha</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase">Cliente / Empresa</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase">Destinatario / Clínica</TableHead>
                   <TableHead className="font-black text-[10px] uppercase text-right">Monto Neto</TableHead>
                   <TableHead className="font-black text-[10px] uppercase text-right">Total IVA Inc.</TableHead>
                   <TableHead className="text-right font-black text-[10px] uppercase">Acciones</TableHead>
@@ -398,18 +417,18 @@ export default function QuotationsPage() {
               </TableHeader>
               <TableBody>
                 {isQuotesLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-12">Cargando...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-12">Buscando cotizaciones...</TableCell></TableRow>
                 ) : quotations?.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium">No se han emitido propuestas aún.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium">No hay cotizaciones registradas aún.</TableCell></TableRow>
                 ) : (
                   quotations?.map((q) => (
-                    <TableRow key={q.id} className="hover:bg-primary/5 transition-colors">
-                      <TableCell className="font-medium text-xs">
+                    <TableRow key={q.id} className="hover:bg-primary/5 transition-colors group">
+                      <TableCell className="font-bold text-xs">
                         {q.createdAt?.seconds ? format(new Date(q.createdAt.seconds * 1000), "dd/MM/yy") : "Reciente"}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-bold text-primary">{q.clientName}</span>
+                          <span className="font-black text-primary group-hover:underline cursor-pointer">{q.clientName}</span>
                           <span className="text-[10px] font-bold text-muted-foreground uppercase">{q.clientCompany || "Particular"}</span>
                         </div>
                       </TableCell>
@@ -426,15 +445,15 @@ export default function QuotationsPage() {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="rounded-full border-primary/20 text-primary hover:bg-primary hover:text-white transition-all font-bold"
+                            className="rounded-full border-primary/20 text-primary hover:bg-primary hover:text-white transition-all font-bold shadow-sm"
                             onClick={() => downloadQuotationPDF(q)}
                           >
-                            <Download className="mr-1 h-3.5 w-3.5" /> PDF
+                            <Download className="mr-1 h-3.5 w-3.5" /> Descargar PDF
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="text-red-400 hover:text-red-600 rounded-full"
+                            className="text-red-300 hover:text-red-600 rounded-full"
                             onClick={() => handleDelete(q.id)}
                           >
                             <Trash2 className="h-4 w-4" />
