@@ -44,7 +44,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Garantía: 2 años para sensores y 5 años para analizador DA7349.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Plazo de Entrega: Aproximadamente 30 días hábiles tras recepción de orden de compra.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: Aproximadamente 30 días hábiles tras recepción de orden de compra.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años para sensores y 5 años para analizador DA7349.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
 
 interface QuotationItem {
   description: string;
@@ -226,6 +226,7 @@ export default function QuotationsPage() {
   const downloadQuotationPDF = (quote: any) => {
     const doc = new jsPDF();
     const margin = 20;
+    const pageHeight = doc.internal.pageSize.height;
     let y = 15;
 
     const primaryRGB = [28, 104, 182];
@@ -304,7 +305,7 @@ export default function QuotationsPage() {
 
     y += 10;
     
-    // Desglose de Totales corregido para evitar superposición
+    // Desglose de Totales
     const netTotal = quote.total;
     const iva = netTotal * IVA_RATE;
     const grossTotal = netTotal * (1 + IVA_RATE);
@@ -325,7 +326,13 @@ export default function QuotationsPage() {
     doc.setFont("helvetica", "bold");
     doc.text(`TOTAL (IVA INC.):`, labelsMargin - 10, y);
     doc.text(`$${Math.round(grossTotal).toLocaleString()}`, rightValueMargin, y, { align: 'right' });
-    y += 20;
+    y += 15;
+
+    // Verificar si hay espacio para las notas antes del footer
+    if (y > pageHeight - 65) {
+      doc.addPage();
+      y = 20;
+    }
 
     // Notas
     if (quote.notes) {
@@ -340,7 +347,7 @@ export default function QuotationsPage() {
       doc.text(splitNotes, margin, y);
     }
 
-    const pageHeight = doc.internal.pageSize.height;
+    // Pie de Página (Fijo al fondo)
     doc.setFillColor(245, 247, 249);
     doc.rect(0, pageHeight - 35, 210, 35, 'F');
     doc.setTextColor(100, 100, 100);
@@ -352,9 +359,8 @@ export default function QuotationsPage() {
     doc.text("Apoquindo 3992, Of. 605, Las Condes, Santiago | contacto@oralab.cl", margin, pageHeight - 15);
     doc.text("Tasa de cambio aplicada: $" + (quote.exchangeRate || DEFAULT_USD_RATE) + " CLP/USD", margin, pageHeight - 10);
     
-    // Identificador de versión para el usuario
     doc.setFontSize(7);
-    doc.text("v2.1.1", 190, pageHeight - 5, { align: 'right' });
+    doc.text("v2.1.2", 190, pageHeight - 5, { align: 'right' });
 
     doc.save(`Sunvou_Propuesta_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
@@ -517,7 +523,7 @@ export default function QuotationsPage() {
                     <div className="text-left w-full md:w-auto">
                       <Label className="font-bold block mb-1 flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-secondary" /> Notas y Condiciones comerciales</Label>
                       <Textarea 
-                        className="bg-white min-h-[100px] w-full md:w-[400px]"
+                        className="bg-white min-h-[120px] w-full md:w-[400px]"
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                       />
