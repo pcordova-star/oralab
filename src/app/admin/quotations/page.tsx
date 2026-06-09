@@ -44,7 +44,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Garantía: 2 años para sensores y 5 años para analizador DA7349.\n- Forma de pago: 50% contra orden de compra y 50% en la entrega (vía transferencia bancaria).\n- Entrega: Sujeta a disponibilidad de stock (aprox. 15-20 días hábiles).";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Garantía: 2 años para sensores y 5 años para analizador DA7349.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Plazo de Entrega: Aproximadamente 30 días hábiles tras recepción de orden de compra.";
 
 interface QuotationItem {
   description: string;
@@ -342,15 +342,19 @@ export default function QuotationsPage() {
 
     const pageHeight = doc.internal.pageSize.height;
     doc.setFillColor(245, 247, 249);
-    doc.rect(0, pageHeight - 30, 210, 30, 'F');
-    doc.setTextColor(150, 150, 150);
+    doc.rect(0, pageHeight - 35, 210, 35, 'F');
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("TRESNA - Representante Oficial Sunvou Breath Diagnostics en Chile.", margin, pageHeight - 20);
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text("Representante Exclusivo Sunvou Breath Diagnostics en Chile.", margin, pageHeight - 15);
+    doc.text("Apoquindo 3992, Of. 605, Las Condes, Santiago | contacto@oralab.cl", margin, pageHeight - 15);
     doc.text("Tasa de cambio aplicada: $" + (quote.exchangeRate || DEFAULT_USD_RATE) + " CLP/USD", margin, pageHeight - 10);
     
     // Identificador de versión para el usuario
     doc.setFontSize(7);
-    doc.text("v2.1.0", 190, pageHeight - 5, { align: 'right' });
+    doc.text("v2.1.1", 190, pageHeight - 5, { align: 'right' });
 
     doc.save(`Sunvou_Propuesta_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
@@ -380,7 +384,7 @@ export default function QuotationsPage() {
             <h1 className="text-3xl font-black text-primary flex items-center gap-3 italic">
               <FileText className="h-8 w-8 text-secondary" /> CRM Sunvou Chile
             </h1>
-            <p className="text-muted-foreground font-medium">Gestión comercial y representación oficial Sunvou®.</p>
+            <p className="text-muted-foreground font-medium">Gestión comercial de Tresna - Representación Sunvou®.</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -431,7 +435,7 @@ export default function QuotationsPage() {
                   </div>
                   <div className="flex items-end">
                     <p className="text-[10px] font-bold text-muted-foreground italic mb-2">
-                      *Los precios de catálogo se ajustarán automáticamente al cambiar la tasa.
+                      *Representante Oficial: Tresna. Entrega 30 días hábiles.
                     </p>
                   </div>
                 </div>
@@ -543,8 +547,8 @@ export default function QuotationsPage() {
         <Card className="bg-white shadow-xl border-primary/10 overflow-hidden rounded-[2rem]">
           <CardHeader className="bg-primary/5 border-b flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-xl text-primary font-bold">Embudo de Ventas Sunvou</CardTitle>
-              <p className="text-xs text-muted-foreground font-medium">Historial y trazabilidad de propuestas comerciales.</p>
+              <CardTitle className="text-xl text-primary font-bold">Embudo de Ventas Tresna - Sunvou</CardTitle>
+              <p className="text-xs text-muted-foreground font-medium">Gestión oficial de representaciones Sunvou Chile.</p>
             </div>
           </CardHeader>
           <div className="overflow-x-auto">
