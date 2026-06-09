@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -47,8 +46,8 @@ export function PrepChatbot() {
   };
 
   const toggleChat = () => {
-    // Si se está cerrando, reiniciamos la conversación
     if (isOpen) {
+      // Si el usuario cierra el chat, reseteamos la conversación por privacidad
       resetChat();
       setIsOpen(false);
     } else {
@@ -60,8 +59,9 @@ export function PrepChatbot() {
     if (!input.trim() || isLoading) return;
 
     const userMsg = input.trim();
-    setInput('');
     const currentHistory = [...messages];
+    
+    setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsLoading(true);
 
@@ -73,8 +73,10 @@ export function PrepChatbot() {
 
       setMessages(prev => [...prev, { role: 'model', text: response.text }]);
     } catch (error) {
-      console.error("Chatbot Error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: 'He tenido un inconveniente técnico. Por favor, intenta escribir tu nombre de nuevo o contáctanos por WhatsApp (+56 9 3685 0468).' }]);
+      setMessages(prev => [...prev, { 
+        role: 'model', 
+        text: 'Lo siento, hubo un inconveniente al procesar tu solicitud. Por favor, intenta de nuevo en unos segundos o contáctanos directamente por WhatsApp (+56 9 3685 0468).' 
+      }]);
     } finally {
       setIsLoading(false);
     }

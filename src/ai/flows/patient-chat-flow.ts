@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Flujo de diagnóstico para el Chatbot de Pacientes con búsqueda en Firestore.
@@ -37,7 +36,7 @@ const lookupPatient = ai.defineTool(
     name: 'lookupPatient',
     description: 'Busca una reserva en el laboratorio por el nombre o apellido del paciente.',
     inputSchema: z.object({
-      name: z.string().describe('Nombre o apellido del paciente.'),
+      name: z.string().describe('Nombre o apellido del paciente para buscar en la base de datos.'),
     }),
     outputSchema: z.object({
       found: z.boolean(),
@@ -48,7 +47,6 @@ const lookupPatient = ai.defineTool(
   },
   async (input) => {
     try {
-      // Inicialización robusta para entorno de servidor
       const { firestore } = initializeFirebase();
       if (!firestore) return { found: false };
 
@@ -66,21 +64,20 @@ const lookupPatient = ai.defineTool(
         const data = match.data();
         return {
           found: true,
-          examType: data.examType || "Examen General",
+          examType: data.examType || "Examen de Aire Espirado",
           patientName: `${data.firstName} ${data.lastNameFather}`,
           status: data.status || "confirmado",
         };
       }
       return { found: false };
     } catch (e) {
-      console.error("Error en lookupPatient:", e);
       return { found: false };
     }
   }
 );
 
 /**
- * Flujo de chat principal utilizando el modelo estable.
+ * Flujo de chat principal utilizando el modelo estable de Google.
  */
 const patientChatFlow = ai.defineFlow(
   {
@@ -91,19 +88,20 @@ const patientChatFlow = ai.defineFlow(
   async (input) => {
     const response = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
-      system: `Eres el asistente virtual de Oralab (Chile).
+      system: `Eres el asistente virtual de Oralab (Chile). Tu misión es ayudar a los pacientes con su preparación.
       
       PROTOCOLO DE SEGURIDAD:
-      1. Solo puedes dar instrucciones de preparación si has encontrado al paciente con 'lookupPatient'.
-      2. Si el usuario no se ha identificado, pide su nombre completo amablemente.
-      3. Si tras buscar no encuentras la cita, dile que no hay registros y sugiérele contactar al WhatsApp +56 9 3685 0468.
+      1. Antes de dar instrucciones específicas, DEBES buscar al paciente usando la herramienta 'lookupPatient'.
+      2. Si el usuario no te ha dado su nombre, pídeselo amablemente para verificar su reserva.
+      3. Si 'lookupPatient' no encuentra nada, dile que no registramos su cita y que contacte al WhatsApp +56 9 3685 0468.
       
-      CONOCIMIENTO DE PREPARACIÓN (Solo tras verificar):
-      - Ayuno: 12 horas totales.
-      - Dieta 24h antes: Dieta blanda (arroz blanco, pollo/pescado plancha). NO fibra, NO lácteos, NO frutas.
-      - Restricción: 4 semanas sin antibióticos ni probióticos.
+      GUÍA DE PREPARACIÓN (Solo tras verificar al paciente):
+      - Ayuno: 12 horas.
+      - Dieta día anterior: Dieta blanda (arroz blanco, pollo/pescado plancha). NO fibra, NO lácteos, NO alcohol.
+      - Restricción Médica: 4 semanas sin antibióticos ni probióticos.
+      - Examen: El test dura entre 2 y 3 horas soplado en bolsas cada 15-20 minutos.
       
-      Responde siempre en ESPAÑOL de forma profesional y amable.`,
+      Responde siempre en ESPAÑOL, de forma empática y profesional.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -121,16 +119,13 @@ const patientChatFlow = ai.defineFlow(
   }
 );
 
-/**
- * Función exportada para el componente cliente con manejo de errores centralizado.
- */
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   try {
     return await patientChatFlow(input);
   } catch (error: any) {
-    console.error("Genkit Flow Error:", error);
+    console.error("Genkit Server Error:", error);
     return {
-      text: `Lo sentimos, tenemos una dificultad técnica temporal para conectar con la IA. Por favor, intenta de nuevo o contáctanos por WhatsApp (+56 9 3685 0468).`,
+      text: `Hola. En este momento tengo una dificultad técnica para conectar con mi base de conocimientos. Por favor, intenta de nuevo en unos minutos o contáctanos por WhatsApp (+56 9 3685 0468) para asistirte manualmente.`,
       isVerified: false
     };
   }
