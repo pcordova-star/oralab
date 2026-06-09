@@ -33,7 +33,11 @@ import {
   BarChart3,
   Info,
   HelpCircle,
-  Building2
+  Building2,
+  Smartphone,
+  Timer,
+  Home,
+  Database
 } from "lucide-react";
 import { 
   LineChart, 
@@ -73,7 +77,7 @@ const reportData = [
   { time: 60, h2: 28, h2_alert: true, ch4: 5, h2s: 1.3, co2: 'OK', symptoms: 'Gases' },
   { time: 90, h2: 45, h2_alert: true, ch4: 6, h2s: 1.5, co2: 'OK', symptoms: 'Cólicos' },
   { time: 120, h2: 38, ch4: 5, h2s: 1.4, co2: 'OK', symptoms: 'Leve' },
-  { time: 150, h2: 25, ch4: 4, h2s: 1.2, co2: 'OK', symptoms: 'Final' },
+  { time: 150, h2: 25, h2_alert: false, ch4: 4, h2s: 1.2, co2: 'OK', symptoms: 'Final' },
   { time: 180, h2: 15, ch4: 3, h2s: 1.0, co2: 'OK', symptoms: 'Ninguno' },
 ];
 
@@ -225,35 +229,30 @@ export default function HomePage() {
               >
                 <motion.div variants={fadeIn} className="flex flex-wrap justify-center lg:justify-start gap-2 md:gap-3">
                   <span className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary/10 text-primary text-xs md:text-sm font-bold border border-primary/20 backdrop-blur-sm">
-                    <Stethoscope className="h-3.5 w-3.5 md:h-4 md:w-4" /> Laboratorio Especializado
+                    <Home className="h-3.5 w-3.5 md:h-4 md:w-4" /> Modalidad en Casa
                   </span>
                   <span className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-secondary/10 text-secondary text-xs md:text-sm font-bold border border-secondary/20 backdrop-blur-sm">
-                    <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" /> Tecnología Sunvou®
+                    <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" /> Asistente Digital IA
                   </span>
                 </motion.div>
                 
                 <motion.h1 variants={fadeIn} className="text-3xl md:text-5xl lg:text-7xl font-black text-primary leading-[1.1]">
-                  Soporte tecnológico <br />para tu salud <span className="text-gradient italic">digestiva</span>.
+                  Test SIBO con <br />precisión clínica <span className="text-gradient italic">donde estés.</span>
                 </motion.h1>
                 
                 <motion.p variants={fadeIn} className="text-base md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                  Especialistas en tests de aire espirado para <strong>SIBO, IMO e Intolerancias</strong>. Un procedimiento clínico de alta precisión diseñado para asistir en el diagnóstico de tu especialista.
+                  Realiza tu test de aire espirado en nuestra clínica o **cómodamente en tu hogar** con nuestro Asistente Interactivo que te guía paso a paso.
                 </motion.p>
                 
                 <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 md:gap-4">
                   <Link href="/booking" className="w-full sm:w-auto">
                     <Button size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 md:px-10 text-base md:text-lg font-bold shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 group">
-                      Reservar Cita <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      Agendar mi Test <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
-                  <Link href="/sunvou" className="w-full sm:w-auto">
+                  <Link href="/home-test" className="w-full sm:w-auto">
                     <Button variant="secondary" size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 text-base md:text-lg font-bold shadow-lg hover:scale-105 transition-all">
-                      <Building2 className="mr-2 h-5 w-5" /> Representación Sunvou
-                    </Button>
-                  </Link>
-                  <Link href="/how-it-works" className="w-full sm:w-auto">
-                    <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 text-base md:text-lg font-bold border-2 hover:bg-secondary/5">
-                      Protocolo
+                      <Smartphone className="mr-2 h-5 w-5" /> Iniciar Asistente
                     </Button>
                   </Link>
                 </motion.div>
@@ -271,15 +270,100 @@ export default function HomePage() {
                         <Logo />
                       </div>
                       <div className="relative text-center space-y-4">
-                        <div className="bg-primary/10 p-8 rounded-full inline-block mb-4">
-                           <Wind className="h-16 w-16 text-primary animate-pulse" />
+                        <div className="bg-secondary/10 p-8 rounded-full inline-block mb-4 shadow-inner">
+                           <Smartphone className="h-16 w-16 text-secondary animate-bounce" />
                         </div>
-                        <h4 className="text-2xl font-black text-primary">Diagnóstico de Precisión</h4>
-                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Protocolos Sunvou®</p>
+                        <h4 className="text-2xl font-black text-primary italic">Guía Paso a Paso</h4>
+                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Protocolo Digital en Casa</p>
                       </div>
                    </div>
                 </div>
               </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Home Test Assistant Differentiator Section */}
+        <section className="py-24 bg-gradient-to-b from-white to-muted/20">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="order-2 lg:order-1"
+              >
+                <div className="relative glass-panel !bg-white rounded-[3rem] p-8 shadow-2xl border-primary/10 max-w-sm mx-auto">
+                  <div className="absolute top-4 right-6 flex gap-1">
+                    <div className="w-2 h-2 rounded-full bg-red-400" />
+                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                    <div className="w-2 h-2 rounded-full bg-green-400" />
+                  </div>
+                  <div className="mt-6 space-y-6 text-center">
+                    <Badge className="bg-secondary font-black uppercase text-[10px]">Paso 4 / 14</Badge>
+                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto text-primary">
+                      <Wind className="h-8 w-8" />
+                    </div>
+                    <h4 className="text-xl font-black text-primary italic">Muestra 2 (T-20)</h4>
+                    <div className="py-4">
+                      <div className="text-4xl font-black text-primary font-mono tabular-nums">14:52</div>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Tiempo restante</p>
+                    </div>
+                    <Button className="w-full rounded-xl bg-secondary font-bold">Confirmar soplido</Button>
+                  </div>
+                </div>
+              </motion.div>
+
+              <div className="order-1 lg:order-2 space-y-8">
+                <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold">EXCLUSIVO ORALAB</Badge>
+                <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">
+                  La tranquilidad de un técnico, <br />en la palma de tu mano.
+                </h2>
+                <p className="text-lg text-muted-foreground font-medium leading-relaxed">
+                  A diferencia de otros kits que solo te entregan instrucciones en papel, en Oralab te acompañamos digitalmente durante todo el procedimiento.
+                </p>
+                
+                <div className="grid gap-6">
+                  {[
+                    { 
+                      t: "Asistente Interactivo", 
+                      d: "Un cronómetro inteligente te avisa exactamente cuándo soplar.", 
+                      i: <Timer className="h-6 w-6" /> 
+                    },
+                    { 
+                      t: "Registro en Tiempo Real", 
+                      d: "Tus tiempos se sincronizan con nuestro laboratorio para validación.", 
+                      i: <Database className="h-6 w-6" /> 
+                    },
+                    { 
+                      t: "Soporte Vía WhatsApp", 
+                      d: "Botón de ayuda directa si tienes cualquier duda técnica.", 
+                      i: <MessageCircle className="h-6 w-6" /> 
+                    }
+                  ].map((feat, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1 }}
+                      className="flex items-start gap-4 p-5 rounded-2xl bg-white border border-primary/5 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="bg-primary/5 p-3 rounded-xl text-primary">{feat.i}</div>
+                      <div>
+                        <h4 className="font-black text-primary text-base">{feat.t}</h4>
+                        <p className="text-sm text-muted-foreground font-medium">{feat.d}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <Link href="/how-it-works" className="inline-block mt-4">
+                  <Button variant="link" className="text-primary font-black flex items-center gap-2 p-0 text-lg">
+                    Ver cómo funciona la modalidad en casa <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -519,7 +603,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row justify-center gap-4 md:gap-6 pt-4 md:pt-8">
                 <Link href="/booking" className="w-full sm:w-auto">
                   <Button size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-20 px-10 md:px-12 text-lg md:text-2xl font-black shadow-2xl bg-white text-primary hover:bg-secondary hover:text-white transition-all hover:scale-105 active:scale-95">
-                    Reservar Cita
+                    Reservar mi Cita
                   </Button>
                 </Link>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
