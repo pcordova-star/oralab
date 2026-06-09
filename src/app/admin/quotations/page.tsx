@@ -44,7 +44,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: Aproximadamente 30 días hábiles tras recepción de orden de compra.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años para sensores y 5 años para analizador DA7349.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: Aproximadamente 15-20 días hábiles tras recepción de orden de compra.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años para sensores y 5 años para analizador DA7349.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
 
 interface QuotationItem {
   description: string;
@@ -159,7 +159,7 @@ export default function QuotationsPage() {
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo procesar la operación." });
+      toast({ variant: "destructive", title: "Error", description: "No se pudo procesar la operation." });
     }
   }
 
@@ -360,7 +360,7 @@ export default function QuotationsPage() {
     doc.text("Tasa de cambio aplicada: $" + (quote.exchangeRate || DEFAULT_USD_RATE) + " CLP/USD", margin, pageHeight - 10);
     
     doc.setFontSize(7);
-    doc.text("v2.1.2", 190, pageHeight - 5, { align: 'right' });
+    doc.text("v2.1.3", 190, pageHeight - 5, { align: 'right' });
 
     doc.save(`Sunvou_Propuesta_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
@@ -441,7 +441,7 @@ export default function QuotationsPage() {
                   </div>
                   <div className="flex items-end">
                     <p className="text-[10px] font-bold text-muted-foreground italic mb-2">
-                      *Representante Oficial: Tresna. Entrega 30 días hábiles.
+                      *Representante Oficial: Tresna. Entrega 15-20 días hábiles.
                     </p>
                   </div>
                 </div>
