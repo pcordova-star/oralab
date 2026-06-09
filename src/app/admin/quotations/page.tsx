@@ -238,11 +238,11 @@ export default function QuotationsPage() {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(26);
     doc.setFont("helvetica", "bold");
-    doc.text("SUNVOU CHILE", margin, 25);
+    doc.text("TRESNA - ORALAB", margin, 25);
     
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text("Representación Oficial Sunvou® Breath Diagnostics", margin, 32);
+    doc.text("Representación Oficial Sunvou® Breath Diagnostics en Chile", margin, 32);
 
     doc.setFontSize(10);
     doc.text(`Fecha: ${format(new Date(), "dd/MM/yyyy")}`, 145, 25);
@@ -353,14 +353,14 @@ export default function QuotationsPage() {
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text("TRESNA - Representante Oficial Sunvou Breath Diagnostics en Chile.", margin, pageHeight - 20);
+    doc.text("TRESNA - Representante oficial para su línea Oralab Breath Diagnostics.", margin, pageHeight - 20);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.text("Apoquindo 3992, Of. 605, Las Condes, Santiago | contacto@oralab.cl", margin, pageHeight - 15);
     doc.text("Tasa de cambio aplicada: $" + (quote.exchangeRate || DEFAULT_USD_RATE) + " CLP/USD", margin, pageHeight - 10);
     
     doc.setFontSize(7);
-    doc.text("v2.1.3", 190, pageHeight - 5, { align: 'right' });
+    doc.text("v2.1.4", 190, pageHeight - 5, { align: 'right' });
 
     doc.save(`Sunvou_Propuesta_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
