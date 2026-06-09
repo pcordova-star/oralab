@@ -44,7 +44,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: Aproximadamente 15-20 días hábiles tras recepción de orden de compra.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años para equipo analizador y sensores.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: Aproximadamente 15-20 días hábiles tras recepción de orden de compra y pago de anticipo.\n- Forma de pago: 50% contra orden de compra (anticipo) y 50% contra entrega.\n- Garantía: 2 años para equipo analizador y sensores.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
 
 interface QuotationItem {
   description: string;
@@ -159,7 +159,7 @@ export default function QuotationsPage() {
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo procesar la operation." });
+      toast({ variant: "destructive", title: "Error", description: "No se pudo procesar la operación." });
     }
   }
 
@@ -347,7 +347,7 @@ export default function QuotationsPage() {
       doc.text(splitNotes, margin, y);
     }
 
-    // Pie de Página (Fijo al fondo)
+    // Pie de Página
     doc.setFillColor(245, 247, 249);
     doc.rect(0, pageHeight - 35, 210, 35, 'F');
     doc.setTextColor(100, 100, 100);
@@ -360,7 +360,7 @@ export default function QuotationsPage() {
     doc.text("Tasa de cambio aplicada: $" + (quote.exchangeRate || DEFAULT_USD_RATE) + " CLP/USD", margin, pageHeight - 10);
     
     doc.setFontSize(7);
-    doc.text("v2.1.5", 190, pageHeight - 5, { align: 'right' });
+    doc.text("v2.1.6", 190, pageHeight - 5, { align: 'right' });
 
     doc.save(`Sunvou_Propuesta_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
