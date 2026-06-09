@@ -15,12 +15,15 @@ type Message = {
   text: string;
 };
 
+const INITIAL_MESSAGE: Message = { 
+  role: 'model', 
+  text: '¡Hola! Soy el asistente virtual de Oralab. Para ayudarte con tu preparación, ¿podrías indicarme tu nombre completo para revisar tu reserva?' 
+};
+
 export function PrepChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: '¡Hola! Soy el asistente virtual de Oralab. Para ayudarte con tu preparación, ¿podrías indicarme tu nombre completo para revisar tu reserva?' }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +38,21 @@ export function PrepChatbot() {
       }
     }
   }, [messages]);
+
+  const resetChat = () => {
+    setMessages([INITIAL_MESSAGE]);
+    setInput('');
+    setIsLoading(false);
+  };
+
+  const toggleChat = () => {
+    if (isOpen) {
+      resetChat();
+      setIsOpen(false);
+    } else {
+      setIsOpen(true);
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -82,7 +100,7 @@ export function PrepChatbot() {
                       <p className="text-[10px] opacity-70 font-bold uppercase tracking-widest">Validación de Pacientes</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-white hover:bg-white/10 rounded-full h-8 w-8">
+                  <Button variant="ghost" size="icon" onClick={toggleChat} className="text-white hover:bg-white/10 rounded-full h-8 w-8">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -139,7 +157,7 @@ export function PrepChatbot() {
       </AnimatePresence>
 
       <Button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleChat}
         className={cn(
           "rounded-full h-14 w-14 shadow-2xl transition-all duration-300 hover:scale-110",
           isOpen ? "bg-red-500 hover:bg-red-600" : "bg-primary hover:bg-secondary shadow-primary/20"
