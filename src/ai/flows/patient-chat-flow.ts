@@ -1,6 +1,7 @@
+
 'use server';
 /**
- * @fileOverview Flujo de diagnóstico para el Chatbot de Pacientes.
+ * @fileOverview Flujo de diagnóstico para el Chatbot de Pacientes con búsqueda en Firestore.
  * 
  * Este chatbot filtra al paciente por nombre antes de responder dudas.
  */
@@ -8,7 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { initializeFirebase } from '@/firebase';
-import { collection, query, getDocs, where } from 'firebase/firestore';
+import { collection, query, getDocs } from 'firebase/firestore';
 
 const ChatMessageSchema = z.object({
   role: z.enum(['user', 'model', 'system']),
@@ -29,7 +30,7 @@ export type PatientChatInput = z.infer<typeof PatientChatInputSchema>;
 export type PatientChatOutput = z.infer<typeof PatientChatOutputSchema>;
 
 /**
- * Herramienta para buscar un paciente en Firestore.
+ * Herramienta para buscar un paciente en Firestore desde el servidor.
  */
 const lookupPatient = ai.defineTool(
   {
@@ -47,17 +48,17 @@ const lookupPatient = ai.defineTool(
   },
   async (input) => {
     try {
+      // Inicialización segura para el servidor
       const { firestore } = initializeFirebase();
       if (!firestore) return { found: false };
 
       const bookingsRef = collection(firestore, 'bookings');
-      const q = query(bookingsRef);
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(bookingsRef);
       
       const searchLower = input.name.toLowerCase();
       const match = snapshot.docs.find(doc => {
         const data = doc.data();
-        const fullName = `${data.firstName || ''} ${data.lastNameFather || ''}`.toLowerCase();
+        const fullName = `${data.firstName || ''} ${data.lastNameFather || ''} ${data.lastNameMother || ''}`.toLowerCase();
         return fullName.includes(searchLower);
       });
 
@@ -72,7 +73,7 @@ const lookupPatient = ai.defineTool(
       }
       return { found: false };
     } catch (e) {
-      console.error("Error en lookupPatient:", e);
+      console.error("Error en lookupPatient Tool:", e);
       return { found: false };
     }
   }
@@ -89,20 +90,19 @@ const patientChatFlow = ai.defineFlow(
   },
   async (input) => {
     const response = await ai.generate({
-      system: `Eres el asistente virtual de Oralab, un laboratorio especializado en tests de aire espirado.
+      system: `Eres el asistente virtual de Oralab, un laboratorio especializado en Chile.
       
-      REGLA DE SEGURIDAD CRÍTICA:
-      1. Solo puedes responder dudas de preparación si has verificado que el paciente tiene una reserva usando la herramienta 'lookupPatient'.
-      2. Si el usuario saluda o pregunta algo sin haberse identificado, pide amablemente su nombre completo para revisar el sistema.
-      3. Si no encuentras al paciente tras usar la herramienta, indícale que no hay una reserva con ese nombre y sugiérele contactar al WhatsApp +56 9 3685 0468.
+      REGLA DE SEGURIDAD:
+      1. Solo puedes dar instrucciones de preparación si has encontrado al paciente en el sistema usando 'lookupPatient'.
+      2. Si el usuario saluda o pregunta algo sin identificarse, pide amablemente su nombre para revisar su reserva.
+      3. Si no encuentras al paciente tras buscarlo, dile que no hay una reserva con ese nombre y sugiérele contactar al WhatsApp +56 9 3685 0468.
       
-      PROTOCOLO DE PREPARACIÓN (Una vez verificado):
-      - Ayuno: 12 horas estrictas.
-      - Dieta: 24h antes dieta blanda (arroz blanco, pollo/pescado plancha). NO fibra, NO legumbres, NO frutas.
-      - Restricción Médica: 4 semanas sin antibióticos ni probióticos.
-      - Día del examen: No fumar ni hacer ejercicio 2h antes.
+      CONOCIMIENTO DE PREPARACIÓN (Solo tras verificar):
+      - Ayuno: 12 horas.
+      - Dieta 24h antes: Arroz blanco, pollo/pescado plancha. NO fibra, NO lácteos (a menos que el test sea de otro tipo), NO frutas.
+      - Restricción: 4 semanas sin antibióticos.
       
-      Responde siempre en ESPAÑOL de forma profesional y amable.`,
+      Responde siempre en ESPAÑOL de forma profesional.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -115,7 +115,7 @@ const patientChatFlow = ai.defineFlow(
 
     return {
       text: response.text,
-      isVerified: response.text.toLowerCase().includes('hola') || response.text.length > 0, // Simplificado para la UI
+      isVerified: true, 
     };
   }
 );
@@ -127,9 +127,9 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
   try {
     return await patientChatFlow(input);
   } catch (error: any) {
-    console.error("AI CHAT ERROR:", error);
+    console.error("AI CHAT FATAL ERROR:", error);
     return {
-      text: `Lo sentimos, tenemos una interrupción temporal en el servicio de IA. Por favor, contacta directamente a nuestro soporte por WhatsApp (+56 9 3685 0468) para asistirte con tu preparación.`,
+      text: `Lo sentimos, tenemos una dificultad técnica temporal. Por favor, intenta de nuevo o contáctanos por WhatsApp (+56 9 3685 0468) para asistirte personalmente.`,
       isVerified: false
     };
   }

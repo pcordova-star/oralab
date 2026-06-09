@@ -4,7 +4,7 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, initializeFirestore } from 'firebase/firestore'
+import { getFirestore, Firestore, initializeFirestore, getFirestore as getFirestoreStandard } from 'firebase/firestore'
 
 // Global variables to hold instances across HMR cycles
 let firebaseApp: FirebaseApp | undefined;
@@ -17,33 +17,31 @@ let firestoreInstance: Firestore | undefined;
  * during Next.js Hot Module Replacement (HMR).
  */
 export function initializeFirebase() {
-  if (typeof window === 'undefined') {
-    return { firebaseApp: null, auth: null, firestore: null } as any;
-  }
-
-  // 1. Initialize App
+  // Initialize App (Works on both client and server)
   if (!getApps().length) {
     firebaseApp = initializeApp(firebaseConfig);
   } else {
     firebaseApp = getApp();
   }
 
-  // 2. Initialize Auth
+  // Initialize Auth (Client-side mostly, but safe on server)
   if (!authInstance) {
     authInstance = getAuth(firebaseApp);
   }
 
-  // 3. Initialize Firestore with specific settings for Cloud IDEs
-  // Using forceLongPolling to prevent "INTERNAL ASSERTION FAILED" related to WebSocket stability
+  // Initialize Firestore
   if (!firestoreInstance) {
-    try {
-      firestoreInstance = initializeFirestore(firebaseApp, {
-        experimentalAutoDetectLongPolling: true,
-        // forceLongPolling is the most reliable way to avoid assertion errors in cloud dev environments
-      });
-    } catch (e) {
-      // If already initialized, fallback to getFirestore
-      firestoreInstance = getFirestore(firebaseApp);
+    if (typeof window !== 'undefined') {
+      try {
+        firestoreInstance = initializeFirestore(firebaseApp, {
+          experimentalAutoDetectLongPolling: true,
+        });
+      } catch (e) {
+        firestoreInstance = getFirestoreStandard(firebaseApp);
+      }
+    } else {
+      // Server-side initialization
+      firestoreInstance = getFirestoreStandard(firebaseApp);
     }
   }
 
