@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, X, Send, Bot, User, RefreshCcw, Sparkles } from 'lucide-react';
+import { X, Send, Bot, Sparkles } from 'lucide-react';
 import { patientChat } from '@/ai/flows/patient-chat-flow';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,7 +47,7 @@ export function PrepChatbot() {
 
   const toggleChat = () => {
     if (isOpen) {
-      // Si el usuario cierra el chat, reseteamos la conversación por privacidad
+      // Al cerrar, reseteamos la conversación por privacidad
       resetChat();
       setIsOpen(false);
     } else {
@@ -75,7 +75,7 @@ export function PrepChatbot() {
     } catch (error) {
       setMessages(prev => [...prev, { 
         role: 'model', 
-        text: 'Lo siento, hubo un inconveniente al procesar tu solicitud. Por favor, intenta de nuevo en unos segundos o contáctanos directamente por WhatsApp (+56 9 3685 0468).' 
+        text: 'Lo sentimos, hubo un problema al procesar tu solicitud. Por favor intenta de nuevo en unos momentos o escríbenos a WhatsApp (+56 9 3685 0468).' 
       }]);
     } finally {
       setIsLoading(false);
