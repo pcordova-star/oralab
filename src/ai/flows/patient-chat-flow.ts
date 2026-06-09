@@ -33,13 +33,13 @@ const PatientChatOutputSchema = z.object({
   isVerified: z.boolean().describe('Si el paciente ya ha sido verificado.'),
 });
 
-// Herramienta de búsqueda de reservas
+// Herramienta de búsqueda de reservas (Opcional ahora)
 const findBookingTool = ai.defineTool(
   {
     name: 'findBookingByName',
     description: 'Busca una reserva en el sistema de Oralab usando el nombre o apellido del paciente.',
     inputSchema: z.object({
-      name: z.string().describe('El nombre o apellido a buscar (mínimo 3 caracteres).'),
+      name: z.string().describe('El nombre o apellido a buscar.'),
     }),
     outputSchema: z.object({
       found: z.boolean(),
@@ -52,12 +52,8 @@ const findBookingTool = ai.defineTool(
   async (input) => {
     try {
       const searchLower = input.name.toLowerCase().trim();
-      if (searchLower.length < 3) {
-        return { found: false, message: "Por favor, escribe un nombre más largo para buscar." };
-      }
-
       const db = getServerDb();
-      const snapshot = await getDocs(query(collection(db, 'bookings'), limit(100)));
+      const snapshot = await getDocs(query(collection(db, 'bookings'), limit(50)));
       
       const match = snapshot.docs.find(d => {
         const data = d.data();
@@ -75,9 +71,9 @@ const findBookingTool = ai.defineTool(
         };
       }
 
-      return { found: false, message: "No encontré ninguna reserva con ese nombre en nuestro sistema." };
+      return { found: false, message: "No encontré ninguna reserva con ese nombre." };
     } catch (e: any) {
-      return { found: false, message: "Hubo un error al consultar la base de datos." };
+      return { found: false, message: "Error al consultar la base de datos." };
     }
   }
 );
@@ -85,25 +81,20 @@ const findBookingTool = ai.defineTool(
 export async function patientChat(input: z.infer<typeof PatientChatInputSchema>): Promise<z.infer<typeof PatientChatOutputSchema>> {
   try {
     const response = await ai.generate({
-      system: `Eres el Asistente Virtual de Preparación de Oralab (Chile).
+      system: `Eres el Asistente Virtual de Oralab (Chile). 
       
       TU MISIÓN:
-      1. Saludar y pedir el nombre del paciente para verificar su cita.
-      2. Solo después de confirmar que el paciente existe con 'findBookingByName', entrega instrucciones.
+      Ayudar a los pacientes con dudas sobre su preparación para tests de aire espirado (SIBO, Lactosa, Fructosa, Lactulosa).
       
-      ESTRATEGIA:
-      - Si el usuario da un nombre: Usa la herramienta 'findBookingByName'.
-      - Si la herramienta confirma la reserva (found: true): 
-        * Saluda por su nombre.
-        * Confirma su examen y fecha.
-        * Da instrucciones: Ayuno 12h, Dieta blanda el día anterior, Sin antibióticos 4 semanas.
-        * IMPORTANTE: Incluye la palabra "VERIFICADO" al final de tu respuesta.
-      - Si la herramienta NO confirma (found: false):
-        * Informa amablemente que no hay reserva con ese nombre.
-        * Sugiere contactar a soporte (+56 9 3685 0468) para ver si hay un error en el registro.
-        * NO des instrucciones médicas si no hay reserva confirmada.
-
-      Responde siempre en español, de forma profesional y amable.`,
+      INSTRUCCIONES GENERALES:
+      - Ayuno de 12 horas.
+      - Dieta blanda el día anterior (sin fibra, sin legumbres, sin lácteos).
+      - No fumar ni ejercicio intenso 2h antes.
+      - No antibióticos ni probióticos en las últimas 4 semanas.
+      
+      Si el usuario te da su nombre, puedes usar 'findBookingByName' para confirmar su cita específica, pero NO es obligatorio para responder dudas generales de preparación.
+      
+      Responde de forma profesional, amable y en español de Chile.`,
       messages: [
         ...input.history.map(m => ({ 
           role: m.role as 'user' | 'model' | 'system', 
@@ -116,11 +107,12 @@ export async function patientChat(input: z.infer<typeof PatientChatInputSchema>)
 
     return {
       text: response.text,
-      isVerified: response.text.toUpperCase().includes('VERIFICADO'),
+      isVerified: response.text.toUpperCase().includes('VERIFICADO') || response.text.toLowerCase().includes('reserva confirmada'),
     };
   } catch (error: any) {
+    console.error("GENKIT_ERROR:", error);
     return {
-      text: "Lo siento, tuve un inconveniente al procesar tu solicitud. Por favor, intenta de nuevo o contáctanos por WhatsApp (+56 9 3685 0468) para ayudarte con tu preparación.",
+      text: "Lo siento, tuve un inconveniente técnico al procesar tu mensaje. Por favor, intenta de nuevo o contáctanos por WhatsApp (+56 9 3685 0468).",
       isVerified: false
     };
   }
