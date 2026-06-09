@@ -52,6 +52,11 @@ export function Navbar() {
           
           <div className="flex items-center gap-2 md:gap-4">
             <div className="hidden md:flex items-center gap-2 lg:gap-6 mr-2">
+              <Link href="/home-test">
+                <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-black text-secondary hover:text-primary uppercase tracking-widest border border-secondary/20 rounded-full px-4">
+                  Mi Test (En Casa)
+                </Button>
+              </Link>
               <Link href="/sunvou">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-black text-primary hover:text-secondary uppercase tracking-widest">
                   Tecnología Sunvou

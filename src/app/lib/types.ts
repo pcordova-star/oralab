@@ -1,4 +1,5 @@
-export type ExamType = 'SIBO' | 'HP';
+
+export type ExamType = 'Lactulosa' | 'Fructosa' | 'Lactosa' | 'SIBO' | 'HP';
 
 export type AppointmentStatus = 'scheduled' | 'waiting' | 'in_progress' | 'completed';
 
@@ -21,51 +22,72 @@ export interface Appointment {
 
 export interface ProtocolStep {
   name: string;
-  waitMinutes: number;
+  type: 'breath' | 'ingest' | 'wait';
+  durationMinutes: number;
   description: string;
 }
 
 export interface ExamProtocol {
   id: ExamType;
   name: string;
-  steps: ProtocolStep[];
   instructions: string;
+  steps: ProtocolStep[];
 }
 
-export const PROTOCOLS: Record<ExamType, ExamProtocol> = {
-  SIBO: {
-    id: 'SIBO',
-    name: 'Sobrecrecimiento Bacteriano (SIBO)',
-    instructions: `**Instrucciones para Examen SIBO:**
-1. **Preparación (24 horas antes):** Evitar antibióticos, laxantes, probióticos y medicamentos que afecten la motilidad intestinal.
-2. **Preparación (12 horas antes):** Ayuno obligatorio. No comer, beber (excepto agua pura sin gas), fumar ni masticar chicle.
-3. **El día del examen:** Traer una lista de sus medicamentos actuales. El test consiste en soplar en bolsas especiales, beber una solución de sustrato y volver a soplar en intervalos de tiempo. La duración total es de aproximadamente 3 horas.
-4. **Importante:** Si ha consumido algún elemento restringido, informe a la recepción al llegar, ya que es posible que deba reprogramar su cita.`,
+export const PROTOCOLS: Record<string, ExamProtocol> = {
+  Lactulosa: {
+    id: 'Lactulosa',
+    name: 'Test de Lactulosa (SIBO/IMO)',
+    instructions: 'Este test evalúa el sobrecrecimiento bacteriano. Siga los tiempos estrictamente.',
     steps: [
-      { name: 'Muestra Basal', waitMinutes: 0, description: 'Tomar la primera muestra de aire antes de ingerir solución.' },
-      { name: 'Esperar 15min', waitMinutes: 15, description: 'Período de reposo después de ingerir el sustrato.' },
-      { name: 'Muestra 1', waitMinutes: 0, description: 'Tomar la segunda muestra de aire.' },
-      { name: 'Esperar 15min', waitMinutes: 15, description: 'Período de reposo.' },
-      { name: 'Muestra 2', waitMinutes: 0, description: 'Tomar la tercera muestra de aire.' },
-      { name: 'Esperar 15min', waitMinutes: 15, description: 'Período de reposo.' },
-      { name: 'Muestra 3', waitMinutes: 0, description: 'Tomar la cuarta y última muestra de aire.' },
+      { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo antes de ingerir nada.' },
+      { name: 'Ingesta de Lactulosa', type: 'ingest', durationMinutes: 5, description: 'Beba la solución de lactulosa lentamente durante 5 minutos.' },
+      { name: 'Espera Muestra 1', type: 'wait', durationMinutes: 20, description: 'Reposo absoluto. No coma ni beba.' },
+      { name: 'Muestra 2 (T-20)', type: 'breath', durationMinutes: 0, description: 'Sople en el segundo tubo.' },
+      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 20, description: 'Reposo absoluto.' },
+      { name: 'Muestra 3 (T-40)', type: 'breath', durationMinutes: 0, description: 'Sople en el tercer tubo.' },
+      { name: 'Espera Muestra 3', type: 'wait', durationMinutes: 20, description: 'Reposo absoluto.' },
+      { name: 'Muestra 4 (T-60)', type: 'breath', durationMinutes: 0, description: 'Sople en el cuarto tubo.' },
+      { name: 'Espera Muestra 4', type: 'wait', durationMinutes: 20, description: 'Reposo absoluto.' },
+      { name: 'Muestra 5 (T-80)', type: 'breath', durationMinutes: 0, description: 'Sople en el quinto tubo.' },
+      { name: 'Espera Muestra 5', type: 'wait', durationMinutes: 20, description: 'Reposo absoluto.' },
+      { name: 'Muestra 6 (T-100)', type: 'breath', durationMinutes: 0, description: 'Sople en el sexto tubo.' },
+      { name: 'Espera Muestra 6', type: 'wait', durationMinutes: 20, description: 'Reposo absoluto.' },
+      { name: 'Muestra 7 (T-120)', type: 'breath', durationMinutes: 0, description: 'Sople en el último tubo.' },
     ]
   },
-  HP: {
-    id: 'HP',
-    name: 'Helicobacter Pylori (HP)',
-    instructions: `**Instrucciones para Examen Helicobacter pylori (HP):**
-1. **Preparación (4 semanas antes):** No haber tomado antibióticos.
-2. **Preparación (2 semanas antes):** No haber tomado medicamentos que contengan bismuto (ej. Pepto-Bismol).
-3. **Preparación (1 semana antes):** No haber tomado inhibidores de la bomba de protones (PPI) como omeprazol, lansoprazol, pantoprazol, esomeprazol.
-4. **Preparación (24 horas antes):** No tomar bloqueadores H2 (ej. famotidina).
-5. **Preparación (12 horas antes):** Ayuno obligatorio. No comer, beber (excepto agua pura sin gas), fumar ni masticar chicle.
-6. **El día del examen:** El test consiste en soplar una muestra basal, beber una solución de Urea C13 y soplar nuevamente tras 15 minutos. La duración total es de aproximadamente 30 minutos.`,
+  Fructosa: {
+    id: 'Fructosa',
+    name: 'Test de Fructosa',
+    instructions: 'Evalúa malabsorción de fructosa. Las tomas son cada 30 minutos.',
     steps: [
-      { name: 'Muestra Basal', waitMinutes: 0, description: 'Tomar muestra de aire basal.' },
-      { name: 'Administrar Solución', waitMinutes: 0, description: 'Paciente debe ingerir la cápsula/solución de Urea C13.' },
-      { name: 'Esperar 15min', waitMinutes: 15, description: 'El paciente debe esperar sentado y en reposo.' },
-      { name: 'Muestra Final', waitMinutes: 0, description: 'Tomar la muestra de aire post-sustrato.' },
+      { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo.' },
+      { name: 'Ingesta de Fructosa', type: 'ingest', durationMinutes: 5, description: 'Beba la solución de fructosa.' },
+      { name: 'Espera Muestra 1', type: 'wait', durationMinutes: 30, description: 'Reposo.' },
+      { name: 'Muestra 2 (T-30)', type: 'breath', durationMinutes: 0, description: 'Sople en el segundo tubo.' },
+      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 30, description: 'Reposo.' },
+      { name: 'Muestra 3 (T-60)', type: 'breath', durationMinutes: 0, description: 'Sople en el tercer tubo.' },
+      { name: 'Espera Muestra 3', type: 'wait', durationMinutes: 30, description: 'Reposo.' },
+      { name: 'Muestra 4 (T-90)', type: 'breath', durationMinutes: 0, description: 'Sople en el cuarto tubo.' },
+      { name: 'Espera Muestra 4', type: 'wait', durationMinutes: 30, description: 'Reposo.' },
+      { name: 'Muestra 5 (T-120)', type: 'breath', durationMinutes: 0, description: 'Sople en el último tubo.' },
+    ]
+  },
+  Lactosa: {
+    id: 'Lactosa',
+    name: 'Test de Lactosa',
+    instructions: 'Evalúa intolerancia a la lactosa. Las tomas son cada 30 minutos.',
+    steps: [
+      { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo.' },
+      { name: 'Ingesta de Lactosa', type: 'ingest', durationMinutes: 5, description: 'Beba la solución de lactosa.' },
+      { name: 'Espera Muestra 1', type: 'wait', durationMinutes: 30, description: 'Reposo.' },
+      { name: 'Muestra 2 (T-30)', type: 'breath', durationMinutes: 0, description: 'Sople en el segundo tubo.' },
+      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 30, description: 'Reposo.' },
+      { name: 'Muestra 3 (T-60)', type: 'breath', durationMinutes: 0, description: 'Sople en el tercer tubo.' },
+      { name: 'Espera Muestra 3', type: 'wait', durationMinutes: 30, description: 'Reposo.' },
+      { name: 'Muestra 4 (T-90)', type: 'breath', durationMinutes: 0, description: 'Sople en el cuarto tubo.' },
+      { name: 'Espera Muestra 4', type: 'wait', durationMinutes: 30, description: 'Reposo.' },
+      { name: 'Muestra 5 (T-120)', type: 'breath', durationMinutes: 0, description: 'Sople en el último tubo.' },
     ]
   }
 };
