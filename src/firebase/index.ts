@@ -24,12 +24,12 @@ export function initializeFirebase() {
     firebaseApp = getApp();
   }
 
-  // Initialize Auth (Client-side mostly, but safe on server)
+  // Initialize Auth
   if (!authInstance) {
     authInstance = getAuth(firebaseApp);
   }
 
-  // Initialize Firestore
+  // Initialize Firestore with settings for SSR stability
   if (!firestoreInstance) {
     if (typeof window !== 'undefined') {
       try {

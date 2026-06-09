@@ -48,6 +48,7 @@ const lookupPatient = ai.defineTool(
   },
   async (input) => {
     try {
+      // Inicialización robusta para entorno de servidor
       const { firestore } = initializeFirebase();
       if (!firestore) return { found: false };
 
@@ -72,13 +73,14 @@ const lookupPatient = ai.defineTool(
       }
       return { found: false };
     } catch (e) {
+      console.error("Error en lookupPatient:", e);
       return { found: false };
     }
   }
 );
 
 /**
- * Flujo de chat principal.
+ * Flujo de chat principal utilizando el modelo estable.
  */
 const patientChatFlow = ai.defineFlow(
   {
@@ -101,7 +103,7 @@ const patientChatFlow = ai.defineFlow(
       - Dieta 24h antes: Dieta blanda (arroz blanco, pollo/pescado plancha). NO fibra, NO lácteos, NO frutas.
       - Restricción: 4 semanas sin antibióticos ni probióticos.
       
-      Responde siempre en ESPAÑOL de forma profesional and amable.`,
+      Responde siempre en ESPAÑOL de forma profesional y amable.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -120,14 +122,15 @@ const patientChatFlow = ai.defineFlow(
 );
 
 /**
- * Función exportada para el componente cliente.
+ * Función exportada para el componente cliente con manejo de errores centralizado.
  */
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   try {
     return await patientChatFlow(input);
   } catch (error: any) {
+    console.error("Genkit Flow Error:", error);
     return {
-      text: `Lo sentimos, tenemos una dificultad técnica temporal para conectar con la IA. Por favor, intenta de nuevo en unos segundos o contáctanos por WhatsApp (+56 9 3685 0468) para asistirte con tu preparación personalmente.`,
+      text: `Lo sentimos, tenemos una dificultad técnica temporal para conectar con la IA. Por favor, intenta de nuevo o contáctanos por WhatsApp (+56 9 3685 0468).`,
       isVerified: false
     };
   }
