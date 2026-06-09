@@ -25,11 +25,14 @@ import {
   UserCheck,
   Search,
   CheckCircle,
-  Activity
+  Activity,
+  XCircle,
+  ArrowLeft
 } from "lucide-react";
 import { PROTOCOLS } from "@/app/lib/types";
 import { cn } from "@/lib/utils";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import Link from "next/link";
 
 interface TestState {
   bookingId: string;
@@ -113,7 +116,7 @@ export default function HomeTestPage() {
       const snapshot = await getDocs(q);
       const match = snapshot.docs.find(doc => {
         const data = doc.data();
-        const fullName = `${data.firstName || ''} ${data.lastNameFather || ''}`.toLowerCase();
+        const fullName = `${data.firstName || ''} ${data.lastNameFather || ''} ${data.lastNameMother || ''}`.toLowerCase();
         return fullName.includes(searchName.toLowerCase().trim());
       });
 
@@ -179,11 +182,25 @@ export default function HomeTestPage() {
     }
   };
 
-  const resetSession = () => {
-    if (confirm("¿Seguro que deseas reiniciar el asistente? Se perderán los tiempos actuales.")) {
+  const restartProtocol = () => {
+    if (confirm("¿Seguro que deseas reiniciar el protocolo desde el primer paso? Los tiempos actuales se perderán.")) {
+      setTestState(prev => prev ? {
+        ...prev,
+        currentStepIndex: 0,
+        startTime: Date.now(),
+        stepStartTime: Date.now(),
+        isCompleted: false
+      } : null);
+      toast({ title: "Protocolo reiniciado", description: "Volviendo al Paso 1." });
+    }
+  };
+
+  const cancelTest = () => {
+    if (confirm("¿Seguro que deseas cancelar el test y volver a la búsqueda? Se perderá todo el progreso actual.")) {
       setTestState(null);
-      localStorage.removeItem("oralab_test_session");
       setBooking(null);
+      localStorage.removeItem("oralab_test_session");
+      toast({ title: "Sesión cancelada" });
     }
   };
 
@@ -198,6 +215,7 @@ export default function HomeTestPage() {
     return PlaceHolderImages.find(img => img.id === imageId);
   };
 
+  // Si no hay test iniciado, mostramos la pantalla de búsqueda con Navbar
   if (!testState) {
     return (
       <div className="flex flex-col min-h-screen bg-muted/30 font-body">
@@ -252,6 +270,9 @@ export default function HomeTestPage() {
                     <Button onClick={startTest} className="w-full h-14 rounded-xl text-lg font-black bg-secondary shadow-lg">
                       Iniciar Protocolo <Play className="ml-2 h-5 w-5" />
                     </Button>
+                    <Button variant="ghost" onClick={() => setBooking(null)} className="w-full text-muted-foreground font-bold">
+                      <ArrowLeft className="mr-2 h-4 w-4" /> Volver a buscar
+                    </Button>
                   </div>
                 </div>
               )}
@@ -267,37 +288,61 @@ export default function HomeTestPage() {
   const progress = (testState.currentStepIndex / protocol.steps.length) * 100;
   const stepImageData = getStepImage(currentStep.type);
 
+  // Pantalla de Finalización (Sin Navbar para foco total)
   if (testState.isCompleted) {
     return (
-      <div className="flex flex-col min-h-screen bg-background font-body">
-        <Navbar />
-        <main className="container mx-auto px-4 py-12 max-w-md">
-          <Card className="rounded-[2.5rem] shadow-2xl border-none text-center p-8">
-            <div className="bg-green-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="h-12 w-12 text-green-600" />
-            </div>
-            <CardTitle className="text-3xl font-black text-primary mb-4">¡Felicidades!</CardTitle>
-            <p className="text-muted-foreground font-medium mb-8">
-              Has completado el protocolo de tu test. Recuerda entregar tus muestras en el laboratorio en las próximas 24 horas.
-            </p>
-            <Button onClick={() => window.location.href = '/'} className="w-full h-12 rounded-xl font-bold">Volver al Inicio</Button>
-          </Card>
-        </main>
+      <div className="flex flex-col min-h-screen bg-background font-body items-center justify-center p-4">
+        <Card className="rounded-[2.5rem] shadow-2xl border-none text-center p-12 max-w-md w-full">
+          <div className="bg-green-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="h-12 w-12 text-green-600" />
+          </div>
+          <CardTitle className="text-3xl font-black text-primary mb-4 italic">¡Test Finalizado!</CardTitle>
+          <p className="text-muted-foreground font-medium mb-8">
+            Has completado todas las muestras siguiendo el protocolo. Recuerda entregar tus tubos en el laboratorio en las próximas 24 horas.
+          </p>
+          <div className="space-y-4">
+            <Button onClick={() => window.location.href = '/'} className="w-full h-14 rounded-2xl font-black text-lg shadow-lg">
+              Terminar y salir
+            </Button>
+            <Button variant="outline" onClick={restartProtocol} className="w-full h-12 rounded-2xl font-bold border-primary/20 text-primary">
+              <RotateCcw className="mr-2 h-4 w-4" /> ¿Repetir el test?
+            </Button>
+          </div>
+        </Card>
       </div>
     );
   }
 
+  // Pantalla de Protocolo en curso (Sin Navbar para evitar distracciones)
   return (
     <div className="flex flex-col min-h-screen bg-background font-body">
-      <Navbar />
-      <main className="container mx-auto px-4 py-8 max-w-md">
+      {/* Zen Header: Solo información crítica del test */}
+      <header className="p-4 flex items-center justify-between border-b bg-white/50 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex items-center gap-2">
+          <div className="bg-primary/10 p-2 rounded-lg">
+             <Activity className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-muted-foreground uppercase leading-none">Paciente</p>
+            <p className="text-sm font-black text-primary truncate max-w-[150px]">{testState.patientName}</p>
+          </div>
+        </div>
+        <Badge className="bg-secondary font-black text-[10px] uppercase">{testState.examType}</Badge>
+      </header>
+
+      <main className="container mx-auto px-4 py-6 max-w-md flex-grow">
         <div className="mb-6 flex items-center justify-between">
-          <Badge variant="outline" className="font-black border-primary/20 text-primary uppercase text-[10px]">
+          <Badge variant="outline" className="font-black border-primary/20 text-primary uppercase text-[10px] px-3 py-1">
             PASO {testState.currentStepIndex + 1} / {protocol.steps.length}
           </Badge>
-          <Button variant="ghost" size="sm" onClick={resetSession} className="text-red-500 font-bold hover:bg-red-50 text-xs">
-            <RotateCcw className="h-4 w-4 mr-1" /> Reiniciar
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={restartProtocol} className="text-primary font-bold hover:bg-primary/5 text-[10px] h-8 px-2">
+              <RotateCcw className="h-3 w-3 mr-1" /> Reiniciar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={cancelTest} className="text-red-500 font-bold hover:bg-red-50 text-[10px] h-8 px-2">
+              <XCircle className="h-3 w-3 mr-1" /> Cancelar
+            </Button>
+          </div>
         </div>
 
         <div className="mb-8">
@@ -370,14 +415,14 @@ export default function HomeTestPage() {
           
           <CardFooter className="bg-muted/30 border-t p-4 flex justify-center">
             <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-              <Activity className="h-3 w-3 text-secondary" /> {testState.patientName}
+              Tecnología Sunvou® Chile
             </div>
           </CardFooter>
         </Card>
 
         <div className="mt-8 text-center bg-primary/5 p-4 rounded-2xl border border-primary/10">
           <p className="text-[11px] text-primary/70 font-bold italic leading-relaxed">
-            * Importante: Mantén esta pestaña activa para asegurar que el temporizador funcione correctamente.
+            * Mantén esta ventana abierta. Si cierras el navegador, el cronómetro podría desincronizarse.
           </p>
         </div>
       </main>
