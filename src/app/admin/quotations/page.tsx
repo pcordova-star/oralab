@@ -305,7 +305,7 @@ export default function QuotationsPage() {
 
     y += 10;
     
-    // Desglose de Totales (Ajuste de solapamiento)
+    // Desglose de Totales
     const netTotal = quote.total;
     const iva = netTotal * IVA_RATE;
     const grossTotal = netTotal * (1 + IVA_RATE);
@@ -328,7 +328,7 @@ export default function QuotationsPage() {
     doc.text(`$${Math.round(grossTotal).toLocaleString()}`, rightValueMargin, y, { align: 'right' });
     y += 15;
 
-    // Verificar si hay espacio para las notas antes del footer
+    // Verificar si hay espacio para las notas
     if (y > pageHeight - 65) {
       doc.addPage();
       y = 20;
@@ -347,7 +347,7 @@ export default function QuotationsPage() {
       doc.text(splitNotes, margin, y);
     }
 
-    // Pie de Página Compacto
+    // Pie de Página
     doc.setFillColor(245, 247, 249);
     doc.rect(0, pageHeight - 35, 210, 35, 'F');
     doc.setTextColor(100, 100, 100);
