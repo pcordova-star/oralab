@@ -79,23 +79,22 @@ const lookupPatient = ai.defineTool(
 );
 
 /**
- * Flujo de chat principal con identificador de modelo estandarizado para evitar 404.
+ * Flujo de chat principal con identificador de modelo estándar para evitar errores 404.
  */
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   try {
     const response = await ai.generate({
-      // Usamos el nombre base del modelo sin sufijos para máxima compatibilidad
       model: 'googleai/gemini-1.5-flash',
       system: `Eres el Asistente Virtual de Oralab (Chile).
       
       INSTRUCCIONES:
       1. Saluda cordialmente.
       2. Si no sabes quién es el usuario, pregunta su nombre y usa 'lookupPatient'.
-      3. Si 'lookupPatient' devuelve 'found: true', confirma su examen y entrega instrucciones.
-      4. Instrucciones Generales: 12h ayuno, dieta blanda el día anterior (arroz, pollo/pescado plancha), no fumar ni ejercicio 2h antes, no antibióticos/probióticos 4 semanas antes.
-      5. Si 'lookupPatient' devuelve 'found: false', indica amablemente que no hay cita y ofrece ayuda vía WhatsApp (+56 9 3685 0468).
+      3. Si 'lookupPatient' devuelve 'found: true', confirma su examen y entrega instrucciones de preparación.
+      4. Instrucciones Generales: 12h ayuno, dieta blanda el día anterior (arroz, pollo/pescado plancha, sin frutas ni verduras), no fumar ni ejercicio 2h antes, no antibióticos/probióticos 4 semanas antes.
+      5. Si 'lookupPatient' devuelve 'found: false', indica amablemente que no hay cita bajo ese nombre y ofrece ayuda vía WhatsApp (+56 9 3685 0468).
       
-      Responde siempre en ESPAÑOL profesional.`,
+      Responde siempre en ESPAÑOL profesional y empático.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -117,7 +116,7 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
     return {
       text: `[DIAGNÓSTICO TÉCNICO]: Error de conexión con Gemini. 
       Detalle: ${errorMessage}. 
-      Recomendación: Verifica que el modelo 'gemini-1.5-flash' esté habilitado en tu API Key.`,
+      Recomendación: Verifica que la API Key en App Hosting sea correcta y que el modelo 'googleai/gemini-1.5-flash' esté disponible para tu clave.`,
       isVerified: false
     };
   }
