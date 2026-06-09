@@ -9,19 +9,13 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, limit, Firestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore, collection, getDocs, query, limit } from 'firebase/firestore';
 
-// Singleton para Firebase en el servidor para evitar reinicializaciones costosas
-let serverApp: FirebaseApp;
-let serverDb: Firestore;
-
-function getDb() {
-  if (!serverDb) {
-    serverApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    serverDb = getFirestore(serverApp);
-  }
-  return serverDb;
+// Inicialización de Firebase optimizada para Server Actions
+function getServerDb() {
+  const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  return getFirestore(app);
 }
 
 const ChatMessageSchema = z.object({
@@ -39,13 +33,13 @@ const PatientChatOutputSchema = z.object({
   isVerified: z.boolean().describe('Si el paciente ya ha sido verificado.'),
 });
 
-// Herramienta de búsqueda optimizada
+// Herramienta de búsqueda de reservas
 const findBookingTool = ai.defineTool(
   {
     name: 'findBookingByName',
     description: 'Busca una reserva en el sistema de Oralab usando el nombre o apellido del paciente.',
     inputSchema: z.object({
-      name: z.string().describe('El nombre o apellido a buscar.'),
+      name: z.string().describe('El nombre o apellido a buscar (mínimo 3 caracteres).'),
     }),
     outputSchema: z.object({
       found: z.boolean(),
@@ -57,20 +51,13 @@ const findBookingTool = ai.defineTool(
   },
   async (input) => {
     try {
-      const db = getDb();
-      const bookingsRef = collection(db, 'bookings');
-      
-      // Traemos una muestra controlada para filtrado flexible (MVP)
-      const snapshot = await getDocs(query(bookingsRef, limit(50)));
-      
-      if (snapshot.empty) {
-        return { found: false, message: "No hay ninguna reserva registrada en el sistema actualmente." };
-      }
-
       const searchLower = input.name.toLowerCase().trim();
       if (searchLower.length < 3) {
-        return { found: false, message: "Por favor, escribe un nombre más completo para realizar la búsqueda." };
+        return { found: false, message: "Por favor, escribe un nombre más largo para buscar." };
       }
+
+      const db = getServerDb();
+      const snapshot = await getDocs(query(collection(db, 'bookings'), limit(100)));
       
       const match = snapshot.docs.find(d => {
         const data = d.data();
@@ -88,9 +75,9 @@ const findBookingTool = ai.defineTool(
         };
       }
 
-      return { found: false, message: `No encontré ninguna reserva para "${input.name}".` };
+      return { found: false, message: "No encontré ninguna reserva con ese nombre en nuestro sistema." };
     } catch (e: any) {
-      return { found: false, message: "Error interno al consultar la base de datos." };
+      return { found: false, message: "Hubo un error al consultar la base de datos." };
     }
   }
 );
@@ -104,19 +91,19 @@ export async function patientChat(input: z.infer<typeof PatientChatInputSchema>)
       1. Saludar y pedir el nombre del paciente para verificar su cita.
       2. Solo después de confirmar que el paciente existe con 'findBookingByName', entrega instrucciones.
       
-      FLUJO DE TRABAJO:
+      ESTRATEGIA:
       - Si el usuario da un nombre: Usa la herramienta 'findBookingByName'.
       - Si la herramienta confirma la reserva (found: true): 
         * Saluda por su nombre.
         * Confirma su examen y fecha.
         * Da instrucciones: Ayuno 12h, Dieta blanda el día anterior, Sin antibióticos 4 semanas.
-        * IMPORTANTE: Incluye la palabra "VERIFICADO" al final.
+        * IMPORTANTE: Incluye la palabra "VERIFICADO" al final de tu respuesta.
       - Si la herramienta NO confirma (found: false):
         * Informa amablemente que no hay reserva con ese nombre.
-        * Sugiere contactar a soporte (+56 9 3685 0468) para ver si hay un error en el sistema.
-        * NO des instrucciones médicas si no hay reserva.
+        * Sugiere contactar a soporte (+56 9 3685 0468) para ver si hay un error en el registro.
+        * NO des instrucciones médicas si no hay reserva confirmada.
 
-      Responde siempre en español, de forma profesional y empática.`,
+      Responde siempre en español, de forma profesional y amable.`,
       messages: [
         ...input.history.map(m => ({ 
           role: m.role as 'user' | 'model' | 'system', 
@@ -133,7 +120,7 @@ export async function patientChat(input: z.infer<typeof PatientChatInputSchema>)
     };
   } catch (error: any) {
     return {
-      text: "Lo siento, tuve un inconveniente al procesar tu solicitud. Por favor, intenta escribir tu nombre de nuevo en unos segundos o contáctanos directamente por WhatsApp (+56 9 3685 0468) para ayudarte con tu preparación.",
+      text: "Lo siento, tuve un inconveniente al procesar tu solicitud. Por favor, intenta de nuevo o contáctanos por WhatsApp (+56 9 3685 0468) para ayudarte con tu preparación.",
       isVerified: false
     };
   }

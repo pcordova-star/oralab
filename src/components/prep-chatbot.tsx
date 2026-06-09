@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -46,6 +47,7 @@ export function PrepChatbot() {
   };
 
   const toggleChat = () => {
+    // Si se está cerrando, reiniciamos la conversación
     if (isOpen) {
       resetChat();
       setIsOpen(false);
@@ -59,20 +61,20 @@ export function PrepChatbot() {
 
     const userMsg = input.trim();
     setInput('');
-    const newMessages: Message[] = [...messages, { role: 'user', text: userMsg }];
-    setMessages(newMessages);
+    const currentHistory = [...messages];
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsLoading(true);
 
     try {
       const response = await patientChat({
-        history: messages,
+        history: currentHistory,
         message: userMsg
       });
 
       setMessages(prev => [...prev, { role: 'model', text: response.text }]);
     } catch (error) {
       console.error("Chatbot Error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: 'He tenido un problema al conectar con el sistema. Por favor, intenta escribir tu nombre de nuevo o contáctanos por WhatsApp (+56 9 3685 0468).' }]);
+      setMessages(prev => [...prev, { role: 'model', text: 'He tenido un inconveniente técnico. Por favor, intenta escribir tu nombre de nuevo o contáctanos por WhatsApp (+56 9 3685 0468).' }]);
     } finally {
       setIsLoading(false);
     }
