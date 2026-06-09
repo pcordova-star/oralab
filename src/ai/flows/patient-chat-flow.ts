@@ -1,14 +1,15 @@
+
 'use server';
 /**
- * @fileOverview Flujo de diagnóstico para el Chatbot de Pacientes con búsqueda en Firestore.
+ * @fileOverview Chatbot de Preparación de Pacientes de Oralab.
  * 
- * Este chatbot valida al paciente por nombre antes de responder dudas de preparación.
+ * Este flujo valida al paciente en Firestore antes de entregar instrucciones de preparación.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { initializeFirebase } from '@/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 const ChatMessageSchema = z.object({
   role: z.enum(['user', 'model', 'system']),
@@ -29,14 +30,14 @@ export type PatientChatInput = z.infer<typeof PatientChatInputSchema>;
 export type PatientChatOutput = z.infer<typeof PatientChatOutputSchema>;
 
 /**
- * Herramienta para buscar un paciente en Firestore.
+ * Herramienta robusta para verificar la existencia de un paciente en Firestore.
  */
 const lookupPatient = ai.defineTool(
   {
     name: 'lookupPatient',
-    description: 'Busca una reserva en el laboratorio por el nombre del paciente.',
+    description: 'Verifica si existe una reserva para el paciente indicado.',
     inputSchema: z.object({
-      name: z.string().describe('Nombre o apellido del paciente.'),
+      name: z.string().describe('Nombre o apellido del paciente para buscar en la base de datos.'),
     }),
     outputSchema: z.object({
       found: z.boolean(),
@@ -53,6 +54,8 @@ const lookupPatient = ai.defineTool(
       const snapshot = await getDocs(bookingsRef);
       
       const searchLower = input.name.toLowerCase().trim();
+      
+      // Búsqueda flexible por nombre o apellido
       const match = snapshot.docs.find(doc => {
         const data = doc.data();
         const fullName = `${data.firstName || ''} ${data.lastNameFather || ''} ${data.lastNameMother || ''}`.toLowerCase();
@@ -69,34 +72,31 @@ const lookupPatient = ai.defineTool(
       }
       return { found: false };
     } catch (e) {
+      console.error("Firestore lookup error:", e);
       return { found: false };
     }
   }
 );
 
 /**
- * Flujo de chat principal.
+ * Flujo de chat principal con manejo de errores técnico explícito.
  */
-const patientChatFlow = ai.defineFlow(
-  {
-    name: 'patientChatFlow',
-    inputSchema: PatientChatInputSchema,
-    outputSchema: PatientChatOutputSchema,
-  },
-  async (input) => {
+export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
+  try {
     const response = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
-      system: `Eres el asistente virtual de Oralab (Chile). Tu misión es ayudar a los pacientes con su preparación.
+      system: `Eres el Asistente Virtual de Oralab (Chile).
       
-      PROTOCOLO:
-      1. Antes de dar instrucciones, DEBES usar 'lookupPatient' para verificar la reserva.
-      2. Si no encuentras al paciente, dile que no registramos su cita y que contacte al WhatsApp +56 9 3685 0468.
-      3. Si el paciente está validado, usa estos datos para las instrucciones:
-         - Ayuno: 12 horas.
-         - Dieta día anterior: Dieta blanda (arroz blanco, pollo/pescado plancha). NO fibra, NO lácteos.
-         - Restricción: 4 semanas sin antibióticos ni probióticos.
+      IMPORTANTE:
+      1. Tu primera misión es saludar y validar al paciente.
+      2. DEBES usar 'lookupPatient' para verificar si el paciente tiene una cita.
+      3. Si 'lookupPatient' devuelve 'found: false', indica amablemente que no registramos su cita y que contacte al WhatsApp +56 9 3685 0468.
+      4. Si el paciente está validado, entrégale estas instrucciones:
+         - Ayuno: 12 horas estrictas.
+         - Dieta: El día anterior solo dieta blanda (arroz blanco, pollo/pescado plancha). NO fibra, NO frutas, NO lácteos.
+         - Restricción: No haber tomado antibióticos ni probióticos en las últimas 4 semanas.
       
-      Responde siempre en ESPAÑOL, de forma amable y profesional.`,
+      Responde siempre en ESPAÑOL, de forma muy amable y profesional.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -111,16 +111,10 @@ const patientChatFlow = ai.defineFlow(
       text: response.text,
       isVerified: true, 
     };
-  }
-);
-
-export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
-  try {
-    return await patientChatFlow(input);
   } catch (error: any) {
-    console.error("Genkit Error:", error);
+    console.error("Genkit Flow Error:", error);
     return {
-      text: `Lo sentimos, tenemos una dificultad técnica temporal para conectar con la IA. Por favor, intenta de nuevo en unos segundos o contáctanos por WhatsApp (+56 9 3685 0468) para asistirte con tu preparación personalmente.`,
+      text: "Lo sentimos, tenemos una dificultad técnica temporal para conectar con la IA de Oralab. Por favor, contáctanos por WhatsApp (+56 9 3685 0468) para asistirte personalmente con tu preparación.",
       isVerified: false
     };
   }

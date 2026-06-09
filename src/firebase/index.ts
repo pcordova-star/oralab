@@ -6,33 +6,33 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore, initializeFirestore, getFirestore as getFirestoreStandard } from 'firebase/firestore'
 
-// Global variables to hold instances across HMR cycles
+// Variables globales para persistir instancias
 let firebaseApp: FirebaseApp | undefined;
 let authInstance: Auth | undefined;
 let firestoreInstance: Firestore | undefined;
 
 /**
- * Robustly initializes Firebase services.
- * Implements a strict singleton pattern to avoid "INTERNAL ASSERTION FAILED"
- * during Next.js Hot Module Replacement (HMR).
+ * Inicialización robusta de Firebase para Oralab.
+ * Funciona tanto en el cliente como en el servidor (SSR/RSC).
  */
 export function initializeFirebase() {
-  // Initialize App (Works on both client and server)
+  // Inicializar App
   if (!getApps().length) {
     firebaseApp = initializeApp(firebaseConfig);
   } else {
     firebaseApp = getApp();
   }
 
-  // Initialize Auth
+  // Inicializar Auth
   if (!authInstance) {
     authInstance = getAuth(firebaseApp);
   }
 
-  // Initialize Firestore with settings for SSR stability
+  // Inicializar Firestore con configuraciones de estabilidad para el servidor
   if (!firestoreInstance) {
     if (typeof window !== 'undefined') {
       try {
+        // En el cliente usamos configuraciones de larga duración
         firestoreInstance = initializeFirestore(firebaseApp, {
           experimentalAutoDetectLongPolling: true,
         });
@@ -40,7 +40,7 @@ export function initializeFirebase() {
         firestoreInstance = getFirestoreStandard(firebaseApp);
       }
     } else {
-      // Server-side initialization
+      // En el servidor usamos la inicialización estándar
       firestoreInstance = getFirestoreStandard(firebaseApp);
     }
   }

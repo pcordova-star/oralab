@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Send, Bot, Sparkles } from 'lucide-react';
+import { X, Send, Bot, Sparkles, RefreshCw } from 'lucide-react';
 import { patientChat } from '@/ai/flows/patient-chat-flow';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,6 +28,7 @@ export function PrepChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll al final de los mensajes
   useEffect(() => {
     if (scrollRef.current) {
       const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
@@ -37,7 +39,7 @@ export function PrepChatbot() {
         });
       }
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const resetChat = () => {
     setMessages([INITIAL_MESSAGE]);
@@ -47,7 +49,7 @@ export function PrepChatbot() {
 
   const toggleChat = () => {
     if (isOpen) {
-      // Al cerrar, reseteamos la conversación por privacidad
+      // AL CERRAR: Reseteamos la conversación por completo por privacidad
       resetChat();
       setIsOpen(false);
     } else {
@@ -101,12 +103,17 @@ export function PrepChatbot() {
                     </div>
                     <div>
                       <CardTitle className="text-sm font-black italic">Asistente Oralab</CardTitle>
-                      <p className="text-[10px] opacity-70 font-bold uppercase tracking-widest">Validación de Pacientes</p>
+                      <p className="text-[10px] opacity-70 font-bold uppercase tracking-widest">Soporte al Paciente</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={toggleChat} className="text-white hover:bg-white/10 rounded-full h-8 w-8">
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" onClick={resetChat} className="text-white hover:bg-white/10 rounded-full h-8 w-8" title="Reiniciar chat">
+                      <RefreshCw className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={toggleChat} className="text-white hover:bg-white/10 rounded-full h-8 w-8">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               
@@ -144,7 +151,7 @@ export function PrepChatbot() {
                   className="flex w-full gap-2"
                 >
                   <Input 
-                    placeholder="Escribe tu nombre..." 
+                    placeholder="Escribe tu consulta..." 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     className="rounded-full border-primary/10 h-10 focus:ring-primary"
