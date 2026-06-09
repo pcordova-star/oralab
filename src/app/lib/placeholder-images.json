@@ -18,6 +18,24 @@
       "description": "Paciente recibiendo atención médica",
       "imageUrl": "https://picsum.photos/seed/patient/800/600",
       "imageHint": "patient care"
+    },
+    {
+      "id": "step-breath",
+      "description": "Paciente soplando suavemente en un tubo de recolección de aire espirado",
+      "imageUrl": "https://picsum.photos/seed/breath-step/600/400",
+      "imageHint": "breath test"
+    },
+    {
+      "id": "step-ingest",
+      "description": "Persona bebiendo una solución líquida de forma pausada",
+      "imageUrl": "https://picsum.photos/seed/ingest-step/600/400",
+      "imageHint": "drinking solution"
+    },
+    {
+      "id": "step-wait",
+      "description": "Paciente sentado cómodamente en reposo absoluto leyendo o descansando",
+      "imageUrl": "https://picsum.photos/seed/wait-step/600/400",
+      "imageHint": "person resting"
     }
   ]
 }

@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { useFirestore } from "@/firebase";
 import { collection, getDocs, query, where, doc, updateDoc, arrayUnion } from "firebase/firestore";
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import Image from "next/image";
 import { 
   Timer, 
   CheckCircle2, 
@@ -27,6 +29,7 @@ import {
 } from "lucide-react";
 import { PROTOCOLS } from "@/app/lib/types";
 import { cn } from "@/lib/utils";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 interface TestState {
   bookingId: string;
@@ -48,28 +51,32 @@ export default function HomeTestPage() {
   
   const db = useFirestore();
 
-  // Cargar estado persistente de localStorage
   useEffect(() => {
     const savedState = localStorage.getItem("oralab_test_session");
     if (savedState) {
-      const parsed = JSON.parse(savedState);
-      setTestState(parsed);
+      try {
+        const parsed = JSON.parse(savedState);
+        setTestState(parsed);
+      } catch (e) {
+        console.error("Failed to parse saved state", e);
+      }
     }
   }, []);
 
-  // Guardar estado en localStorage cada vez que cambie
   useEffect(() => {
     if (testState) {
       localStorage.setItem("oralab_test_session", JSON.stringify(testState));
     }
   }, [testState]);
 
-  // Lógica del Temporizador
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
     if (testState && !testState.isPaused && !testState.isCompleted) {
-      const currentStep = PROTOCOLS[testState.examType]?.steps[testState.currentStepIndex];
+      const currentProtocol = PROTOCOLS[testState.examType];
+      if (!currentProtocol) return;
+      
+      const currentStep = currentProtocol.steps[testState.currentStepIndex];
       
       if (currentStep?.type === 'wait' || currentStep?.type === 'ingest') {
         const duration = currentStep.durationMinutes * 60;
@@ -80,13 +87,14 @@ export default function HomeTestPage() {
 
         if (remaining > 0) {
           interval = setInterval(() => {
-            setTimeLeft((prev) => {
-              if (prev <= 1) {
-                clearInterval(interval);
-                return 0;
-              }
-              return prev - 1;
-            });
+            const now = Date.now();
+            const elapsed = Math.floor((now - (testState.stepStartTime || now)) / 1000);
+            const nextRemaining = Math.max(0, duration - elapsed);
+            setTimeLeft(nextRemaining);
+            
+            if (nextRemaining <= 0) {
+              clearInterval(interval);
+            }
           }, 1000);
         }
       } else {
@@ -105,7 +113,7 @@ export default function HomeTestPage() {
       const snapshot = await getDocs(q);
       const match = snapshot.docs.find(doc => {
         const data = doc.data();
-        const fullName = `${data.firstName} ${data.lastNameFather}`.toLowerCase();
+        const fullName = `${data.firstName || ''} ${data.lastNameFather || ''}`.toLowerCase();
         return fullName.includes(searchName.toLowerCase().trim());
       });
 
@@ -144,7 +152,6 @@ export default function HomeTestPage() {
     const currentProtocol = PROTOCOLS[testState.examType];
     const isLastStep = testState.currentStepIndex === currentProtocol.steps.length - 1;
 
-    // Registrar en Firestore si es un soplido (breath)
     const currentStep = currentProtocol.steps[testState.currentStepIndex];
     if (currentStep.type === 'breath') {
       try {
@@ -186,9 +193,14 @@ export default function HomeTestPage() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  const getStepImage = (type: string) => {
+    const imageId = type === 'breath' ? 'step-breath' : type === 'ingest' ? 'step-ingest' : 'step-wait';
+    return PlaceHolderImages.find(img => img.id === imageId);
+  };
+
   if (!testState) {
     return (
-      <div className="flex flex-col min-h-screen bg-muted/30">
+      <div className="flex flex-col min-h-screen bg-muted/30 font-body">
         <Navbar />
         <main className="container mx-auto px-4 py-12 max-w-md">
           <Card className="rounded-[2.5rem] shadow-2xl border-primary/10 overflow-hidden">
@@ -253,10 +265,11 @@ export default function HomeTestPage() {
   const protocol = PROTOCOLS[testState.examType];
   const currentStep = protocol.steps[testState.currentStepIndex];
   const progress = (testState.currentStepIndex / protocol.steps.length) * 100;
+  const stepImageData = getStepImage(currentStep.type);
 
   if (testState.isCompleted) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex flex-col min-h-screen bg-background font-body">
         <Navbar />
         <main className="container mx-auto px-4 py-12 max-w-md">
           <Card className="rounded-[2.5rem] shadow-2xl border-none text-center p-8">
@@ -275,81 +288,96 @@ export default function HomeTestPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background font-body">
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-md">
         <div className="mb-6 flex items-center justify-between">
-          <Badge variant="outline" className="font-black border-primary/20 text-primary">PASO {testState.currentStepIndex + 1} / {protocol.steps.length}</Badge>
-          <Button variant="ghost" size="sm" onClick={resetSession} className="text-red-500 font-bold hover:bg-red-50">
+          <Badge variant="outline" className="font-black border-primary/20 text-primary uppercase text-[10px]">
+            PASO {testState.currentStepIndex + 1} / {protocol.steps.length}
+          </Badge>
+          <Button variant="ghost" size="sm" onClick={resetSession} className="text-red-500 font-bold hover:bg-red-50 text-xs">
             <RotateCcw className="h-4 w-4 mr-1" /> Reiniciar
           </Button>
         </div>
 
         <div className="mb-8">
-          <Progress value={progress} className="h-3 rounded-full" />
+          <Progress value={progress} className="h-2 rounded-full" />
         </div>
 
-        <Card className="rounded-[2.5rem] shadow-2xl border-primary/5 overflow-hidden">
+        <Card className="rounded-[2.5rem] shadow-2xl border-primary/5 overflow-hidden bg-white">
+          {stepImageData && (
+            <div className="relative w-full aspect-[3/2] overflow-hidden group">
+              <Image 
+                src={stepImageData.imageUrl} 
+                alt={stepImageData.description}
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                data-ai-hint={stepImageData.imageHint}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-60" />
+            </div>
+          )}
+          
           <div className="p-8 text-center space-y-6">
             <div className={cn(
-              "w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 transition-all duration-500",
+              "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto -mt-16 relative z-10 shadow-xl transition-all duration-500",
               currentStep.type === 'breath' ? "bg-blue-100 text-blue-600 animate-pulse" :
-              currentStep.type === 'ingest' ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary"
+              currentStep.type === 'ingest' ? "bg-amber-100 text-amber-600" : "bg-primary text-white"
             )}>
-              {currentStep.type === 'breath' && <Wind className="h-10 w-10" />}
-              {currentStep.type === 'ingest' && <Droplets className="h-10 w-10" />}
-              {currentStep.type === 'wait' && <Timer className="h-10 w-10" />}
+              {currentStep.type === 'breath' && <Wind className="h-8 w-8" />}
+              {currentStep.type === 'ingest' && <Droplets className="h-8 w-8" />}
+              {currentStep.type === 'wait' && <Timer className="h-8 w-8" />}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h2 className="text-2xl font-black text-primary italic leading-tight">{currentStep.name}</h2>
-              <p className="text-muted-foreground font-medium leading-relaxed">{currentStep.description}</p>
+              <p className="text-muted-foreground font-medium text-sm leading-relaxed px-2">{currentStep.description}</p>
             </div>
 
             {(currentStep.type === 'wait' || currentStep.type === 'ingest') && (
-              <div className="py-6">
-                <div className="text-6xl font-black text-primary font-mono tracking-tighter tabular-nums">
+              <div className="py-4">
+                <div className="text-6xl font-black text-primary font-mono tracking-tighter tabular-nums drop-shadow-sm">
                   {formatTime(timeLeft)}
                 </div>
-                <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mt-2">Tiempo restante</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2 opacity-60">Tiempo restante</p>
               </div>
             )}
 
-            <div className="pt-6">
+            <div className="pt-4">
               {currentStep.type === 'breath' ? (
                 <Button 
                   onClick={confirmStep} 
-                  className="w-full h-20 rounded-3xl text-xl font-black bg-secondary hover:bg-secondary/90 shadow-xl transition-all active:scale-95"
+                  className="w-full h-16 rounded-2xl text-lg font-black bg-secondary hover:bg-secondary/90 shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
-                  Confirmar Soplido <CheckCircle2 className="ml-2 h-6 w-6" />
+                  Confirmar soplido <CheckCircle2 className="h-5 w-5" />
                 </Button>
               ) : timeLeft === 0 ? (
                 <Button 
                   onClick={confirmStep} 
-                  className="w-full h-20 rounded-3xl text-xl font-black bg-primary shadow-xl animate-in zoom-in duration-300"
+                  className="w-full h-16 rounded-2xl text-lg font-black bg-primary shadow-xl animate-in zoom-in duration-300"
                 >
-                  Continuar <ChevronRight className="ml-2 h-6 w-6" />
+                  Paso completado <ChevronRight className="ml-2 h-5 w-5" />
                 </Button>
               ) : (
-                <div className="bg-muted/50 p-6 rounded-3xl border-dashed border-2 border-muted">
-                  <p className="text-sm font-bold text-muted-foreground italic">
-                    Esperando el tiempo de protocolo...
+                <div className="bg-muted/50 p-6 rounded-2xl border-dashed border-2 border-muted">
+                  <p className="text-xs font-bold text-muted-foreground italic flex items-center justify-center gap-2">
+                    <Clock className="h-3 w-3" /> Esperando el tiempo de protocolo...
                   </p>
                 </div>
               )}
             </div>
           </div>
           
-          <CardFooter className="bg-muted/30 border-t p-6 flex justify-center">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              <Activity className="h-3 w-3 text-secondary" /> Paciente: {testState.patientName}
+          <CardFooter className="bg-muted/30 border-t p-4 flex justify-center">
+            <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+              <Activity className="h-3 w-3 text-secondary" /> {testState.patientName}
             </div>
           </CardFooter>
         </Card>
 
-        <div className="mt-8 text-center">
-          <p className="text-xs text-muted-foreground italic">
-            * No bloquees la pantalla de tu teléfono para evitar que el temporizador se pause.
+        <div className="mt-8 text-center bg-primary/5 p-4 rounded-2xl border border-primary/10">
+          <p className="text-[11px] text-primary/70 font-bold italic leading-relaxed">
+            * Importante: Mantén esta pestaña activa para asegurar que el temporizador funcione correctamente.
           </p>
         </div>
       </main>
