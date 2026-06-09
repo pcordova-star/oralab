@@ -48,10 +48,7 @@ const lookupPatient = ai.defineTool(
   async (input) => {
     try {
       const { firestore } = initializeFirebase();
-      if (!firestore) {
-        console.error("Firestore no inicializado en el servidor");
-        return { found: false };
-      }
+      if (!firestore) return { found: false };
 
       const bookingsRef = collection(firestore, 'bookings');
       const snapshot = await getDocs(bookingsRef);
@@ -76,29 +73,29 @@ const lookupPatient = ai.defineTool(
       }
       return { found: false };
     } catch (e) {
-      console.error("Error en lookupPatient:", e);
       return { found: false };
     }
   }
 );
 
 /**
- * Flujo de chat principal con manejo de errores técnico explícito para diagnóstico.
+ * Flujo de chat principal con identificador de modelo actualizado para evitar 404.
  */
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   try {
     const response = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
+      // Usamos el identificador más robusto para evitar el error 404 de versión de API
+      model: 'googleai/gemini-1.5-flash-latest',
       system: `Eres el Asistente Virtual de Oralab (Chile).
       
-      INSTRUCCIONES CRÍTICAS:
+      INSTRUCCIONES:
       1. Saluda cordialmente.
-      2. Si no sabes quién es el usuario, DEBES preguntar su nombre y usar la herramienta 'lookupPatient'.
-      3. Si 'lookupPatient' devuelve 'found: true', confirma su examen (ej: "Veo que tienes un test de Lactosa") y entrega instrucciones.
+      2. Si no sabes quién es el usuario, pregunta su nombre y usa 'lookupPatient'.
+      3. Si 'lookupPatient' devuelve 'found: true', confirma su examen y entrega instrucciones.
       4. Instrucciones Generales: 12h ayuno, dieta blanda el día anterior (arroz, pollo/pescado plancha), no fumar ni ejercicio 2h antes, no antibióticos/probióticos 4 semanas antes.
-      5. Si 'lookupPatient' devuelve 'found: false', indica que no hay cita y ofrece ayuda vía WhatsApp (+56 9 3685 0468).
+      5. Si 'lookupPatient' devuelve 'found: false', indica amablemente que no hay cita y ofrece ayuda vía WhatsApp (+56 9 3685 0468).
       
-      Responde siempre en ESPAÑOL profesional y empático.`,
+      Responde siempre en ESPAÑOL profesional.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -114,14 +111,14 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       isVerified: true, 
     };
   } catch (error: any) {
-    // ESTO ES PARA DIAGNÓSTICO: Mostramos el error real en la interfaz.
     const errorMessage = error?.message || "Error desconocido";
     console.error("Genkit Error:", error);
     
+    // Devolvemos el error detallado para diagnosticar si persiste el 404 u otro problema
     return {
-      text: `[DIAGNÓSTICO TÉCNICO]: Ha ocurrido un error al conectar con Gemini. 
+      text: `[DIAGNÓSTICO TÉCNICO]: Error de conexión con Gemini. 
       Detalle: ${errorMessage}. 
-      Por favor, asegúrate de que la API Key en App Hosting sea válida y que el modelo gemini-1.5-flash esté disponible.`,
+      Asegúrate de que la API Key sea correcta y el modelo gemini-1.5-flash-latest sea accesible.`,
       isVerified: false
     };
   }
