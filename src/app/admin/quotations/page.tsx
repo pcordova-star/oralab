@@ -44,7 +44,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: Aproximadamente 15-20 días hábiles tras recepción de orden de compra.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años para sensores y 5 años para analizador DA7349.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: Aproximadamente 15-20 días hábiles tras recepción de orden de compra.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años para equipo analizador y sensores.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
 
 interface QuotationItem {
   description: string;
@@ -360,7 +360,7 @@ export default function QuotationsPage() {
     doc.text("Tasa de cambio aplicada: $" + (quote.exchangeRate || DEFAULT_USD_RATE) + " CLP/USD", margin, pageHeight - 10);
     
     doc.setFontSize(7);
-    doc.text("v2.1.4", 190, pageHeight - 5, { align: 'right' });
+    doc.text("v2.1.5", 190, pageHeight - 5, { align: 'right' });
 
     doc.save(`Sunvou_Propuesta_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
@@ -573,7 +573,7 @@ export default function QuotationsPage() {
                 {isQuotesLoading ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-12">Buscando propuestas...</TableCell></TableRow>
                 ) : quotations?.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-20 text-muted-foreground font-medium">No hay cotizaciones registradas aún.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-20 text-muted-foreground font-medium italic">No hay cotizaciones registradas aún.</TableCell></TableRow>
                 ) : (
                   quotations?.map((q) => (
                     <TableRow key={q.id} className="hover:bg-primary/5 transition-colors group">
