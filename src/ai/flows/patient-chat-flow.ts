@@ -9,7 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { initializeFirebase } from '@/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 const ChatMessageSchema = z.object({
   role: z.enum(['user', 'model', 'system']),
@@ -30,14 +30,14 @@ export type PatientChatInput = z.infer<typeof PatientChatInputSchema>;
 export type PatientChatOutput = z.infer<typeof PatientChatOutputSchema>;
 
 /**
- * Herramienta robusta para verificar la existencia de un paciente en Firestore.
+ * Herramienta para verificar la existencia de un paciente en Firestore.
  */
 const lookupPatient = ai.defineTool(
   {
     name: 'lookupPatient',
-    description: 'Verifica si existe una reserva para el paciente indicado.',
+    description: 'Verifica si existe una reserva para el paciente indicado buscando por su nombre o apellido.',
     inputSchema: z.object({
-      name: z.string().describe('Nombre o apellido del paciente para buscar en la base de datos.'),
+      name: z.string().describe('Nombre o apellido del paciente para buscar.'),
     }),
     outputSchema: z.object({
       found: z.boolean(),
@@ -48,14 +48,18 @@ const lookupPatient = ai.defineTool(
   async (input) => {
     try {
       const { firestore } = initializeFirebase();
-      if (!firestore) return { found: false };
+      if (!firestore) {
+        console.error("Firestore no inicializado en el servidor");
+        return { found: false };
+      }
 
       const bookingsRef = collection(firestore, 'bookings');
       const snapshot = await getDocs(bookingsRef);
       
+      if (snapshot.empty) return { found: false };
+
       const searchLower = input.name.toLowerCase().trim();
       
-      // Búsqueda flexible por nombre o apellido
       const match = snapshot.docs.find(doc => {
         const data = doc.data();
         const fullName = `${data.firstName || ''} ${data.lastNameFather || ''} ${data.lastNameMother || ''}`.toLowerCase();
@@ -72,14 +76,14 @@ const lookupPatient = ai.defineTool(
       }
       return { found: false };
     } catch (e) {
-      console.error("Firestore lookup error:", e);
+      console.error("Error en lookupPatient:", e);
       return { found: false };
     }
   }
 );
 
 /**
- * Flujo de chat principal con manejo de errores técnico explícito.
+ * Flujo de chat principal con manejo de errores técnico explícito para diagnóstico.
  */
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   try {
@@ -87,16 +91,14 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       model: 'googleai/gemini-1.5-flash',
       system: `Eres el Asistente Virtual de Oralab (Chile).
       
-      IMPORTANTE:
-      1. Tu primera misión es saludar y validar al paciente.
-      2. DEBES usar 'lookupPatient' para verificar si el paciente tiene una cita.
-      3. Si 'lookupPatient' devuelve 'found: false', indica amablemente que no registramos su cita y que contacte al WhatsApp +56 9 3685 0468.
-      4. Si el paciente está validado, entrégale estas instrucciones:
-         - Ayuno: 12 horas estrictas.
-         - Dieta: El día anterior solo dieta blanda (arroz blanco, pollo/pescado plancha). NO fibra, NO frutas, NO lácteos.
-         - Restricción: No haber tomado antibióticos ni probióticos en las últimas 4 semanas.
+      INSTRUCCIONES CRÍTICAS:
+      1. Saluda cordialmente.
+      2. Si no sabes quién es el usuario, DEBES preguntar su nombre y usar la herramienta 'lookupPatient'.
+      3. Si 'lookupPatient' devuelve 'found: true', confirma su examen (ej: "Veo que tienes un test de Lactosa") y entrega instrucciones.
+      4. Instrucciones Generales: 12h ayuno, dieta blanda el día anterior (arroz, pollo/pescado plancha), no fumar ni ejercicio 2h antes, no antibióticos/probióticos 4 semanas antes.
+      5. Si 'lookupPatient' devuelve 'found: false', indica que no hay cita y ofrece ayuda vía WhatsApp (+56 9 3685 0468).
       
-      Responde siempre en ESPAÑOL, de forma muy amable y profesional.`,
+      Responde siempre en ESPAÑOL profesional y empático.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -112,9 +114,14 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       isVerified: true, 
     };
   } catch (error: any) {
-    console.error("Genkit Flow Error:", error);
+    // ESTO ES PARA DIAGNÓSTICO: Mostramos el error real en la interfaz.
+    const errorMessage = error?.message || "Error desconocido";
+    console.error("Genkit Error:", error);
+    
     return {
-      text: "Lo sentimos, tenemos una dificultad técnica temporal para conectar con la IA de Oralab. Por favor, contáctanos por WhatsApp (+56 9 3685 0468) para asistirte personalmente con tu preparación.",
+      text: `[DIAGNÓSTICO TÉCNICO]: Ha ocurrido un error al conectar con Gemini. 
+      Detalle: ${errorMessage}. 
+      Por favor, asegúrate de que la API Key en App Hosting sea válida y que el modelo gemini-1.5-flash esté disponible.`,
       isVerified: false
     };
   }
