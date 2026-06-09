@@ -1,19 +1,18 @@
+
 'use server';
 /**
  * @fileOverview Un flujo de Genkit para asistir a los pacientes con su preparación.
  * 
  * - patientChat - Función principal que maneja la conversación.
- * - findBookingTool - Herramienta para buscar reservas en Firestore.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, limit } from 'firebase/firestore';
 
-// Inicialización de Firebase para el entorno de servidor (Genkit)
-// Usamos una aproximación más robusta para Server Actions
+// Inicialización de Firebase segura para Server Actions
 function getDb() {
   const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   return getFirestore(app);
@@ -34,7 +33,7 @@ const PatientChatOutputSchema = z.object({
   isVerified: z.boolean().describe('Si el paciente ya ha sido verificado.'),
 });
 
-// Herramienta para que la IA busque en la base de datos
+// Herramienta de búsqueda flexible
 const findBookingTool = ai.defineTool(
   {
     name: 'findBookingByName',
@@ -47,7 +46,7 @@ const findBookingTool = ai.defineTool(
       patientName: z.string().optional(),
       examType: z.string().optional(),
       scheduledDate: z.string().optional(),
-      error: z.string().optional(),
+      message: z.string().optional(),
     }),
   },
   async (input) => {
@@ -55,47 +54,41 @@ const findBookingTool = ai.defineTool(
       const db = getDb();
       const bookingsRef = collection(db, 'bookings');
       
-      // Búsqueda simple por nombre. Nota: Firestore requiere coincidencia exacta o rangos.
-      // Aquí intentamos buscar documentos donde el nombre empiece por el texto ingresado
-      const q = query(bookingsRef, where('firstName', '>=', input.name), limit(5));
-      const snapshot = await getDocs(q);
+      // Traemos una muestra de documentos recientes para filtrado flexible en memoria (ideal para MVP)
+      const snapshot = await getDocs(query(bookingsRef, limit(100)));
       
-      let foundDoc = null;
-      
-      if (!snapshot.empty) {
-        // Verificamos si realmente coincide el inicio del nombre (case-insensitive manual simple)
-        const match = snapshot.docs.find(d => 
-          d.data().firstName?.toLowerCase().includes(input.name.toLowerCase()) ||
-          d.data().lastNameFather?.toLowerCase().includes(input.name.toLowerCase())
-        );
-        if (match) foundDoc = match.data();
+      if (snapshot.empty) {
+        return { found: false, message: "No hay reservas registradas en la base de datos actualmente." };
       }
 
-      if (!foundDoc) {
-        // Re-intento por apellido
-        const q2 = query(bookingsRef, where('lastNameFather', '>=', input.name), limit(5));
-        const snapshot2 = await getDocs(q2);
-        if (!snapshot2.empty) {
-          const match = snapshot2.docs.find(d => 
-            d.data().lastNameFather?.toLowerCase().includes(input.name.toLowerCase())
-          );
-          if (match) foundDoc = match.data();
-        }
-      }
+      const searchLower = input.name.toLowerCase();
+      
+      // Búsqueda por coincidencia parcial en nombre o apellidos
+      const match = snapshot.docs.find(d => {
+        const data = d.data();
+        const firstName = (data.firstName || "").toLowerCase();
+        const lastNameFather = (data.lastNameFather || "").toLowerCase();
+        const lastNameMother = (data.lastNameMother || "").toLowerCase();
+        
+        return firstName.includes(searchLower) || 
+               lastNameFather.includes(searchLower) || 
+               lastNameMother.includes(searchLower);
+      });
 
-      if (foundDoc) {
+      if (match) {
+        const data = match.data();
         return {
           found: true,
-          patientName: `${foundDoc.firstName} ${foundDoc.lastNameFather}`,
-          examType: foundDoc.examType,
-          scheduledDate: foundDoc.scheduledDate,
+          patientName: `${data.firstName} ${data.lastNameFather}`,
+          examType: data.examType,
+          scheduledDate: data.scheduledDate,
         };
       }
 
-      return { found: false };
+      return { found: false, message: `No se encontró ninguna reserva bajo el nombre "${input.name}".` };
     } catch (e: any) {
-      console.error("Error in findBookingByName tool:", e);
-      return { found: false, error: e.message };
+      console.error("Error en findBookingByName:", e);
+      return { found: false, message: "Hubo un error al conectar con la base de datos de pacientes." };
     }
   }
 );
@@ -107,37 +100,43 @@ export async function patientChat(input: z.infer<typeof PatientChatInputSchema>)
       
       TU MISIÓN:
       1. Saludar amablemente.
-      2. Si no conoces el nombre del paciente, PÍDELO para verificar la reserva.
-      3. Usa la herramienta 'findBookingByName' con el nombre proporcionado.
+      2. Solicitar el nombre si no ha sido proporcionado para verificar la reserva.
+      3. Usar la herramienta 'findBookingByName' para validar que el paciente existe.
       
-      ESCENARIOS DE RESPUESTA:
-      - SI ENCUENTRAS LA RESERVA: 
-        * Saluda por su nombre: "Hola [Nombre], he confirmado tu reserva para un [examType] el día [scheduledDate]".
-        * Entrega las instrucciones clínicas pertinentes: Ayuno 12h, Dieta blanda el día anterior, 4 semanas sin antibióticos.
-        * Menciona la palabra "VERIFICADO" o "CONFIRMADO" en tu respuesta.
+      LÓGICA DE RESPUESTA:
+      - SI SE ENCUENTRA LA RESERVA: 
+        * Saluda: "Hola [Nombre], he confirmado tu reserva para un [examType] el día [scheduledDate]".
+        * Entrega instrucciones: Ayuno 12h, Dieta blanda el día anterior, 4 semanas sin antibióticos.
+        * OBLIGATORIO: Incluye la palabra "VERIFICADO" en tu respuesta final.
       
-      - SI NO ENCUENTRAS LA RESERVA:
-        * Dile amablemente: "No he podido encontrar una reserva bajo el nombre '[nombre]'. Por favor, asegúrate de escribirlo tal cual lo registraste o contacta a nuestro soporte vía WhatsApp al +56 9 3685 0468 para ayudarte directamente."
-      
-      - REGLA DE ORO: No des instrucciones médicas detalladas hasta no confirmar que el paciente existe en el sistema.`,
+      - SI NO SE ENCUENTRA LA RESERVA:
+        * Informa amablemente que no hay resultados para ese nombre en el sistema.
+        * Sugiere verificar la ortografía o contactar a soporte (+56 9 3685 0468).
+        * NO entregues instrucciones médicas si no hay reserva.
+        
+      Mantén siempre un tono profesional, amable y empático.`,
       messages: [
-        ...input.history.map(m => ({ role: m.role, content: [{ text: m.text }] })),
+        ...input.history.map(m => ({ 
+          role: m.role === 'model' ? 'model' : (m.role === 'system' ? 'system' : 'user'), 
+          content: [{ text: m.text }] 
+        })),
         { role: 'user', content: [{ text: input.message }] }
       ],
       tools: [findBookingTool],
     });
 
     const responseText = response.text;
-    const isVerified = responseText.toLowerCase().includes('verificado') || responseText.toLowerCase().includes('confirmado');
+    // Verificamos si la IA incluyó la palabra clave de éxito
+    const isVerified = responseText.toUpperCase().includes('VERIFICADO');
 
     return {
       text: responseText,
-      isVerified: isVerified,
+      isVerified,
     };
   } catch (error: any) {
-    console.error("Error in patientChat flow:", error);
+    console.error("Error en flujo patientChat:", error);
     return {
-      text: "Lo siento, tuve un inconveniente al procesar tu solicitud. Por favor, intenta de nuevo en unos momentos o contáctanos directamente por WhatsApp (+56 9 3685 0468).",
+      text: "En este momento tengo dificultades técnicas para conectar con mi cerebro de IA o con la base de datos. Por favor, intenta escribir tu nombre nuevamente en unos segundos o contáctanos por WhatsApp al +56 9 3685 0468 para asistirte manualmente con tu preparación.",
       isVerified: false
     };
   }
