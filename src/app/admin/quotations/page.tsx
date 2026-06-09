@@ -304,26 +304,26 @@ export default function QuotationsPage() {
 
     y += 10;
     
-    // Desglose de Totales (Corregido para evitar superposición)
+    // Desglose de Totales
     const netTotal = quote.total;
     const iva = netTotal * IVA_RATE;
     const grossTotal = netTotal * (1 + IVA_RATE);
-    const rightMarginX = margin + 170; // 190
+    const rightValueMargin = 190;
 
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(10);
     doc.text(`SUBTOTAL NETO:`, 110, y);
-    doc.text(`$${Math.round(netTotal).toLocaleString()}`, rightMarginX, y, { align: 'right' });
+    doc.text(`$${Math.round(netTotal).toLocaleString()}`, rightValueMargin, y, { align: 'right' });
     y += 7;
     doc.text(`IVA (19%):`, 110, y);
-    doc.text(`$${Math.round(iva).toLocaleString()}`, rightMarginX, y, { align: 'right' });
+    doc.text(`$${Math.round(iva).toLocaleString()}`, rightValueMargin, y, { align: 'right' });
     y += 10;
     
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text(`TOTAL (IVA INC.):`, 100, y);
-    doc.text(`$${Math.round(grossTotal).toLocaleString()}`, rightMarginX, y, { align: 'right' });
+    doc.text(`$${Math.round(grossTotal).toLocaleString()}`, rightValueMargin, y, { align: 'right' });
     y += 20;
 
     // Notas
@@ -346,6 +346,10 @@ export default function QuotationsPage() {
     doc.setFontSize(8);
     doc.text("Representante Exclusivo Sunvou Breath Diagnostics en Chile.", margin, pageHeight - 15);
     doc.text("Tasa de cambio aplicada: $" + (quote.exchangeRate || DEFAULT_USD_RATE) + " CLP/USD", margin, pageHeight - 10);
+    
+    // Identificador de versión para el usuario
+    doc.setFontSize(7);
+    doc.text("v2.1.0", 190, pageHeight - 5, { align: 'right' });
 
     doc.save(`Sunvou_Propuesta_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
