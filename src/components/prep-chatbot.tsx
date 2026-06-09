@@ -26,7 +26,13 @@ export function PrepChatbot() {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTo(0, scrollRef.current.scrollHeight);
+      const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTo({
+          top: scrollContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
     }
   }, [messages]);
 
@@ -35,7 +41,8 @@ export function PrepChatbot() {
 
     const userMsg = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    const newMessages: Message[] = [...messages, { role: 'user', text: userMsg }];
+    setMessages(newMessages);
     setIsLoading(true);
 
     try {
@@ -46,7 +53,8 @@ export function PrepChatbot() {
 
       setMessages(prev => [...prev, { role: 'model', text: response.text }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', text: 'Lo siento, tuve un problema técnico. ¿Podrías intentar de nuevo o contactarnos por WhatsApp?' }]);
+      console.error("Chatbot Error:", error);
+      setMessages(prev => [...prev, { role: 'model', text: 'He tenido un problema al conectar con el sistema. Por favor, intenta escribir tu nombre de nuevo o contáctanos por WhatsApp (+56 9 3685 0468).' }]);
     } finally {
       setIsLoading(false);
     }
@@ -86,10 +94,10 @@ export function PrepChatbot() {
                     {messages.map((msg, i) => (
                       <div key={i} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
                         <div className={cn(
-                          "max-w-[80%] p-3 rounded-2xl text-sm shadow-sm",
+                          "max-w-[85%] p-3 rounded-2xl text-sm shadow-sm",
                           msg.role === 'user' 
                             ? "bg-primary text-white rounded-tr-none" 
-                            : "bg-white text-primary border border-primary/5 rounded-tl-none font-medium"
+                            : "bg-white text-primary border border-primary/5 rounded-tl-none font-medium leading-relaxed"
                         )}>
                           {msg.text}
                         </div>
@@ -114,13 +122,13 @@ export function PrepChatbot() {
                   className="flex w-full gap-2"
                 >
                   <Input 
-                    placeholder="Escribe tu nombre o consulta..." 
+                    placeholder="Escribe tu nombre..." 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="rounded-full border-primary/10 h-10"
+                    className="rounded-full border-primary/10 h-10 focus:ring-primary"
                     disabled={isLoading}
                   />
-                  <Button type="submit" size="icon" disabled={isLoading || !input.trim()} className="rounded-full shrink-0">
+                  <Button type="submit" size="icon" disabled={isLoading || !input.trim()} className="rounded-full shrink-0 bg-primary hover:bg-secondary transition-colors">
                     <Send className="h-4 w-4" />
                   </Button>
                 </form>
@@ -134,7 +142,7 @@ export function PrepChatbot() {
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "rounded-full h-14 w-14 shadow-2xl transition-all duration-300 hover:scale-110",
-          isOpen ? "bg-red-500 hover:bg-red-600" : "bg-primary hover:bg-secondary"
+          isOpen ? "bg-red-500 hover:bg-red-600" : "bg-primary hover:bg-secondary shadow-primary/20"
         )}
       >
         {isOpen ? <X className="h-6 w-6" /> : <Bot className="h-6 w-6" />}

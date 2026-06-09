@@ -13,6 +13,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, query, where, getDocs, limit } from 'firebase/firestore';
 
 // Inicialización de Firebase para el entorno de servidor (Genkit)
+// Usamos una aproximación más robusta para Server Actions
 function getDb() {
   const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   return getFirestore(app);
@@ -31,7 +32,6 @@ const PatientChatInputSchema = z.object({
 const PatientChatOutputSchema = z.object({
   text: z.string().describe('La respuesta del asistente.'),
   isVerified: z.boolean().describe('Si el paciente ya ha sido verificado.'),
-  examType: z.string().optional().describe('El tipo de examen del paciente verificado.'),
 });
 
 // Herramienta para que la IA busque en la base de datos
@@ -47,68 +47,98 @@ const findBookingTool = ai.defineTool(
       patientName: z.string().optional(),
       examType: z.string().optional(),
       scheduledDate: z.string().optional(),
+      error: z.string().optional(),
     }),
   },
   async (input) => {
-    const db = getDb();
-    const bookingsRef = collection(db, 'bookings');
-    
-    // Buscamos por nombre (insensible a mayúsculas es difícil en Firestore sin índices complejos, 
-    // así que usamos una búsqueda simple por el campo firstName o lastNameFather)
-    const q = query(bookingsRef, where('firstName', '>=', input.name), limit(5));
-    const snapshot = await getDocs(q);
-    
-    if (snapshot.empty) {
-      // Intentamos con el apellido
-      const q2 = query(bookingsRef, where('lastNameFather', '>=', input.name), limit(5));
-      const snapshot2 = await getDocs(q2);
-      if (snapshot2.empty) return { found: false };
+    try {
+      const db = getDb();
+      const bookingsRef = collection(db, 'bookings');
       
-      const doc = snapshot2.docs[0].data();
-      return {
-        found: true,
-        patientName: `${doc.firstName} ${doc.lastNameFather}`,
-        examType: doc.examType,
-        scheduledDate: doc.scheduledDate,
-      };
-    }
+      // Búsqueda simple por nombre. Nota: Firestore requiere coincidencia exacta o rangos.
+      // Aquí intentamos buscar documentos donde el nombre empiece por el texto ingresado
+      const q = query(bookingsRef, where('firstName', '>=', input.name), limit(5));
+      const snapshot = await getDocs(q);
+      
+      let foundDoc = null;
+      
+      if (!snapshot.empty) {
+        // Verificamos si realmente coincide el inicio del nombre (case-insensitive manual simple)
+        const match = snapshot.docs.find(d => 
+          d.data().firstName?.toLowerCase().includes(input.name.toLowerCase()) ||
+          d.data().lastNameFather?.toLowerCase().includes(input.name.toLowerCase())
+        );
+        if (match) foundDoc = match.data();
+      }
 
-    const doc = snapshot.docs[0].data();
-    return {
-      found: true,
-      patientName: `${doc.firstName} ${doc.lastNameFather}`,
-      examType: doc.examType,
-      scheduledDate: doc.scheduledDate,
-    };
+      if (!foundDoc) {
+        // Re-intento por apellido
+        const q2 = query(bookingsRef, where('lastNameFather', '>=', input.name), limit(5));
+        const snapshot2 = await getDocs(q2);
+        if (!snapshot2.empty) {
+          const match = snapshot2.docs.find(d => 
+            d.data().lastNameFather?.toLowerCase().includes(input.name.toLowerCase())
+          );
+          if (match) foundDoc = match.data();
+        }
+      }
+
+      if (foundDoc) {
+        return {
+          found: true,
+          patientName: `${foundDoc.firstName} ${foundDoc.lastNameFather}`,
+          examType: foundDoc.examType,
+          scheduledDate: foundDoc.scheduledDate,
+        };
+      }
+
+      return { found: false };
+    } catch (e: any) {
+      console.error("Error in findBookingByName tool:", e);
+      return { found: false, error: e.message };
+    }
   }
 );
 
 export async function patientChat(input: z.infer<typeof PatientChatInputSchema>): Promise<z.infer<typeof PatientChatOutputSchema>> {
-  const response = await ai.generate({
-    system: `Eres el Asistente Virtual de Preparación de Oralab (Chile).
-    
-    REGLA CRÍTICA DE SEGURIDAD:
-    1. Tu primera misión es pedirle el nombre al paciente para verificar su reserva. 
-    2. No entregues NINGUNA instrucción de preparación clínica hasta que hayas usado la herramienta 'findBookingByName' y confirmado que el paciente existe.
-    3. Si el paciente NO es encontrado, indícale amablemente que no visualizas su reserva y sugiérele contactar a soporte por WhatsApp (+56 9 3685 0468).
-    
-    UNA VEZ VERIFICADO:
-    - Identifica su 'examType' (Lactulosa, Fructosa, Lactosa).
-    - Entrega instrucciones concisas basadas en los protocolos de Oralab:
-      * Ayuno de 12 horas.
-      * Dieta blanda el día anterior (sin fibra, sin legumbres).
-      * 4 semanas sin antibióticos ni probióticos.
-    - Responde siempre en ESPAÑOL de forma amable y profesional.`,
-    messages: [
-      ...input.history.map(m => ({ role: m.role, content: [{ text: m.text }] })),
-      { role: 'user', content: [{ text: input.message }] }
-    ],
-    tools: [findBookingTool],
-  });
+  try {
+    const response = await ai.generate({
+      system: `Eres el Asistente Virtual de Preparación de Oralab (Chile).
+      
+      TU MISIÓN:
+      1. Saludar amablemente.
+      2. Si no conoces el nombre del paciente, PÍDELO para verificar la reserva.
+      3. Usa la herramienta 'findBookingByName' con el nombre proporcionado.
+      
+      ESCENARIOS DE RESPUESTA:
+      - SI ENCUENTRAS LA RESERVA: 
+        * Saluda por su nombre: "Hola [Nombre], he confirmado tu reserva para un [examType] el día [scheduledDate]".
+        * Entrega las instrucciones clínicas pertinentes: Ayuno 12h, Dieta blanda el día anterior, 4 semanas sin antibióticos.
+        * Menciona la palabra "VERIFICADO" o "CONFIRMADO" en tu respuesta.
+      
+      - SI NO ENCUENTRAS LA RESERVA:
+        * Dile amablemente: "No he podido encontrar una reserva bajo el nombre '[nombre]'. Por favor, asegúrate de escribirlo tal cual lo registraste o contacta a nuestro soporte vía WhatsApp al +56 9 3685 0468 para ayudarte directamente."
+      
+      - REGLA DE ORO: No des instrucciones médicas detalladas hasta no confirmar que el paciente existe en el sistema.`,
+      messages: [
+        ...input.history.map(m => ({ role: m.role, content: [{ text: m.text }] })),
+        { role: 'user', content: [{ text: input.message }] }
+      ],
+      tools: [findBookingTool],
+    });
 
-  return {
-    text: response.text,
-    isVerified: response.text.toLowerCase().includes('verificado') || response.text.toLowerCase().includes('confirmado'), // Heurística simple
-    examType: undefined, // Podría extraerse de la respuesta si fuera necesario
-  };
+    const responseText = response.text;
+    const isVerified = responseText.toLowerCase().includes('verificado') || responseText.toLowerCase().includes('confirmado');
+
+    return {
+      text: responseText,
+      isVerified: isVerified,
+    };
+  } catch (error: any) {
+    console.error("Error in patientChat flow:", error);
+    return {
+      text: "Lo siento, tuve un inconveniente al procesar tu solicitud. Por favor, intenta de nuevo en unos momentos o contáctanos directamente por WhatsApp (+56 9 3685 0468).",
+      isVerified: false
+    };
+  }
 }
