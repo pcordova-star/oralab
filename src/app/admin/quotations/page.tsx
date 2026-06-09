@@ -304,25 +304,26 @@ export default function QuotationsPage() {
 
     y += 10;
     
-    // Desglose de Totales
+    // Desglose de Totales corregido para evitar superposición
     const netTotal = quote.total;
     const iva = netTotal * IVA_RATE;
     const grossTotal = netTotal * (1 + IVA_RATE);
     const rightValueMargin = 190;
+    const labelsMargin = 110;
 
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(10);
-    doc.text(`SUBTOTAL NETO:`, 110, y);
+    doc.text(`SUBTOTAL NETO:`, labelsMargin, y);
     doc.text(`$${Math.round(netTotal).toLocaleString()}`, rightValueMargin, y, { align: 'right' });
     y += 7;
-    doc.text(`IVA (19%):`, 110, y);
+    doc.text(`IVA (19%):`, labelsMargin, y);
     doc.text(`$${Math.round(iva).toLocaleString()}`, rightValueMargin, y, { align: 'right' });
     y += 10;
     
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text(`TOTAL (IVA INC.):`, 100, y);
+    doc.text(`TOTAL (IVA INC.):`, labelsMargin - 10, y);
     doc.text(`$${Math.round(grossTotal).toLocaleString()}`, rightValueMargin, y, { align: 'right' });
     y += 20;
 
