@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Un flujo de Genkit para asistir a los pacientes con su preparación.
@@ -33,7 +32,7 @@ const PatientChatOutputSchema = z.object({
   isVerified: z.boolean().describe('Si el paciente ya ha sido verificado.'),
 });
 
-// Herramienta de búsqueda de reservas (Opcional ahora)
+// Herramienta de búsqueda de reservas (Opcional)
 const findBookingTool = ai.defineTool(
   {
     name: 'findBookingByName',
@@ -92,9 +91,9 @@ export async function patientChat(input: z.infer<typeof PatientChatInputSchema>)
       - No fumar ni ejercicio intenso 2h antes.
       - No antibióticos ni probióticos en las últimas 4 semanas.
       
-      Si el usuario te da su nombre, puedes usar 'findBookingByName' para confirmar su cita específica, pero NO es obligatorio para responder dudas generales de preparación.
+      Si el usuario te da su nombre, puedes usar 'findBookingByName' para confirmar su cita específica, pero si el usuario solo saluda o pregunta algo general, responde de forma amable y profesional inmediatamente.
       
-      Responde de forma profesional, amable y en español de Chile.`,
+      Responde de forma amable y en español de Chile.`,
       messages: [
         ...input.history.map(m => ({ 
           role: m.role as 'user' | 'model' | 'system', 
@@ -110,7 +109,7 @@ export async function patientChat(input: z.infer<typeof PatientChatInputSchema>)
       isVerified: response.text.toUpperCase().includes('VERIFICADO') || response.text.toLowerCase().includes('reserva confirmada'),
     };
   } catch (error: any) {
-    console.error("GENKIT_ERROR:", error);
+    // Si falla la generación de IA, mostramos un error controlado
     return {
       text: "Lo siento, tuve un inconveniente técnico al procesar tu mensaje. Por favor, intenta de nuevo o contáctanos por WhatsApp (+56 9 3685 0468).",
       isVerified: false
