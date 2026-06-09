@@ -304,25 +304,26 @@ export default function QuotationsPage() {
 
     y += 10;
     
-    // Desglose de Totales
+    // Desglose de Totales (Corregido para evitar superposición)
     const netTotal = quote.total;
     const iva = netTotal * IVA_RATE;
     const grossTotal = netTotal * (1 + IVA_RATE);
+    const rightMarginX = margin + 170; // 190
 
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(10);
-    doc.text(`SUBTOTAL NETO:`, 130, y);
-    doc.text(`$${Math.round(netTotal).toLocaleString()}`, 170, y, { align: 'right' });
+    doc.text(`SUBTOTAL NETO:`, 110, y);
+    doc.text(`$${Math.round(netTotal).toLocaleString()}`, rightMarginX, y, { align: 'right' });
     y += 7;
-    doc.text(`IVA (19%):`, 130, y);
-    doc.text(`$${Math.round(iva).toLocaleString()}`, 170, y, { align: 'right' });
+    doc.text(`IVA (19%):`, 110, y);
+    doc.text(`$${Math.round(iva).toLocaleString()}`, rightMarginX, y, { align: 'right' });
     y += 10;
     
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text(`TOTAL (IVA INC.):`, 115, y);
-    doc.text(`$${Math.round(grossTotal).toLocaleString()}`, 170, y, { align: 'right' });
+    doc.text(`TOTAL (IVA INC.):`, 100, y);
+    doc.text(`$${Math.round(grossTotal).toLocaleString()}`, rightMarginX, y, { align: 'right' });
     y += 20;
 
     // Notas
