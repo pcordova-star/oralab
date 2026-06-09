@@ -44,7 +44,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: Aproximadamente 15-20 días hábiles tras recepción de orden de compra y pago de anticipo.\n- Forma de pago: 50% contra orden de compra (anticipo) y 50% contra entrega.\n- Garantía: 2 años para equipo analizador y sensores.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 15 a 20 días hábiles tras recepción de orden de compra y pago de anticipo. El plazo de entrega inicia a partir de la confirmación del primer depósito.\n- Forma de pago: 50% contra orden de compra (anticipo) y 50% contra entrega.\n- Garantía: 2 años para equipo analizador y sensores.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
 
 interface QuotationItem {
   description: string;
@@ -305,7 +305,7 @@ export default function QuotationsPage() {
 
     y += 10;
     
-    // Desglose de Totales
+    // Desglose de Totales (Ajuste de solapamiento)
     const netTotal = quote.total;
     const iva = netTotal * IVA_RATE;
     const grossTotal = netTotal * (1 + IVA_RATE);
@@ -347,7 +347,7 @@ export default function QuotationsPage() {
       doc.text(splitNotes, margin, y);
     }
 
-    // Pie de Página
+    // Pie de Página Compacto
     doc.setFillColor(245, 247, 249);
     doc.rect(0, pageHeight - 35, 210, 35, 'F');
     doc.setTextColor(100, 100, 100);
