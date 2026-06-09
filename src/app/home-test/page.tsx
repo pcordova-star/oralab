@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -23,7 +22,8 @@ import {
   Clock,
   UserCheck,
   Search,
-  CheckCircle
+  CheckCircle,
+  Activity
 } from "lucide-react";
 import { PROTOCOLS } from "@/app/lib/types";
 import { cn } from "@/lib/utils";
@@ -54,8 +54,6 @@ export default function HomeTestPage() {
     if (savedState) {
       const parsed = JSON.parse(savedState);
       setTestState(parsed);
-      // Si hay una sesión activa, intentar recuperar el booking de Firestore
-      // Esto es opcional, pero ayuda a mantener la integridad
     }
   }, []);
 
@@ -85,14 +83,11 @@ export default function HomeTestPage() {
             setTimeLeft((prev) => {
               if (prev <= 1) {
                 clearInterval(interval);
-                handleStepAutoFinish();
                 return 0;
               }
               return prev - 1;
             });
           }, 1000);
-        } else {
-          handleStepAutoFinish();
         }
       } else {
         setTimeLeft(0);
@@ -141,12 +136,6 @@ export default function HomeTestPage() {
       isCompleted: false
     };
     setTestState(newState);
-  };
-
-  const handleStepAutoFinish = () => {
-    // Para pasos de espera o ingesta que terminan por tiempo
-    // En este asistente, preferimos que el usuario marque manualmente para asegurar que leyó.
-    // Pero si el tiempo acaba, simplemente mostramos el botón de continuar.
   };
 
   const confirmStep = async () => {
