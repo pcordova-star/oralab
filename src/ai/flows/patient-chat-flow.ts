@@ -79,7 +79,7 @@ const lookupPatient = ai.defineTool(
 );
 
 /**
- * Flujo de chat principal con identificador de modelo estándar para evitar errores 404.
+ * Flujo de chat principal con identificador de modelo estándar.
  */
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   try {
