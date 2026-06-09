@@ -9,13 +9,19 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, limit } from 'firebase/firestore';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getFirestore, collection, getDocs, query, limit, Firestore } from 'firebase/firestore';
 
-// Inicialización de Firebase segura para Server Actions
+// Singleton para Firebase en el servidor para evitar reinicializaciones costosas
+let serverApp: FirebaseApp;
+let serverDb: Firestore;
+
 function getDb() {
-  const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  return getFirestore(app);
+  if (!serverDb) {
+    serverApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    serverDb = getFirestore(serverApp);
+  }
+  return serverDb;
 }
 
 const ChatMessageSchema = z.object({
@@ -33,7 +39,7 @@ const PatientChatOutputSchema = z.object({
   isVerified: z.boolean().describe('Si el paciente ya ha sido verificado.'),
 });
 
-// Herramienta de búsqueda flexible
+// Herramienta de búsqueda optimizada
 const findBookingTool = ai.defineTool(
   {
     name: 'findBookingByName',
@@ -54,25 +60,22 @@ const findBookingTool = ai.defineTool(
       const db = getDb();
       const bookingsRef = collection(db, 'bookings');
       
-      // Traemos una muestra de documentos recientes para filtrado flexible en memoria (ideal para MVP)
-      const snapshot = await getDocs(query(bookingsRef, limit(100)));
+      // Traemos una muestra controlada para filtrado flexible (MVP)
+      const snapshot = await getDocs(query(bookingsRef, limit(50)));
       
       if (snapshot.empty) {
-        return { found: false, message: "No hay reservas registradas en la base de datos actualmente." };
+        return { found: false, message: "No hay ninguna reserva registrada en el sistema actualmente." };
       }
 
-      const searchLower = input.name.toLowerCase();
+      const searchLower = input.name.toLowerCase().trim();
+      if (searchLower.length < 3) {
+        return { found: false, message: "Por favor, escribe un nombre más completo para realizar la búsqueda." };
+      }
       
-      // Búsqueda por coincidencia parcial en nombre o apellidos
       const match = snapshot.docs.find(d => {
         const data = d.data();
-        const firstName = (data.firstName || "").toLowerCase();
-        const lastNameFather = (data.lastNameFather || "").toLowerCase();
-        const lastNameMother = (data.lastNameMother || "").toLowerCase();
-        
-        return firstName.includes(searchLower) || 
-               lastNameFather.includes(searchLower) || 
-               lastNameMother.includes(searchLower);
+        const fullSearchArea = `${data.firstName} ${data.lastNameFather} ${data.lastNameMother}`.toLowerCase();
+        return fullSearchArea.includes(searchLower);
       });
 
       if (match) {
@@ -85,10 +88,9 @@ const findBookingTool = ai.defineTool(
         };
       }
 
-      return { found: false, message: `No se encontró ninguna reserva bajo el nombre "${input.name}".` };
+      return { found: false, message: `No encontré ninguna reserva para "${input.name}".` };
     } catch (e: any) {
-      console.error("Error en findBookingByName:", e);
-      return { found: false, message: "Hubo un error al conectar con la base de datos de pacientes." };
+      return { found: false, message: "Error interno al consultar la base de datos." };
     }
   }
 );
@@ -99,25 +101,25 @@ export async function patientChat(input: z.infer<typeof PatientChatInputSchema>)
       system: `Eres el Asistente Virtual de Preparación de Oralab (Chile).
       
       TU MISIÓN:
-      1. Saludar amablemente.
-      2. Solicitar el nombre si no ha sido proporcionado para verificar la reserva.
-      3. Usar la herramienta 'findBookingByName' para validar que el paciente existe.
+      1. Saludar y pedir el nombre del paciente para verificar su cita.
+      2. Solo después de confirmar que el paciente existe con 'findBookingByName', entrega instrucciones.
       
-      LÓGICA DE RESPUESTA:
-      - SI SE ENCUENTRA LA RESERVA: 
-        * Saluda: "Hola [Nombre], he confirmado tu reserva para un [examType] el día [scheduledDate]".
-        * Entrega instrucciones: Ayuno 12h, Dieta blanda el día anterior, 4 semanas sin antibióticos.
-        * OBLIGATORIO: Incluye la palabra "VERIFICADO" en tu respuesta final.
-      
-      - SI NO SE ENCUENTRA LA RESERVA:
-        * Informa amablemente que no hay resultados para ese nombre en el sistema.
-        * Sugiere verificar la ortografía o contactar a soporte (+56 9 3685 0468).
-        * NO entregues instrucciones médicas si no hay reserva.
-        
-      Mantén siempre un tono profesional, amable y empático.`,
+      FLUJO DE TRABAJO:
+      - Si el usuario da un nombre: Usa la herramienta 'findBookingByName'.
+      - Si la herramienta confirma la reserva (found: true): 
+        * Saluda por su nombre.
+        * Confirma su examen y fecha.
+        * Da instrucciones: Ayuno 12h, Dieta blanda el día anterior, Sin antibióticos 4 semanas.
+        * IMPORTANTE: Incluye la palabra "VERIFICADO" al final.
+      - Si la herramienta NO confirma (found: false):
+        * Informa amablemente que no hay reserva con ese nombre.
+        * Sugiere contactar a soporte (+56 9 3685 0468) para ver si hay un error en el sistema.
+        * NO des instrucciones médicas si no hay reserva.
+
+      Responde siempre en español, de forma profesional y empática.`,
       messages: [
         ...input.history.map(m => ({ 
-          role: m.role === 'model' ? 'model' : (m.role === 'system' ? 'system' : 'user'), 
+          role: m.role as 'user' | 'model' | 'system', 
           content: [{ text: m.text }] 
         })),
         { role: 'user', content: [{ text: input.message }] }
@@ -125,18 +127,13 @@ export async function patientChat(input: z.infer<typeof PatientChatInputSchema>)
       tools: [findBookingTool],
     });
 
-    const responseText = response.text;
-    // Verificamos si la IA incluyó la palabra clave de éxito
-    const isVerified = responseText.toUpperCase().includes('VERIFICADO');
-
     return {
-      text: responseText,
-      isVerified,
+      text: response.text,
+      isVerified: response.text.toUpperCase().includes('VERIFICADO'),
     };
   } catch (error: any) {
-    console.error("Error en flujo patientChat:", error);
     return {
-      text: "En este momento tengo dificultades técnicas para conectar con mi cerebro de IA o con la base de datos. Por favor, intenta escribir tu nombre nuevamente en unos segundos o contáctanos por WhatsApp al +56 9 3685 0468 para asistirte manualmente con tu preparación.",
+      text: "Lo siento, tuve un inconveniente al procesar tu solicitud. Por favor, intenta escribir tu nombre de nuevo en unos segundos o contáctanos directamente por WhatsApp (+56 9 3685 0468) para ayudarte con tu preparación.",
       isVerified: false
     };
   }
