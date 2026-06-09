@@ -3,13 +3,13 @@
 /**
  * @fileOverview Flujo de diagnóstico para el Chatbot de Pacientes con búsqueda en Firestore.
  * 
- * Este chatbot filtra al paciente por nombre antes de responder dudas.
+ * Este chatbot filtra al paciente por nombre antes de responder dudas de preparación.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { initializeFirebase } from '@/firebase';
-import { collection, query, getDocs } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 const ChatMessageSchema = z.object({
   role: z.enum(['user', 'model', 'system']),
@@ -35,9 +35,9 @@ export type PatientChatOutput = z.infer<typeof PatientChatOutputSchema>;
 const lookupPatient = ai.defineTool(
   {
     name: 'lookupPatient',
-    description: 'Busca una reserva en el laboratorio por el nombre del paciente.',
+    description: 'Busca una reserva en el laboratorio por el nombre o apellido del paciente.',
     inputSchema: z.object({
-      name: z.string().describe('Nombre o apellido del paciente a buscar.'),
+      name: z.string().describe('Nombre o apellido del paciente.'),
     }),
     outputSchema: z.object({
       found: z.boolean(),
@@ -48,14 +48,13 @@ const lookupPatient = ai.defineTool(
   },
   async (input) => {
     try {
-      // Inicialización segura para el servidor
       const { firestore } = initializeFirebase();
       if (!firestore) return { found: false };
 
       const bookingsRef = collection(firestore, 'bookings');
       const snapshot = await getDocs(bookingsRef);
       
-      const searchLower = input.name.toLowerCase();
+      const searchLower = input.name.toLowerCase().trim();
       const match = snapshot.docs.find(doc => {
         const data = doc.data();
         const fullName = `${data.firstName || ''} ${data.lastNameFather || ''} ${data.lastNameMother || ''}`.toLowerCase();
@@ -66,14 +65,13 @@ const lookupPatient = ai.defineTool(
         const data = match.data();
         return {
           found: true,
-          examType: data.examType,
+          examType: data.examType || "Examen General",
           patientName: `${data.firstName} ${data.lastNameFather}`,
-          status: data.status,
+          status: data.status || "confirmado",
         };
       }
       return { found: false };
     } catch (e) {
-      console.error("Error en lookupPatient Tool:", e);
       return { found: false };
     }
   }
@@ -90,19 +88,20 @@ const patientChatFlow = ai.defineFlow(
   },
   async (input) => {
     const response = await ai.generate({
-      system: `Eres el asistente virtual de Oralab, un laboratorio especializado en Chile.
+      model: 'googleai/gemini-1.5-flash',
+      system: `Eres el asistente virtual de Oralab (Chile).
       
-      REGLA DE SEGURIDAD:
-      1. Solo puedes dar instrucciones de preparación si has encontrado al paciente en el sistema usando 'lookupPatient'.
-      2. Si el usuario saluda o pregunta algo sin identificarse, pide amablemente su nombre para revisar su reserva.
-      3. Si no encuentras al paciente tras buscarlo, dile que no hay una reserva con ese nombre y sugiérele contactar al WhatsApp +56 9 3685 0468.
+      PROTOCOLO DE SEGURIDAD:
+      1. Solo puedes dar instrucciones de preparación si has encontrado al paciente con 'lookupPatient'.
+      2. Si el usuario no se ha identificado, pide su nombre completo amablemente.
+      3. Si tras buscar no encuentras la cita, dile que no hay registros y sugiérele contactar al WhatsApp +56 9 3685 0468.
       
       CONOCIMIENTO DE PREPARACIÓN (Solo tras verificar):
-      - Ayuno: 12 horas.
-      - Dieta 24h antes: Arroz blanco, pollo/pescado plancha. NO fibra, NO lácteos (a menos que el test sea de otro tipo), NO frutas.
-      - Restricción: 4 semanas sin antibióticos.
+      - Ayuno: 12 horas totales.
+      - Dieta 24h antes: Dieta blanda (arroz blanco, pollo/pescado plancha). NO fibra, NO lácteos, NO frutas.
+      - Restricción: 4 semanas sin antibióticos ni probióticos.
       
-      Responde siempre en ESPAÑOL de forma profesional.`,
+      Responde siempre en ESPAÑOL de forma profesional and amable.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -127,9 +126,8 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
   try {
     return await patientChatFlow(input);
   } catch (error: any) {
-    console.error("AI CHAT FATAL ERROR:", error);
     return {
-      text: `Lo sentimos, tenemos una dificultad técnica temporal. Por favor, intenta de nuevo o contáctanos por WhatsApp (+56 9 3685 0468) para asistirte personalmente.`,
+      text: `Lo sentimos, tenemos una dificultad técnica temporal para conectar con la IA. Por favor, intenta de nuevo en unos segundos o contáctanos por WhatsApp (+56 9 3685 0468) para asistirte con tu preparación personalmente.`,
       isVerified: false
     };
   }
