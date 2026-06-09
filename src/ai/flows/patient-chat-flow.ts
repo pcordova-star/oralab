@@ -79,13 +79,13 @@ const lookupPatient = ai.defineTool(
 );
 
 /**
- * Flujo de chat principal con identificador de modelo actualizado para evitar 404.
+ * Flujo de chat principal con identificador de modelo estandarizado para evitar 404.
  */
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   try {
     const response = await ai.generate({
-      // Usamos el identificador más robusto para evitar el error 404 de versión de API
-      model: 'googleai/gemini-1.5-flash-latest',
+      // Usamos el nombre base del modelo sin sufijos para máxima compatibilidad
+      model: 'googleai/gemini-1.5-flash',
       system: `Eres el Asistente Virtual de Oralab (Chile).
       
       INSTRUCCIONES:
@@ -114,11 +114,10 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
     const errorMessage = error?.message || "Error desconocido";
     console.error("Genkit Error:", error);
     
-    // Devolvemos el error detallado para diagnosticar si persiste el 404 u otro problema
     return {
       text: `[DIAGNÓSTICO TÉCNICO]: Error de conexión con Gemini. 
       Detalle: ${errorMessage}. 
-      Asegúrate de que la API Key sea correcta y el modelo gemini-1.5-flash-latest sea accesible.`,
+      Recomendación: Verifica que el modelo 'gemini-1.5-flash' esté habilitado en tu API Key.`,
       isVerified: false
     };
   }

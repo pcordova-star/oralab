@@ -2,10 +2,6 @@
 'use server';
 /**
  * @fileOverview Un flujo de Genkit para generar instrucciones de preparación pre-cita para pacientes.
- *
- * - generatePrepInstructions - Función que genera instrucciones personalizadas.
- * - GeneratePrepInstructionsInput - Tipo de entrada para la función.
- * - GeneratePrepInstructionsOutput - Tipo de retorno para la función.
  */
 
 import { ai } from '@/ai/genkit';
@@ -24,35 +20,30 @@ export type GeneratePrepInstructionsOutput = z.infer<typeof GeneratePrepInstruct
 export async function generatePrepInstructions(
   input: GeneratePrepInstructionsInput
 ): Promise<GeneratePrepInstructionsOutput> {
-  return generatePrepInstructionsFlow(input);
-}
+  try {
+    const response = await ai.generate({
+      model: 'googleai/gemini-1.5-flash',
+      prompt: `Eres un asistente de IA para Oralab, un laboratorio clínico especializado en Chile. Tu tarea es generar instrucciones claras y concisas para un paciente que ha reservado un examen de tipo ${input.examType}.
 
-const prompt = ai.definePrompt({
-  name: 'generatePrepInstructionsPrompt',
-  input: { schema: GeneratePrepInstructionsInputSchema },
-  output: { schema: GeneratePrepInstructionsOutputSchema },
-  prompt: `Eres un asistente de IA para Oralab, un laboratorio clínico especializado en Chile. Tu tarea es generar instrucciones claras y concisas para un paciente que ha reservado un examen de tipo {{{examType}}}.
+      Debes responder ÚNICAMENTE en ESPAÑOL.
 
-Debes responder ÚNICAMENTE en ESPAÑOL.
+      Consideraciones para el examen ${input.examType}:
+      1. Todos los tests de aire espirado (Lactosa, Fructosa, Lactulosa) requieren:
+         - Ayuno de 12 horas.
+         - Dieta blanda el día anterior (sin fibra, sin legumbres).
+         - No fumar ni realizar ejercicio intenso 2 horas antes.
+         - No haber tomado antibióticos ni probióticos en las últimas 4 semanas.
 
-Consideraciones para el examen {{{examType}}}:
-1. Todos los tests de aire espirado (Lactosa, Fructosa, Lactulosa) requieren:
-   - Ayuno de 12 horas.
-   - Dieta blanda el día anterior (sin fibra, sin legumbres).
-   - No fumar ni realizar ejercicio intenso 2 horas antes.
-   - No haber tomado antibióticos ni probióticos en las últimas 4 semanas.
+      Genera un texto amable, directo y profesional enumerando los pasos clave.`,
+    });
 
-Genera un texto amable, directo y profesional enumerando los pasos clave para que el examen sea exitoso.`,
-});
-
-const generatePrepInstructionsFlow = ai.defineFlow(
-  {
-    name: 'generatePrepInstructionsFlow',
-    inputSchema: GeneratePrepInstructionsInputSchema,
-    outputSchema: GeneratePrepInstructionsOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input);
-    return output!;
+    return {
+      instructions: response.text || "Error al generar instrucciones. Por favor contacte a soporte.",
+    };
+  } catch (error) {
+    console.error("Error generating instructions:", error);
+    return {
+      instructions: "Ayuno de 12 horas y dieta blanda el día anterior. Para más detalles consulte con recepción.",
+    };
   }
-);
+}
