@@ -27,12 +27,20 @@ import {
   CheckCircle,
   Activity,
   XCircle,
-  ArrowLeft
+  ArrowLeft,
+  ListChecks,
+  History
 } from "lucide-react";
 import { PROTOCOLS } from "@/app/lib/types";
 import { cn } from "@/lib/utils";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Link from "next/link";
+import { format } from "date-fns";
+
+interface LogEntry {
+  stepName: string;
+  timestamp: string;
+}
 
 interface TestState {
   bookingId: string;
@@ -43,6 +51,7 @@ interface TestState {
   stepStartTime: number | null;
   isPaused: boolean;
   isCompleted: boolean;
+  logs: LogEntry[];
 }
 
 export default function HomeTestPage() {
@@ -144,7 +153,8 @@ export default function HomeTestPage() {
       startTime: Date.now(),
       stepStartTime: Date.now(),
       isPaused: false,
-      isCompleted: false
+      isCompleted: false,
+      logs: []
     };
     setTestState(newState);
   };
@@ -154,14 +164,22 @@ export default function HomeTestPage() {
     
     const currentProtocol = PROTOCOLS[testState.examType];
     const isLastStep = testState.currentStepIndex === currentProtocol.steps.length - 1;
-
     const currentStep = currentProtocol.steps[testState.currentStepIndex];
+    const nowISO = new Date().toISOString();
+
+    const newLog: LogEntry = {
+      stepName: currentStep.name,
+      timestamp: nowISO
+    };
+
+    const updatedLogs = [...(testState.logs || []), newLog];
+
     if (currentStep.type === 'breath') {
       try {
         await updateDoc(doc(db, "bookings", testState.bookingId), {
           testLogs: arrayUnion({
             stepName: currentStep.name,
-            timestamp: new Date().toISOString()
+            timestamp: nowISO
           })
         });
       } catch (e) {
@@ -170,12 +188,13 @@ export default function HomeTestPage() {
     }
 
     if (isLastStep) {
-      setTestState({ ...testState, isCompleted: true });
+      setTestState({ ...testState, logs: updatedLogs, isCompleted: true });
       localStorage.removeItem("oralab_test_session");
       toast({ title: "¡Test Finalizado!", description: "Has completado todas las muestras correctamente." });
     } else {
       setTestState({
         ...testState,
+        logs: updatedLogs,
         currentStepIndex: testState.currentStepIndex + 1,
         stepStartTime: Date.now()
       });
@@ -183,13 +202,14 @@ export default function HomeTestPage() {
   };
 
   const restartProtocol = () => {
-    if (confirm("¿Seguro que deseas reiniciar el protocolo desde el primer paso? Los tiempos actuales se perderán.")) {
+    if (confirm("¿Seguro que deseas reiniciar el protocolo? Se borrará el historial de tiempos actual.")) {
       setTestState(prev => prev ? {
         ...prev,
         currentStepIndex: 0,
         startTime: Date.now(),
         stepStartTime: Date.now(),
-        isCompleted: false
+        isCompleted: false,
+        logs: []
       } : null);
       toast({ title: "Protocolo reiniciado", description: "Volviendo al Paso 1." });
     }
@@ -210,12 +230,26 @@ export default function HomeTestPage() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  const getClockTime = (timestamp: number) => {
+    return format(new Date(timestamp), "HH:mm");
+  };
+
+  const getNextActionTime = () => {
+    if (!testState) return "";
+    const protocol = PROTOCOLS[testState.examType];
+    const step = protocol.steps[testState.currentStepIndex];
+    if (step.type === 'wait' || step.type === 'ingest') {
+      const scheduledTime = (testState.stepStartTime || Date.now()) + (step.durationMinutes * 60 * 1000);
+      return format(new Date(scheduledTime), "HH:mm");
+    }
+    return "Ahora";
+  };
+
   const getStepImage = (type: string) => {
     const imageId = type === 'breath' ? 'step-breath' : type === 'ingest' ? 'step-ingest' : 'step-wait';
     return PlaceHolderImages.find(img => img.id === imageId);
   };
 
-  // Si no hay test iniciado, mostramos la pantalla de búsqueda con Navbar
   if (!testState) {
     return (
       <div className="flex flex-col min-h-screen bg-muted/30 font-body">
@@ -264,7 +298,7 @@ export default function HomeTestPage() {
                     <div className="flex items-start gap-3 bg-amber-50 p-4 rounded-xl border border-amber-200">
                       <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                       <p className="text-xs text-amber-800 font-medium">
-                        Asegúrate de tener todos tus tubos numerados y el sustrato preparado antes de iniciar. No cierres esta ventana durante el proceso.
+                        Asegúrate de tener todos tus tubos numerados y el sustrato preparado antes de iniciar. Puedes anotar las horas en papel como respaldo.
                       </p>
                     </div>
                     <Button onClick={startTest} className="w-full h-14 rounded-xl text-lg font-black bg-secondary shadow-lg">
@@ -288,24 +322,35 @@ export default function HomeTestPage() {
   const progress = (testState.currentStepIndex / protocol.steps.length) * 100;
   const stepImageData = getStepImage(currentStep.type);
 
-  // Pantalla de Finalización (Sin Navbar para foco total)
   if (testState.isCompleted) {
     return (
       <div className="flex flex-col min-h-screen bg-background font-body items-center justify-center p-4">
-        <Card className="rounded-[2.5rem] shadow-2xl border-none text-center p-12 max-w-md w-full">
-          <div className="bg-green-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="h-12 w-12 text-green-600" />
+        <Card className="rounded-[2.5rem] shadow-2xl border-none text-center p-8 max-w-md w-full">
+          <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="h-10 w-10 text-green-600" />
           </div>
-          <CardTitle className="text-3xl font-black text-primary mb-4 italic">¡Test Finalizado!</CardTitle>
-          <p className="text-muted-foreground font-medium mb-8">
-            Has completado todas las muestras siguiendo el protocolo. Recuerda entregar tus tubos en el laboratorio en las próximas 24 horas.
+          <CardTitle className="text-2xl font-black text-primary mb-4 italic">¡Test Finalizado!</CardTitle>
+          <p className="text-sm text-muted-foreground font-medium mb-6">
+            Has completado todas las muestras. Entrega tus tubos en el laboratorio en las próximas 24 horas.
           </p>
+
+          <div className="bg-muted/30 rounded-2xl p-4 mb-8 text-left">
+            <h4 className="text-xs font-black text-primary uppercase mb-3 flex items-center gap-2">
+              <History className="h-3 w-3" /> Resumen de Tiempos
+            </h4>
+            <div className="space-y-2">
+              {testState.logs?.map((log, i) => (
+                <div key={i} className="flex justify-between items-center text-[10px] border-b border-white/50 pb-1">
+                  <span className="font-bold text-muted-foreground">{log.stepName}</span>
+                  <span className="font-black text-primary">{format(new Date(log.timestamp), "HH:mm")} hrs</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-4">
             <Button onClick={() => window.location.href = '/'} className="w-full h-14 rounded-2xl font-black text-lg shadow-lg">
               Terminar y salir
-            </Button>
-            <Button variant="outline" onClick={restartProtocol} className="w-full h-12 rounded-2xl font-bold border-primary/20 text-primary">
-              <RotateCcw className="mr-2 h-4 w-4" /> ¿Repetir el test?
             </Button>
           </div>
         </Card>
@@ -313,10 +358,8 @@ export default function HomeTestPage() {
     );
   }
 
-  // Pantalla de Protocolo en curso (Sin Navbar para evitar distracciones)
   return (
     <div className="flex flex-col min-h-screen bg-background font-body">
-      {/* Zen Header: Solo información crítica del test */}
       <header className="p-4 flex items-center justify-between border-b bg-white/50 backdrop-blur-md sticky top-0 z-20">
         <div className="flex items-center gap-2">
           <div className="bg-primary/10 p-2 rounded-lg">
@@ -327,11 +370,14 @@ export default function HomeTestPage() {
             <p className="text-sm font-black text-primary truncate max-w-[150px]">{testState.patientName}</p>
           </div>
         </div>
-        <Badge className="bg-secondary font-black text-[10px] uppercase">{testState.examType}</Badge>
+        <div className="text-right">
+           <p className="text-[10px] font-black text-muted-foreground uppercase leading-none">Inicio</p>
+           <p className="text-sm font-black text-primary">{getClockTime(testState.startTime || 0)}</p>
+        </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-md flex-grow">
-        <div className="mb-6 flex items-center justify-between">
+      <main className="container mx-auto px-4 py-6 max-w-md flex-grow space-y-6">
+        <div className="flex items-center justify-between">
           <Badge variant="outline" className="font-black border-primary/20 text-primary uppercase text-[10px] px-3 py-1">
             PASO {testState.currentStepIndex + 1} / {protocol.steps.length}
           </Badge>
@@ -345,7 +391,7 @@ export default function HomeTestPage() {
           </div>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-4">
           <Progress value={progress} className="h-2 rounded-full" />
         </div>
 
@@ -380,11 +426,14 @@ export default function HomeTestPage() {
             </div>
 
             {(currentStep.type === 'wait' || currentStep.type === 'ingest') && (
-              <div className="py-4">
+              <div className="py-4 space-y-4">
                 <div className="text-6xl font-black text-primary font-mono tracking-tighter tabular-nums drop-shadow-sm">
                   {formatTime(timeLeft)}
                 </div>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2 opacity-60">Tiempo restante</p>
+                <div className="bg-secondary/10 border border-secondary/20 rounded-xl p-3 inline-block">
+                   <p className="text-[10px] font-black text-secondary uppercase tracking-widest leading-none mb-1">Próxima acción a las:</p>
+                   <p className="text-xl font-black text-primary">{getNextActionTime()} hrs</p>
+                </div>
               </div>
             )}
 
@@ -420,9 +469,32 @@ export default function HomeTestPage() {
           </CardFooter>
         </Card>
 
-        <div className="mt-8 text-center bg-primary/5 p-4 rounded-2xl border border-primary/10">
+        {/* Bitácora de Respaldo */}
+        {testState.logs && testState.logs.length > 0 && (
+          <Card className="rounded-3xl border-primary/10 shadow-lg overflow-hidden bg-white/50">
+            <div className="p-4 bg-primary/5 border-b border-primary/10 flex items-center justify-between">
+              <h3 className="text-xs font-black text-primary uppercase flex items-center gap-2">
+                <ListChecks className="h-4 w-4" /> Bitácora Digital (Respaldo)
+              </h3>
+              <p className="text-[10px] font-bold text-muted-foreground italic">Anota estos tiempos en tu ficha física</p>
+            </div>
+            <div className="p-4 space-y-2 max-h-40 overflow-y-auto">
+              {[...testState.logs].reverse().map((log, idx) => (
+                <div key={idx} className="flex items-center justify-between py-2 border-b border-dashed last:border-0 border-primary/10">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-3 w-3 text-green-500" />
+                    <span className="text-[11px] font-bold text-primary/80">{log.stepName}</span>
+                  </div>
+                  <span className="text-xs font-black text-primary">{format(new Date(log.timestamp), "HH:mm")} hrs</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        <div className="text-center bg-primary/5 p-4 rounded-2xl border border-primary/10">
           <p className="text-[11px] text-primary/70 font-bold italic leading-relaxed">
-            * Mantén esta ventana abierta. Si cierras el navegador, el cronómetro podría desincronizarse.
+            * Si tu teléfono tiene problemas, usa la hora programada en la bitácora para guiarte manualmente con un reloj.
           </p>
         </div>
       </main>
