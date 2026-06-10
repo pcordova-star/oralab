@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -203,25 +202,37 @@ export default function HomeTestPage() {
   };
 
   const restartProtocol = () => {
-    if (confirm("¿Seguro que deseas reiniciar el protocolo? Se borrará el historial de tiempos actual.")) {
-      setTestState(prev => prev ? {
-        ...prev,
-        currentStepIndex: 0,
-        startTime: Date.now(),
-        stepStartTime: Date.now(),
-        isCompleted: false,
-        logs: []
-      } : null);
-      toast({ title: "Protocolo reiniciado", description: "Volviendo al Paso 1." });
+    // Primera validación
+    const confirm1 = confirm("⚠️ ¿ESTÁS SEGURO QUE DESEAS REINICIAR EL PROTOCOLO?\n\nEsta acción borrará todo el historial de tiempos y volverás al Paso 1.");
+    if (confirm1) {
+      // Segunda validación crítica
+      const confirm2 = confirm("🚨 ¡ALERTA CRÍTICA!\n\nConfirmas que deseas ELIMINAR los datos actuales de esta sesión y empezar de cero?\n\nPresiona Aceptar para proceder.");
+      if (confirm2) {
+        setTestState(prev => prev ? {
+          ...prev,
+          currentStepIndex: 0,
+          startTime: Date.now(),
+          stepStartTime: Date.now(),
+          isCompleted: false,
+          logs: []
+        } : null);
+        toast({ title: "Protocolo reiniciado", description: "Volviendo al Paso 1." });
+      }
     }
   };
 
   const cancelTest = () => {
-    if (confirm("¿Seguro que deseas cancelar el test y volver a la búsqueda? Se perderá todo el progreso actual.")) {
-      setTestState(null);
-      setBooking(null);
-      localStorage.removeItem("oralab_test_session");
-      toast({ title: "Sesión cancelada" });
+    // Primera validación
+    const confirm1 = confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?\n\nSe perderá todo el progreso y se cerrará la sesión actual.");
+    if (confirm1) {
+      // Segunda validación crítica
+      const confirm2 = confirm("🚨 ¡ATENCIÓN!\n\nEstás a punto de ABANDONAR el asistente. Si no terminaste el test, las muestras recolectadas podrían ser inválidas.\n\n¿Deseas salir de todas formas?");
+      if (confirm2) {
+        setTestState(null);
+        setBooking(null);
+        localStorage.removeItem("oralab_test_session");
+        toast({ title: "Sesión cancelada" });
+      }
     }
   };
 
@@ -383,10 +394,20 @@ export default function HomeTestPage() {
             PASO {testState.currentStepIndex + 1} / {protocol.steps.length}
           </Badge>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={restartProtocol} className="text-primary font-bold hover:bg-primary/5 text-[10px] h-8 px-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={restartProtocol} 
+              className="text-primary font-black hover:bg-primary/5 text-[10px] h-9 px-3 border border-primary/10 rounded-full"
+            >
               <RotateCcw className="h-3 w-3 mr-1" /> Reiniciar
             </Button>
-            <Button variant="ghost" size="sm" onClick={cancelTest} className="text-red-500 font-bold hover:bg-red-50 text-[10px] h-8 px-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={cancelTest} 
+              className="text-red-500 font-black hover:bg-red-50 text-[10px] h-9 px-3 border border-red-100 rounded-full"
+            >
               <XCircle className="h-3 w-3 mr-1" /> Cancelar
             </Button>
           </div>
