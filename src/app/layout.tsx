@@ -3,7 +3,6 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { WhatsAppFAB } from '@/components/whatsapp-fab';
-import { PrepChatbot } from '@/components/prep-chatbot';
 
 export const metadata: Metadata = {
   title: 'Oralab - Salud Digestiva Avanzada',
@@ -26,7 +25,6 @@ export default function RootLayout({
         <FirebaseClientProvider>
           {children}
           <Toaster />
-          <PrepChatbot />
           <WhatsAppFAB />
         </FirebaseClientProvider>
       </body>
