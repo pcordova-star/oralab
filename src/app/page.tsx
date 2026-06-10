@@ -40,7 +40,9 @@ import {
   Home,
   Database,
   Droplets,
-  RotateCcw
+  RotateCcw,
+  CheckCircle2,
+  Flag
 } from "lucide-react";
 import { 
   LineChart, 
@@ -246,6 +248,25 @@ const InteractiveAssistantSim = () => {
       badge: "Paso 4 / 14",
       button: "Confirmar Soplido",
       time: "00:00"
+    },
+    {
+      title: "Seguimiento Seriados",
+      instruction: "Este proceso se repite cada 20-30 minutos.",
+      importance: "Repetiremos los soplidos y esperas 10 veces más. Esto construye tu curva metabólica completa para el médico.",
+      icon: <RotateCcw className="h-8 w-8" />,
+      badge: "Pasos 5 al 13",
+      button: "Simular Ciclo Completo",
+      time: "--:--"
+    },
+    {
+      title: "¡Test Finalizado!",
+      instruction: "Has completado todas las muestras con éxito.",
+      importance: "¡Excelente! Has garantizado una toma de muestra profesional. Ahora solo entrega tus tubos en el laboratorio.",
+      icon: <CheckCircle2 className="h-10 w-10 text-secondary" />,
+      badge: "Paso 14 / 14",
+      button: "Ver Resumen",
+      time: "LISTO",
+      isFinal: true
     }
   ];
 
@@ -272,14 +293,14 @@ const InteractiveAssistantSim = () => {
       </AnimatePresence>
 
       {/* Phone Mockup */}
-      <div className="relative glass-panel !bg-white rounded-[3rem] p-8 shadow-2xl border-primary/10 overflow-hidden">
+      <div className="relative glass-panel !bg-white rounded-[3rem] p-8 shadow-2xl border-primary/10 overflow-hidden min-h-[500px] flex flex-col">
         <div className="absolute top-4 right-6 flex gap-1">
           <div className="w-2 h-2 rounded-full bg-red-400" />
           <div className="w-2 h-2 rounded-full bg-amber-400" />
           <div className="w-2 h-2 rounded-full bg-green-400" />
         </div>
         
-        <div className="mt-6 space-y-6 text-center">
+        <div className="mt-6 space-y-6 text-center flex-grow flex flex-col justify-center">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -288,26 +309,36 @@ const InteractiveAssistantSim = () => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <Badge className="bg-secondary font-black uppercase text-[10px]">{current.badge}</Badge>
+              <Badge className={cn("font-black uppercase text-[10px]", current.isFinal ? "bg-green-500" : "bg-secondary")}>
+                {current.badge}
+              </Badge>
+              
               <div className={cn(
-                "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto transition-colors",
+                "w-20 h-20 rounded-2xl flex items-center justify-center mx-auto transition-all duration-500",
+                current.isFinal ? "bg-green-100 text-green-600 scale-110 shadow-lg" : 
                 current.title.includes("Muestra") ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-600"
               )}>
                 {current.icon}
               </div>
-              <h4 className="text-xl font-black text-primary italic leading-tight">{current.title}</h4>
-              <p className="text-[10px] font-bold text-muted-foreground leading-tight px-4">{current.instruction}</p>
-              
-              <div className="py-4">
-                <div className="text-4xl font-black text-primary font-mono tabular-nums">{current.time}</div>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Tiempo restante</p>
+
+              <div className="space-y-2">
+                <h4 className="text-xl font-black text-primary italic leading-tight">{current.title}</h4>
+                <p className="text-[10px] font-bold text-muted-foreground leading-tight px-4">{current.instruction}</p>
               </div>
+              
+              {!current.isFinal && (
+                <div className="py-4">
+                  <div className="text-4xl font-black text-primary font-mono tabular-nums">{current.time}</div>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Tiempo restante</p>
+                </div>
+              )}
 
               <Button 
                 onClick={() => setStep((step + 1) % simSteps.length)}
                 className={cn(
-                  "w-full rounded-xl font-bold shadow-lg active:scale-95 transition-all",
-                  current.isWaiting ? "bg-slate-200 text-slate-500 pointer-events-none" : "bg-secondary hover:bg-secondary/90"
+                  "w-full rounded-xl font-bold shadow-lg active:scale-95 transition-all h-12",
+                  current.isWaiting ? "bg-slate-200 text-slate-500 pointer-events-none" : 
+                  current.isFinal ? "bg-green-600 hover:bg-green-700" : "bg-secondary hover:bg-secondary/90"
                 )}
               >
                 {current.button}
@@ -319,22 +350,28 @@ const InteractiveAssistantSim = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-[10px] font-bold text-primary underline"
+              className="text-[10px] font-bold text-primary underline mt-2"
               onClick={() => setStep((step + 1) % simSteps.length)}
             >
               Simular fin de espera
             </Button>
           )}
 
-          {step === simSteps.length - 1 && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-4 rounded-full"
-              onClick={() => setStep(0)}
+          {current.isFinal && (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              className="pt-4 border-t border-dashed"
             >
-              <RotateCcw className="h-3 w-3 mr-1" /> Reiniciar Simulación
-            </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="rounded-full text-[10px] font-bold"
+                onClick={() => setStep(0)}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" /> Reiniciar Simulación
+              </Button>
+            </motion.div>
           )}
         </div>
       </div>
