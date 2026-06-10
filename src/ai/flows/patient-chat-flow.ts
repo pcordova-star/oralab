@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Chatbot de Preparación de Pacientes de Oralab.
@@ -79,7 +78,7 @@ const lookupPatient = ai.defineTool(
 );
 
 /**
- * Flujo de chat principal con identificador de modelo estándar.
+ * Flujo de chat principal con referencia de modelo directa por ID.
  */
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   try {
@@ -114,9 +113,9 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
     console.error("Genkit Error:", error);
     
     return {
-      text: `[DIAGNÓSTICO TÉCNICO]: Error de conexión con Gemini. 
+      text: `[DIAGNÓSTICO TÉCNICO]: Error de comunicación con Google AI. 
       Detalle: ${errorMessage}. 
-      Recomendación: Verifica que la API Key en App Hosting sea correcta y que el modelo 'googleai/gemini-1.5-flash' esté disponible para tu clave.`,
+      Recomendación: Verifica que la API Key en el panel de Firebase App Hosting sea la correcta y que el modelo 'gemini-1.5-flash' esté habilitado.`,
       isVerified: false
     };
   }

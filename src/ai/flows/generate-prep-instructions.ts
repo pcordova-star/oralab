@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Un flujo de Genkit para generar instrucciones de preparación pre-cita para pacientes.
