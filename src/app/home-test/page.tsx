@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -261,7 +262,7 @@ export default function HomeTestPage() {
   if (!testState) {
     return (
       <div className="flex flex-col min-h-screen bg-muted/30 font-body">
-        {!testState && <Navbar />}
+        <Navbar />
         <main className="container mx-auto px-4 py-12 max-w-md">
           <Card className="rounded-[2.5rem] shadow-2xl border-primary/10 overflow-hidden">
             <CardHeader className="bg-primary text-white text-center py-8">
