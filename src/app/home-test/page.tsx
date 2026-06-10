@@ -29,7 +29,8 @@ import {
   XCircle,
   ArrowLeft,
   ListChecks,
-  History
+  History,
+  PencilLine
 } from "lucide-react";
 import { PROTOCOLS } from "@/app/lib/types";
 import { cn } from "@/lib/utils";
@@ -253,7 +254,7 @@ export default function HomeTestPage() {
   if (!testState) {
     return (
       <div className="flex flex-col min-h-screen bg-muted/30 font-body">
-        <Navbar />
+        {!testState && <Navbar />}
         <main className="container mx-auto px-4 py-12 max-w-md">
           <Card className="rounded-[2.5rem] shadow-2xl border-primary/10 overflow-hidden">
             <CardHeader className="bg-primary text-white text-center py-8">
@@ -439,12 +440,17 @@ export default function HomeTestPage() {
 
             <div className="pt-4">
               {currentStep.type === 'breath' ? (
-                <Button 
-                  onClick={confirmStep} 
-                  className="w-full h-16 rounded-2xl text-lg font-black bg-secondary hover:bg-secondary/90 shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
-                >
-                  Confirmar soplido <CheckCircle2 className="h-5 w-5" />
-                </Button>
+                <div className="space-y-4">
+                  <Button 
+                    onClick={confirmStep} 
+                    className="w-full h-16 rounded-2xl text-lg font-black bg-secondary hover:bg-secondary/90 shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    Confirmar soplido <CheckCircle2 className="h-5 w-5" />
+                  </Button>
+                  <p className="text-[11px] font-bold text-amber-600 flex items-center justify-center gap-1">
+                    <PencilLine className="h-3 w-3" /> Recuerda anotar la hora en tu ficha física
+                  </p>
+                </div>
               ) : timeLeft === 0 ? (
                 <Button 
                   onClick={confirmStep} 
@@ -472,11 +478,13 @@ export default function HomeTestPage() {
         {/* Bitácora de Respaldo */}
         {testState.logs && testState.logs.length > 0 && (
           <Card className="rounded-3xl border-primary/10 shadow-lg overflow-hidden bg-white/50">
-            <div className="p-4 bg-primary/5 border-b border-primary/10 flex items-center justify-between">
+            <div className="p-4 bg-primary/5 border-b border-primary/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <h3 className="text-xs font-black text-primary uppercase flex items-center gap-2">
-                <ListChecks className="h-4 w-4" /> Bitácora Digital (Respaldo)
+                <ListChecks className="h-4 w-4" /> Bitácora Digital
               </h3>
-              <p className="text-[10px] font-bold text-muted-foreground italic">Anota estos tiempos en tu ficha física</p>
+              <p className="text-[10px] font-black text-secondary italic uppercase tracking-tight flex items-center gap-1">
+                <PencilLine className="h-3 w-3" /> Anota estos tiempos en tu ficha física
+              </p>
             </div>
             <div className="p-4 space-y-2 max-h-40 overflow-y-auto">
               {[...testState.logs].reverse().map((log, idx) => (
@@ -494,7 +502,7 @@ export default function HomeTestPage() {
 
         <div className="text-center bg-primary/5 p-4 rounded-2xl border border-primary/10">
           <p className="text-[11px] text-primary/70 font-bold italic leading-relaxed">
-            * Si tu teléfono tiene problemas, usa la hora programada en la bitácora para guiarte manualmente con un reloj.
+            * Si tu teléfono tiene problemas, usa la hora programada en la bitácora para guiarte manualmente con un reloj convencional.
           </p>
         </div>
       </main>
