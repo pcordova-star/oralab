@@ -459,6 +459,66 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Estadísticas Clínicas (Educación) - AHORA ANTES DEL ASISTENTE */}
+        <section className="py-12 md:py-24 bg-white relative">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto mb-10 md:mb-20 space-y-4">
+              <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold">EDUCACIÓN AL PACIENTE</Badge>
+              <h2 className="text-2xl md:text-5xl font-black text-primary italic leading-tight">¿Por qué mi especialista me solicitó este test?</h2>
+              <div className="h-1.5 w-24 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+              {[
+                { 
+                  stat: "78%", 
+                  label: "No es solo estrés", 
+                  desc: "Hasta el 78% de personas con síntomas de Colon Irritable tienen en realidad un sobrecrecimiento de bacterias (SIBO).", 
+                  icon: <Users className="h-8 w-8" />,
+                  color: "border-blue-100 bg-blue-50/30"
+                },
+                { 
+                  stat: "30%", 
+                  label: "Más allá de lo básico", 
+                  desc: "Nuestra tecnología detecta gases (Metano y Sulfuro) que otros equipos pasan por alto.", 
+                  icon: <BarChart3 className="h-8 w-8" />,
+                  color: "border-emerald-100 bg-emerald-50/30"
+                },
+                { 
+                  stat: "1 de 5", 
+                  label: "Tus síntomas tienen explicación", 
+                  desc: "Cerca del 20% de los adultos sufren intolerancias a la lactosa o fructosa sin saberlo.", 
+                  icon: <PieChartIcon className="h-8 w-8" />,
+                  color: "border-amber-100 bg-amber-50/30"
+                },
+                { 
+                  stat: "180", 
+                  label: "Un mapa para tu médico", 
+                  desc: "En 3 horas de seguimiento, generamos la curva metabólica que tu médico necesita.", 
+                  icon: <ClipboardCheck className="h-8 w-8" />,
+                  color: "border-purple-100 bg-purple-50/30"
+                },
+              ].map((item, idx) => (
+                <motion.div 
+                  key={idx}
+                  whileHover={{ y: -5 }}
+                  className={cn(
+                    "p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border transition-all shadow-sm flex flex-col items-center text-center group",
+                    item.color
+                  )}
+                >
+                  <div className="mb-4 md:mb-6 text-primary group-hover:scale-110 transition-transform bg-white p-3 md:p-4 rounded-2xl shadow-sm">
+                    {item.icon}
+                  </div>
+                  <span className="text-3xl md:text-4xl font-black text-primary mb-1 md:mb-2">{item.stat}</span>
+                  <span className="text-sm md:text-base font-black text-primary/80 uppercase tracking-widest mb-3 md:mb-4 leading-tight">{item.label}</span>
+                  <p className="text-xs md:text-sm text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Home Test Assistant: Simulación Interactiva */}
         <section className="py-32 bg-gradient-to-b from-white to-muted/20 border-y overflow-visible">
           <div className="container mx-auto px-4">
@@ -545,66 +605,6 @@ export default function HomePage() {
                 </Button>
               </Link>
             </motion.div>
-          </div>
-        </section>
-
-        {/* Estadísticas Clínicas */}
-        <section className="py-12 md:py-24 bg-white relative">
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-3xl mx-auto mb-10 md:mb-20 space-y-4">
-              <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold">EDUCACIÓN AL PACIENTE</Badge>
-              <h2 className="text-2xl md:text-5xl font-black text-primary italic leading-tight">¿Por qué mi especialista me solicitó este test?</h2>
-              <div className="h-1.5 w-24 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-              {[
-                { 
-                  stat: "78%", 
-                  label: "No es solo estrés", 
-                  desc: "Hasta el 78% de personas con síntomas de Colon Irritable tienen en realidad un sobrecrecimiento de bacterias (SIBO).", 
-                  icon: <Users className="h-8 w-8" />,
-                  color: "border-blue-100 bg-blue-50/30"
-                },
-                { 
-                  stat: "30%", 
-                  label: "Más allá de lo básico", 
-                  desc: "Nuestra tecnología detecta gases (Metano y Sulfuro) que otros equipos pasan por alto.", 
-                  icon: <BarChart3 className="h-8 w-8" />,
-                  color: "border-emerald-100 bg-emerald-50/30"
-                },
-                { 
-                  stat: "1 de 5", 
-                  label: "Tus síntomas tienen explicación", 
-                  desc: "Cerca del 20% de los adultos sufren intolerancias a la lactosa o fructosa sin saberlo.", 
-                  icon: <PieChartIcon className="h-8 w-8" />,
-                  color: "border-amber-100 bg-amber-50/30"
-                },
-                { 
-                  stat: "180", 
-                  label: "Un mapa para tu médico", 
-                  desc: "En 3 horas de seguimiento, generamos la curva metabólica que tu médico necesita.", 
-                  icon: <ClipboardCheck className="h-8 w-8" />,
-                  color: "border-purple-100 bg-purple-50/30"
-                },
-              ].map((item, idx) => (
-                <motion.div 
-                  key={idx}
-                  whileHover={{ y: -5 }}
-                  className={cn(
-                    "p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border transition-all shadow-sm flex flex-col items-center text-center group",
-                    item.color
-                  )}
-                >
-                  <div className="mb-4 md:mb-6 text-primary group-hover:scale-110 transition-transform bg-white p-3 md:p-4 rounded-2xl shadow-sm">
-                    {item.icon}
-                  </div>
-                  <span className="text-3xl md:text-4xl font-black text-primary mb-1 md:mb-2">{item.stat}</span>
-                  <span className="text-sm md:text-base font-black text-primary/80 uppercase tracking-widest mb-3 md:mb-4 leading-tight">{item.label}</span>
-                  <p className="text-xs md:text-sm text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
-                </motion.div>
-              ))}
-            </div>
           </div>
         </section>
 
