@@ -202,10 +202,8 @@ export default function HomeTestPage() {
   };
 
   const restartProtocol = () => {
-    // Primera validación
     const confirm1 = confirm("⚠️ ¿ESTÁS SEGURO QUE DESEAS REINICIAR EL PROTOCOLO?\n\nEsta acción borrará todo el historial de tiempos y volverás al Paso 1.");
     if (confirm1) {
-      // Segunda validación crítica
       const confirm2 = confirm("🚨 ¡ALERTA CRÍTICA!\n\nConfirmas que deseas ELIMINAR los datos actuales de esta sesión y empezar de cero?\n\nPresiona Aceptar para proceder.");
       if (confirm2) {
         setTestState(prev => prev ? {
@@ -222,10 +220,8 @@ export default function HomeTestPage() {
   };
 
   const cancelTest = () => {
-    // Primera validación
     const confirm1 = confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?\n\nSe perderá todo el progreso y se cerrará la sesión actual.");
     if (confirm1) {
-      // Segunda validación crítica
       const confirm2 = confirm("🚨 ¡ATENCIÓN!\n\nEstás a punto de ABANDONAR el asistente. Si no terminaste el test, las muestras recolectadas podrían ser inválidas.\n\n¿Deseas salir de todas formas?");
       if (confirm2) {
         setTestState(null);
@@ -417,9 +413,9 @@ export default function HomeTestPage() {
           <Progress value={progress} className="h-2 rounded-full" />
         </div>
 
-        <Card className="rounded-[2.5rem] shadow-2xl border-primary/5 overflow-hidden bg-white">
+        <Card className="rounded-[2.5rem] shadow-2xl border-primary/5 bg-white relative mt-10">
           {stepImageData && (
-            <div className="relative w-full aspect-[3/2] overflow-hidden group">
+            <div className="relative w-full aspect-[3/2] overflow-hidden group rounded-t-[2.5rem]">
               <Image 
                 src={stepImageData.imageUrl} 
                 alt={stepImageData.description}
@@ -431,42 +427,42 @@ export default function HomeTestPage() {
             </div>
           )}
           
-          <div className="p-8 text-center space-y-6">
+          <div className="p-10 text-center space-y-8">
             <div className={cn(
-              "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto -mt-16 relative z-10 shadow-xl transition-all duration-500",
+              "w-20 h-20 rounded-2xl flex items-center justify-center mx-auto -mt-20 relative z-10 shadow-2xl transition-all duration-500",
               currentStep.type === 'breath' ? "bg-blue-100 text-blue-600 animate-pulse" :
               currentStep.type === 'ingest' ? "bg-amber-100 text-amber-600" : "bg-primary text-white"
             )}>
-              {currentStep.type === 'breath' && <Wind className="h-8 w-8" />}
-              {currentStep.type === 'ingest' && <Droplets className="h-8 w-8" />}
-              {currentStep.type === 'wait' && <Timer className="h-8 w-8" />}
+              {currentStep.type === 'breath' && <Wind className="h-10 w-10" />}
+              {currentStep.type === 'ingest' && <Droplets className="h-10 w-10" />}
+              {currentStep.type === 'wait' && <Timer className="h-10 w-10" />}
             </div>
 
-            <div className="space-y-3">
-              <h2 className="text-2xl font-black text-primary italic leading-tight">{currentStep.name}</h2>
-              <p className="text-muted-foreground font-medium text-sm leading-relaxed px-2">{currentStep.description}</p>
+            <div className="space-y-4">
+              <h2 className="text-3xl font-black text-primary italic leading-tight">{currentStep.name}</h2>
+              <p className="text-muted-foreground font-medium text-base leading-relaxed px-4">{currentStep.description}</p>
             </div>
 
             {(currentStep.type === 'wait' || currentStep.type === 'ingest') && (
-              <div className="py-4 space-y-4">
-                <div className="text-6xl font-black text-primary font-mono tracking-tighter tabular-nums drop-shadow-sm">
+              <div className="py-6 space-y-4">
+                <div className="text-7xl font-black text-primary font-mono tracking-tighter tabular-nums drop-shadow-sm">
                   {formatTime(timeLeft)}
                 </div>
-                <div className="bg-secondary/10 border border-secondary/20 rounded-xl p-3 inline-block">
+                <div className="bg-secondary/10 border border-secondary/20 rounded-xl p-4 inline-block">
                    <p className="text-[10px] font-black text-secondary uppercase tracking-widest leading-none mb-1">Próxima acción a las:</p>
-                   <p className="text-xl font-black text-primary">{getNextActionTime()} hrs</p>
+                   <p className="text-2xl font-black text-primary">{getNextActionTime()} hrs</p>
                 </div>
               </div>
             )}
 
-            <div className="pt-4">
+            <div className="pt-6">
               {currentStep.type === 'breath' ? (
                 <div className="space-y-4">
                   <Button 
                     onClick={confirmStep} 
-                    className="w-full h-16 rounded-2xl text-lg font-black bg-secondary hover:bg-secondary/90 shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full h-20 rounded-2xl text-xl font-black bg-secondary hover:bg-secondary/90 shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
                   >
-                    Confirmar soplido <CheckCircle2 className="h-5 w-5" />
+                    Confirmar soplido <CheckCircle2 className="h-6 w-6" />
                   </Button>
                   <p className="text-[11px] font-bold text-amber-600 flex items-center justify-center gap-1">
                     <PencilLine className="h-3 w-3" /> Recuerda anotar la hora en tu ficha física
@@ -475,28 +471,27 @@ export default function HomeTestPage() {
               ) : timeLeft === 0 ? (
                 <Button 
                   onClick={confirmStep} 
-                  className="w-full h-16 rounded-2xl text-lg font-black bg-primary shadow-xl animate-in zoom-in duration-300"
+                  className="w-full h-20 rounded-2xl text-xl font-black bg-primary shadow-xl animate-in zoom-in duration-300"
                 >
-                  Paso completado <ChevronRight className="ml-2 h-5 w-5" />
+                  Paso completado <ChevronRight className="ml-2 h-6 w-6" />
                 </Button>
               ) : (
-                <div className="bg-muted/50 p-6 rounded-2xl border-dashed border-2 border-muted">
-                  <p className="text-xs font-bold text-muted-foreground italic flex items-center justify-center gap-2">
-                    <Clock className="h-3 w-3" /> Esperando el tiempo de protocolo...
+                <div className="bg-muted/50 p-8 rounded-2xl border-dashed border-2 border-muted">
+                  <p className="text-sm font-bold text-muted-foreground italic flex items-center justify-center gap-2">
+                    <Clock className="h-4 w-4" /> Esperando el tiempo de protocolo...
                   </p>
                 </div>
               )}
             </div>
           </div>
           
-          <CardFooter className="bg-muted/30 border-t p-4 flex justify-center">
+          <CardFooter className="bg-muted/30 border-t p-6 flex justify-center rounded-b-[2.5rem]">
             <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-              Tecnología Sunvou® Chile
+              <Activity className="h-3 w-3 text-secondary" /> Tecnología Sunvou® Chile
             </div>
           </CardFooter>
         </Card>
 
-        {/* Bitácora de Respaldo */}
         {testState.logs && testState.logs.length > 0 && (
           <Card className="rounded-3xl border-primary/10 shadow-lg overflow-hidden bg-white/50">
             <div className="p-4 bg-primary/5 border-b border-primary/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
