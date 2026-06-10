@@ -1,10 +1,11 @@
 
 "use client";
 
+import { useState } from "react";
 import { Navbar, Logo } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Activity, 
   ArrowRight, 
@@ -37,7 +38,9 @@ import {
   Smartphone,
   Timer,
   Home,
-  Database
+  Database,
+  Droplets,
+  RotateCcw
 } from "lucide-react";
 import { 
   LineChart, 
@@ -203,6 +206,142 @@ const TechScannerAnimation = () => {
   );
 };
 
+const InteractiveAssistantSim = () => {
+  const [step, setStep] = useState(0);
+
+  const simSteps = [
+    {
+      title: "Muestra Basal (T-0)",
+      instruction: "Sopla en el primer tubo antes de ingerir el sustrato.",
+      importance: "Este es tu punto cero. Nos permite saber cuántos gases produce tu cuerpo naturalmente antes del estímulo.",
+      icon: <Wind className="h-8 w-8" />,
+      badge: "Paso 1 / 14",
+      button: "Confirmar Soplido",
+      time: "00:00"
+    },
+    {
+      title: "Ingesta del Sustrato",
+      instruction: "Bebe la solución lentamente durante 5 minutos.",
+      importance: "El sustrato (lactulosa o azúcar) es el 'alimento' que las bacterias fermentarán si están presentes en exceso.",
+      icon: <Droplets className="h-8 w-8" />,
+      badge: "Paso 2 / 14",
+      button: "Comenzar Ingesta",
+      time: "05:00"
+    },
+    {
+      title: "Periodo de Espera",
+      instruction: "Mantén reposo absoluto durante 20 minutos.",
+      importance: "El reposo es vital. La actividad física altera la respiración y puede diluir los gases, dando un falso negativo.",
+      icon: <Timer className="h-8 w-8" />,
+      badge: "Paso 3 / 14",
+      button: "Esperando...",
+      time: "14:52",
+      isWaiting: true
+    },
+    {
+      title: "Segunda Muestra (T-20)",
+      instruction: "Sopla suavemente en el tubo número 2.",
+      importance: "Aquí evaluamos el inicio del tránsito. Detectar gases tempranos sugiere bacterias en el intestino delgado (SIBO).",
+      icon: <Wind className="h-8 w-8" />,
+      badge: "Paso 4 / 14",
+      button: "Confirmar Soplido",
+      time: "00:00"
+    }
+  ];
+
+  const current = simSteps[step];
+
+  return (
+    <div className="relative w-full max-w-sm mx-auto">
+      {/* Speech Bubble (Globo didáctico) */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, y: 20, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="absolute -top-24 left-0 right-0 z-20"
+        >
+          <div className="bg-primary text-white p-4 rounded-2xl shadow-xl relative border-2 border-white/20">
+            <p className="text-xs font-bold leading-relaxed italic">
+              <Sparkles className="h-3 w-3 inline mr-1 text-secondary" /> {current.importance}
+            </p>
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rotate-45 border-r-2 border-b-2 border-white/20" />
+          </div>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Phone Mockup */}
+      <div className="relative glass-panel !bg-white rounded-[3rem] p-8 shadow-2xl border-primary/10 overflow-hidden">
+        <div className="absolute top-4 right-6 flex gap-1">
+          <div className="w-2 h-2 rounded-full bg-red-400" />
+          <div className="w-2 h-2 rounded-full bg-amber-400" />
+          <div className="w-2 h-2 rounded-full bg-green-400" />
+        </div>
+        
+        <div className="mt-6 space-y-6 text-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-6"
+            >
+              <Badge className="bg-secondary font-black uppercase text-[10px]">{current.badge}</Badge>
+              <div className={cn(
+                "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto transition-colors",
+                current.title.includes("Muestra") ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-600"
+              )}>
+                {current.icon}
+              </div>
+              <h4 className="text-xl font-black text-primary italic leading-tight">{current.title}</h4>
+              <p className="text-[10px] font-bold text-muted-foreground leading-tight px-4">{current.instruction}</p>
+              
+              <div className="py-4">
+                <div className="text-4xl font-black text-primary font-mono tabular-nums">{current.time}</div>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Tiempo restante</p>
+              </div>
+
+              <Button 
+                onClick={() => setStep((step + 1) % simSteps.length)}
+                className={cn(
+                  "w-full rounded-xl font-bold shadow-lg active:scale-95 transition-all",
+                  current.isWaiting ? "bg-slate-200 text-slate-500 pointer-events-none" : "bg-secondary hover:bg-secondary/90"
+                )}
+              >
+                {current.button}
+              </Button>
+            </motion.div>
+          </AnimatePresence>
+          
+          {current.isWaiting && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-[10px] font-bold text-primary underline"
+              onClick={() => setStep((step + 1) % simSteps.length)}
+            >
+              Simular fin de espera
+            </Button>
+          )}
+
+          {step === simSteps.length - 1 && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-4 rounded-full"
+              onClick={() => setStep(0)}
+            >
+              <RotateCcw className="h-3 w-3 mr-1" /> Reiniciar Simulación
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function HomePage() {
   const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Apoquindo+3992+oficina+605+Las+Condes+Santiago+Chile";
   const whatsappUrl = "https://wa.me/56936850468";
@@ -283,44 +422,21 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Home Test Assistant: Ahora como una sección de valor agregado */}
-        <section className="py-24 bg-gradient-to-b from-white to-muted/20 border-y">
+        {/* Home Test Assistant: Simulación Interactiva */}
+        <section className="py-32 bg-gradient-to-b from-white to-muted/20 border-y overflow-visible">
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="order-2 lg:order-1"
-              >
-                <div className="relative glass-panel !bg-white rounded-[3rem] p-8 shadow-2xl border-primary/10 max-w-sm mx-auto">
-                  <div className="absolute top-4 right-6 flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-red-400" />
-                    <div className="w-2 h-2 rounded-full bg-amber-400" />
-                    <div className="w-2 h-2 rounded-full bg-green-400" />
-                  </div>
-                  <div className="mt-6 space-y-6 text-center">
-                    <Badge className="bg-secondary font-black uppercase text-[10px]">Paso 4 / 14</Badge>
-                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto text-primary">
-                      <Wind className="h-8 w-8" />
-                    </div>
-                    <h4 className="text-xl font-black text-primary italic">Muestra 2 (T-20)</h4>
-                    <div className="py-4">
-                      <div className="text-4xl font-black text-primary font-mono tabular-nums">14:52</div>
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Tiempo restante</p>
-                    </div>
-                    <Button className="w-full rounded-xl bg-secondary font-bold">Confirmar soplido</Button>
-                  </div>
-                </div>
-              </motion.div>
+              <div className="order-2 lg:order-1 pt-12 lg:pt-0">
+                <InteractiveAssistantSim />
+              </div>
 
               <div className="order-1 lg:order-2 space-y-8">
                 <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold">VALOR AGREGADO</Badge>
                 <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">
-                  ¿Prefieres realizar tu <br /><span className="text-secondary">test en casa?</span>
+                  Prueba nuestro <br /><span className="text-secondary">Asistente Digital</span>
                 </h2>
                 <p className="text-lg text-muted-foreground font-medium leading-relaxed">
-                  Si retiras un kit para el hogar, nuestro **Asistente Digital Interactivo** te guiará paso a paso con cronómetros y recordatorios para asegurar un resultado perfecto.
+                  Interactúa con la simulación a la izquierda. Nuestro asistente guía al paciente paso a paso, explicando la importancia de cada etapa para asegurar un resultado válido.
                 </p>
                 
                 <div className="grid gap-6">
@@ -331,14 +447,14 @@ export default function HomePage() {
                       i: <Timer className="h-6 w-6" /> 
                     },
                     { 
-                      t: "Trazabilidad Digital", 
-                      d: "Tus tiempos se sincronizan con nuestro laboratorio para validación.", 
-                      i: <Database className="h-6 w-6" /> 
+                      t: "Explicación Clínica", 
+                      d: "Cada paso detalla su relevancia para el diagnóstico final.", 
+                      i: <Info className="h-6 w-6" /> 
                     },
                     { 
-                      t: "Acompañamiento IA", 
-                      d: "Resolución de dudas técnicas durante todo el procedimiento.", 
-                      i: <Sparkles className="h-6 w-6" /> 
+                      t: "Trazabilidad Total", 
+                      d: "Tus tiempos se sincronizan con nuestro laboratorio para validación.", 
+                      i: <Database className="h-6 w-6" /> 
                     }
                   ].map((feat, i) => (
                     <motion.div 
@@ -360,7 +476,7 @@ export default function HomePage() {
 
                 <Link href="/home-test" className="inline-block mt-4">
                   <Button variant="link" className="text-primary font-black flex items-center gap-2 p-0 text-lg">
-                    Probar el Asistente Digital <ChevronRight className="h-5 w-5" />
+                    Ir al Asistente Real <ChevronRight className="h-5 w-5" />
                   </Button>
                 </Link>
               </div>
