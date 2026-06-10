@@ -212,7 +212,7 @@ export default function HomePage() {
       <Navbar />
       
       <main className="flex-grow">
-        {/* Hero Section */}
+        {/* Hero Section: Enfoque en Agenda y Rigor Clínico */}
         <section className="relative pt-10 pb-16 md:pt-20 md:pb-20 lg:pt-32 lg:pb-32 overflow-hidden">
           <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
             <div className="absolute top-[-10%] left-[-10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-primary/10 rounded-full blur-[80px] md:blur-[120px] animate-blob" />
@@ -229,19 +229,19 @@ export default function HomePage() {
               >
                 <motion.div variants={fadeIn} className="flex flex-wrap justify-center lg:justify-start gap-2 md:gap-3">
                   <span className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary/10 text-primary text-xs md:text-sm font-bold border border-primary/20 backdrop-blur-sm">
-                    <Home className="h-3.5 w-3.5 md:h-4 md:w-4" /> Modalidad en Casa
+                    <Activity className="h-3.5 w-3.5 md:h-4 md:w-4" /> Laboratorio Especializado
                   </span>
                   <span className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-secondary/10 text-secondary text-xs md:text-sm font-bold border border-secondary/20 backdrop-blur-sm">
-                    <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" /> Asistente Digital IA
+                    <Microscope className="h-3.5 w-3.5 md:h-4 md:w-4" /> Tecnología Sunvou®
                   </span>
                 </motion.div>
                 
                 <motion.h1 variants={fadeIn} className="text-3xl md:text-5xl lg:text-7xl font-black text-primary leading-[1.1]">
-                  Test SIBO con <br />precisión clínica <span className="text-gradient italic">donde estés.</span>
+                  Test SIBO con <br />precisión clínica. <span className="text-gradient italic">Reserva tu cita.</span>
                 </motion.h1>
                 
                 <motion.p variants={fadeIn} className="text-base md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                  Realiza tu test de aire espirado en nuestra clínica o **cómodamente en tu hogar** con nuestro Asistente Interactivo que te guía paso a paso.
+                  Somos especialistas en el diagnóstico de sobrecrecimiento bacteriano e intolerancias alimentarias mediante aire espirado multigas.
                 </motion.p>
                 
                 <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 md:gap-4">
@@ -250,9 +250,9 @@ export default function HomePage() {
                       Agendar mi Test <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
-                  <Link href="/home-test" className="w-full sm:w-auto">
-                    <Button variant="secondary" size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 text-base md:text-lg font-bold shadow-lg hover:scale-105 transition-all">
-                      <Smartphone className="mr-2 h-5 w-5" /> Iniciar Asistente
+                  <Link href="/how-it-works" className="w-full sm:w-auto">
+                    <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-16 px-8 text-base md:text-lg font-bold border-2 border-primary text-primary hover:bg-primary/5 transition-all">
+                      Conoce el protocolo
                     </Button>
                   </Link>
                 </motion.div>
@@ -265,16 +265,16 @@ export default function HomePage() {
                 className="relative hidden lg:block"
               >
                 <div className="relative z-10 p-4">
-                   <div className="aspect-video bg-white/40 backdrop-blur-sm rounded-[3rem] border border-white/40 flex items-center justify-center overflow-hidden shadow-2xl">
+                   <div className="aspect-square bg-white/40 backdrop-blur-sm rounded-[3rem] border border-white/40 flex items-center justify-center overflow-hidden shadow-2xl">
                       <div className="absolute -bottom-10 -right-10 opacity-5 rotate-12 scale-150">
                         <Logo />
                       </div>
-                      <div className="relative text-center space-y-4">
-                        <div className="bg-secondary/10 p-8 rounded-full inline-block mb-4 shadow-inner">
-                           <Smartphone className="h-16 w-16 text-secondary animate-bounce" />
+                      <div className="relative text-center space-y-6">
+                        <div className="bg-primary/10 p-8 rounded-full inline-block shadow-inner">
+                           <CalendarDays className="h-20 w-20 text-primary" />
                         </div>
-                        <h4 className="text-2xl font-black text-primary italic">Guía Paso a Paso</h4>
-                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Protocolo Digital en Casa</p>
+                        <h4 className="text-2xl font-black text-primary italic leading-none">Agenda Digital</h4>
+                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Reserva inmediata 24/7</p>
                       </div>
                    </div>
                 </div>
@@ -283,8 +283,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Home Test Assistant Differentiator Section */}
-        <section className="py-24 bg-gradient-to-b from-white to-muted/20">
+        {/* Home Test Assistant: Ahora como una sección de valor agregado */}
+        <section className="py-24 bg-gradient-to-b from-white to-muted/20 border-y">
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <motion.div 
@@ -315,30 +315,30 @@ export default function HomePage() {
               </motion.div>
 
               <div className="order-1 lg:order-2 space-y-8">
-                <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold">EXCLUSIVO ORALAB</Badge>
+                <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold">VALOR AGREGADO</Badge>
                 <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">
-                  La tranquilidad de un técnico, <br />en la palma de tu mano.
+                  ¿Prefieres realizar tu <br /><span className="text-secondary">test en casa?</span>
                 </h2>
                 <p className="text-lg text-muted-foreground font-medium leading-relaxed">
-                  A diferencia de otros kits que solo te entregan instrucciones en papel, en Oralab te acompañamos digitalmente durante todo el procedimiento.
+                  Si retiras un kit para el hogar, nuestro **Asistente Digital Interactivo** te guiará paso a paso con cronómetros y recordatorios para asegurar un resultado perfecto.
                 </p>
                 
                 <div className="grid gap-6">
                   {[
                     { 
-                      t: "Asistente Interactivo", 
+                      t: "Guía Paso a Paso", 
                       d: "Un cronómetro inteligente te avisa exactamente cuándo soplar.", 
                       i: <Timer className="h-6 w-6" /> 
                     },
                     { 
-                      t: "Registro en Tiempo Real", 
+                      t: "Trazabilidad Digital", 
                       d: "Tus tiempos se sincronizan con nuestro laboratorio para validación.", 
                       i: <Database className="h-6 w-6" /> 
                     },
                     { 
-                      t: "Soporte Vía WhatsApp", 
-                      d: "Botón de ayuda directa si tienes cualquier duda técnica.", 
-                      i: <MessageCircle className="h-6 w-6" /> 
+                      t: "Acompañamiento IA", 
+                      d: "Resolución de dudas técnicas durante todo el procedimiento.", 
+                      i: <Sparkles className="h-6 w-6" /> 
                     }
                   ].map((feat, i) => (
                     <motion.div 
@@ -358,9 +358,9 @@ export default function HomePage() {
                   ))}
                 </div>
 
-                <Link href="/how-it-works" className="inline-block mt-4">
+                <Link href="/home-test" className="inline-block mt-4">
                   <Button variant="link" className="text-primary font-black flex items-center gap-2 p-0 text-lg">
-                    Ver cómo funciona la modalidad en casa <ChevronRight className="h-5 w-5" />
+                    Probar el Asistente Digital <ChevronRight className="h-5 w-5" />
                   </Button>
                 </Link>
               </div>
@@ -368,7 +368,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Represtantion Banner Section */}
+        {/* Representación Banner */}
         <section className="py-12 bg-muted/30">
           <div className="container mx-auto px-4">
             <motion.div 
@@ -383,7 +383,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-black text-primary italic">Partner Oficial Sunvou® en Chile</h3>
-                  <p className="text-muted-foreground font-medium">Representación exclusiva para clínicas, laboratorios e instituciones médicas.</p>
+                  <p className="text-muted-foreground font-medium">Representación exclusiva para clínicas e instituciones médicas.</p>
                 </div>
               </div>
               <Link href="/sunvou">
@@ -395,16 +395,13 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Clinical Statistics Section */}
+        {/* Estadísticas Clínicas */}
         <section className="py-12 md:py-24 bg-white relative">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-10 md:mb-20 space-y-4">
               <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold">EDUCACIÓN AL PACIENTE</Badge>
               <h2 className="text-2xl md:text-5xl font-black text-primary italic leading-tight">¿Por qué mi especialista me solicitó este test?</h2>
               <div className="h-1.5 w-24 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full" />
-              <p className="text-base md:text-xl text-muted-foreground font-medium">
-                Entender lo que sucede en tu interior es el primer paso para recuperar tu bienestar.
-              </p>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
@@ -455,30 +452,12 @@ export default function HomePage() {
                 </motion.div>
               ))}
             </div>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mt-8 md:mt-16 max-w-4xl mx-auto bg-primary/5 rounded-[1.5rem] md:rounded-[2.5rem] p-6 md:p-8 border border-primary/10 flex flex-col md:flex-row items-center gap-6 md:gap-8"
-            >
-              <div className="bg-white p-4 rounded-full shrink-0 shadow-md">
-                <HelpCircle className="h-6 w-6 md:h-8 md:w-8 text-primary" />
-              </div>
-              <div>
-                <h4 className="text-lg md:text-xl font-bold text-primary mb-2">¿Es tu primera vez con este test?</h4>
-                <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                  Es un procedimiento <strong>no invasivo</strong>. Solo necesitas soplar en un equipo especializado después de ingerir una solución dulce. A través de tu aliento, podemos "leer" lo que las bacterias están haciendo en tu intestino.
-                </p>
-              </div>
-            </motion.div>
           </div>
         </section>
 
-        {/* Science Section */}
+        {/* Sección de Ciencia y Tecnología */}
         <section className="py-16 md:py-24 bg-primary text-white relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-          
           <div className="container mx-auto px-4 relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div>
@@ -491,7 +470,7 @@ export default function HomePage() {
                   Rigor técnico al servicio de la <span className="text-secondary">gastroenterología</span>
                 </motion.h2>
                 <p className="text-base md:text-xl opacity-80 mb-8 md:mb-12 leading-relaxed">
-                  Nuestra metodología Sunvou® permite cuantificar Hidrógeno, Metano y Sulfuro de Hidrógeno de forma simultánea. Este análisis multigas proporciona información detallada para el diagnóstico diferencial.
+                  Nuestra metodología Sunvou® permite cuantificar Hidrógeno, Metano y Sulfuro de Hidrógeno de forma simultánea para un diagnóstico diferencial preciso.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-6 md:gap-8">
                   <div className="flex gap-4">
@@ -533,7 +512,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Technical Report Section */}
+        {/* Visualización de Informe Técnico */}
         <section className="py-16 md:py-24 bg-background overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
@@ -545,43 +524,19 @@ export default function HomePage() {
                   <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
                     Un informe técnico de Oralab entrega una representación gráfica que permite al especialista identificar patrones clínicos como el SIBO o intolerancias.
                   </p>
-                  
-                  <ul className="space-y-3 md:space-y-4">
-                    {[
-                      { t: "Detección de Sulfuro de Hidrógeno (H₂S)", d: "Identifica SIBO sulfuroso." },
-                      { t: "Control de CO₂ Alveolar", d: "Asegura muestra de aire válida." },
-                      { t: "Curva Multivariante", d: "Gases correlacionados con síntomas." }
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-3 md:gap-4 p-3 md:p-4 rounded-2xl bg-white border border-border">
-                        <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-secondary shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-bold text-sm md:text-base text-primary">{item.t}</p>
-                          <p className="text-xs md:text-sm text-muted-foreground">{item.d}</p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                  <Link href="/booking">
+                    <Button size="lg" className="rounded-full px-8 font-black">Agendar mi examen ahora</Button>
+                  </Link>
                </div>
 
                <div className="relative mt-8 lg:mt-0 w-full max-w-full">
                   <ClinicalReportVisualizer />
-                  <div className="absolute -bottom-4 -right-2 md:-bottom-6 md:-right-6 glass-panel p-3 md:p-6 rounded-2xl md:rounded-3xl z-20 bg-white border-primary/10 shadow-xl hidden sm:block">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <div className="bg-secondary/10 p-2 md:p-3 rounded-xl md:rounded-2xl text-secondary">
-                        <TrendingUp className="h-5 w-5 md:h-6 md:w-6" />
-                      </div>
-                      <div>
-                        <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estatístico</p>
-                        <p className="text-xs md:text-sm font-black text-primary">Interpretación Sunvou®</p>
-                      </div>
-                    </div>
-                  </div>
                </div>
             </div>
           </div>
         </section>
 
-        {/* Final CTA */}
+        {/* CTA Final */}
         <section className="py-12 md:py-32 container mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
@@ -589,17 +544,10 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="rounded-[1.5rem] md:rounded-[3rem] p-8 md:p-16 lg:p-24 bg-gradient-to-br from-primary via-primary to-secondary relative overflow-hidden shadow-2xl"
           >
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-              <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-            </div>
-
             <div className="relative z-10 text-center space-y-6 md:space-y-8">
               <h2 className="text-2xl md:text-5xl lg:text-7xl font-black text-white leading-tight">
                 Comprometidos con el soporte al diagnóstico médico.
               </h2>
-              <p className="text-base md:text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto leading-relaxed font-medium">
-                Agende su procedimiento con orden médica y cuente con el respaldo tecnológico necesario.
-              </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4 md:gap-6 pt-4 md:pt-8">
                 <Link href="/booking" className="w-full sm:w-auto">
                   <Button size="lg" className="w-full sm:w-auto rounded-full h-14 md:h-20 px-10 md:px-12 text-lg md:text-2xl font-black shadow-2xl bg-white text-primary hover:bg-secondary hover:text-white transition-all hover:scale-105 active:scale-95">
@@ -618,9 +566,9 @@ export default function HomePage() {
       </main>
 
       <footer className="bg-white border-t border-border py-10 md:py-20 relative overflow-hidden">
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-16 mb-10 md:mb-16">
-            <div className="col-span-1 lg:col-span-2 space-y-6 md:space-y-8 text-center md:text-left">
+        <div className="container mx-auto px-4 relative z-10 text-center md:text-left">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-16">
+            <div className="col-span-1 lg:col-span-2 space-y-6 md:space-y-8">
               <Link href="/" className="inline-block">
                 <Logo />
               </Link>
@@ -646,12 +594,8 @@ export default function HomePage() {
               </ul>
             </div>
           </div>
-          <div className="pt-8 md:pt-12 border-t border-border flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 text-muted-foreground text-[10px] md:text-xs font-medium text-center md:text-left">
+          <div className="pt-8 md:pt-12 border-t border-border mt-10 flex flex-col md:flex-row justify-between items-center gap-6 text-muted-foreground text-[10px] md:text-xs font-medium">
             <p>© 2024 Oralab Clinical Lab. Diagnóstico especializado Sunvou®.</p>
-            <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8">
-              <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-500" /> Certificación IVD</span>
-              <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-500" /> Tecnología Sunvou®</span>
-            </div>
           </div>
         </div>
       </footer>
