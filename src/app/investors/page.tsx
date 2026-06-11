@@ -68,9 +68,9 @@ const MILESTONES = [
   {
     id: "m3",
     title: "Capital de trabajo",
-    target: 3097884, // Diferencia para llegar a 13.5M
+    target: 3097884,
     percentage: 23,
-    color: "bg-[#065f46]", // Emerald 800ish
+    color: "bg-[#065f46]",
     textColor: "text-[#065f46]",
     icon: <Briefcase className="h-8 w-8" />,
     items: [
@@ -98,7 +98,6 @@ export default function InvestorsDashboardPage() {
     value: inv.amount
   })) || [];
 
-  // Calcular fondeo por hito
   let remainingCapital = totalInvestment;
   const milestonesWithProgress = MILESTONES.map(m => {
     const funded = Math.min(remainingCapital, m.target);
@@ -120,7 +119,6 @@ export default function InvestorsDashboardPage() {
           </p>
         </div>
 
-        {/* Sección de Meta de Recaudación */}
         <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/5 mb-12 overflow-hidden">
           <div className="bg-primary/5 p-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
@@ -152,7 +150,6 @@ export default function InvestorsDashboardPage() {
           </div>
         </Card>
 
-        {/* Sección Hitos de Inversión (Nueva) */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-secondary/10 p-2 rounded-xl">
@@ -191,7 +188,6 @@ export default function InvestorsDashboardPage() {
                     </ul>
                   </div>
                   
-                  {/* Footer de la tarjeta con progreso */}
                   <div className="mt-auto">
                     <div className="px-8 py-2">
                        <Progress value={m.progress} className="h-1.5" />
@@ -240,7 +236,6 @@ export default function InvestorsDashboardPage() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 items-start mb-16">
-          {/* Gráfico de Proporciones */}
           <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/5 p-8">
             <CardHeader className="p-0 mb-8">
               <CardTitle className="text-xl font-black text-primary flex items-center gap-2">
@@ -261,6 +256,7 @@ export default function InvestorsDashboardPage() {
                       outerRadius={120}
                       paddingAngle={8}
                       dataKey="value"
+                      label={({ value }) => `$${value.toLocaleString()}`}
                     >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -270,7 +266,7 @@ export default function InvestorsDashboardPage() {
                       contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
                       formatter={(value: number) => [`$${value.toLocaleString()}`, 'Aporte']}
                     />
-                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />
+                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '20px' }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -279,7 +275,6 @@ export default function InvestorsDashboardPage() {
             </div>
           </Card>
 
-          {/* Listado Anonimizado */}
           <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/5 overflow-hidden">
             <CardHeader className="bg-primary/5 p-8 border-b">
               <CardTitle className="text-xl font-black text-primary">Detalle de Aportes</CardTitle>
@@ -334,4 +329,3 @@ export default function InvestorsDashboardPage() {
     </div>
   );
 }
-
