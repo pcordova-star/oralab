@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -24,14 +23,11 @@ import {
   Microscope, 
   Building2, 
   Briefcase, 
-  CheckCircle2,
   ChevronRight,
   Info,
   Calendar,
   Clock,
-  Activity,
-  AlertCircle,
-  Sparkles
+  AlertCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -94,6 +90,7 @@ export default function InvestorsDashboardPage() {
   const db = useFirestore();
 
   useEffect(() => {
+    setMounted(false); // Reset to avoid double hydrate in dev
     setMounted(true);
   }, []);
 
@@ -166,7 +163,9 @@ export default function InvestorsDashboardPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Progreso de la Ronda</p>
-                <div className="text-4xl font-black text-secondary italic">{mounted ? progressPercentage.toFixed(1) : "0"}%</div>
+                <div className="text-4xl font-black text-secondary italic">
+                  {mounted ? progressPercentage.toFixed(1) : "0"}%
+                </div>
               </div>
             </div>
             
@@ -316,7 +315,6 @@ export default function InvestorsDashboardPage() {
           </Card>
         </div>
 
-        {/* Sección de Retornos y Operación */}
         <section className="mb-16 max-w-5xl mx-auto">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-primary/10 p-2 rounded-xl">

@@ -62,7 +62,7 @@ import {
   LayoutGrid,
   Calendar as CalendarViewIcon
 } from "lucide-react";
-import { format, addDays, subDays, startOfToday, isSameDay } from "date-fns";
+import { format, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { getAuth, signOut } from "firebase/auth";
@@ -92,7 +92,6 @@ export default function ReceptionPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isMounted, setIsMounted] = useState(false);
   
-  // Investor State
   const [isInvestorDialogOpen, setIsInvestorDialogOpen] = useState(false);
   const [investorName, setInvestorName] = useState("");
   const [investorAmount, setInvestorAmount] = useState("");
@@ -117,13 +116,11 @@ export default function ReceptionPage() {
 
   const dateString = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : "";
 
-  // Queries
   const bookingsQuery = useMemoFirebase(() => {
     if (!db || !dateString) return null;
     return query(collection(db, "bookings"), where("scheduledDate", "==", dateString));
   }, [db, dateString]);
 
-  // Query to get all bookings to highlight them on the calendar
   const allBookingsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "bookings"), where("status", "not-in", ["cancelled"]));
@@ -154,7 +151,6 @@ export default function ReceptionPage() {
     b.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Financial calculations
   const totalInvestment = investors?.reduce((acc, inv) => acc + (inv.amount || 0), 0) || 0;
   const remainingAmount = Math.max(0, FUNDING_GOAL - totalInvestment);
   const progressPercentage = Math.min((totalInvestment / FUNDING_GOAL) * 100, 100);
@@ -219,7 +215,6 @@ export default function ReceptionPage() {
     }
   };
 
-  // Helper to find if a day has bookings
   const hasBookingsOnDay = (date: Date) => {
     if (!allBookingsData) return false;
     const formattedDate = format(date, 'yyyy-MM-dd');
@@ -265,7 +260,6 @@ export default function ReceptionPage() {
 
           <TabsContent value="patients">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Calendario Lateral */}
               <div className="lg:col-span-4">
                 <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden sticky top-24">
                   <CardHeader className="bg-primary/5 border-b">
@@ -292,7 +286,6 @@ export default function ReceptionPage() {
                 </Card>
               </div>
 
-              {/* Listado de Pacientes */}
               <div className="lg:col-span-8">
                 <Card className="bg-white shadow-xl border-primary/10 overflow-hidden rounded-[2rem] min-h-[600px]">
                   <div className="p-6 border-b bg-primary/5 flex flex-col md:flex-row gap-6 items-center justify-between">
@@ -468,7 +461,6 @@ export default function ReceptionPage() {
         </Tabs>
       </main>
 
-      {/* Dialogo Inversionista */}
       <Dialog open={isInvestorDialogOpen} onOpenChange={setIsInvestorDialogOpen}>
         <DialogContent className="rounded-[2rem]">
           <DialogHeader>
@@ -491,7 +483,6 @@ export default function ReceptionPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialogo Reprogramación */}
       <Dialog open={!!editingBooking} onOpenChange={() => setEditingBooking(null)}>
         <DialogContent className="rounded-[2rem]">
           <DialogHeader><DialogTitle className="font-black text-primary italic">Reprogramar Cita</DialogTitle></DialogHeader>

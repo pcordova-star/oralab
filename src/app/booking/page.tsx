@@ -25,14 +25,14 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Beaker, Wind, Stethoscope, MessageCircle, HelpCircle, MapPin, Globe } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Stethoscope, MessageCircle, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
-import { collection, serverTimestamp, doc } from "firebase/firestore";
+import { collection, serverTimestamp } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, isBefore, startOfToday, isWeekend } from "date-fns";
+import { format, isBefore, isWeekend } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
@@ -101,7 +101,6 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
-// Fecha de inicio de operaciones: 15 de Julio de 2025
 const OPERATIONS_START_DATE = new Date(2025, 6, 15);
 
 export default function BookingPage() {
@@ -441,9 +440,6 @@ export default function BookingPage() {
               <Button onClick={downloadPDF} variant="outline" size="lg" className="rounded-full flex items-center gap-2 bg-primary/5 hover:bg-primary hover:text-white transition-all">
                 <Download className="h-5 w-5" /> Descargar Resumen Oficial PDF
               </Button>
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-green-500" /> Documento válido para presentación médica
-              </div>
             </div>
 
             <Link href="/">
