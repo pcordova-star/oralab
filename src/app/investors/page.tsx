@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -185,30 +186,6 @@ export default function InvestorsDashboardPage() {
           </div>
         </Card>
 
-        {/* Sección: La Propuesta */}
-        <section className="mb-16">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="bg-secondary/10 p-2 rounded-xl">
-              <Sparkles className="h-6 w-6 text-secondary" />
-            </div>
-            <h2 className="text-3xl font-black text-primary italic">La Propuesta</h2>
-          </div>
-
-          <Card className="bg-white shadow-xl rounded-[2.5rem] border-none overflow-hidden mb-8">
-            <div className="bg-[#e9f7f2] p-4 border-l-8 border-[#10b981]">
-              <p className="text-lg md:text-xl font-bold text-[#065f46]">
-                Sin monto mínimo ni máximo — cada persona aporta lo que puede y recibe en proporción
-              </p>
-            </div>
-            
-            <div className="bg-primary p-8 text-white">
-              <p className="text-xl md:text-2xl font-medium leading-relaxed">
-                Por cada $1.000.000 aportado: <span className="font-black text-secondary">$200.000 retorno fijo (20%)</span> + devolución de tu capital + <span className="font-black text-secondary">0,74% del negocio para siempre</span>
-              </p>
-            </div>
-          </Card>
-        </section>
-
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-secondary/10 p-2 rounded-xl">
@@ -393,9 +370,6 @@ export default function InvestorsDashboardPage() {
                   <h4 className="text-sm font-black text-primary uppercase flex items-center gap-2">
                     <Activity className="h-4 w-4 text-secondary" /> Métricas Proyectadas de Retorno
                   </h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed italic">
-                    * Dividendo anual estimado en régimen (10 pac/día). Año 1: capital + 20% en cuotas mes 6–12. Desde año 2: % del negocio genera dividendos permanentes.
-                  </p>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-primary/10 flex items-center justify-between">
                    <div>
