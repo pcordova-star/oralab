@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -37,30 +38,24 @@ import {
 import { 
   Search, 
   LogOut,
-  RefreshCcw,
   Phone,
   UserCheck,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   CalendarDays,
-  AlertTriangle,
   Calendar as CalendarIcon,
   XCircle,
   Clock,
   Pencil,
   FileText,
   Mail,
-  Building2,
-  MessageSquare,
-  Bell,
   Coins,
   Plus,
   User,
   Target,
   TrendingUp,
-  LayoutGrid,
-  Calendar as CalendarViewIcon
+  Calendar as CalendarViewIcon,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 import { format, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -95,6 +90,7 @@ export default function ReceptionPage() {
   const [isInvestorDialogOpen, setIsInvestorDialogOpen] = useState(false);
   const [investorName, setInvestorName] = useState("");
   const [investorAmount, setInvestorAmount] = useState("");
+  const [investorStatus, setInvestorStatus] = useState<"confirmed" | "pending">("confirmed");
 
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
@@ -152,7 +148,6 @@ export default function ReceptionPage() {
   );
 
   const totalInvestment = investors?.reduce((acc, inv) => acc + (inv.amount || 0), 0) || 0;
-  const remainingAmount = Math.max(0, FUNDING_GOAL - totalInvestment);
   const progressPercentage = Math.min((totalInvestment / FUNDING_GOAL) * 100, 100);
 
   async function handleLogout() {
@@ -171,6 +166,7 @@ export default function ReceptionPage() {
       realName: investorName,
       investorNumber: newNumber,
       amount: parseInt(investorAmount),
+      status: investorStatus,
       createdAt: serverTimestamp(),
     };
 
@@ -179,9 +175,20 @@ export default function ReceptionPage() {
       toast({ title: "Inversionista agregado", description: "El aporte ha sido registrado." });
       setInvestorName("");
       setInvestorAmount("");
+      setInvestorStatus("confirmed");
       setIsInvestorDialogOpen(false);
     } catch (e) {
       toast({ variant: "destructive", title: "Error", description: "No se pudo guardar el registro." });
+    }
+  }
+
+  async function handleUpdateInvestorStatus(id: string, newStatus: "confirmed" | "pending") {
+    if (!db) return;
+    try {
+      await updateDoc(doc(db, "investors", id), { status: newStatus });
+      toast({ title: "Estado actualizado" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error" });
     }
   }
 
@@ -399,9 +406,9 @@ export default function ReceptionPage() {
                     <div className="bg-secondary/10 p-2 rounded-lg">
                       <Target className="h-5 w-5 text-secondary" />
                     </div>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Faltante por Recaudar</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Inversionistas</p>
                   </div>
-                  <h3 className="text-3xl font-black text-primary italic">${remainingAmount.toLocaleString()}</h3>
+                  <h3 className="text-3xl font-black text-primary italic">{investors?.length || 0}</h3>
                   <p className="text-[10px] font-bold text-muted-foreground mt-2 uppercase tracking-tighter">Meta Global: ${FUNDING_GOAL.toLocaleString()}</p>
                 </CardContent>
               </Card>
@@ -424,15 +431,16 @@ export default function ReceptionPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/10">
-                      <TableHead className="font-black text-[10px] uppercase pl-8"># Folio Público</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase">Nombre Real (Privado)</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase text-right">Monto Aportado</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase pl-8"># Folio</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase">Inversionista (Nombre Real)</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase">Monto</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase text-center">Estado</TableHead>
                       <TableHead className="text-right font-black text-[10px] uppercase pr-8">Gestión</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {investors?.map((inv) => (
-                      <TableRow key={inv.id} className="hover:bg-primary/5">
+                      <TableRow key={inv.id} className="hover:bg-primary/5 group">
                         <TableCell className="font-black text-primary pl-8 italic">#{inv.investorNumber}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -440,18 +448,35 @@ export default function ReceptionPage() {
                              <span className="font-bold">{inv.realName}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <span className="text-lg font-black text-secondary">${(inv.amount || 0).toLocaleString()}</span>
+                        <TableCell>
+                          <span className="font-black text-primary">${(inv.amount || 0).toLocaleString()}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Select 
+                            value={inv.status || "confirmed"} 
+                            onValueChange={(v) => handleUpdateInvestorStatus(inv.id, v as "confirmed" | "pending")}
+                          >
+                            <SelectTrigger className={cn(
+                              "h-7 text-[9px] font-black uppercase w-32 mx-auto rounded-full border-none",
+                              inv.status === "pending" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"
+                            )}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="confirmed" className="text-[10px] font-bold">Confirmado</SelectItem>
+                              <SelectItem value="pending" className="text-[10px] font-bold">Por Confirmar</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell className="text-right pr-8">
-                          <Button variant="ghost" size="icon" className="text-red-300 hover:text-red-600" onClick={() => handleDeleteInvestor(inv.id)}>
+                          <Button variant="ghost" size="icon" className="text-red-300 hover:text-red-600 rounded-full h-8 w-8" onClick={() => handleDeleteInvestor(inv.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
                     ))}
                     {investors?.length === 0 && (
-                      <TableRow><TableCell colSpan={4} className="text-center py-20 text-muted-foreground italic">Esperando primeros inversionistas.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic">Esperando primeros inversionistas.</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -466,19 +491,33 @@ export default function ReceptionPage() {
           <DialogHeader>
             <DialogTitle className="font-black text-primary italic">Registrar Nuevo Aporte</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-6 py-4">
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-primary/50">Nombre Real del Inversionista</label>
-              <Input value={investorName} onChange={(e) => setInvestorName(e.target.value)} placeholder="Ej: Roberto Sánchez" />
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Nombre Real del Inversionista</label>
+              <Input value={investorName} onChange={(e) => setInvestorName(e.target.value)} placeholder="Ej: Roberto Sánchez" className="h-12 rounded-xl" />
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-primary/50">Monto del Aporte (CLP)</label>
-              <Input type="number" value={investorAmount} onChange={(e) => setInvestorAmount(e.target.value)} placeholder="Ej: 5000000" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Monto (CLP)</label>
+                <Input type="number" value={investorAmount} onChange={(e) => setInvestorAmount(e.target.value)} placeholder="Ej: 5000000" className="h-12 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Estado Inicial</label>
+                <Select value={investorStatus} onValueChange={(v) => setInvestorStatus(v as "confirmed" | "pending")}>
+                  <SelectTrigger className="h-12 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="confirmed">Confirmado</SelectItem>
+                    <SelectItem value="pending">Por Confirmar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsInvestorDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleInvestorSubmit} className="bg-primary font-black rounded-full px-6">Guardar Registro</Button>
+            <Button onClick={handleInvestorSubmit} className="bg-primary font-black rounded-full px-8 h-12">Guardar Registro</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -89,9 +89,10 @@
         "realName": { "type": "string", "description": "Nombre real visible solo para admin." },
         "investorNumber": { "type": "number", "description": "Número secuencial para vista pública." },
         "amount": { "type": "number", "description": "Monto aportado en CLP." },
+        "status": { "type": "string", "enum": ["confirmed", "pending"], "description": "Estado del aporte: confirmado o por confirmar." },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["realName", "investorNumber", "amount", "createdAt"]
+      "required": ["realName", "investorNumber", "amount", "status", "createdAt"]
     }
   },
   "auth": {

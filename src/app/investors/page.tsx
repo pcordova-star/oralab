@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -27,7 +28,8 @@ import {
   Info,
   Calendar,
   Clock,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,7 +41,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-const REMAINING_COLOR = '#e2e8f0'; 
+const PENDING_COLOR = '#94a3b8';
+const REMAINING_COLOR = '#f1f5f9'; 
 const FUNDING_GOAL = 13500000;
 
 const MILESTONES = [
@@ -102,29 +105,34 @@ export default function InvestorsDashboardPage() {
 
   const { data: investors, isLoading } = useCollection(investorsQuery);
 
-  const totalInvestment = investors?.reduce((acc, inv) => acc + (inv.amount || 0), 0) || 0;
-  const progressPercentage = Math.min((totalInvestment / FUNDING_GOAL) * 100, 100);
+  const totalConfirmed = investors?.filter(i => i.status !== "pending").reduce((acc, inv) => acc + (inv.amount || 0), 0) || 0;
+  const totalPending = investors?.filter(i => i.status === "pending").reduce((acc, inv) => acc + (inv.amount || 0), 0) || 0;
+  const totalInvestment = totalConfirmed + totalPending;
+
+  const confirmedPercentage = Math.min((totalConfirmed / FUNDING_GOAL) * 100, 100);
+  const pendingPercentage = Math.min((totalPending / FUNDING_GOAL) * 100, 100);
+  const totalPercentage = Math.min((totalInvestment / FUNDING_GOAL) * 100, 100);
   const remainingCapital = Math.max(0, FUNDING_GOAL - totalInvestment);
 
   const chartData = [
     ...(investors?.map((inv, index) => ({
-      name: `Inversionista #${inv.investorNumber}`,
+      name: `Inversionista #${inv.investorNumber}${inv.status === 'pending' ? ' (Por Confirmar)' : ''}`,
       value: inv.amount,
-      isInvestor: true,
-      color: COLORS[index % COLORS.length]
+      status: inv.status || 'confirmed',
+      color: inv.status === 'pending' ? PENDING_COLOR : COLORS[index % COLORS.length]
     })) || []),
   ];
 
   if (remainingCapital > 0) {
     chartData.push({
-      name: "Capital por Recaudar",
+      name: "Disponible para Ronda",
       value: remainingCapital,
-      isInvestor: false,
+      status: 'available',
       color: REMAINING_COLOR
     } as any);
   }
 
-  let tempRemaining = totalInvestment;
+  let tempRemaining = totalConfirmed;
   const milestonesWithProgress = MILESTONES.map(m => {
     const funded = Math.min(tempRemaining, m.target);
     tempRemaining = Math.max(0, tempRemaining - m.target);
@@ -162,26 +170,42 @@ export default function InvestorsDashboardPage() {
                 <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] md:text-xs tracking-widest">
                   <Target className="h-4 w-4 text-secondary" /> Meta de Recaudación
                 </div>
-                <h2 className="text-2xl md:text-3xl font-black text-primary italic">Ronda de Capital</h2>
+                <h2 className="text-2xl md:text-3xl font-black text-primary italic">Ronda de Levantamiento</h2>
               </div>
               <div className="text-left md:text-right">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Progreso de la Ronda</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Estado de la Ronda</p>
                 <div className="text-3xl md:text-4xl font-black text-secondary italic">
-                  {mounted ? progressPercentage.toFixed(1) : "0"}%
+                  {mounted ? totalPercentage.toFixed(1) : "0"}%
                 </div>
               </div>
             </div>
             
             <div className="space-y-4">
-              <Progress value={mounted ? progressPercentage : 0} className="h-4 md:h-5 rounded-full bg-slate-200" />
-              <div className="flex justify-between items-end">
+              <div className="relative h-4 md:h-5 w-full bg-slate-100 rounded-full overflow-hidden">
+                 <motion.div 
+                   initial={{ width: 0 }}
+                   animate={{ width: `${confirmedPercentage}%` }}
+                   className="absolute h-full bg-primary z-20"
+                 />
+                 <motion.div 
+                   initial={{ width: 0 }}
+                   animate={{ width: `${confirmedPercentage + pendingPercentage}%` }}
+                   className="absolute h-full bg-primary/30 z-10"
+                 />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase">Recaudado Actual</p>
-                  <p className="text-xl md:text-3xl font-black text-primary">{formatCurrency(totalInvestment)}</p>
+                  <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-primary" /> Recaudado (Confirmado)
+                  </p>
+                  <p className="text-xl md:text-3xl font-black text-primary">{formatCurrency(totalConfirmed)}</p>
                 </div>
-                <div className="text-right space-y-1">
-                  <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase">Objetivo Final</p>
-                  <p className="text-xl md:text-3xl font-black text-slate-400">{formatCurrency(FUNDING_GOAL)}</p>
+                <div className="text-left md:text-right space-y-1">
+                  <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase flex items-center md:justify-end gap-1">
+                    <AlertCircle className="h-3 w-3 text-primary/40" /> Comprometido (Por Confirmar)
+                  </p>
+                  <p className="text-xl md:text-3xl font-black text-primary/40">{formatCurrency(totalPending)}</p>
                 </div>
               </div>
             </div>
@@ -238,40 +262,7 @@ export default function InvestorsDashboardPage() {
               </motion.div>
             ))}
           </div>
-          
-          <div className="mt-8 bg-primary p-4 rounded-2xl text-center text-white font-black italic shadow-lg text-sm md:text-base">
-            TOTAL A LEVANTAR: {formatCurrency(FUNDING_GOAL)} CLP
-          </div>
         </section>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="bg-primary text-white shadow-xl rounded-[1.5rem] md:rounded-[2rem] border-none overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-              <Coins className="h-16 md:h-24 w-16 md:w-24" />
-            </div>
-            <CardContent className="p-6 md:p-8 space-y-2 relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Capital Vigente</p>
-              <h3 className="text-2xl md:text-4xl font-black italic">{formatCurrency(totalInvestment)}</h3>
-              <p className="text-[10px] font-bold opacity-60 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> CLP Inversión Privada</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-lg rounded-[1.5rem] md:rounded-[2rem] border-primary/5">
-            <CardContent className="p-6 md:p-8 space-y-2">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">N° de Aportantes</p>
-              <h3 className="text-2xl md:text-4xl font-black text-primary italic">{mounted ? (investors?.length || 0) : "0"}</h3>
-              <p className="text-[10px] font-bold text-secondary flex items-center gap-1"><Users className="h-3 w-3" /> Socios Fundadores</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-lg rounded-[1.5rem] md:rounded-[2rem] border-primary/5">
-            <CardContent className="p-6 md:p-8 space-y-2">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estado de Ronda</p>
-              <h3 className="text-2xl md:text-4xl font-black text-secondary italic">ABIERTA</h3>
-              <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-1"><Rocket className="h-3 w-3" /> Levantamiento I+D</p>
-            </CardContent>
-          </Card>
-        </div>
 
         <div className="mb-16 max-w-4xl mx-auto">
           <Card className="bg-white shadow-xl rounded-[2rem] md:rounded-[2.5rem] border-primary/5 p-4 md:p-8">
@@ -279,7 +270,7 @@ export default function InvestorsDashboardPage() {
               <CardTitle className="text-xl md:text-2xl font-black text-primary flex items-center justify-center gap-2 italic">
                 <TrendingUp className="h-6 w-6 text-secondary" /> Distribución de Participación
               </CardTitle>
-              <CardDescription className="font-medium text-xs md:text-sm">Resumen visual de los aportes frente a la meta de {formatCurrency(FUNDING_GOAL)}.</CardDescription>
+              <CardDescription className="font-medium text-xs md:text-sm">Resumen de aportes frente a la meta de {formatCurrency(FUNDING_GOAL)}.</CardDescription>
             </CardHeader>
             
             <CardContent className="p-0">
@@ -290,35 +281,34 @@ export default function InvestorsDashboardPage() {
               ) : chartData.length > 0 ? (
                 <div className="w-full">
                   {isMobile ? (
-                    /* Vista de Tabla para Móviles */
                     <div className="overflow-hidden rounded-2xl border border-primary/5">
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-muted/30">
-                            <TableHead className="font-black text-[9px] uppercase pl-4">Aportante</TableHead>
-                            <TableHead className="font-black text-[9px] uppercase text-right">Monto</TableHead>
-                            <TableHead className="font-black text-[9px] uppercase text-right pr-4">%</TableHead>
+                            <TableHead className="font-black text-[9px] uppercase pl-4">Folio</TableHead>
+                            <TableHead className="font-black text-[9px] uppercase">Estado</TableHead>
+                            <TableHead className="font-black text-[9px] uppercase text-right pr-4">Monto</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {chartData.map((entry: any, index: number) => (
+                          {chartData.filter(e => e.status !== 'available').map((entry: any, index: number) => (
                             <TableRow key={`row-${index}`} className="hover:bg-primary/5 transition-colors">
                               <TableCell className="pl-4">
                                 <div className="flex items-center gap-2">
-                                  <div 
-                                    className="w-2.5 h-2.5 rounded-full shrink-0" 
-                                    style={{ backgroundColor: entry.color }} 
-                                  />
-                                  <span className="font-bold text-[11px] text-primary truncate max-w-[120px]">
-                                    {entry.name}
-                                  </span>
+                                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                                  <span className="font-bold text-[11px] text-primary">{entry.name}</span>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-right font-black text-[11px] text-primary">
-                                {formatCurrency(entry.value)}
+                              <TableCell>
+                                <Badge className={cn(
+                                  "text-[8px] font-black uppercase px-2 py-0.5 border-none",
+                                  entry.status === "pending" ? "bg-amber-100 text-amber-600" : "bg-green-100 text-green-600"
+                                )}>
+                                  {entry.status === "pending" ? "Por Confirmar" : "Confirmado"}
+                                </Badge>
                               </TableCell>
-                              <TableCell className="text-right font-bold text-[10px] text-muted-foreground pr-4">
-                                {((entry.value / FUNDING_GOAL) * 100).toFixed(1)}%
+                              <TableCell className="text-right font-black text-[11px] text-primary pr-4">
+                                {formatCurrency(entry.value)}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -326,7 +316,6 @@ export default function InvestorsDashboardPage() {
                       </Table>
                     </div>
                   ) : (
-                    /* Vista de Gráfico para Desktop */
                     <div className="h-[500px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -344,6 +333,8 @@ export default function InvestorsDashboardPage() {
                               <Cell 
                                 key={`cell-${index}`} 
                                 fill={entry.color} 
+                                strokeWidth={entry.status === 'pending' ? 2 : 0}
+                                stroke={entry.status === 'pending' ? '#fff' : 'none'}
                               />
                             ))}
                           </Pie>
@@ -351,7 +342,7 @@ export default function InvestorsDashboardPage() {
                             contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
                             formatter={(value: number, name: string) => [formatCurrency(value), name]}
                           />
-                          <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '30px' }} />
+                          <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '30px' }} />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
@@ -419,17 +410,9 @@ export default function InvestorsDashboardPage() {
             <p className="text-[10px] md:text-xs font-black text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2">
               <Calendar className="h-3 w-3" /> Última actualización: {getUpdateDate()}
             </p>
-            <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic leading-relaxed">
-              <Info className="h-3 w-3 inline mr-1" /> Información financiera y operativa sujeta a cambios según plan de despliegue 2025.
-            </p>
             <p className="text-[10px] md:text-xs font-bold text-primary max-w-2xl mx-auto leading-relaxed mt-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
               * Dividendo anual estimado en régimen (10 pac/día). Año 1: capital + 20% en cuotas mes 6–12. Desde año 2: % del negocio genera dividendos permanentes.
             </p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2 md:gap-4 pb-12">
-             <Badge variant="outline" className="rounded-full bg-white border-primary/10 py-1 px-3 text-[9px] md:text-[10px]">Capital Inversión</Badge>
-             <Badge variant="outline" className="rounded-full bg-white border-primary/10 py-1 px-3 text-[9px] md:text-[10px]">Representación Sunvou®</Badge>
-             <Badge variant="outline" className="rounded-full bg-white border-primary/10 py-1 px-3 text-[9px] md:text-[10px]">I+D Salud Digestiva</Badge>
           </div>
         </div>
       </main>
