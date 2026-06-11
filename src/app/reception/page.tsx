@@ -59,16 +59,18 @@ import {
   Plus,
   User,
   Target,
-  TrendingUp
+  TrendingUp,
+  LayoutGrid,
+  Calendar as CalendarViewIcon
 } from "lucide-react";
-import { format, addDays, subDays, startOfToday } from "date-fns";
+import { format, addDays, subDays, startOfToday, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { getAuth, signOut } from "firebase/auth";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { updateDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
 const FUNDING_GOAL = 13000000;
@@ -88,7 +90,7 @@ export default function ReceptionPage() {
   const db = useFirestore();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isMounted, setIsMounted] = useState(false);
   
   // Investor State
@@ -122,6 +124,12 @@ export default function ReceptionPage() {
     return query(collection(db, "bookings"), where("scheduledDate", "==", dateString));
   }, [db, dateString]);
 
+  // Query to get all bookings to highlight them on the calendar
+  const allBookingsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "bookings"), where("status", "not-in", ["cancelled"]));
+  }, [db]);
+
   const leadsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "leads"), orderBy("createdAt", "desc"));
@@ -133,6 +141,7 @@ export default function ReceptionPage() {
   }, [db]);
 
   const { data: rawBookings, isLoading: isBookingsLoading } = useCollection(bookingsQuery);
+  const { data: allBookingsData } = useCollection(allBookingsQuery);
   const { data: leads, isLoading: isLeadsLoading } = useCollection(leadsQuery);
   const { data: investors, isLoading: isInvestorsLoading } = useCollection(investorsQuery);
 
@@ -211,6 +220,13 @@ export default function ReceptionPage() {
     }
   };
 
+  // Helper to find if a day has bookings
+  const hasBookingsOnDay = (date: Date) => {
+    if (!allBookingsData) return false;
+    const formattedDate = format(date, 'yyyy-MM-dd');
+    return allBookingsData.some(b => b.scheduledDate === formattedDate);
+  };
+
   if (isUserLoading || !user || !isMounted) return null;
 
   return (
@@ -239,7 +255,9 @@ export default function ReceptionPage() {
 
         <Tabs defaultValue="patients" className="space-y-6">
           <TabsList className="bg-muted/50 p-1 rounded-full w-full max-w-2xl mx-auto grid grid-cols-3">
-            <TabsTrigger value="patients" className="rounded-full font-black uppercase text-xs">Agenda</TabsTrigger>
+            <TabsTrigger value="patients" className="rounded-full font-black uppercase text-xs flex items-center gap-2">
+              <CalendarViewIcon className="h-3 w-3" /> Agenda
+            </TabsTrigger>
             <TabsTrigger value="leads" className="rounded-full font-black uppercase text-xs">Leads Sunvou</TabsTrigger>
             <TabsTrigger value="investors" className="rounded-full font-black uppercase text-xs flex items-center gap-2">
               <Coins className="h-3 w-3" /> Inversionistas
@@ -247,54 +265,95 @@ export default function ReceptionPage() {
           </TabsList>
 
           <TabsContent value="patients">
-            <Card className="bg-white shadow-xl border-primary/10 overflow-hidden rounded-[2rem]">
-              <div className="p-6 border-b bg-primary/5 flex flex-col md:flex-row gap-6 items-center justify-between">
-                <div className="flex items-center gap-4 bg-white p-2 rounded-full border shadow-sm">
-                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => selectedDate && setSelectedDate(subDays(selectedDate, 1))}>
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                  <div className="text-center min-w-[180px]">
-                    <span className="text-sm font-black text-primary capitalize">{dateString ? format(new Date(dateString + 'T12:00:00'), 'EEEE d MMMM', { locale: es }) : "Cargando..."}</span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Calendario Lateral */}
+              <div className="lg:col-span-4">
+                <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden sticky top-24">
+                  <CardHeader className="bg-primary/5 border-b">
+                    <CardTitle className="text-lg font-black text-primary flex items-center gap-2">
+                      <CalendarDays className="h-5 w-5 text-secondary" /> Selector de Fecha
+                    </CardTitle>
+                    <CardDescription className="text-[10px] font-bold uppercase tracking-tight">Los días con punto tienen citas agendadas.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-4 flex justify-center">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      className="rounded-md border-none"
+                      locale={es}
+                      modifiers={{
+                        booked: (date) => hasBookingsOnDay(date)
+                      }}
+                      modifiersClassNames={{
+                        booked: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-secondary after:rounded-full"
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Listado de Pacientes */}
+              <div className="lg:col-span-8">
+                <Card className="bg-white shadow-xl border-primary/10 overflow-hidden rounded-[2rem] min-h-[600px]">
+                  <div className="p-6 border-b bg-primary/5 flex flex-col md:flex-row gap-6 items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <h2 className="text-xl font-black text-primary italic">
+                        {selectedDate ? format(selectedDate, 'EEEE d MMMM', { locale: es }) : "Seleccione un día"}
+                      </h2>
+                      <Badge variant="secondary" className="bg-secondary/10 text-secondary font-black">
+                        {filteredBookings?.length || 0} Pacientes
+                      </Badge>
+                    </div>
+                    <div className="relative flex-1 w-full max-w-sm">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Buscar por nombre..." className="pl-10 rounded-full h-11 border-primary/10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => selectedDate && setSelectedDate(addDays(selectedDate, 1))}>
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
-                </div>
-                <div className="relative flex-1 w-full max-w-md">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Buscar paciente..." className="pl-10 rounded-full h-11 border-primary/10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                </div>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader><TableRow className="bg-muted/10">
+                        <TableHead className="font-black text-[10px] uppercase">Hora</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase">Paciente</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase">Examen</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase">Estado</TableHead>
+                        <TableHead className="text-right font-black text-[10px] uppercase pr-8">Acciones</TableHead>
+                      </TableRow></TableHeader>
+                      <TableBody>
+                        {isBookingsLoading ? (
+                          <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic">Buscando citas...</TableCell></TableRow>
+                        ) : filteredBookings?.length === 0 ? (
+                          <TableRow><TableCell colSpan={5} className="text-center py-40 text-muted-foreground italic font-medium">No hay pacientes agendados para este día.</TableCell></TableRow>
+                        ) : (
+                          filteredBookings?.map((b) => (
+                            <TableRow key={b.id} className="group hover:bg-primary/5 transition-colors">
+                              <TableCell className="font-black text-primary text-lg pl-6 italic">{b.scheduledTime} hrs</TableCell>
+                              <TableCell>
+                                <div className="flex flex-col">
+                                  <span className="font-black text-primary">{b.firstName} {b.lastNameFather}</span>
+                                  <span className="text-[11px] font-bold text-muted-foreground">+{b.phone}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell><Badge variant="outline" className="bg-secondary/5 font-bold">{b.examType}</Badge></TableCell>
+                              <TableCell><Badge className={cn("font-black text-[10px]", getStatusBadgeClass(b.status))}>{getStatusLabel(b.status)}</Badge></TableCell>
+                              <TableCell className="text-right pr-6">
+                                <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 text-primary" onClick={() => {
+                                  setEditingBooking(b);
+                                  setNewDate(selectedDate);
+                                  setNewTime(b.scheduledTime);
+                                }}>
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </Card>
               </div>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader><TableRow className="bg-muted/10">
-                    <TableHead className="font-black text-[10px] uppercase">Hora</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase">Paciente</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase">Examen</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase">Estado</TableHead>
-                    <TableHead className="text-right font-black text-[10px] uppercase pr-8">Acciones</TableHead>
-                  </TableRow></TableHeader>
-                  <TableBody>
-                    {filteredBookings?.map((b) => (
-                      <TableRow key={b.id} className="group">
-                        <TableCell className="font-black text-primary text-lg pl-6 italic">{b.scheduledTime} hrs</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-black text-primary">{b.firstName} {b.lastNameFather}</span>
-                            <span className="text-[11px] font-bold text-muted-foreground">+{b.phone}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell><Badge variant="outline" className="bg-secondary/5 font-bold">{b.examType}</Badge></TableCell>
-                        <TableCell><Badge className={cn("font-black text-[10px]", getStatusBadgeClass(b.status))}>{getStatusLabel(b.status)}</Badge></TableCell>
-                        <TableCell className="text-right pr-6">
-                           <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setEditingBooking(b)}><Pencil className="h-4 w-4" /></Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="leads">
