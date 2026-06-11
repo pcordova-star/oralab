@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
@@ -81,7 +82,12 @@ const MILESTONES = [
 ];
 
 export default function InvestorsDashboardPage() {
+  const [mounted, setMounted] = useState(false);
   const db = useFirestore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const investorsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -105,6 +111,12 @@ export default function InvestorsDashboardPage() {
     const progress = (funded / m.target) * 100;
     return { ...m, funded, progress };
   });
+
+  // Evitar desajustes de hidratación para valores formateados localmente
+  const formatCurrency = (value: number) => {
+    if (!mounted) return `$0`;
+    return `$${value.toLocaleString()}`;
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/30 font-body">
@@ -130,20 +142,20 @@ export default function InvestorsDashboardPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Progreso de la Ronda</p>
-                <div className="text-4xl font-black text-secondary italic">{progressPercentage.toFixed(1)}%</div>
+                <div className="text-4xl font-black text-secondary italic">{mounted ? progressPercentage.toFixed(1) : "0"}%</div>
               </div>
             </div>
             
             <div className="space-y-4">
-              <Progress value={progressPercentage} className="h-5 rounded-full bg-slate-200" />
+              <Progress value={mounted ? progressPercentage : 0} className="h-5 rounded-full bg-slate-200" />
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-muted-foreground uppercase">Recaudado Actual</p>
-                  <p className="text-3xl font-black text-primary">${totalInvestment.toLocaleString()}</p>
+                  <p className="text-3xl font-black text-primary">{formatCurrency(totalInvestment)}</p>
                 </div>
                 <div className="text-right space-y-1">
                   <p className="text-[10px] font-black text-muted-foreground uppercase">Objetivo Final</p>
-                  <p className="text-3xl font-black text-slate-400">${FUNDING_GOAL.toLocaleString()}</p>
+                  <p className="text-3xl font-black text-slate-400">{formatCurrency(FUNDING_GOAL)}</p>
                 </div>
               </div>
             </div>
@@ -175,7 +187,7 @@ export default function InvestorsDashboardPage() {
                     </div>
                     <div className="space-y-1">
                       <h3 className="text-lg font-black text-primary">{m.title}</h3>
-                      <p className={cn("text-2xl font-black", m.textColor)}>${m.target.toLocaleString()}</p>
+                      <p className={cn("text-2xl font-black", m.textColor)}>{formatCurrency(m.target)}</p>
                     </div>
                     
                     <ul className="text-left w-full space-y-3">
@@ -190,10 +202,10 @@ export default function InvestorsDashboardPage() {
                   
                   <div className="mt-auto">
                     <div className="px-8 py-2">
-                       <Progress value={m.progress} className="h-1.5" />
+                       <Progress value={mounted ? m.progress : 0} className="h-1.5" />
                     </div>
                     <div className={cn("p-4 text-center text-white font-black uppercase text-[10px] tracking-widest", m.color)}>
-                      {m.percentage}% del total {m.progress === 100 && "• COMPLETADO"}
+                      {m.percentage}% del total {mounted && m.progress === 100 && "• COMPLETADO"}
                     </div>
                   </div>
                 </Card>
@@ -202,7 +214,7 @@ export default function InvestorsDashboardPage() {
           </div>
           
           <div className="mt-8 bg-primary p-4 rounded-2xl text-center text-white font-black italic shadow-lg">
-            TOTAL A LEVANTAR: ${FUNDING_GOAL.toLocaleString()} CLP
+            TOTAL A LEVANTAR: {formatCurrency(FUNDING_GOAL)} CLP
           </div>
         </section>
 
@@ -213,7 +225,7 @@ export default function InvestorsDashboardPage() {
             </div>
             <CardContent className="p-8 space-y-2 relative z-10">
               <p className="text-xs font-black uppercase tracking-widest opacity-70">Capital Vigente</p>
-              <h3 className="text-4xl font-black italic">${totalInvestment.toLocaleString()}</h3>
+              <h3 className="text-4xl font-black italic">{formatCurrency(totalInvestment)}</h3>
               <p className="text-xs font-bold opacity-60 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> CLP Inversión Privada</p>
             </CardContent>
           </Card>
@@ -221,7 +233,7 @@ export default function InvestorsDashboardPage() {
           <Card className="bg-white shadow-lg rounded-[2rem] border-primary/5">
             <CardContent className="p-8 space-y-2">
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">N° de Aportantes</p>
-              <h3 className="text-4xl font-black text-primary italic">{investors?.length || 0}</h3>
+              <h3 className="text-4xl font-black text-primary italic">{mounted ? (investors?.length || 0) : "0"}</h3>
               <p className="text-xs font-bold text-secondary flex items-center gap-1"><Users className="h-3 w-3" /> Socios Fundadores</p>
             </CardContent>
           </Card>
@@ -243,7 +255,7 @@ export default function InvestorsDashboardPage() {
               </CardTitle>
             </CardHeader>
             <div className="h-[400px] w-full">
-              {isLoading ? (
+              {!mounted || isLoading ? (
                 <div className="h-full flex items-center justify-center"><Skeleton className="h-64 w-64 rounded-full" /></div>
               ) : chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -256,7 +268,7 @@ export default function InvestorsDashboardPage() {
                       outerRadius={120}
                       paddingAngle={8}
                       dataKey="value"
-                      label={({ value }) => `$${value.toLocaleString()}`}
+                      label={({ value }) => formatCurrency(value)}
                     >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -264,7 +276,7 @@ export default function InvestorsDashboardPage() {
                     </Pie>
                     <Tooltip 
                       contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: number) => [`$${value.toLocaleString()}`, 'Aporte']}
+                      formatter={(value: number) => [formatCurrency(value), 'Aporte']}
                     />
                     <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '20px' }} />
                   </PieChart>
@@ -284,12 +296,12 @@ export default function InvestorsDashboardPage() {
               <Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow>
-                    <TableHead className="font-black text-[10px] uppercase pl-8">Identificador</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase pl-8"># Folio Público</TableHead>
                     <TableHead className="font-black text-[10px] uppercase text-right pr-8">Monto CLP</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoading ? (
+                  {!mounted || isLoading ? (
                     <TableRow><TableCell colSpan={2} className="text-center py-12"><Skeleton className="h-4 w-full mx-auto" /></TableCell></TableRow>
                   ) : investors?.map((inv, idx) => (
                     <TableRow key={inv.id} className="hover:bg-primary/5 transition-colors">
@@ -302,11 +314,11 @@ export default function InvestorsDashboardPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right pr-8">
-                        <span className="text-xl font-black text-primary">${(inv.amount || 0).toLocaleString()}</span>
+                        <span className="text-xl font-black text-primary">{formatCurrency(inv.amount || 0)}</span>
                       </TableCell>
                     </TableRow>
                   ))}
-                  {investors?.length === 0 && (
+                  {mounted && investors?.length === 0 && (
                     <TableRow><TableCell colSpan={2} className="text-center py-20 text-muted-foreground italic">Esperando primeros inversionistas.</TableCell></TableRow>
                   )}
                 </TableBody>
