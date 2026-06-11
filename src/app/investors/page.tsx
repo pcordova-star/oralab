@@ -393,8 +393,8 @@ export default function InvestorsDashboardPage() {
                   <h4 className="text-sm font-black text-primary uppercase flex items-center gap-2">
                     <Activity className="h-4 w-4 text-secondary" /> Métricas Proyectadas de Retorno
                   </h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    El modelo de negocio estima un punto de equilibrio operativo al alcanzar los 40 tests mensuales. Los dividendos se calcularán semestralmente tras el primer año de operación continua.
+                  <p className="text-xs text-muted-foreground leading-relaxed italic">
+                    * Dividendo anual estimado en régimen (10 pac/día). Año 1: capital + 20% en cuotas mes 6–12. Desde año 2: % del negocio genera dividendos permanentes.
                   </p>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-primary/10 flex items-center justify-between">
