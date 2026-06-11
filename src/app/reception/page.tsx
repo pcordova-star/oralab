@@ -62,7 +62,7 @@ import {
   TrendingUp,
   LayoutGrid,
   Calendar as CalendarViewIcon
-} from "lucide-center";
+} from "lucide-react";
 import { format, addDays, subDays, startOfToday, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -530,4 +530,3 @@ export default function ReceptionPage() {
     </div>
   );
 }
-
