@@ -26,15 +26,18 @@ import {
   Briefcase, 
   CheckCircle2,
   ChevronRight,
-  Info
+  Info,
+  Calendar
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-const REMAINING_COLOR = '#e2e8f0'; // Color gris neutro para el capital faltante
+const REMAINING_COLOR = '#e2e8f0'; 
 const FUNDING_GOAL = 13500000;
 
 const MILESTONES = [
@@ -100,7 +103,6 @@ export default function InvestorsDashboardPage() {
   const progressPercentage = Math.min((totalInvestment / FUNDING_GOAL) * 100, 100);
   const remainingCapital = Math.max(0, FUNDING_GOAL - totalInvestment);
 
-  // Datos para el gráfico: Inversionistas + Capital Restante
   const chartData = [
     ...(investors?.map((inv) => ({
       name: `Inversionista #${inv.investorNumber}`,
@@ -130,6 +132,11 @@ export default function InvestorsDashboardPage() {
     return `$${value.toLocaleString()}`;
   };
 
+  const getUpdateDate = () => {
+    if (!mounted) return "";
+    return format(new Date(), "dd 'de' MMMM, yyyy", { locale: es });
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-muted/30 font-body">
       <Navbar />
@@ -150,7 +157,7 @@ export default function InvestorsDashboardPage() {
                 <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest">
                   <Target className="h-4 w-4 text-secondary" /> Meta de Recaudación
                 </div>
-                <h2 className="text-3xl font-black text-primary italic">Ronda de Capital Semilla</h2>
+                <h2 className="text-3xl font-black text-primary italic">Ronda de Capital</h2>
               </div>
               <div className="text-right">
                 <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Progreso de la Ronda</p>
@@ -179,7 +186,7 @@ export default function InvestorsDashboardPage() {
             <div className="bg-secondary/10 p-2 rounded-xl">
               <Rocket className="h-6 w-6 text-secondary" />
             </div>
-            <h2 className="text-3xl font-black text-primary italic">¿En qué se usa el dinero?</h2>
+            <h2 className="text-3xl font-black text-primary italic">Uso de los Fondos</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -305,11 +312,16 @@ export default function InvestorsDashboardPage() {
         </div>
 
         <div className="mt-12 text-center">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-6 italic">
-            <Info className="h-3 w-3 inline mr-1" /> Información financiera actualizada en tiempo real según depósitos confirmados.
-          </p>
+          <div className="flex flex-col items-center gap-2 mb-6">
+            <p className="text-xs font-black text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2">
+              <Calendar className="h-3 w-3" /> Última actualización: {getUpdateDate()}
+            </p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">
+              <Info className="h-3 w-3 inline mr-1" /> Información financiera actualizada en tiempo real según depósitos confirmados.
+            </p>
+          </div>
           <div className="flex justify-center gap-4">
-             <Badge variant="outline" className="rounded-full bg-white border-primary/10 py-1 px-3">Capital Semilla</Badge>
+             <Badge variant="outline" className="rounded-full bg-white border-primary/10 py-1 px-3">Capital Inversión</Badge>
              <Badge variant="outline" className="rounded-full bg-white border-primary/10 py-1 px-3">Representación Sunvou®</Badge>
              <Badge variant="outline" className="rounded-full bg-white border-primary/10 py-1 px-3">I+D Salud Digestiva</Badge>
           </div>
