@@ -35,6 +35,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+const REMAINING_COLOR = '#e2e8f0'; // Color gris neutro para el capital faltante
 const FUNDING_GOAL = 13500000;
 
 const MILESTONES = [
@@ -98,21 +99,33 @@ export default function InvestorsDashboardPage() {
 
   const totalInvestment = investors?.reduce((acc, inv) => acc + (inv.amount || 0), 0) || 0;
   const progressPercentage = Math.min((totalInvestment / FUNDING_GOAL) * 100, 100);
+  const remainingCapital = Math.max(0, FUNDING_GOAL - totalInvestment);
 
-  const chartData = investors?.map((inv) => ({
-    name: `Inversionista #${inv.investorNumber}`,
-    value: inv.amount
-  })) || [];
+  // Datos para el gráfico: Inversionistas + Capital Restante
+  const chartData = [
+    ...(investors?.map((inv) => ({
+      name: `Inversionista #${inv.investorNumber}`,
+      value: inv.amount,
+      isInvestor: true
+    })) || []),
+  ];
 
-  let remainingCapital = totalInvestment;
+  if (remainingCapital > 0) {
+    chartData.push({
+      name: "Capital por Recaudar",
+      value: remainingCapital,
+      isInvestor: false
+    } as any);
+  }
+
+  let tempRemaining = totalInvestment;
   const milestonesWithProgress = MILESTONES.map(m => {
-    const funded = Math.min(remainingCapital, m.target);
-    remainingCapital = Math.max(0, remainingCapital - m.target);
+    const funded = Math.min(tempRemaining, m.target);
+    tempRemaining = Math.max(0, tempRemaining - m.target);
     const progress = (funded / m.target) * 100;
     return { ...m, funded, progress };
   });
 
-  // Evitar desajustes de hidratación para valores formateados localmente
   const formatCurrency = (value: number) => {
     if (!mounted) return `$0`;
     return `$${value.toLocaleString()}`;
@@ -253,6 +266,7 @@ export default function InvestorsDashboardPage() {
               <CardTitle className="text-xl font-black text-primary flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-secondary" /> Distribución de Participación
               </CardTitle>
+              <CardDescription className="font-medium">Proporción de inversión actual frente a la meta de {formatCurrency(FUNDING_GOAL)}.</CardDescription>
             </CardHeader>
             <div className="h-[400px] w-full">
               {!mounted || isLoading ? (
@@ -270,13 +284,16 @@ export default function InvestorsDashboardPage() {
                       dataKey="value"
                       label={({ value }) => formatCurrency(value)}
                     >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      {chartData.map((entry: any, index: number) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.isInvestor ? COLORS[index % COLORS.length] : REMAINING_COLOR} 
+                        />
                       ))}
                     </Pie>
                     <Tooltip 
                       contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: number) => [formatCurrency(value), 'Aporte']}
+                      formatter={(value: number, name: string) => [formatCurrency(value), name]}
                     />
                     <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '20px' }} />
                   </PieChart>
