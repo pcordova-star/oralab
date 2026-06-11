@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, deleteDoc, doc, updateDoc, where, orderBy } from "firebase/firestore";
+import { collection, query, deleteDoc, doc, updateDoc, where, orderBy, serverTimestamp, addDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +53,10 @@ import {
   Mail,
   Building2,
   MessageSquare,
-  Bell
+  Bell,
+  Coins,
+  Plus,
+  User
 } from "lucide-react";
 import { format, addDays, subDays, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -62,7 +65,7 @@ import { getAuth, signOut } from "firebase/auth";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { updateDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
 
@@ -84,6 +87,11 @@ export default function ReceptionPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   
+  // Investor State
+  const [isInvestorDialogOpen, setIsInvestorDialogOpen] = useState(false);
+  const [investorName, setInvestorName] = useState("");
+  const [investorAmount, setInvestorAmount] = useState("");
+
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
   const [newTime, setNewTime] = useState<string>("");
@@ -104,23 +112,25 @@ export default function ReceptionPage() {
 
   const dateString = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : "";
 
-  // Query para Citas
+  // Queries
   const bookingsQuery = useMemoFirebase(() => {
     if (!db || !dateString) return null;
-    return query(
-      collection(db, "bookings"), 
-      where("scheduledDate", "==", dateString)
-    );
+    return query(collection(db, "bookings"), where("scheduledDate", "==", dateString));
   }, [db, dateString]);
 
-  // Query para Leads de Sunvou
   const leadsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "leads"), orderBy("createdAt", "desc"));
   }, [db]);
 
+  const investorsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "investors"), orderBy("investorNumber", "asc"));
+  }, [db]);
+
   const { data: rawBookings, isLoading: isBookingsLoading } = useCollection(bookingsQuery);
   const { data: leads, isLoading: isLeadsLoading } = useCollection(leadsQuery);
+  const { data: investors, isLoading: isInvestorsLoading } = useCollection(investorsQuery);
 
   const bookings = rawBookings ? [...rawBookings].sort((a, b) => 
     (a.scheduledTime || "").localeCompare(b.scheduledTime || "")
@@ -140,30 +150,32 @@ export default function ReceptionPage() {
     }
   }
 
-  async function handleCancel(bookingId: string) {
-    if (!db) return;
-    if (confirm("¿Marcar esta reserva como cancelada?")) {
-      updateDocumentNonBlocking(doc(db, "bookings", bookingId), { status: 'cancelled' });
-      toast({ title: "Reserva cancelada" });
+  async function handleInvestorSubmit() {
+    if (!db || !investorName || !investorAmount) return;
+    
+    const newNumber = (investors?.length || 0) + 1;
+    const investorData = {
+      realName: investorName,
+      investorNumber: newNumber,
+      amount: parseInt(investorAmount),
+      createdAt: serverTimestamp(),
+    };
+
+    try {
+      await addDoc(collection(db, "investors"), investorData);
+      toast({ title: "Inversionista agregado", description: "El aporte ha sido registrado." });
+      setInvestorName("");
+      setInvestorAmount("");
+      setIsInvestorDialogOpen(false);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "No se pudo guardar el registro." });
     }
   }
 
-  async function handleReschedule() {
-    if (!db || !editingBooking || !newDate || !newTime) return;
-    const nextData = {
-      scheduledDate: format(newDate, "yyyy-MM-dd"),
-      scheduledTime: newTime,
-      status: 'rescheduled'
-    };
-    updateDocumentNonBlocking(doc(db, "bookings", editingBooking.id), nextData);
-    toast({ title: "Cita reprogramada" });
-    setEditingBooking(null);
-  }
-
-  async function updateStatus(bookingId: string, nextStatus: string) {
-    if (!db) return;
-    updateDocumentNonBlocking(doc(db, "bookings", bookingId), { status: nextStatus });
-    toast({ title: "Estado actualizado" });
+  async function handleDeleteInvestor(id: string) {
+    if (!db || !confirm("¿Eliminar este registro de inversión?")) return;
+    deleteDocumentNonBlocking(doc(db, "investors", id));
+    toast({ title: "Registro eliminado" });
   }
 
   const getStatusLabel = (status: string) => {
@@ -190,32 +202,7 @@ export default function ReceptionPage() {
     }
   };
 
-  const safeFormatDate = (dateStr: string) => {
-    if (!dateStr) return "Cargando...";
-    try {
-      const date = new Date(dateStr + 'T12:00:00');
-      return format(date, 'EEEE d MMMM', { locale: es });
-    } catch (e) {
-      return "Error de fecha";
-    }
-  };
-
-  const handleDeleteLead = (leadId: string) => {
-    if (!db || !confirm("¿Eliminar este requerimiento de contacto?")) return;
-    deleteDocumentNonBlocking(doc(db, "leads", leadId));
-    toast({ title: "Lead eliminado" });
-  };
-
-  if (isUserLoading || !user || !isMounted) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-muted/30">
-        <div className="flex flex-col items-center gap-4">
-          <RefreshCcw className="h-10 w-10 animate-spin text-primary" />
-          <p className="font-bold text-muted-foreground">Autenticando...</p>
-        </div>
-      </div>
-    );
-  }
+  if (isUserLoading || !user || !isMounted) return null;
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/30 pb-20 font-body">
@@ -225,9 +212,9 @@ export default function ReceptionPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black text-primary flex items-center gap-3 italic">
-              <UserCheck className="h-8 w-8 text-secondary" /> Panel de Control Oralab
+              <UserCheck className="h-8 w-8 text-secondary" /> Panel Super Admin
             </h1>
-            <p className="text-muted-foreground font-medium">Gestión integral de pacientes y requerimientos comerciales.</p>
+            <p className="text-muted-foreground font-medium">Control total de la infraestructura comercial y de capital.</p>
           </div>
           <div className="flex gap-2">
             <Link href="/admin/quotations">
@@ -241,53 +228,12 @@ export default function ReceptionPage() {
           </div>
         </div>
 
-        {/* Dashboard de Estadísticas */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
-          <Card className="bg-white"><CardContent className="p-4">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Agendados</p>
-            <div className="text-2xl font-black text-primary">{bookings?.length || 0}</div>
-          </CardContent></Card>
-          <Card className="bg-white border-l-4 border-l-blue-500"><CardContent className="p-4">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">En Espera</p>
-            <div className="text-2xl font-black text-blue-600">{bookings?.filter(b => b.status === 'arrived').length || 0}</div>
-          </CardContent></Card>
-          <Card className="bg-white border-l-4 border-l-amber-500"><CardContent className="p-4">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">En Test</p>
-            <div className="text-2xl font-black text-amber-600">{bookings?.filter(b => b.status === 'in_progress').length || 0}</div>
-          </CardContent></Card>
-          <Card className="bg-white border-l-4 border-l-green-500"><CardContent className="p-4">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Listos</p>
-            <div className="text-2xl font-black text-green-600">{bookings?.filter(b => b.status === 'completed').length || 0}</div>
-          </CardContent></Card>
-          <Card className="bg-white border-l-4 border-l-red-400 opacity-60"><CardContent className="p-4">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Cancelados</p>
-            <div className="text-2xl font-black text-red-500">{bookings?.filter(b => b.status === 'cancelled').length || 0}</div>
-          </CardContent></Card>
-          <Card className="bg-white border-l-4 border-l-purple-400 opacity-60"><CardContent className="p-4">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Reprogr.</p>
-            <div className="text-2xl font-black text-purple-600">{bookings?.filter(b => b.status === 'rescheduled').length || 0}</div>
-          </CardContent></Card>
-          
-          {/* Card de Alerta de Leads */}
-          <Card className={cn(
-            "bg-white border-2 transition-all duration-500",
-            leads && leads.length > 0 ? "border-secondary animate-pulse-subtle bg-secondary/5" : "border-transparent"
-          )}>
-            <CardContent className="p-4 flex flex-col justify-center">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black text-secondary uppercase tracking-widest">Leads Sunvou</p>
-                {leads && leads.length > 0 && <Bell className="h-3 w-3 text-secondary animate-bounce" />}
-              </div>
-              <div className="text-2xl font-black text-secondary">{leads?.length || 0}</div>
-            </CardContent>
-          </Card>
-        </div>
-
         <Tabs defaultValue="patients" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-full w-full max-w-md mx-auto grid grid-cols-2">
-            <TabsTrigger value="patients" className="rounded-full font-black uppercase text-xs">Agenda Pacientes</TabsTrigger>
-            <TabsTrigger value="leads" className="rounded-full font-black uppercase text-xs flex items-center gap-2">
-              Leads Sunvou {leads && leads.length > 0 && <Badge className="bg-secondary h-4 w-4 p-0 flex items-center justify-center text-[10px]">{leads.length}</Badge>}
+          <TabsList className="bg-muted/50 p-1 rounded-full w-full max-w-2xl mx-auto grid grid-cols-3">
+            <TabsTrigger value="patients" className="rounded-full font-black uppercase text-xs">Agenda</TabsTrigger>
+            <TabsTrigger value="leads" className="rounded-full font-black uppercase text-xs">Leads Sunvou</TabsTrigger>
+            <TabsTrigger value="investors" className="rounded-full font-black uppercase text-xs flex items-center gap-2">
+              <Coins className="h-3 w-3" /> Inversionistas
             </TabsTrigger>
           </TabsList>
 
@@ -295,117 +241,47 @@ export default function ReceptionPage() {
             <Card className="bg-white shadow-xl border-primary/10 overflow-hidden rounded-[2rem]">
               <div className="p-6 border-b bg-primary/5 flex flex-col md:flex-row gap-6 items-center justify-between">
                 <div className="flex items-center gap-4 bg-white p-2 rounded-full border shadow-sm">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="rounded-full"
-                    onClick={() => selectedDate && setSelectedDate(subDays(selectedDate, 1))}
-                    disabled={!selectedDate}
-                  >
+                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => selectedDate && setSelectedDate(subDays(selectedDate, 1))}>
                     <ChevronLeft className="h-5 w-5" />
                   </Button>
                   <div className="text-center min-w-[180px]">
-                    <span className="text-sm font-black text-primary capitalize">{safeFormatDate(dateString)}</span>
+                    <span className="text-sm font-black text-primary capitalize">{dateString ? format(new Date(dateString + 'T12:00:00'), 'EEEE d MMMM', { locale: es }) : "Cargando..."}</span>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="rounded-full"
-                    onClick={() => selectedDate && setSelectedDate(addDays(selectedDate, 1))}
-                    disabled={!selectedDate}
-                  >
+                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => selectedDate && setSelectedDate(addDays(selectedDate, 1))}>
                     <ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
-
                 <div className="relative flex-1 w-full max-w-md">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Buscar paciente..." 
-                    className="pl-10 rounded-full h-11 border-primary/10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                  <Input placeholder="Buscar paciente..." className="pl-10 rounded-full h-11 border-primary/10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
               </div>
-
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/10">
-                      <TableHead className="font-black text-[10px] uppercase">Hora</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase">Paciente / Contacto</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase">Examen / Modalidad</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase">Estado Clínica</TableHead>
-                      <TableHead className="text-right font-black text-[10px] uppercase pr-8">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                  <TableHeader><TableRow className="bg-muted/10">
+                    <TableHead className="font-black text-[10px] uppercase">Hora</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase">Paciente</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase">Examen</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase">Estado</TableHead>
+                    <TableHead className="text-right font-black text-[10px] uppercase pr-8">Acciones</TableHead>
+                  </TableRow></TableHeader>
                   <TableBody>
-                    {isBookingsLoading ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-12">Cargando agenda...</TableCell></TableRow>
-                    ) : filteredBookings?.length === 0 ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium italic">No hay registros para este día.</TableCell></TableRow>
-                    ) : (
-                      filteredBookings?.map((b) => (
-                        <TableRow key={b.id} className={cn("transition-colors group", b.status === 'cancelled' && "opacity-40 grayscale")}>
-                          <TableCell className="font-black text-primary text-lg pl-6 italic">{b.scheduledTime} hrs</TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-black text-primary group-hover:underline cursor-pointer">{b.firstName} {b.lastNameFather}</span>
-                              <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" /> +56 9 {b.phone}</span>
-                              <span className="text-[10px] font-medium text-muted-foreground/60">{b.email}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col gap-1">
-                              <Badge variant="outline" className="w-fit bg-secondary/5 text-secondary border-secondary/20 font-bold text-[10px]">TEST {b.examType?.toUpperCase()}</Badge>
-                              <span className="text-[10px] font-black uppercase text-muted-foreground/50">{b.modality === 'home_kit' ? 'Retiro de Kit' : 'Presencial'}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={cn("font-black text-[10px] uppercase tracking-tighter px-3", getStatusBadgeClass(b.status))}>{getStatusLabel(b.status)}</Badge>
-                          </TableCell>
-                          <TableCell className="text-right pr-6">
-                            <div className="flex justify-end items-center gap-2">
-                              {b.status === 'pending' && (
-                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 font-black rounded-full h-8 text-[10px] px-4" onClick={() => updateStatus(b.id, 'arrived')}>Llegó</Button>
-                              )}
-                              {b.status === 'arrived' && (
-                                <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white font-black rounded-full h-8 text-[10px] px-4" onClick={() => updateStatus(b.id, 'in_progress')}>Iniciar</Button>
-                              )}
-                              {b.status === 'in_progress' && (
-                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white font-black rounded-full h-8 text-[10px] px-4" onClick={() => updateStatus(b.id, 'completed')}>Finalizar</Button>
-                              )}
-                              
-                              <div className="flex border-l pl-3 ml-1 gap-1">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8 text-muted-foreground hover:text-primary rounded-full"
-                                  onClick={() => {
-                                    setEditingBooking(b);
-                                    setNewDate(new Date(b.scheduledDate + 'T12:00:00'));
-                                    setNewTime(b.scheduledTime);
-                                  }}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                {b.status !== 'cancelled' && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-red-300 hover:text-red-600 rounded-full"
-                                    onClick={() => handleCancel(b.id)}
-                                  >
-                                    <XCircle className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    {filteredBookings?.map((b) => (
+                      <TableRow key={b.id} className="group">
+                        <TableCell className="font-black text-primary text-lg pl-6 italic">{b.scheduledTime} hrs</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-black text-primary">{b.firstName} {b.lastNameFather}</span>
+                            <span className="text-[11px] font-bold text-muted-foreground">+{b.phone}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell><Badge variant="outline" className="bg-secondary/5 font-bold">{b.examType}</Badge></TableCell>
+                        <TableCell><Badge className={cn("font-black text-[10px]", getStatusBadgeClass(b.status))}>{getStatusLabel(b.status)}</Badge></TableCell>
+                        <TableCell className="text-right pr-6">
+                           <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setEditingBooking(b)}><Pencil className="h-4 w-4" /></Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
@@ -414,66 +290,71 @@ export default function ReceptionPage() {
 
           <TabsContent value="leads">
             <Card className="bg-white shadow-xl border-secondary/20 overflow-hidden rounded-[2rem]">
-              <CardHeader className="bg-secondary/5 border-b">
-                <CardTitle className="text-xl text-secondary font-black flex items-center gap-2 italic">
-                  <Mail className="h-6 w-6" /> Consultas Institucionales Sunvou
-                </CardTitle>
-                <CardDescription className="font-medium">Solicitudes de contacto recibidas desde la landing oficial de representación.</CardDescription>
+              <CardHeader className="bg-secondary/5 border-b flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl text-secondary font-black flex items-center gap-2 italic"><Mail className="h-6 w-6" /> Consultas Sunvou</CardTitle>
+                </div>
+              </CardHeader>
+              <Table>
+                <TableHeader><TableRow className="bg-muted/10">
+                  <TableHead className="font-black text-[10px] uppercase">Fecha</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase">Institución</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase">Mensaje</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {leads?.map((l) => (
+                    <TableRow key={l.id}>
+                      <TableCell className="font-bold text-xs">{l.createdAt?.seconds ? format(new Date(l.createdAt.seconds * 1000), "dd/MM/yy") : "-"}</TableCell>
+                      <TableCell><span className="font-black text-primary">{l.institution}</span></TableCell>
+                      <TableCell className="text-xs italic text-muted-foreground">{l.message}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="investors">
+            <Card className="bg-white shadow-xl border-primary/20 overflow-hidden rounded-[2rem]">
+              <CardHeader className="bg-primary/5 border-b flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-xl text-primary font-black flex items-center gap-2 italic"><Coins className="h-6 w-6 text-secondary" /> Gestión de Inversionistas</CardTitle>
+                  <CardDescription className="font-medium">Solo tú ves los nombres reales. En la web pública aparecen como "Inversionista #X".</CardDescription>
+                </div>
+                <Button onClick={() => setIsInvestorDialogOpen(true)} className="rounded-full bg-secondary font-black h-11 px-6 shadow-lg">
+                  <Plus className="mr-2 h-5 w-5" /> Registrar Aporte
+                </Button>
               </CardHeader>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/10">
-                      <TableHead className="font-black text-[10px] uppercase">Fecha</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase">Interesado / Institución</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase">Mensaje / Requerimiento</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase"># Folio Público</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase">Nombre Real (Privado)</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase text-right">Monto Aportado</TableHead>
                       <TableHead className="text-right font-black text-[10px] uppercase pr-8">Gestión</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {isLeadsLoading ? (
-                      <TableRow><TableCell colSpan={4} className="text-center py-12">Buscando requerimientos...</TableCell></TableRow>
-                    ) : leads?.length === 0 ? (
-                      <TableRow><TableCell colSpan={4} className="text-center py-20 text-muted-foreground font-medium italic">No hay nuevas consultas comerciales.</TableCell></TableRow>
-                    ) : (
-                      leads?.map((l) => (
-                        <TableRow key={l.id} className="hover:bg-secondary/5 transition-colors group">
-                          <TableCell className="font-bold text-xs pl-6">
-                            {l.createdAt?.seconds ? format(new Date(l.createdAt.seconds * 1000), "dd/MM/yyyy HH:mm") : "Reciente"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-black text-primary flex items-center gap-1 italic"><UserCheck className="h-3 w-3" /> {l.name}</span>
-                              <span className="text-[11px] font-black uppercase text-secondary flex items-center gap-1"><Building2 className="h-3 w-3" /> {l.institution}</span>
-                              <span className="text-[10px] font-medium text-muted-foreground">{l.email}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="max-w-md">
-                            <div className="bg-muted/30 p-3 rounded-xl border border-primary/5 text-xs text-muted-foreground font-medium italic leading-relaxed">
-                              <MessageSquare className="h-3 w-3 mb-1 opacity-50" />
-                              "{l.message}"
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right pr-6">
-                            <div className="flex justify-end gap-2">
-                              <a href={`mailto:${l.email}`} className="block">
-                                <Button variant="outline" size="sm" className="rounded-full border-secondary text-secondary hover:bg-secondary hover:text-white transition-all font-black text-[10px]">
-                                  Responder por Email
-                                </Button>
-                              </a>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="text-red-300 hover:text-red-600 rounded-full h-8 w-8"
-                                onClick={() => handleDeleteLead(l.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    {investors?.map((inv) => (
+                      <TableRow key={inv.id} className="hover:bg-primary/5">
+                        <TableCell className="font-black text-primary pl-8 italic">#{inv.investorNumber}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                             <User className="h-4 w-4 text-muted-foreground" />
+                             <span className="font-bold">{inv.realName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className="text-lg font-black text-secondary">${(inv.amount || 0).toLocaleString()}</span>
+                        </TableCell>
+                        <TableCell className="text-right pr-8">
+                          <Button variant="ghost" size="icon" className="text-red-300 hover:text-red-600" onClick={() => handleDeleteInvestor(inv.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
@@ -482,51 +363,61 @@ export default function ReceptionPage() {
         </Tabs>
       </main>
 
-      {/* Dialogo de Reprogramación */}
-      <Dialog open={!!editingBooking} onOpenChange={() => setEditingBooking(null)}>
-        <DialogContent className="sm:max-w-[425px] rounded-[2rem]">
+      {/* Dialogo Inversionista */}
+      <Dialog open={isInvestorDialogOpen} onOpenChange={setIsInvestorDialogOpen}>
+        <DialogContent className="rounded-[2rem]">
           <DialogHeader>
-            <DialogTitle className="font-black text-primary italic">Reprogramar Cita Clínica</DialogTitle>
-            <p className="text-sm font-bold text-muted-foreground">
-              Paciente: {editingBooking?.firstName} {editingBooking?.lastNameFather}
-            </p>
+            <DialogTitle className="font-black text-primary italic">Registrar Nuevo Aporte</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-6 py-4">
+          <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-primary/50">Nueva Fecha</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-bold h-12 rounded-xl border-primary/10">
-                    <CalendarIcon className="mr-2 h-4 w-4 text-secondary" />
-                    {newDate ? format(newDate, "PPP", { locale: es }) : "Elegir fecha"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-2xl">
-                  <Calendar 
-                    mode="single" 
-                    selected={newDate} 
-                    onSelect={setNewDate} 
-                    locale={es}
-                    disabled={(date) => date < startOfToday()}
-                  />
-                </PopoverContent>
-              </Popover>
+              <label className="text-xs font-black uppercase tracking-widest text-primary/50">Nombre Real del Inversionista</label>
+              <Input value={investorName} onChange={(e) => setInvestorName(e.target.value)} placeholder="Ej: Roberto Sánchez" />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-primary/50">Nueva Hora</label>
-              <Select value={newTime} onValueChange={setNewTime}>
-                <SelectTrigger className="h-12 rounded-xl border-primary/10 font-bold">
-                  <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-secondary" /><SelectValue /></div>
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map(t => <SelectItem key={t} value={t} className="font-medium">{t} hrs</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <label className="text-xs font-black uppercase tracking-widest text-primary/50">Monto del Aporte (CLP)</label>
+              <Input type="number" value={investorAmount} onChange={(e) => setInvestorAmount(e.target.value)} placeholder="Ej: 5000000" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" className="rounded-full font-bold" onClick={() => setEditingBooking(null)}>Descartar</Button>
-            <Button onClick={handleReschedule} className="font-black bg-primary rounded-full px-6 shadow-lg">Confirmar Cambio</Button>
+            <Button variant="ghost" onClick={() => setIsInvestorDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleInvestorSubmit} className="bg-primary font-black rounded-full px-6">Guardar Registro</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialogo Reprogramación */}
+      <Dialog open={!!editingBooking} onOpenChange={() => setEditingBooking(null)}>
+        <DialogContent className="rounded-[2rem]">
+          <DialogHeader><DialogTitle className="font-black text-primary italic">Reprogramar Cita</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start h-12 rounded-xl">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {newDate ? format(newDate, "PPP", { locale: es }) : "Elegir fecha"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={newDate} onSelect={setNewDate} locale={es} /></PopoverContent>
+            </Popover>
+            <Select value={newTime} onValueChange={setNewTime}>
+              <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Hora" /></SelectTrigger>
+              <SelectContent>{timeSlots.map(t => <SelectItem key={t} value={t}>{t} hrs</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditingBooking(null)}>Descartar</Button>
+            <Button onClick={() => {
+              if (newDate && newTime) {
+                updateDocumentNonBlocking(doc(db, "bookings", editingBooking.id), {
+                  scheduledDate: format(newDate, "yyyy-MM-dd"),
+                  scheduledTime: newTime,
+                  status: 'rescheduled'
+                });
+                toast({ title: "Reprogramado" });
+                setEditingBooking(null);
+              }
+            }} className="bg-primary font-black rounded-full px-6">Confirmar Cambio</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

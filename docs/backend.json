@@ -80,6 +80,18 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "email", "message"]
+    },
+    "Investor": {
+      "title": "Investor",
+      "description": "Registro de inversión y aportes de capital.",
+      "type": "object",
+      "properties": {
+        "realName": { "type": "string", "description": "Nombre real visible solo para admin." },
+        "investorNumber": { "type": "number", "description": "Número secuencial para vista pública." },
+        "amount": { "type": "number", "description": "Monto aportado en CLP." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["realName", "investorNumber", "amount", "createdAt"]
     }
   },
   "auth": {
@@ -101,6 +113,10 @@
     "/leads/{leadId}": {
       "schema": "Lead",
       "description": "Consultas comerciales recibidas por el representante."
+    },
+    "/investors/{investorId}": {
+      "schema": "Investor",
+      "description": "Colección de inversionistas gestionada por el Super Admin."
     }
   }
 }
