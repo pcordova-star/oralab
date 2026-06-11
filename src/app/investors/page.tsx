@@ -6,7 +6,6 @@ import { Navbar } from "@/components/navbar";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { 
   PieChart, 
@@ -260,15 +259,15 @@ export default function InvestorsDashboardPage() {
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 items-start mb-16">
+        <div className="mb-16 max-w-4xl mx-auto">
           <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/5 p-8">
-            <CardHeader className="p-0 mb-8">
-              <CardTitle className="text-xl font-black text-primary flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-secondary" /> Distribución de Participación
+            <CardHeader className="p-0 mb-8 text-center">
+              <CardTitle className="text-2xl font-black text-primary flex items-center justify-center gap-2 italic">
+                <TrendingUp className="h-6 w-6 text-secondary" /> Distribución de Participación
               </CardTitle>
-              <CardDescription className="font-medium">Proporción de inversión actual frente a la meta de {formatCurrency(FUNDING_GOAL)}.</CardDescription>
+              <CardDescription className="font-medium">Resumen visual de los aportes frente a la meta de {formatCurrency(FUNDING_GOAL)}.</CardDescription>
             </CardHeader>
-            <div className="h-[400px] w-full">
+            <div className="h-[500px] w-full">
               {!mounted || isLoading ? (
                 <div className="h-full flex items-center justify-center"><Skeleton className="h-64 w-64 rounded-full" /></div>
               ) : chartData.length > 0 ? (
@@ -278,8 +277,8 @@ export default function InvestorsDashboardPage() {
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={80}
-                      outerRadius={120}
+                      innerRadius={100}
+                      outerRadius={160}
                       paddingAngle={8}
                       dataKey="value"
                       label={({ value }) => formatCurrency(value)}
@@ -295,51 +294,12 @@ export default function InvestorsDashboardPage() {
                       contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
                       formatter={(value: number, name: string) => [formatCurrency(value), name]}
                     />
-                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '20px' }} />
+                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '30px' }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground italic">No hay aportes registrados.</div>
               )}
-            </div>
-          </Card>
-
-          <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/5 overflow-hidden">
-            <CardHeader className="bg-primary/5 p-8 border-b">
-              <CardTitle className="text-xl font-black text-primary">Detalle de Aportes</CardTitle>
-              <CardDescription className="font-medium">Identificación por número de folio para proteger privacidad.</CardDescription>
-            </CardHeader>
-            <div className="p-0">
-              <Table>
-                <TableHeader className="bg-muted/50">
-                  <TableRow>
-                    <TableHead className="font-black text-[10px] uppercase pl-8"># Folio Público</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase text-right pr-8">Monto CLP</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {!mounted || isLoading ? (
-                    <TableRow><TableCell colSpan={2} className="text-center py-12"><Skeleton className="h-4 w-full mx-auto" /></TableCell></TableRow>
-                  ) : investors?.map((inv, idx) => (
-                    <TableRow key={inv.id} className="hover:bg-primary/5 transition-colors">
-                      <TableCell className="pl-8 py-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-[10px] text-white" style={{ backgroundColor: COLORS[idx % COLORS.length] }}>
-                            #{inv.investorNumber}
-                          </div>
-                          <span className="font-black text-primary italic">Inversionista #{inv.investorNumber}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right pr-8">
-                        <span className="text-xl font-black text-primary">{formatCurrency(inv.amount || 0)}</span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {mounted && investors?.length === 0 && (
-                    <TableRow><TableCell colSpan={2} className="text-center py-20 text-muted-foreground italic">Esperando primeros inversionistas.</TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
             </div>
           </Card>
         </div>
