@@ -37,7 +37,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { generatePrepInstructions } from "@/ai/flows/generate-prep-instructions";
-import { jsPDF } from "jspdf";
+import { jsPDF } from "jsPDF";
 
 const regions = [
   "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
@@ -100,6 +100,9 @@ const bookingSchema = z.object({
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
+
+// Fecha de inicio de operaciones: 15 de Julio de 2025
+const OPERATIONS_START_DATE = new Date(2025, 6, 15);
 
 export default function BookingPage() {
   const [step, setStep] = useState(1);
@@ -180,11 +183,9 @@ export default function BookingPage() {
     const margin = 20;
     let y = 15;
 
-    // Colores corporativos
     const primaryRGB = [28, 104, 182];
     const secondaryRGB = [25, 204, 204];
 
-    // Cabecera Corporativa
     doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.rect(0, 0, 210, 40, 'F');
     
@@ -203,14 +204,12 @@ export default function BookingPage() {
 
     y = 55;
 
-    // Título de Documento
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
     doc.text("CONFIRMACIÓN DE RESERVA CLÍNICA", margin, y);
     y += 15;
 
-    // Información del Paciente (Recuadro Gris)
     doc.setFillColor(245, 247, 249);
     doc.setDrawColor(230, 235, 240);
     doc.roundedRect(margin, y, 170, 45, 3, 3, 'FD');
@@ -231,7 +230,6 @@ export default function BookingPage() {
     doc.text(`Médico: ${lastBookingValues.doctor}`, 130, y + 28);
     y += 55;
 
-    // Detalles de la Cita
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
@@ -257,7 +255,6 @@ export default function BookingPage() {
     doc.text(`${format(lastBookingValues.scheduledDate, "EEEE d 'de' MMMM", { locale: es }).toUpperCase()} - ${lastBookingValues.scheduledTime} HRS`, margin + 5, y + 10);
     y += 25;
 
-    // Instrucciones de Preparación
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
@@ -272,7 +269,6 @@ export default function BookingPage() {
     doc.text(splitInstructions, margin, y);
     y += (splitInstructions.length * 5) + 15;
 
-    // Gestión de Cita
     doc.setFillColor(255, 244, 244);
     doc.roundedRect(margin, y, 170, 25, 2, 2, 'F');
     doc.setTextColor(200, 0, 0);
@@ -284,7 +280,6 @@ export default function BookingPage() {
     doc.text("Para modificar tu cita, avísanos con al menos 24 hrs de antelación vía WhatsApp al +56 9 3685 0468.", margin + 5, y + 16);
     y += 35;
 
-    // Pie de Página
     const pageHeight = doc.internal.pageSize.height;
     doc.setFillColor(245, 247, 249);
     doc.rect(0, pageHeight - 30, 210, 30, 'F');
@@ -344,7 +339,6 @@ export default function BookingPage() {
         const aiResponse = await generatePrepInstructions({ examType: values.examType });
         instructions = aiResponse.instructions;
       } catch (aiError) {
-        console.warn("AI generation failed or key missing, using fallback instructions.");
         instructions = "Por favor, siga estas indicaciones fundamentales:\n\n1. Ayuno estricto de 12 horas.\n2. El día anterior, siga una dieta blanda (arroz, pollo/pescado a la plancha). Evite legumbres, fibra, frutas y verduras.\n3. No fume ni realice ejercicio intenso 2 horas antes del examen.\n4. No tome antibióticos ni probióticos 4 semanas antes de la prueba.";
       }
 
@@ -366,7 +360,6 @@ export default function BookingPage() {
       setIsSubmitting(false);
       setStep(4);
     } catch (error) {
-      console.error(error);
       setIsSubmitting(false);
       toast({
         variant: "destructive",
@@ -576,6 +569,10 @@ export default function BookingPage() {
 
                 {step === 2 && (
                   <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                    <div className="flex items-center gap-2 p-4 bg-amber-50 border border-amber-200 rounded-xl mb-4">
+                       <AlertCircle className="h-5 w-5 text-amber-600" />
+                       <p className="text-xs font-bold text-amber-800">Agendas disponibles desde el 15 de Julio de 2025 (Inicio de Operaciones).</p>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FormField
                         control={form.control}
@@ -613,7 +610,7 @@ export default function BookingPage() {
                                     setIsCalendarOpen(false);
                                   }}
                                   disabled={(date) =>
-                                    isBefore(date, startOfToday()) || isWeekend(date)
+                                    isBefore(date, OPERATIONS_START_DATE) || isWeekend(date)
                                   }
                                   initialFocus
                                   locale={es}

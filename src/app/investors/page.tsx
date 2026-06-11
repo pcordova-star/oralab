@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -27,7 +26,11 @@ import {
   CheckCircle2,
   ChevronRight,
   Info,
-  Calendar
+  Calendar,
+  Clock,
+  Activity,
+  AlertCircle,
+  Table as TableIcon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +38,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 const REMAINING_COLOR = '#e2e8f0'; 
@@ -311,13 +315,83 @@ export default function InvestorsDashboardPage() {
           </Card>
         </div>
 
+        {/* Sección de Retornos y Operación */}
+        <section className="mb-16 max-w-5xl mx-auto">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="bg-primary/10 p-2 rounded-xl">
+              <TrendingUp className="h-6 w-6 text-primary" />
+            </div>
+            <h2 className="text-3xl font-black text-primary italic">Proyección de Retornos y Operación</h2>
+          </div>
+
+          <Card className="bg-white shadow-xl rounded-[2rem] border-primary/10 overflow-hidden">
+            <div className="p-6 bg-primary/5 border-b flex items-center gap-4">
+               <AlertCircle className="h-6 w-6 text-secondary animate-pulse" />
+               <p className="text-xs font-bold text-primary">
+                 IMPORTANTE: Esta información se alimentará en tiempo real una vez que el laboratorio inicie sus funciones comerciales (Julio 2025).
+               </p>
+            </div>
+            <div className="p-0 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/10">
+                    <TableHead className="font-black text-[10px] uppercase pl-8">Fecha de Operación</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase">N° de Tests Proyectados</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase text-right">Recaudación Día (CLP)</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase text-right pr-8">Status Operativo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow className="bg-slate-50/50">
+                    <TableCell className="pl-8 font-black text-slate-400 italic">15 de Julio, 2025</TableCell>
+                    <TableCell className="font-bold text-slate-400">---</TableCell>
+                    <TableCell className="text-right font-black text-slate-400">$0</TableCell>
+                    <TableCell className="text-right pr-8">
+                      <Badge variant="outline" className="bg-slate-100 text-slate-400 border-slate-200">INICIO PROGRAMADO</Badge>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-20">
+                      <div className="flex flex-col items-center gap-4 opacity-50">
+                        <Clock className="h-10 w-10 text-muted-foreground" />
+                        <p className="text-sm font-medium italic text-muted-foreground">
+                          Esperando inicio de actividades para mostrar el histórico de recaudación.
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+            <div className="p-6 border-t bg-muted/20">
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-black text-primary uppercase flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-secondary" /> Métricas Proyectadas de Retorno
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    El modelo de negocio estima un punto de equilibrio operativo al alcanzar los 40 tests mensuales. Los dividendos se calcularán semestralmente tras el primer año de operación continua.
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-primary/10 flex items-center justify-between">
+                   <div>
+                     <p className="text-[10px] font-black text-muted-foreground uppercase">Tasa de Retorno Est. (Anual)</p>
+                     <p className="text-2xl font-black text-secondary italic">18% - 24%</p>
+                   </div>
+                   <TrendingUp className="h-8 w-8 text-secondary/30" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </section>
+
         <div className="mt-12 text-center">
           <div className="flex flex-col items-center gap-2 mb-6">
             <p className="text-xs font-black text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2">
               <Calendar className="h-3 w-3" /> Última actualización: {getUpdateDate()}
             </p>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">
-              <Info className="h-3 w-3 inline mr-1" /> Información financiera actualizada en tiempo real según depósitos confirmados.
+              <Info className="h-3 w-3 inline mr-1" /> Información financiera y operativa sujeta a cambios según plan de despliegue 2025.
             </p>
           </div>
           <div className="flex justify-center gap-4">
