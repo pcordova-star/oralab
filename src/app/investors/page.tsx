@@ -30,10 +30,7 @@ import {
   Clock,
   Activity,
   AlertCircle,
-  Table as TableIcon,
-  Sparkles,
-  Percent,
-  Gem
+  Sparkles
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -89,14 +86,6 @@ const MILESTONES = [
       "Respaldo hasta completar $13.5M"
     ]
   }
-];
-
-const INVESTMENT_PROPOSAL = [
-  { aporte: "$500.000", retorno: "$100.000", capital: "$500.000", total: "$600.000", pct: "0,37%", div: "~$608.000/año" },
-  { aporte: "$1.000.000", retorno: "$200.000", capital: "$1.000.000", total: "$1.200.000", pct: "0,74%", div: "~$1.217.000/año" },
-  { aporte: "$1.500.000", retorno: "$300.000", capital: "$1.500.000", total: "$1.800.000", pct: "1,11%", div: "~$1.826.000/año" },
-  { aporte: "$2.000.000", retorno: "$400.000", capital: "$2.000.000", total: "$2.400.000", pct: "1,48%", div: "~$2.435.000/año" },
-  { aporte: "$3.000.000", retorno: "$600.000", capital: "$3.000.000", total: "$3.600.000", pct: "2,22%", div: "~$3.652.000/año" },
 ];
 
 export default function InvestorsDashboardPage() {
@@ -212,41 +201,9 @@ export default function InvestorsDashboardPage() {
               </p>
             </div>
             
-            <div className="bg-primary p-6 text-white">
-              <p className="text-lg md:text-xl font-medium leading-relaxed">
+            <div className="bg-primary p-8 text-white">
+              <p className="text-xl md:text-2xl font-medium leading-relaxed">
                 Por cada $1.000.000 aportado: <span className="font-black text-secondary">$200.000 retorno fijo (20%)</span> + devolución de tu capital + <span className="font-black text-secondary">0,74% del negocio para siempre</span>
-              </p>
-            </div>
-
-            <div className="p-0 overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-primary/5 hover:bg-primary/5 border-b-2">
-                    <TableHead className="font-black text-primary uppercase h-14">Aporte</TableHead>
-                    <TableHead className="font-black text-primary uppercase h-14">Retorno fijo</TableHead>
-                    <TableHead className="font-black text-primary uppercase h-14">Capital devuelto</TableHead>
-                    <TableHead className="font-black text-primary uppercase h-14">Total año 1</TableHead>
-                    <TableHead className="font-black text-primary uppercase h-14">% negocio</TableHead>
-                    <TableHead className="font-black text-white uppercase h-14 bg-primary text-center">Dividendo año 2+*</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {INVESTMENT_PROPOSAL.map((row, i) => (
-                    <TableRow key={i} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-black text-lg py-6">{row.aporte}</TableCell>
-                      <TableCell className="font-medium text-muted-foreground">{row.retorno}</TableCell>
-                      <TableCell className="font-medium text-muted-foreground">{row.capital}</TableCell>
-                      <TableCell className="font-black text-primary">{row.total}</TableCell>
-                      <TableCell className="font-bold">{row.pct}</TableCell>
-                      <TableCell className="bg-[#f0f9ff] text-secondary font-black text-center text-lg">{row.div}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="p-6 bg-muted/20 border-t">
-              <p className="text-xs italic text-muted-foreground leading-relaxed">
-                * Dividendo anual estimado en <span className="underline decoration-secondary decoration-2">régimen (10 pac/día)</span>. Año 1: capital + 20% en cuotas mes 6–12. Desde año 2: % del negocio genera dividendos permanentes.
               </p>
             </div>
           </Card>
