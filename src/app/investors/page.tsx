@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -109,7 +109,7 @@ export default function InvestorsDashboardPage() {
   const remainingCapital = Math.max(0, FUNDING_GOAL - totalInvestment);
 
   const chartData = [
-    ...(investors?.map((inv) => ({
+    ...(investors?.map((inv, index) => ({
       name: `Inversionista #${inv.investorNumber}`,
       value: inv.amount,
       isInvestor: true
@@ -364,22 +364,6 @@ export default function InvestorsDashboardPage() {
                 </TableBody>
               </Table>
             </div>
-            <div className="p-6 border-t bg-muted/20">
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-black text-primary uppercase flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-secondary" /> Métricas Proyectadas de Retorno
-                  </h4>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-primary/10 flex items-center justify-between">
-                   <div>
-                     <p className="text-[10px] font-black text-muted-foreground uppercase">Tasa de Retorno Est. (Anual)</p>
-                     <p className="text-2xl font-black text-secondary italic">18% - 24%</p>
-                   </div>
-                   <TrendingUp className="h-8 w-8 text-secondary/30" />
-                </div>
-              </div>
-            </div>
           </Card>
         </section>
 
@@ -390,6 +374,9 @@ export default function InvestorsDashboardPage() {
             </p>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">
               <Info className="h-3 w-3 inline mr-1" /> Información financiera y operativa sujeta a cambios según plan de despliegue 2025.
+            </p>
+            <p className="text-xs font-bold text-primary max-w-2xl mx-auto leading-relaxed mt-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
+              * Dividendo anual estimado en régimen (10 pac/día). Año 1: capital + 20% en cuotas mes 6–12. Desde año 2: % del negocio genera dividendos permanentes.
             </p>
           </div>
           <div className="flex justify-center gap-4">
