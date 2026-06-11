@@ -62,7 +62,7 @@ import {
   TrendingUp,
   LayoutGrid,
   Calendar as CalendarViewIcon
-} from "lucide-react";
+} from "lucide-center";
 import { format, addDays, subDays, startOfToday, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -73,7 +73,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
-const FUNDING_GOAL = 13000000;
+const FUNDING_GOAL = 13500000;
 
 const timeSlots = [];
 for (let hour = 8; hour <= 12; hour++) {
@@ -530,3 +530,4 @@ export default function ReceptionPage() {
     </div>
   );
 }
+

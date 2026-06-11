@@ -15,12 +15,70 @@ import {
   Tooltip, 
   Legend 
 } from "recharts";
-import { Coins, TrendingUp, Users, Target, Rocket } from "lucide-react";
+import { 
+  Coins, 
+  TrendingUp, 
+  Users, 
+  Target, 
+  Rocket, 
+  Microscope, 
+  Building2, 
+  Briefcase, 
+  CheckCircle2,
+  ChevronRight,
+  Info
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-const FUNDING_GOAL = 13000000;
+const FUNDING_GOAL = 13500000;
+
+const MILESTONES = [
+  {
+    id: "m1",
+    title: "Equipo + importación",
+    target: 9102116,
+    percentage: 67,
+    color: "bg-[#1c68b6]",
+    textColor: "text-[#1c68b6]",
+    icon: <Microscope className="h-8 w-8" />,
+    items: [
+      "Sunvou DA7349 FOB China: $6.734.600",
+      "Logística importación (flete, seguro, arancel): $968.860",
+      "IVA 19% importación (recuperable): $1.398.656"
+    ]
+  },
+  {
+    id: "m2",
+    title: "Habilitación consulta",
+    target: 1300000,
+    percentage: 10,
+    color: "bg-[#19cccc]",
+    textColor: "text-[#19cccc]",
+    icon: <Building2 className="h-8 w-8" />,
+    items: [
+      "Revestimiento vinílico piso y muro",
+      "Televisión sala de espera",
+      "Lavamanos portátil"
+    ]
+  },
+  {
+    id: "m3",
+    title: "Capital de trabajo",
+    target: 3097884, // Diferencia para llegar a 13.5M
+    percentage: 23,
+    color: "bg-[#065f46]", // Emerald 800ish
+    textColor: "text-[#065f46]",
+    icon: <Briefcase className="h-8 w-8" />,
+    items: [
+      "Gastos operacionales primeros 3 meses",
+      "Respaldo hasta completar $13.5M"
+    ]
+  }
+];
 
 export default function InvestorsDashboardPage() {
   const db = useFirestore();
@@ -40,11 +98,20 @@ export default function InvestorsDashboardPage() {
     value: inv.amount
   })) || [];
 
+  // Calcular fondeo por hito
+  let remainingCapital = totalInvestment;
+  const milestonesWithProgress = MILESTONES.map(m => {
+    const funded = Math.min(remainingCapital, m.target);
+    remainingCapital = Math.max(0, remainingCapital - m.target);
+    const progress = (funded / m.target) * 100;
+    return { ...m, funded, progress };
+  });
+
   return (
     <div className="flex flex-col min-h-screen bg-muted/30 font-body">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-12 max-w-5xl">
+      <main className="container mx-auto px-4 py-12 max-w-6xl">
         <div className="text-center mb-12 space-y-4">
           <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold">DASHBOARD ESTRATÉGICO</Badge>
           <h1 className="text-4xl md:text-6xl font-black text-primary italic leading-tight">Estructura de Capital Oralab</h1>
@@ -54,7 +121,7 @@ export default function InvestorsDashboardPage() {
         </div>
 
         {/* Sección de Meta de Recaudación */}
-        <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/5 mb-8 overflow-hidden">
+        <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/5 mb-12 overflow-hidden">
           <div className="bg-primary/5 p-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
               <div className="space-y-1">
@@ -65,25 +132,83 @@ export default function InvestorsDashboardPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Progreso de la Ronda</p>
-                <div className="text-3xl font-black text-secondary italic">{progressPercentage.toFixed(1)}%</div>
+                <div className="text-4xl font-black text-secondary italic">{progressPercentage.toFixed(1)}%</div>
               </div>
             </div>
             
             <div className="space-y-4">
-              <Progress value={progressPercentage} className="h-4 rounded-full bg-slate-200" />
+              <Progress value={progressPercentage} className="h-5 rounded-full bg-slate-200" />
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-muted-foreground uppercase">Recaudado Actual</p>
-                  <p className="text-2xl font-black text-primary">${totalInvestment.toLocaleString()}</p>
+                  <p className="text-3xl font-black text-primary">${totalInvestment.toLocaleString()}</p>
                 </div>
                 <div className="text-right space-y-1">
                   <p className="text-[10px] font-black text-muted-foreground uppercase">Objetivo Final</p>
-                  <p className="text-2xl font-black text-slate-400">${FUNDING_GOAL.toLocaleString()}</p>
+                  <p className="text-3xl font-black text-slate-400">${FUNDING_GOAL.toLocaleString()}</p>
                 </div>
               </div>
             </div>
           </div>
         </Card>
+
+        {/* Sección Hitos de Inversión (Nueva) */}
+        <section className="mb-16">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="bg-secondary/10 p-2 rounded-xl">
+              <Rocket className="h-6 w-6 text-secondary" />
+            </div>
+            <h2 className="text-3xl font-black text-primary italic">¿En qué se usa el dinero?</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {milestonesWithProgress.map((m, idx) => (
+              <motion.div
+                key={m.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="flex flex-col"
+              >
+                <Card className="flex-grow bg-white border-none shadow-xl rounded-[2rem] overflow-hidden flex flex-col">
+                  <div className={cn("p-8 flex flex-col items-center text-center space-y-6 flex-grow", m.id === 'm1' ? 'bg-blue-50/30' : m.id === 'm2' ? 'bg-cyan-50/30' : 'bg-emerald-50/30')}>
+                    <div className={cn("p-4 rounded-2xl bg-white shadow-sm", m.textColor)}>
+                      {m.icon}
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-black text-primary">{m.title}</h3>
+                      <p className={cn("text-2xl font-black", m.textColor)}>${m.target.toLocaleString()}</p>
+                    </div>
+                    
+                    <ul className="text-left w-full space-y-3">
+                      {m.items.map((item, i) => (
+                        <li key={i} className="text-xs font-medium text-muted-foreground flex items-start gap-2">
+                          <ChevronRight className={cn("h-3 w-3 mt-0.5 shrink-0", m.textColor)} />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  {/* Footer de la tarjeta con progreso */}
+                  <div className="mt-auto">
+                    <div className="px-8 py-2">
+                       <Progress value={m.progress} className="h-1.5" />
+                    </div>
+                    <div className={cn("p-4 text-center text-white font-black uppercase text-[10px] tracking-widest", m.color)}>
+                      {m.percentage}% del total {m.progress === 100 && "• COMPLETADO"}
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+          
+          <div className="mt-8 bg-primary p-4 rounded-2xl text-center text-white font-black italic shadow-lg">
+            TOTAL A LEVANTAR: ${FUNDING_GOAL.toLocaleString()} CLP
+          </div>
+        </section>
 
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           <Card className="bg-primary text-white shadow-xl rounded-[2rem] border-none overflow-hidden relative group">
@@ -114,7 +239,7 @@ export default function InvestorsDashboardPage() {
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 items-start">
+        <div className="grid lg:grid-cols-2 gap-8 items-start mb-16">
           {/* Gráfico de Proporciones */}
           <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/5 p-8">
             <CardHeader className="p-0 mb-8">
@@ -196,7 +321,9 @@ export default function InvestorsDashboardPage() {
         </div>
 
         <div className="mt-12 text-center">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-6 italic">* Información técnica sujeta a auditoría interna Oralab.</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-6 italic">
+            <Info className="h-3 w-3 inline mr-1" /> Información financiera actualizada en tiempo real según depósitos confirmados.
+          </p>
           <div className="flex justify-center gap-4">
              <Badge variant="outline" className="rounded-full bg-white border-primary/10 py-1 px-3">Capital Semilla</Badge>
              <Badge variant="outline" className="rounded-full bg-white border-primary/10 py-1 px-3">Representación Sunvou®</Badge>
@@ -207,3 +334,4 @@ export default function InvestorsDashboardPage() {
     </div>
   );
 }
+
