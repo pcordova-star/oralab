@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
 import { 
   Table, 
@@ -56,7 +57,9 @@ import {
   Bell,
   Coins,
   Plus,
-  User
+  User,
+  Target,
+  TrendingUp
 } from "lucide-react";
 import { format, addDays, subDays, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -68,6 +71,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { updateDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
+const FUNDING_GOAL = 13000000;
 
 const timeSlots = [];
 for (let hour = 8; hour <= 12; hour++) {
@@ -141,6 +145,11 @@ export default function ReceptionPage() {
     b.lastNameFather?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     b.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Financial calculations
+  const totalInvestment = investors?.reduce((acc, inv) => acc + (inv.amount || 0), 0) || 0;
+  const remainingAmount = Math.max(0, FUNDING_GOAL - totalInvestment);
+  const progressPercentage = Math.min((totalInvestment / FUNDING_GOAL) * 100, 100);
 
   async function handleLogout() {
     const auth = getAuth();
@@ -315,21 +324,56 @@ export default function ReceptionPage() {
           </TabsContent>
 
           <TabsContent value="investors">
-            <Card className="bg-white shadow-xl border-primary/20 overflow-hidden rounded-[2rem]">
-              <CardHeader className="bg-primary/5 border-b flex flex-col md:flex-row items-center justify-between gap-4">
-                <div>
-                  <CardTitle className="text-xl text-primary font-black flex items-center gap-2 italic"><Coins className="h-6 w-6 text-secondary" /> Gestión de Inversionistas</CardTitle>
-                  <CardDescription className="font-medium">Solo tú ves los nombres reales. En la web pública aparecen como "Inversionista #X".</CardDescription>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              <Card className="bg-primary text-white shadow-lg rounded-2xl overflow-hidden relative group">
+                <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="h-20 w-20" />
                 </div>
-                <Button onClick={() => setIsInvestorDialogOpen(true)} className="rounded-full bg-secondary font-black h-11 px-6 shadow-lg">
-                  <Plus className="mr-2 h-5 w-5" /> Registrar Aporte
+                <CardContent className="p-6 relative z-10">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">Total Invertido</p>
+                  <h3 className="text-3xl font-black italic">${totalInvestment.toLocaleString()}</h3>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold">
+                      <span>Progreso Meta</span>
+                      <span>{progressPercentage.toFixed(1)}%</span>
+                    </div>
+                    <Progress value={progressPercentage} className="h-1.5 bg-white/20" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-lg rounded-2xl border-primary/5">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-secondary/10 p-2 rounded-lg">
+                      <Target className="h-5 w-5 text-secondary" />
+                    </div>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Faltante por Recaudar</p>
+                  </div>
+                  <h3 className="text-3xl font-black text-primary italic">${remainingAmount.toLocaleString()}</h3>
+                  <p className="text-[10px] font-bold text-muted-foreground mt-2 uppercase tracking-tighter">Meta Global: ${FUNDING_GOAL.toLocaleString()}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-lg rounded-2xl border-primary/5 flex items-center justify-center">
+                <Button onClick={() => setIsInvestorDialogOpen(true)} className="rounded-full bg-secondary font-black h-14 px-8 shadow-lg hover:scale-105 transition-transform">
+                  <Plus className="mr-2 h-6 w-6" /> Registrar Aporte
                 </Button>
+              </Card>
+            </div>
+
+            <Card className="bg-white shadow-xl border-primary/20 overflow-hidden rounded-[2rem]">
+              <CardHeader className="bg-primary/5 border-b">
+                <div>
+                  <CardTitle className="text-xl text-primary font-black flex items-center gap-2 italic"><Coins className="h-6 w-6 text-secondary" /> Registro Privado de Socios</CardTitle>
+                  <CardDescription className="font-medium">Identificación real visible solo para administración central.</CardDescription>
+                </div>
               </CardHeader>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/10">
-                      <TableHead className="font-black text-[10px] uppercase"># Folio Público</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase pl-8"># Folio Público</TableHead>
                       <TableHead className="font-black text-[10px] uppercase">Nombre Real (Privado)</TableHead>
                       <TableHead className="font-black text-[10px] uppercase text-right">Monto Aportado</TableHead>
                       <TableHead className="text-right font-black text-[10px] uppercase pr-8">Gestión</TableHead>
@@ -355,6 +399,9 @@ export default function ReceptionPage() {
                         </TableCell>
                       </TableRow>
                     ))}
+                    {investors?.length === 0 && (
+                      <TableRow><TableCell colSpan={4} className="text-center py-20 text-muted-foreground italic">Esperando primeros inversionistas.</TableCell></TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
