@@ -6,6 +6,7 @@ import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
 import { 
   PieChart, 
   Pie, 
@@ -14,11 +15,12 @@ import {
   Tooltip, 
   Legend 
 } from "recharts";
-import { Coins, TrendingUp, Users, ArrowRight } from "lucide-react";
+import { Coins, TrendingUp, Users, Target, Rocket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+const FUNDING_GOAL = 13000000;
 
 export default function InvestorsDashboardPage() {
   const db = useFirestore();
@@ -31,6 +33,7 @@ export default function InvestorsDashboardPage() {
   const { data: investors, isLoading } = useCollection(investorsQuery);
 
   const totalInvestment = investors?.reduce((acc, inv) => acc + (inv.amount || 0), 0) || 0;
+  const progressPercentage = Math.min((totalInvestment / FUNDING_GOAL) * 100, 100);
 
   const chartData = investors?.map((inv) => ({
     name: `Inversionista #${inv.investorNumber}`,
@@ -50,15 +53,47 @@ export default function InvestorsDashboardPage() {
           </p>
         </div>
 
+        {/* Sección de Meta de Recaudación */}
+        <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/5 mb-8 overflow-hidden">
+          <div className="bg-primary/5 p-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest">
+                  <Target className="h-4 w-4 text-secondary" /> Meta de Recaudación
+                </div>
+                <h2 className="text-3xl font-black text-primary italic">Ronda de Capital Semilla</h2>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Progreso de la Ronda</p>
+                <div className="text-3xl font-black text-secondary italic">{progressPercentage.toFixed(1)}%</div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <Progress value={progressPercentage} className="h-4 rounded-full bg-slate-200" />
+              <div className="flex justify-between items-end">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase">Recaudado Actual</p>
+                  <p className="text-2xl font-black text-primary">${totalInvestment.toLocaleString()}</p>
+                </div>
+                <div className="text-right space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase">Objetivo Final</p>
+                  <p className="text-2xl font-black text-slate-400">${FUNDING_GOAL.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           <Card className="bg-primary text-white shadow-xl rounded-[2rem] border-none overflow-hidden relative group">
             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
               <Coins className="h-24 w-24" />
             </div>
             <CardContent className="p-8 space-y-2 relative z-10">
-              <p className="text-xs font-black uppercase tracking-widest opacity-70">Inversión Total</p>
+              <p className="text-xs font-black uppercase tracking-widest opacity-70">Capital Vigente</p>
               <h3 className="text-4xl font-black italic">${totalInvestment.toLocaleString()}</h3>
-              <p className="text-xs font-bold opacity-60 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> CLP Capital Semilla</p>
+              <p className="text-xs font-bold opacity-60 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> CLP Inversión Privada</p>
             </CardContent>
           </Card>
 
@@ -66,15 +101,15 @@ export default function InvestorsDashboardPage() {
             <CardContent className="p-8 space-y-2">
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">N° de Aportantes</p>
               <h3 className="text-4xl font-black text-primary italic">{investors?.length || 0}</h3>
-              <p className="text-xs font-bold text-secondary flex items-center gap-1"><Users className="h-3 w-3" /> Socios Estratégicos</p>
+              <p className="text-xs font-bold text-secondary flex items-center gap-1"><Users className="h-3 w-3" /> Socios Fundadores</p>
             </CardContent>
           </Card>
 
           <Card className="bg-white shadow-lg rounded-[2rem] border-primary/5">
             <CardContent className="p-8 space-y-2">
-              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Estado</p>
-              <h3 className="text-4xl font-black text-secondary italic">ACTIVO</h3>
-              <p className="text-xs font-bold text-muted-foreground">Ronda de Financiamiento</p>
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Estado de Ronda</p>
+              <h3 className="text-4xl font-black text-secondary italic">ABIERTA</h3>
+              <p className="text-xs font-bold text-muted-foreground flex items-center gap-1"><Rocket className="h-3 w-3" /> Levantamiento I+D</p>
             </CardContent>
           </Card>
         </div>
