@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar, Logo } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -271,20 +271,28 @@ const InteractiveAssistantSim = () => {
     }
   ];
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStep((prev) => (prev + 1) % simSteps.length);
+    }, 4500); // Avanza solo cada 4.5 segundos
+    return () => clearInterval(timer);
+  }, [simSteps.length]);
+
   const current = simSteps[step];
 
   return (
     <div className="relative w-full max-w-sm mx-auto">
+      {/* AI Clinical Insight Bubble */}
       <AnimatePresence mode="wait">
         <motion.div
           key={step}
           initial={{ opacity: 0, y: 20, scale: 0.8 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
-          className="absolute -top-24 left-0 right-0 z-20"
+          className="absolute -top-24 left-0 right-0 z-20 px-2"
         >
           <div className="bg-primary text-white p-4 rounded-2xl shadow-xl relative border-2 border-white/20">
-            <p className="text-xs font-bold leading-relaxed italic">
+            <p className="text-[11px] font-bold leading-relaxed italic">
               <Sparkles className="h-3 w-3 inline mr-1 text-secondary" /> {current.importance}
             </p>
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rotate-45 border-r-2 border-b-2 border-white/20" />
@@ -293,6 +301,17 @@ const InteractiveAssistantSim = () => {
       </AnimatePresence>
 
       <div className="relative glass-panel !bg-white rounded-[3rem] p-8 shadow-2xl border-primary/10 overflow-hidden min-h-[500px] flex flex-col">
+        {/* Step Progress Bar */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-muted">
+           <motion.div 
+             key={step}
+             initial={{ width: "0%" }}
+             animate={{ width: "100%" }}
+             transition={{ duration: 4.5, ease: "linear" }}
+             className="h-full bg-secondary"
+           />
+        </div>
+
         <div className="mt-6 space-y-6 text-center flex-grow flex flex-col justify-center">
           <AnimatePresence mode="wait">
             <motion.div
@@ -302,30 +321,47 @@ const InteractiveAssistantSim = () => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <Badge className={cn("font-black uppercase text-[10px]", current.isFinal ? "bg-green-500" : "bg-secondary")}>
+              <Badge className={cn(
+                "font-black uppercase text-[10px] px-3 py-1 rounded-full",
+                current.isFinal ? "bg-green-500" : "bg-secondary"
+              )}>
                 {current.badge}
               </Badge>
+
               <div className={cn(
-                "w-20 h-20 rounded-2xl flex items-center justify-center mx-auto transition-all duration-500",
+                "w-24 h-24 rounded-3xl flex items-center justify-center mx-auto transition-all duration-500 shadow-inner",
                 current.isFinal ? "bg-green-100 text-green-600 scale-110 shadow-lg" : 
                 current.title.includes("Muestra") ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-600"
               )}>
-                {current.icon}
+                <motion.div
+                  animate={current.isFinal ? { scale: [1, 1.2, 1] } : {}}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                >
+                  {current.icon}
+                </motion.div>
               </div>
-              <div className="space-y-2">
-                <h4 className="text-xl font-black text-primary italic leading-tight">{current.title}</h4>
-                <p className="text-[10px] font-bold text-muted-foreground leading-tight px-4">{current.instruction}</p>
+
+              <div className="space-y-2 px-2">
+                <h4 className="text-2xl font-black text-primary italic leading-tight">{current.title}</h4>
+                <p className="text-sm font-bold text-muted-foreground leading-snug">{current.instruction}</p>
               </div>
-              <Button 
-                onClick={() => setStep((step + 1) % simSteps.length)}
-                className={cn(
-                  "w-full rounded-xl font-bold shadow-lg active:scale-95 transition-all h-12",
-                  current.isWaiting ? "bg-slate-200 text-slate-500 pointer-events-none" : 
-                  current.isFinal ? "bg-green-600 hover:bg-green-700" : "bg-secondary hover:bg-secondary/90"
+
+              <div className="pt-4">
+                <Button 
+                  className={cn(
+                    "w-full rounded-2xl font-black shadow-lg transition-all h-14 text-base",
+                    current.isWaiting ? "bg-slate-200 text-slate-500 border border-slate-300" : 
+                    current.isFinal ? "bg-green-600 hover:bg-green-700" : "bg-primary hover:bg-primary/90"
+                  )}
+                >
+                  {current.button}
+                </Button>
+                {current.time !== "--:--" && (
+                  <p className="mt-3 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Cronómetro: {current.time}
+                  </p>
                 )}
-              >
-                {current.button}
-              </Button>
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -393,13 +429,16 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Asistente Simulador */}
+        {/* Asistente Simulador Reordenado */}
         <section className="py-24 bg-muted/20 border-y">
            <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
              <div className="space-y-6 lg:order-1">
                 <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">Test en Casa con <br/><span className="text-secondary">Guía Inteligente</span></h2>
-                <p className="text-lg text-muted-foreground font-medium">Nuestro asistente guía al paciente paso a paso, explicando cada etapa para asegurar un resultado válido y profesional desde su hogar.</p>
-                <Link href="/home-test"><Button variant="outline" className="rounded-full h-12 px-6 font-bold border-primary text-primary">Probar Asistente Real</Button></Link>
+                <p className="text-lg text-muted-foreground font-medium">Nuestro asistente guía al paciente paso a paso, explicando cada etapa para asegurar un resultado válido y profesional desde su hogar. Una experiencia interactiva que garantiza la calidad clínica de tu muestra.</p>
+                <div className="flex flex-wrap gap-4">
+                  <Link href="/home-test"><Button className="rounded-full h-14 px-8 font-black text-lg bg-primary shadow-xl">Probar Asistente Real</Button></Link>
+                  <Link href="/how-it-works"><Button variant="outline" className="rounded-full h-14 px-8 font-bold border-primary text-primary">Ver Protocolos</Button></Link>
+                </div>
              </div>
              <div className="lg:order-2">
                <InteractiveAssistantSim />
