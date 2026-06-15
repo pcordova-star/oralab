@@ -58,7 +58,8 @@ import {
   AlertCircle,
   History,
   ListChecks,
-  Activity
+  Activity,
+  HandCoins
 } from "lucide-react";
 import { format, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -334,7 +335,7 @@ export default function ReceptionPage() {
                               <TableCell>
                                 <div className="flex flex-col">
                                   <span className="font-black text-primary">{b.firstName} {b.lastNameFather}</span>
-                                  <span className="text-[11px] font-bold text-muted-foreground">+{b.phone}</span>
+                                  <span className="text-[11px] font-bold text-muted-foreground">{b.phone}</span>
                                 </div>
                               </TableCell>
                               <TableCell><Badge variant="outline" className="bg-secondary/5 font-bold">{b.examType}</Badge></TableCell>
@@ -406,7 +407,7 @@ export default function ReceptionPage() {
                 </div>
                 <CardContent className="p-6 relative z-10">
                   <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">Total Invertido</p>
-                  <h3 className="text-3xl font-black italic">${totalInvestment.toLocaleString()}</h3>
+                  <h3 className="text-3xl font-black italic">${totalInvestment.toLocaleString('es-CL')}</h3>
                   <div className="mt-4 space-y-2">
                     <div className="flex justify-between text-[10px] font-bold">
                       <span>Progreso Meta</span>
@@ -426,7 +427,7 @@ export default function ReceptionPage() {
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Inversionistas</p>
                   </div>
                   <h3 className="text-3xl font-black text-primary italic">{investors?.length || 0}</h3>
-                  <p className="text-[10px] font-bold text-muted-foreground mt-2 uppercase tracking-tighter">Meta Global: ${FUNDING_GOAL.toLocaleString()}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground mt-2 uppercase tracking-tighter">Meta Global: ${FUNDING_GOAL.toLocaleString('es-CL')}</p>
                 </CardContent>
               </Card>
 
@@ -466,7 +467,7 @@ export default function ReceptionPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="font-black text-primary">${(inv.amount || 0).toLocaleString()}</span>
+                          <span className="font-black text-primary">${(inv.amount || 0).toLocaleString('es-CL')}</span>
                         </TableCell>
                         <TableCell className="text-center">
                           <Select 
@@ -563,7 +564,10 @@ export default function ReceptionPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Monto (CLP)</label>
-                <Input type="number" value={investorAmount} onChange={(e) => setInvestorAmount(e.target.value)} placeholder="Ej: 5000000" className="h-12 rounded-xl" />
+                <div className="relative">
+                  <HandCoins className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                  <Input type="number" value={investorAmount} onChange={(e) => setInvestorAmount(e.target.value)} placeholder="1.000.000" className="h-12 rounded-xl pl-10" />
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Estado Inicial</label>

@@ -160,11 +160,24 @@ export default function InvestorsDashboardPage() {
 
   const formatCurrency = (value: number) => {
     if (!mounted) return `$0`;
-    return `$${value.toLocaleString()}`;
+    return `$${value.toLocaleString('es-CL')}`;
   };
 
   const calculateEquity = (amount: number) => {
     return (amount / FUNDING_GOAL) * EQUITY_TOTAL;
+  };
+
+  const formatRut = (value: string) => {
+    const clean = value.replace(/[^0-9kK]/g, "");
+    if (!clean) return "";
+    const dv = clean.slice(-1).toUpperCase();
+    const body = clean.slice(0, -1);
+    const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return body.length > 0 ? `${formattedBody}-${dv}` : dv;
+  };
+
+  const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInvRut(formatRut(e.target.value));
   };
 
   const generateContractPDF = () => {
@@ -214,13 +227,13 @@ export default function InvestorsDashboardPage() {
     addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento, habilitación de infraestructura y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends\".", 10, false, "justify");
 
     addText("SEGUNDA: APORTE", 10, true);
-    addText(`El Inversionista aporta a TRESNA SpA la suma de $${Number(invAmount).toLocaleString()} pesos. La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
+    addText(`El Inversionista aporta a TRESNA SpA la suma de $${Number(invAmount).toLocaleString('es-CL')} pesos. La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
 
     addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
     addText("Los recursos serán utilizados para: a) Compra e importación del analizador Sunvou DA7349. b) Habilitación de la consulta ORALAB. c) Capital de trabajo y gastos operacionales iniciales.", 10, false, "justify");
 
     addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
-    addText(`La Empresa se obliga a devolver al Inversionista: a) El 100% del capital aportado. b) Un retorno adicional equivalente al 20% del monto aportado ($${returnAmount.toLocaleString()}). La suma total de $${totalReturn.toLocaleString()} será pagada en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte.`, 10, false, "justify");
+    addText(`La Empresa se obliga a devolver al Inversionista: a) El 100% del capital aportado. b) Un retorno adicional equivalente al 20% del monto aportado ($${returnAmount.toLocaleString('es-CL')}). La suma total de $${totalReturn.toLocaleString('es-CL')} será pagada en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte.`, 10, false, "justify");
 
     addText("QUINTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
     addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten los $13.500.000 requeridos.`, 10, false, "justify");
@@ -353,7 +366,7 @@ export default function InvestorsDashboardPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT / Identificación</Label>
-                      <Input placeholder="12.345.678-9" value={invRut} onChange={(e) => setInvRut(e.target.value)} />
+                      <Input placeholder="12.345.678-9" value={invRut} onChange={handleRutChange} />
                     </div>
                     <div className="space-y-2">
                       <Label className="font-bold flex items-center gap-2"><Mail className="h-4 w-4" /> Correo Electrónico</Label>
@@ -363,7 +376,10 @@ export default function InvestorsDashboardPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="font-bold flex items-center gap-2"><HandCoins className="h-4 w-4" /> Monto del Aporte (CLP)</Label>
-                      <Input type="number" placeholder="1000000" value={invAmount} onChange={(e) => setInvAmount(Number(e.target.value) || "")} />
+                      <div className="relative">
+                        <span className="absolute left-3 top-3 text-muted-foreground font-bold">$</span>
+                        <Input type="number" placeholder="1.000.000" className="pl-7" value={invAmount} onChange={(e) => setInvAmount(Number(e.target.value) || "")} />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Domicilio</Label>
