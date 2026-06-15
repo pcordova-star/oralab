@@ -396,11 +396,13 @@ export default function HomePage() {
         {/* Asistente Simulador */}
         <section className="py-24 bg-muted/20 border-y">
            <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
-             <InteractiveAssistantSim />
-             <div className="space-y-6">
+             <div className="space-y-6 lg:order-1">
                 <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">Test en Casa con <br/><span className="text-secondary">Guía Inteligente</span></h2>
                 <p className="text-lg text-muted-foreground font-medium">Nuestro asistente guía al paciente paso a paso, explicando cada etapa para asegurar un resultado válido y profesional desde su hogar.</p>
                 <Link href="/home-test"><Button variant="outline" className="rounded-full h-12 px-6 font-bold border-primary text-primary">Probar Asistente Real</Button></Link>
+             </div>
+             <div className="lg:order-2">
+               <InteractiveAssistantSim />
              </div>
            </div>
         </section>
