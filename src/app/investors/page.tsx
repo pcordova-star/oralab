@@ -296,7 +296,7 @@ export default function InvestorsDashboardPage() {
     doc.text(invName.toUpperCase(), pageWidth - margin, y, { align: "right" });
 
     doc.save(`Contrato_Participacion_Oralab_${invName.replace(/\s+/g, '_')}.pdf`);
-    toast({ title: "Documento Generado", description: "Se ha descargado tu borrador de contrato." });
+    toast({ title: "Documento Generado", description: "Se ha descargado tu borrador de contrato. Por favor envíalo firmado a pcordova@oralab.cl" });
   };
 
   return (
@@ -376,7 +376,7 @@ export default function InvestorsDashboardPage() {
                 <div className="space-y-2">
                   <h3 className="text-2xl font-black text-primary">Generar Contrato de Participación</h3>
                   <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                    Completa tus datos para generar el borrador de contrato. Los cálculos de retorno y participación se aplican según la cláusula cuarta y quinta.
+                    Completa tus datos para generar el borrador de contrato. Los cálculos de retorno y participación se aplican automáticamente según las cláusulas de TRESNA SpA.
                   </p>
                 </div>
 
@@ -410,13 +410,18 @@ export default function InvestorsDashboardPage() {
                   </div>
                 </div>
 
-                <Button 
-                  onClick={generateContractPDF} 
-                  className="w-full h-14 rounded-2xl bg-primary hover:bg-secondary transition-all font-black text-lg shadow-xl"
-                  disabled={!invName || !invAmount || !invEmail}
-                >
-                  Generar y Descargar Contrato PDF <Download className="ml-2 h-5 w-5" />
-                </Button>
+                <div className="space-y-4">
+                  <Button 
+                    onClick={generateContractPDF} 
+                    className="w-full h-14 rounded-2xl bg-primary hover:bg-secondary transition-all font-black text-lg shadow-xl"
+                    disabled={!invName || !invAmount || !invEmail}
+                  >
+                    Generar y Descargar Contrato PDF <Download className="ml-2 h-5 w-5" />
+                  </Button>
+                  <p className="text-[10px] text-center font-bold text-muted-foreground italic">
+                    * El documento generado debe ser enviado firmado a <span className="text-primary">pcordova@oralab.cl</span>
+                  </p>
+                </div>
               </div>
 
               <div className="p-8 lg:p-12 flex flex-col justify-center bg-white">
@@ -445,9 +450,9 @@ export default function InvestorsDashboardPage() {
                        <div className="flex items-start gap-3">
                           <AlertCircle className="h-5 w-5 text-amber-600 mt-1 shrink-0" />
                           <div className="space-y-1">
-                            <p className="text-xs font-bold text-amber-800 uppercase tracking-tight">Nota Legal</p>
+                            <p className="text-xs font-bold text-amber-800 uppercase tracking-tight">Instrucciones de Firma</p>
                             <p className="text-[11px] text-amber-700 leading-relaxed">
-                              Este generador emite un borrador del "Contrato Privado de Financiamiento e Participación Económica". Para que tenga plena validez, debe ser firmado digitalmente o en dos ejemplares físicos por ambas partes.
+                              Una vez descargado el contrato, puede firmarlo digitalmente o imprimirlo para firma física. <strong>El documento final debe enviarse a pcordova@oralab.cl</strong> para su procesamiento.
                             </p>
                           </div>
                        </div>
@@ -501,7 +506,7 @@ export default function InvestorsDashboardPage() {
                     </div>
                     <div className="pt-4 border-t border-dashed">
                       <p className="text-[11px] font-medium text-muted-foreground italic">
-                        * Por favor enviar comprobante a <span className="font-bold text-primary">contacto@oralab.cl</span> indicando el folio del contrato generado.
+                        * Por favor enviar comprobante a <span className="font-bold text-primary">pcordova@oralab.cl</span> indicando el folio del contrato generado.
                       </p>
                     </div>
                   </motion.div>
