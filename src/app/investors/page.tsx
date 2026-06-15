@@ -34,7 +34,8 @@ import {
   MapPin,
   CreditCard,
   Percent,
-  HandCoins
+  HandCoins,
+  Mail
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -107,6 +108,7 @@ export default function InvestorsDashboardPage() {
   // Form State para el contrato
   const [invName, setInvName] = useState("");
   const [invRut, setInvRut] = useState("");
+  const [invEmail, setInvEmail] = useState("");
   const [invAddress, setInvAddress] = useState("");
   const [invAmount, setInvAmount] = useState<number | "">("");
 
@@ -166,7 +168,7 @@ export default function InvestorsDashboardPage() {
   };
 
   const generateContractPDF = () => {
-    if (!invName || !invRut || !invAddress || !invAmount) {
+    if (!invName || !invRut || !invAddress || !invAmount || !invEmail) {
       alert("Por favor completa todos los campos para generar tu contrato.");
       return;
     }
@@ -204,7 +206,7 @@ export default function InvestorsDashboardPage() {
     addText("Por una parte, TRESNA SpA, RUT N° 77.023.697-5, domiciliada en Avenida Apoquindo N° 3990, Oficina 605, comuna de Las Condes, Región Metropolitana, representada legalmente por don PAULO CÓRDOVA, cédula nacional de identidad N° 12.901.912-3, ambos domiciliados para estos efectos en la misma dirección, en adelante \"TRESNA\" o la \"Empresa\".", 10, false, "justify");
 
     addText("Y por la otra:", 10, true);
-    addText(`Don(ña) ${invName}, cédula nacional de identidad N° ${invRut}, domiciliado(a) en ${invAddress}, en adelante el \"Inversionista\".`, 10, false, "justify");
+    addText(`Don(ña) ${invName}, cédula nacional de identidad N° ${invRut}, domiciliado(a) en ${invAddress}, email ${invEmail}, en adelante el \"Inversionista\".`, 10, false, "justify");
 
     addText("Las partes acuerdan celebrar el presente Contrato Privado de Financiamiento e Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
 
@@ -354,20 +356,26 @@ export default function InvestorsDashboardPage() {
                       <Input placeholder="12.345.678-9" value={invRut} onChange={(e) => setInvRut(e.target.value)} />
                     </div>
                     <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-2"><Mail className="h-4 w-4" /> Correo Electrónico</Label>
+                      <Input type="email" placeholder="inversionista@correo.com" value={invEmail} onChange={(e) => setInvEmail(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
                       <Label className="font-bold flex items-center gap-2"><HandCoins className="h-4 w-4" /> Monto del Aporte (CLP)</Label>
                       <Input type="number" placeholder="1000000" value={invAmount} onChange={(e) => setInvAmount(Number(e.target.value) || "")} />
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Domicilio</Label>
-                    <Input placeholder="Calle, número, comuna" value={invAddress} onChange={(e) => setInvAddress(e.target.value)} />
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Domicilio</Label>
+                      <Input placeholder="Calle, número, comuna" value={invAddress} onChange={(e) => setInvAddress(e.target.value)} />
+                    </div>
                   </div>
                 </div>
 
                 <Button 
                   onClick={generateContractPDF} 
                   className="w-full h-14 rounded-2xl bg-primary hover:bg-secondary transition-all font-black text-lg shadow-xl"
-                  disabled={!invName || !invAmount}
+                  disabled={!invName || !invAmount || !invEmail}
                 >
                   Generar y Descargar Contrato PDF <Download className="ml-2 h-5 w-5" />
                 </Button>
@@ -555,56 +563,6 @@ export default function InvestorsDashboardPage() {
           </Card>
         </div>
 
-        <section className="mb-16 max-w-5xl mx-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="bg-primary/10 p-2 rounded-xl">
-              <TrendingUp className="h-6 w-6 text-primary" />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black text-primary italic">Proyección de Retornos y Operación</h2>
-          </div>
-
-          <Card className="bg-white shadow-xl rounded-[1.5rem] md:rounded-[2rem] border-primary/10 overflow-hidden">
-            <div className="p-5 md:p-6 bg-primary/5 border-b flex items-center gap-4">
-               <AlertCircle className="h-5 md:h-6 w-5 md:w-6 text-secondary animate-pulse shrink-0" />
-               <p className="text-[10px] md:text-xs font-bold text-primary leading-tight">
-                 IMPORTANTE: Esta información se alimentará en tiempo real una vez que el laboratorio inicie sus funciones comerciales (Julio 2025).
-               </p>
-            </div>
-            <div className="p-0 overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/10">
-                    <TableHead className="font-black text-[9px] md:text-[10px] uppercase pl-6 md:pl-8">Fecha Operación</TableHead>
-                    <TableHead className="font-black text-[9px] md:text-[10px] uppercase">Tests Proyectados</TableHead>
-                    <TableHead className="font-black text-[9px] md:text-[10px] uppercase text-right">Recaudación (CLP)</TableHead>
-                    <TableHead className="text-right font-black text-[9px] md:text-[10px] uppercase pr-6 md:pr-8">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow className="bg-slate-50/50">
-                    <TableCell className="pl-6 md:pl-8 font-black text-slate-400 italic text-xs">15 Julio, 2025</TableCell>
-                    <TableCell className="font-bold text-slate-400 text-xs">---</TableCell>
-                    <TableCell className="text-right font-black text-slate-400 text-xs">$0</TableCell>
-                    <TableCell className="text-right pr-6 md:pr-8">
-                      <Badge variant="outline" className="bg-slate-100 text-slate-400 border-slate-200 text-[9px] md:text-xs">INICIO PROGRAMADO</Badge>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-16 md:py-20">
-                      <div className="flex flex-col items-center gap-4 opacity-50">
-                        <Clock className="h-8 md:h-10 w-8 md:w-10 text-muted-foreground" />
-                        <p className="text-xs md:text-sm font-medium italic text-muted-foreground px-4">
-                          Esperando inicio de actividades para mostrar el histórico de recaudación.
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          </Card>
-        </section>
-
         <div className="mt-12 text-center px-4">
           <div className="flex flex-col items-center gap-2 mb-6">
             <p className="text-[10px] md:text-xs font-black text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -619,4 +577,3 @@ export default function InvestorsDashboardPage() {
     </div>
   );
 }
-
