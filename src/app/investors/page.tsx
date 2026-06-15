@@ -198,8 +198,11 @@ export default function InvestorsDashboardPage() {
         const lines = doc.splitTextToSize(text, pageWidth - (margin * 2));
         doc.text(lines, margin, y);
         y += (lines.length * (fontSize / 2)) + 5;
+      } else if (align === "center") {
+        doc.text(text, pageWidth / 2, y, { align: "center" });
+        y += fontSize / 2 + 5;
       } else {
-        doc.text(text, margin, y, { align: align === "center" ? "center" : "left" });
+        doc.text(text, margin, y, { align: "left" });
         y += fontSize / 2 + 5;
       }
     };
@@ -210,7 +213,7 @@ export default function InvestorsDashboardPage() {
     const returnAmount = Number(invAmount) * 0.2;
     const totalReturn = Number(invAmount) + returnAmount;
 
-    // Header
+    // Header Centrado
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO E PARTICIPACIÓN ECONÓMICA", 12, true, "center");
     y += 10;
 
