@@ -175,6 +175,7 @@ export default function HomeTestPage() {
 
     const updatedLogs = [...(testState.logs || []), newLog];
 
+    // Persistir registro en Firestore para verificación clínica
     if (currentStep.type === 'breath') {
       try {
         await updateDoc(doc(db, "bookings", testState.bookingId), {
@@ -493,6 +494,7 @@ export default function HomeTestPage() {
           </CardFooter>
         </Card>
 
+        {/* Bitácora Digital en tiempo real */}
         {testState.logs && testState.logs.length > 0 && (
           <Card className="rounded-3xl border-primary/10 shadow-lg overflow-hidden bg-white/50">
             <div className="p-4 bg-primary/5 border-b border-primary/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
