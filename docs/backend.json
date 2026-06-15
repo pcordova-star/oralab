@@ -93,6 +93,21 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["realName", "investorNumber", "amount", "status", "createdAt"]
+    },
+    "ContractLead": {
+      "title": "ContractLead",
+      "description": "Registro de inversionistas que han completado el formulario y descargado el borrador de contrato.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "rut": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "address": { "type": "string" },
+        "amount": { "type": "number" },
+        "equity": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "rut", "email", "amount", "createdAt"]
     }
   },
   "auth": {
@@ -118,6 +133,10 @@
     "/investors/{investorId}": {
       "schema": "Investor",
       "description": "Colección de inversionistas gestionada por el Super Admin."
+    },
+    "/contract_leads/{leadId}": {
+      "schema": "ContractLead",
+      "description": "Colección de interesados que generaron borradores de contrato."
     }
   }
 }

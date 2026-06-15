@@ -4,7 +4,8 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { collection, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { 
@@ -51,6 +52,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { jsPDF } from "jspdf";
+import { toast } from "@/hooks/use-toast";
 
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 const PENDING_COLOR = '#94a3b8';
@@ -182,10 +184,24 @@ export default function InvestorsDashboardPage() {
     setInvRut(formatRut(e.target.value));
   };
 
-  const generateContractPDF = () => {
+  const generateContractPDF = async () => {
     if (!invName || !invRut || !invAddress || !invAmount || !invEmail) {
-      alert("Por favor completa todos los campos para generar tu contrato.");
+      toast({ variant: "destructive", title: "Campos incompletos", description: "Por favor completa todos los campos para generar tu contrato." });
       return;
+    }
+
+    if (db) {
+      const equityPct = calculateEquity(Number(invAmount));
+      // Registrar el lead de contrato para el admin
+      addDocumentNonBlocking(collection(db, "contract_leads"), {
+        name: invName,
+        rut: invRut,
+        email: invEmail,
+        address: invAddress,
+        amount: Number(invAmount),
+        equity: equityPct,
+        createdAt: serverTimestamp()
+      });
     }
 
     const doc = new jsPDF();
@@ -211,7 +227,7 @@ export default function InvestorsDashboardPage() {
 
     const currentDay = format(new Date(), "d");
     const currentMonth = format(new Date(), "MMMM", { locale: es });
-    const equityPct = calculateEquity(Number(invAmount)).toFixed(4);
+    const equityPctStr = calculateEquity(Number(invAmount)).toFixed(4);
     const returnAmount = Number(invAmount) * 0.2;
     const totalReturn = Number(invAmount) + returnAmount;
 
@@ -243,7 +259,7 @@ export default function InvestorsDashboardPage() {
     addText("QUINTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
     addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten los $13.500.000 requeridos.`, 10, false, "justify");
     
-    addText(`La participación económica individual para este aporte se calcula en un ${equityPct}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, true, "justify");
+    addText(`La participación económica individual para este aporte se calcula en un ${equityPctStr}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, true, "justify");
 
     if (y > 250) { doc.addPage(); y = 20; }
 
@@ -280,6 +296,7 @@ export default function InvestorsDashboardPage() {
     doc.text(invName.toUpperCase(), pageWidth - margin, y, { align: "right" });
 
     doc.save(`Contrato_Participacion_Oralab_${invName.replace(/\s+/g, '_')}.pdf`);
+    toast({ title: "Documento Generado", description: "Se ha descargado tu borrador de contrato." });
   };
 
   return (

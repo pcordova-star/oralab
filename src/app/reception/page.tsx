@@ -59,7 +59,8 @@ import {
   History,
   ListChecks,
   Activity,
-  HandCoins
+  HandCoins,
+  UserPlus
 } from "lucide-react";
 import { format, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -137,10 +138,16 @@ export default function ReceptionPage() {
     return query(collection(db, "investors"), orderBy("investorNumber", "asc"));
   }, [db]);
 
+  const contractLeadsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "contract_leads"), orderBy("createdAt", "desc"));
+  }, [db]);
+
   const { data: rawBookings, isLoading: isBookingsLoading } = useCollection(bookingsQuery);
   const { data: allBookingsData } = useCollection(allBookingsQuery);
   const { data: leads, isLoading: isLeadsLoading } = useCollection(leadsQuery);
   const { data: investors, isLoading: isInvestorsLoading } = useCollection(investorsQuery);
+  const { data: contractLeads } = useCollection(contractLeadsQuery);
 
   const bookings = rawBookings ? [...rawBookings].sort((a, b) => 
     (a.scheduledTime || "").localeCompare(b.scheduledTime || "")
@@ -438,68 +445,132 @@ export default function ReceptionPage() {
               </Card>
             </div>
 
-            <Card className="bg-white shadow-xl border-primary/20 overflow-hidden rounded-[2rem]">
-              <CardHeader className="bg-primary/5 border-b">
-                <div>
-                  <CardTitle className="text-xl text-primary font-black flex items-center gap-2 italic"><Coins className="h-6 w-6 text-secondary" /> Registro Privado de Socios</CardTitle>
-                  <CardDescription className="font-medium">Identificación real visible solo para administración central.</CardDescription>
-                </div>
-              </CardHeader>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/10">
-                      <TableHead className="font-black text-[10px] uppercase pl-8"># Folio</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase">Inversionista (Nombre Real)</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase">Monto</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase text-center">Estado</TableHead>
-                      <TableHead className="text-right font-black text-[10px] uppercase pr-8">Gestión</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {investors?.map((inv) => (
-                      <TableRow key={inv.id} className="hover:bg-primary/5 group">
-                        <TableCell className="font-black text-primary pl-8 italic">#{inv.investorNumber}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                             <User className="h-4 w-4 text-muted-foreground" />
-                             <span className="font-bold">{inv.realName}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-black text-primary">${(inv.amount || 0).toLocaleString('es-CL')}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Select 
-                            value={inv.status || "confirmed"} 
-                            onValueChange={(v) => handleUpdateInvestorStatus(inv.id, v as "confirmed" | "pending")}
-                          >
-                            <SelectTrigger className={cn(
-                              "h-7 text-[9px] font-black uppercase w-32 mx-auto rounded-full border-none",
-                              inv.status === "pending" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"
-                            )}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="confirmed" className="text-[10px] font-bold">Confirmado</SelectItem>
-                              <SelectItem value="pending" className="text-[10px] font-bold">Por Confirmar</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="text-right pr-8">
-                          <Button variant="ghost" size="icon" className="text-red-300 hover:text-red-600 rounded-full h-8 w-8" onClick={() => handleDeleteInvestor(inv.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {investors?.length === 0 && (
-                      <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic">Esperando primeros inversionistas.</TableCell></TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
+            <Tabs defaultValue="confirmed_investors" className="space-y-6">
+              <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-2">
+                <TabsTrigger value="confirmed_investors" className="rounded-full font-bold px-8">Socios Fundadores</TabsTrigger>
+                <TabsTrigger value="contract_leads" className="rounded-full font-bold px-8 flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" /> Interesados (Descargas)
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="confirmed_investors">
+                <Card className="bg-white shadow-xl border-primary/20 overflow-hidden rounded-[2rem]">
+                  <CardHeader className="bg-primary/5 border-b">
+                    <div>
+                      <CardTitle className="text-xl text-primary font-black flex items-center gap-2 italic"><Coins className="h-6 w-6 text-secondary" /> Registro Privado de Socios</CardTitle>
+                      <CardDescription className="font-medium">Identificación real visible solo para administración central.</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/10">
+                          <TableHead className="font-black text-[10px] uppercase pl-8"># Folio</TableHead>
+                          <TableHead className="font-black text-[10px] uppercase">Inversionista (Nombre Real)</TableHead>
+                          <TableHead className="font-black text-[10px] uppercase">Monto</TableHead>
+                          <TableHead className="font-black text-[10px] uppercase text-center">Estado</TableHead>
+                          <TableHead className="text-right font-black text-[10px] uppercase pr-8">Gestión</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {investors?.map((inv) => (
+                          <TableRow key={inv.id} className="hover:bg-primary/5 group">
+                            <TableCell className="font-black text-primary pl-8 italic">#{inv.investorNumber}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                 <User className="h-4 w-4 text-muted-foreground" />
+                                 <span className="font-bold">{inv.realName}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="font-black text-primary">${(inv.amount || 0).toLocaleString('es-CL')}</span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Select 
+                                value={inv.status || "confirmed"} 
+                                onValueChange={(v) => handleUpdateInvestorStatus(inv.id, v as "confirmed" | "pending")}
+                              >
+                                <SelectTrigger className={cn(
+                                  "h-7 text-[9px] font-black uppercase w-32 mx-auto rounded-full border-none",
+                                  inv.status === "pending" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"
+                                )}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="confirmed" className="text-[10px] font-bold">Confirmado</SelectItem>
+                                  <SelectItem value="pending" className="text-[10px] font-bold">Por Confirmar</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="text-right pr-8">
+                              <Button variant="ghost" size="icon" className="text-red-300 hover:text-red-600 rounded-full h-8 w-8" onClick={() => handleDeleteInvestor(inv.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {investors?.length === 0 && (
+                          <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic">Esperando primeros inversionistas.</TableCell></TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="contract_leads">
+                <Card className="bg-white shadow-xl border-secondary/20 overflow-hidden rounded-[2rem]">
+                  <CardHeader className="bg-secondary/5 border-b">
+                    <CardTitle className="text-xl text-secondary font-black flex items-center gap-2 italic">
+                      <FileText className="h-6 w-6" /> Registros de Contrato Generados
+                    </CardTitle>
+                    <CardDescription>Usuarios que completaron el formulario y descargaron el PDF.</CardDescription>
+                  </CardHeader>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/10">
+                          <TableHead className="font-black text-[10px] uppercase pl-8">Fecha</TableHead>
+                          <TableHead className="font-black text-[10px] uppercase">Nombre e Identificación</TableHead>
+                          <TableHead className="font-black text-[10px] uppercase">Contacto</TableHead>
+                          <TableHead className="font-black text-[10px] uppercase text-right pr-8">Monto Pretendido</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {contractLeads?.map((lead) => (
+                          <TableRow key={lead.id} className="hover:bg-secondary/5">
+                            <TableCell className="pl-8 font-bold text-xs">
+                              {lead.createdAt?.seconds ? format(new Date(lead.createdAt.seconds * 1000), "dd/MM/yy HH:mm", { locale: es }) : "-"}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-black text-primary">{lead.name}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase">{lead.rut}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col text-xs font-medium">
+                                <span className="flex items-center gap-1"><Mail className="h-3 w-3" /> {lead.email}</span>
+                                <span className="text-muted-foreground">{lead.address}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right pr-8">
+                               <div className="flex flex-col items-end">
+                                  <span className="font-black text-secondary text-lg">${(lead.amount || 0).toLocaleString('es-CL')}</span>
+                                  <span className="text-[10px] font-bold text-muted-foreground">Participación: {lead.equity?.toFixed(4)}%</span>
+                               </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {(!contractLeads || contractLeads.length === 0) && (
+                          <TableRow><TableCell colSpan={4} className="text-center py-20 text-muted-foreground italic">No hay descargas de contrato registradas.</TableCell></TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </main>
