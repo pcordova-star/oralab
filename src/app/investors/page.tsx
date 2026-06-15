@@ -192,7 +192,6 @@ export default function InvestorsDashboardPage() {
 
     if (db) {
       const equityPct = calculateEquity(Number(invAmount));
-      // Registrar el lead de contrato para el admin
       addDocumentNonBlocking(collection(db, "contract_leads"), {
         name: invName,
         rut: invRut,
@@ -231,17 +230,13 @@ export default function InvestorsDashboardPage() {
     const returnAmount = Number(invAmount) * 0.2;
     const totalReturn = Number(invAmount) + returnAmount;
 
-    // Header Centrado
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO E PARTICIPACIÓN ECONÓMICA", 12, true, "center");
     y += 10;
 
     addText(`En Santiago de Chile, a ${currentDay} de ${currentMonth} de 2026, comparecen:`, 10, false, "justify");
-    
     addText("Por una parte, TRESNA SpA, RUT N° 77.023.697-5, domiciliada en Avenida Apoquindo N° 3990, Oficina 605, comuna de Las Condes, Región Metropolitana, representada legalmente por don PAULO CÓRDOVA, cédula nacional de identidad N° 12.901.912-3, ambos domiciliados para estos efectos en la misma dirección, en adelante \"TRESNA\" o la \"Empresa\".", 10, false, "justify");
-
     addText("Y por la otra:", 10, true);
     addText(`Don(ña) ${invName}, cédula nacional de identidad N° ${invRut}, domiciliado(a) en ${invAddress}, email ${invEmail}, en adelante el \"Inversionista\".`, 10, false, "justify");
-
     addText("Las partes acuerdan celebrar el presente Contrato Privado de Financiamiento e Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
 
     addText("PRIMERA: ANTECEDENTES", 10, true);
@@ -258,7 +253,6 @@ export default function InvestorsDashboardPage() {
 
     addText("QUINTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
     addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten los $13.500.000 requeridos.`, 10, false, "justify");
-    
     addText(`La participación económica individual para este aporte se calcula en un ${equityPctStr}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, true, "justify");
 
     if (y > 250) { doc.addPage(); y = 20; }
@@ -312,6 +306,7 @@ export default function InvestorsDashboardPage() {
           </p>
         </div>
 
+        {/* 1. Meta y Progreso */}
         <Card className="bg-white shadow-xl rounded-[2rem] md:rounded-[2.5rem] border-primary/5 mb-12 overflow-hidden">
           <div className="bg-primary/5 p-6 md:p-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
@@ -361,161 +356,7 @@ export default function InvestorsDashboardPage() {
           </div>
         </Card>
 
-        {/* Generador de Contrato y Datos de Pago */}
-        <section className="mb-16">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="bg-primary/10 p-2 rounded-xl">
-              <FileText className="h-6 w-6 text-primary" />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black text-primary italic">Formalización del Aporte</h2>
-          </div>
-
-          <Card className="bg-white shadow-2xl rounded-[2.5rem] border-primary/10 overflow-hidden mb-8">
-            <div className="grid lg:grid-cols-2">
-              <div className="p-8 lg:p-12 space-y-8 bg-muted/20">
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-primary">Generar Contrato de Participación</h3>
-                  <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                    Completa tus datos para generar el borrador de contrato. Los cálculos de retorno y participación se aplican automáticamente según las cláusulas de TRESNA SpA.
-                  </p>
-                </div>
-
-                <div className="grid gap-6">
-                  <div className="space-y-2">
-                    <Label className="font-bold flex items-center gap-2"><User className="h-4 w-4" /> Nombre Completo</Label>
-                    <Input placeholder="Ej: Juan Pérez González" value={invName} onChange={(e) => setInvName(e.target.value)} />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT / Identificación</Label>
-                      <Input placeholder="12.345.678-9" value={invRut} onChange={handleRutChange} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="font-bold flex items-center gap-2"><Mail className="h-4 w-4" /> Correo Electrónico</Label>
-                      <Input type="email" placeholder="inversionista@correo.com" value={invEmail} onChange={(e) => setInvEmail(e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="font-bold flex items-center gap-2"><HandCoins className="h-4 w-4" /> Monto del Aporte (CLP)</Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-3 text-muted-foreground font-bold">$</span>
-                        <Input type="number" placeholder="1.000.000" className="pl-7" value={invAmount} onChange={(e) => setInvAmount(Number(e.target.value) || "")} />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Domicilio</Label>
-                      <Input placeholder="Calle, número, comuna" value={invAddress} onChange={(e) => setInvAddress(e.target.value)} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Button 
-                    onClick={generateContractPDF} 
-                    className="w-full h-14 rounded-2xl bg-primary hover:bg-secondary transition-all font-black text-lg shadow-xl"
-                    disabled={!invName || !invAmount || !invEmail}
-                  >
-                    Generar y Descargar Contrato PDF <Download className="ml-2 h-5 w-5" />
-                  </Button>
-                  <p className="text-[10px] text-center font-bold text-muted-foreground italic">
-                    * El documento generado debe ser enviado firmado a <span className="text-primary">pcordova@oralab.cl</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-8 lg:p-12 flex flex-col justify-center bg-white">
-                 <div className="space-y-6">
-                    <div className="p-6 rounded-3xl bg-secondary/5 border border-secondary/10">
-                       <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-2 flex items-center gap-1">
-                         <Percent className="h-3 w-3" /> Participación Permanente
-                       </p>
-                       <p className="text-4xl font-black text-primary italic">
-                         {invAmount ? calculateEquity(Number(invAmount)).toFixed(4) : "0.0000"}%
-                       </p>
-                       <p className="text-xs font-medium text-muted-foreground mt-2">Sobre las utilidades distribuibles de Oralab.</p>
-                    </div>
-
-                    <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10">
-                       <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-1">
-                         <Clock className="h-3 w-3" /> Retorno Año 1 (Mes 6-12)
-                       </p>
-                       <p className="text-3xl font-black text-primary italic">
-                         {invAmount ? formatCurrency(Number(invAmount) * 1.2) : "$0"}
-                       </p>
-                       <p className="text-xs font-medium text-muted-foreground mt-2">Corresponde a la devolución del capital + 20% fijo.</p>
-                    </div>
-
-                    <div className="bg-amber-50/50 p-6 rounded-3xl border border-amber-200/50">
-                       <div className="flex items-start gap-3">
-                          <AlertCircle className="h-5 w-5 text-amber-600 mt-1 shrink-0" />
-                          <div className="space-y-1">
-                            <p className="text-xs font-bold text-amber-800 uppercase tracking-tight">Instrucciones de Firma</p>
-                            <p className="text-[11px] text-amber-700 leading-relaxed">
-                              Una vez descargado el contrato, puede firmarlo digitalmente o imprimirlo para firma física. <strong>El documento final debe enviarse a pcordova@oralab.cl</strong> para su procesamiento.
-                            </p>
-                          </div>
-                       </div>
-                    </div>
-                 </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Datos de Transferencia */}
-          <div className="max-w-2xl mx-auto">
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="payment-data" className="border-none">
-                <AccordionTrigger className="flex items-center gap-3 px-8 py-4 bg-white hover:bg-primary/5 rounded-2xl shadow-lg transition-all no-underline hover:no-underline border border-primary/5">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-2 rounded-lg">
-                      <Banknote className="h-5 w-5 text-primary" />
-                    </div>
-                    <span className="text-lg font-black text-primary italic">Ver Datos para Depósito / Transferencia</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4">
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-8 bg-white rounded-2xl border border-primary/10 shadow-inner grid gap-6"
-                  >
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Titular</p>
-                        <p className="font-bold text-primary">Tresna SpA</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">RUT</p>
-                        <p className="font-bold text-primary">77.023.697-5</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Banco</p>
-                        <p className="font-bold text-primary">Itaú</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Tipo de Cuenta</p>
-                        <p className="font-bold text-primary">Cuenta Corriente</p>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Número de Cuenta</p>
-                      <p className="text-xl font-black text-primary tracking-tighter">0 002 15 07469 6</p>
-                    </div>
-                    <div className="pt-4 border-t border-dashed">
-                      <p className="text-[11px] font-medium text-muted-foreground italic">
-                        * Por favor enviar comprobante a <span className="font-bold text-primary">pcordova@oralab.cl</span> indicando el folio del contrato generado.
-                      </p>
-                    </div>
-                  </motion.div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        </section>
-
+        {/* 2. Uso de Fondos */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-secondary/10 p-2 rounded-xl">
@@ -568,6 +409,7 @@ export default function InvestorsDashboardPage() {
           </div>
         </section>
 
+        {/* 3. Distribución Visual */}
         <div className="mb-16 max-w-4xl mx-auto">
           <Card className="bg-white shadow-xl rounded-[2rem] md:rounded-[2.5rem] border-primary/5 p-4 md:p-8">
             <CardHeader className="p-4 md:p-0 mb-6 md:mb-8 text-center">
@@ -659,6 +501,162 @@ export default function InvestorsDashboardPage() {
           </Card>
         </div>
 
+        {/* 4. Formalización del Aporte (MOVÍDO AL FINAL) */}
+        <section className="mb-16">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="bg-primary/10 p-2 rounded-xl">
+              <FileText className="h-6 w-6 text-primary" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-primary italic">Formalización del Aporte</h2>
+          </div>
+
+          <Card className="bg-white shadow-2xl rounded-[2.5rem] border-primary/10 overflow-hidden mb-8">
+            <div className="grid lg:grid-cols-2">
+              <div className="p-8 lg:p-12 space-y-8 bg-muted/20">
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-primary">Generar Contrato de Participación</h3>
+                  <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                    Completa tus datos para generar el borrador de contrato. Los cálculos de retorno y participación se aplican automáticamente según las cláusulas de TRESNA SpA.
+                  </p>
+                </div>
+
+                <div className="grid gap-6">
+                  <div className="space-y-2">
+                    <Label className="font-bold flex items-center gap-2"><User className="h-4 w-4" /> Nombre Completo</Label>
+                    <Input placeholder="Ej: Juan Pérez González" value={invName} onChange={(e) => setInvName(e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT / Identificación</Label>
+                      <Input placeholder="12.345.678-9" value={invRut} onChange={handleRutChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-2"><Mail className="h-4 w-4" /> Correo Electrónico</Label>
+                      <Input type="email" placeholder="inversionista@correo.com" value={invEmail} onChange={(e) => setInvEmail(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-2"><HandCoins className="h-4 w-4" /> Monto del Aporte (CLP)</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-3 text-muted-foreground font-bold">$</span>
+                        <Input type="number" placeholder="1.000.000" className="pl-7" value={invAmount} onChange={(e) => setInvAmount(Number(e.target.value) || "")} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Domicilio</Label>
+                      <Input placeholder="Calle, número, comuna" value={invAddress} onChange={(e) => setInvAddress(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Button 
+                    onClick={generateContractPDF} 
+                    className="w-full h-14 rounded-2xl bg-primary hover:bg-secondary transition-all font-black text-lg shadow-xl"
+                    disabled={!invName || !invAmount || !invEmail}
+                  >
+                    Generar y Descargar Contrato PDF <Download className="ml-2 h-5 w-5" />
+                  </Button>
+                  <p className="text-[10px] text-center font-bold text-muted-foreground italic">
+                    * El documento generado debe ser enviado firmado a <span className="text-primary font-black">pcordova@oralab.cl</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-8 lg:p-12 flex flex-col justify-center bg-white">
+                 <div className="space-y-6">
+                    <div className="p-6 rounded-3xl bg-secondary/5 border border-secondary/10">
+                       <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-2 flex items-center gap-1">
+                         <Percent className="h-3 w-3" /> Participación Permanente (Est.)
+                       </p>
+                       <p className="text-4xl font-black text-primary italic">
+                         {invAmount ? calculateEquity(Number(invAmount)).toFixed(4) : "0.0000"}%
+                       </p>
+                       <p className="text-xs font-medium text-muted-foreground mt-2">Sobre las utilidades distribuibles de Oralab.</p>
+                    </div>
+
+                    <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10">
+                       <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-1">
+                         <Clock className="h-3 w-3" /> Retorno Año 1 (Mes 6-12)
+                       </p>
+                       <p className="text-3xl font-black text-primary italic">
+                         {invAmount ? formatCurrency(Number(invAmount) * 1.2) : "$0"}
+                       </p>
+                       <p className="text-xs font-medium text-muted-foreground mt-2">Corresponde a la devolución del capital + 20% fijo.</p>
+                    </div>
+
+                    <div className="bg-amber-50/50 p-6 rounded-3xl border border-amber-200/50">
+                       <div className="flex items-start gap-3">
+                          <AlertCircle className="h-5 w-5 text-amber-600 mt-1 shrink-0" />
+                          <div className="space-y-1">
+                            <p className="text-xs font-bold text-amber-800 uppercase tracking-tight">Instrucciones de Firma</p>
+                            <p className="text-[11px] text-amber-700 leading-relaxed">
+                              Una vez descargado el contrato, puede firmarlo digitalmente o imprimirlo para firma física. <strong>El documento final debe enviarse a pcordova@oralab.cl</strong> para su procesamiento.
+                            </p>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Datos de Transferencia */}
+          <div className="max-w-2xl mx-auto">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="payment-data" className="border-none">
+                <AccordionTrigger className="flex items-center gap-3 px-8 py-4 bg-white hover:bg-primary/5 rounded-2xl shadow-lg transition-all no-underline hover:no-underline border border-primary/5">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 p-2 rounded-lg">
+                      <Banknote className="h-5 w-5 text-primary" />
+                    </div>
+                    <span className="text-lg font-black text-primary italic">Ver Datos para Depósito / Transferencia</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4">
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-8 bg-white rounded-2xl border border-primary/10 shadow-inner grid gap-6"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Titular</p>
+                        <p className="font-bold text-primary">Tresna SpA</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">RUT</p>
+                        <p className="font-bold text-primary">77.023.697-5</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Banco</p>
+                        <p className="font-bold text-primary">Itaú</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Tipo de Cuenta</p>
+                        <p className="font-bold text-primary">Cuenta Corriente</p>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Número de Cuenta</p>
+                      <p className="text-xl font-black text-primary tracking-tighter">0 002 15 07469 6</p>
+                    </div>
+                    <div className="pt-4 border-t border-dashed">
+                      <p className="text-[11px] font-medium text-muted-foreground italic">
+                        * Por favor enviar comprobante a <span className="font-bold text-primary">pcordova@oralab.cl</span> indicando el folio del contrato generado.
+                      </p>
+                    </div>
+                  </motion.div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </section>
+
+        {/* 5. Footer Text */}
         <div className="mt-12 text-center px-4">
           <div className="flex flex-col items-center gap-2 mb-6">
             <p className="text-[10px] md:text-xs font-black text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -673,3 +671,4 @@ export default function InvestorsDashboardPage() {
     </div>
   );
 }
+
