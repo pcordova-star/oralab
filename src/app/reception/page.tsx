@@ -92,11 +92,20 @@ export default function ReceptionPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isMounted, setIsMounted] = useState(false);
   
+  // Create States
   const [isInvestorDialogOpen, setIsInvestorDialogOpen] = useState(false);
   const [investorName, setInvestorName] = useState("");
   const [investorAmount, setInvestorAmount] = useState("");
   const [investorStatus, setInvestorStatus] = useState<"confirmed" | "pending">("confirmed");
 
+  // Edit Investor States
+  const [editingInvestor, setEditingInvestor] = useState<any>(null);
+  const [isEditInvestorDialogOpen, setIsEditInvestorDialogOpen] = useState(false);
+  const [editInvName, setEditInvName] = useState("");
+  const [editInvAmount, setEditInvAmount] = useState("");
+  const [editInvStatus, setEditInvStatus] = useState<"confirmed" | "pending">("confirmed");
+
+  // Booking states
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const [viewingLogsBooking, setViewingLogsBooking] = useState<any>(null);
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
@@ -193,6 +202,30 @@ export default function ReceptionPage() {
       toast({ variant: "destructive", title: "Error", description: "No se pudo guardar el registro." });
     }
   }
+
+  const handleEditInvestorOpen = (inv: any) => {
+    setEditingInvestor(inv);
+    setEditInvName(inv.realName || "");
+    setEditInvAmount((inv.amount || "").toString());
+    setEditInvStatus(inv.status || "confirmed");
+    setIsEditInvestorDialogOpen(true);
+  };
+
+  const handleEditInvestorSubmit = () => {
+    if (!db || !editingInvestor || !editInvName || !editInvAmount) return;
+    
+    const docRef = doc(db, "investors", editingInvestor.id);
+    updateDocumentNonBlocking(docRef, {
+      realName: editInvName,
+      amount: parseInt(editInvAmount),
+      status: editInvStatus,
+      updatedAt: serverTimestamp()
+    });
+
+    toast({ title: "Registro actualizado", description: "Los cambios se guardaron exitosamente." });
+    setIsEditInvestorDialogOpen(false);
+    setEditingInvestor(null);
+  };
 
   async function handleUpdateInvestorStatus(id: string, newStatus: "confirmed" | "pending") {
     if (!db) return;
@@ -503,9 +536,20 @@ export default function ReceptionPage() {
                               </Select>
                             </TableCell>
                             <TableCell className="text-right pr-8">
-                              <Button variant="ghost" size="icon" className="text-red-300 hover:text-red-600 rounded-full h-8 w-8" onClick={() => handleDeleteInvestor(inv.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <div className="flex justify-end gap-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="rounded-full hover:bg-primary/10 text-primary" 
+                                  onClick={() => handleEditInvestorOpen(inv)}
+                                  title="Editar"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="text-red-300 hover:text-red-600 rounded-full h-8 w-8" onClick={() => handleDeleteInvestor(inv.id)} title="Eliminar">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -622,6 +666,7 @@ export default function ReceptionPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Diálogo Registrar Nuevo Inversionista */}
       <Dialog open={isInvestorDialogOpen} onOpenChange={setIsInvestorDialogOpen}>
         <DialogContent className="rounded-[2rem]">
           <DialogHeader>
@@ -657,6 +702,46 @@ export default function ReceptionPage() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsInvestorDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleInvestorSubmit} className="bg-primary font-black rounded-full px-8 h-12">Guardar Registro</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo Editar Inversionista */}
+      <Dialog open={isEditInvestorDialogOpen} onOpenChange={setIsEditInvestorDialogOpen}>
+        <DialogContent className="rounded-[2rem]">
+          <DialogHeader>
+            <DialogTitle className="font-black text-primary italic">Editar Registro de Socio</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Nombre Real</label>
+              <Input value={editInvName} onChange={(e) => setEditInvName(e.target.value)} className="h-12 rounded-xl" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Monto (CLP)</label>
+                <div className="relative">
+                  <HandCoins className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                  <Input type="number" value={editInvAmount} onChange={(e) => setEditInvAmount(e.target.value)} className="h-12 rounded-xl pl-10" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Estado</label>
+                <Select value={editInvStatus} onValueChange={(v) => setEditInvStatus(v as "confirmed" | "pending")}>
+                  <SelectTrigger className="h-12 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="confirmed">Confirmado</SelectItem>
+                    <SelectItem value="pending">Por Confirmar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsEditInvestorDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleEditInvestorSubmit} className="bg-primary font-black rounded-full px-8 h-12">Guardar Cambios</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
