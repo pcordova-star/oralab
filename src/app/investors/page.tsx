@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { 
   PieChart, 
@@ -18,18 +18,23 @@ import {
 import { 
   Coins, 
   TrendingUp, 
-  Users, 
   Target, 
   Rocket, 
   Microscope, 
   Building2, 
   Briefcase, 
   ChevronRight,
-  Info,
   Calendar,
   Clock,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  FileText,
+  Download,
+  User,
+  MapPin,
+  CreditCard,
+  Percent,
+  HandCoins
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,11 +44,16 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { jsPDF } from "jspdf";
 
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 const PENDING_COLOR = '#94a3b8';
 const REMAINING_COLOR = '#f1f5f9'; 
 const FUNDING_GOAL = 13500000;
+const EQUITY_TOTAL = 10; // 10% total equity distributed
 
 const MILESTONES = [
   {
@@ -93,6 +103,12 @@ export default function InvestorsDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
   const isMobile = useIsMobile();
+
+  // Form State para el contrato
+  const [invName, setInvName] = useState("");
+  const [invRut, setInvRut] = useState("");
+  const [invAddress, setInvAddress] = useState("");
+  const [invAmount, setInvAmount] = useState<number | "">("");
 
   useEffect(() => {
     setMounted(true);
@@ -145,9 +161,105 @@ export default function InvestorsDashboardPage() {
     return `$${value.toLocaleString()}`;
   };
 
-  const getUpdateDate = () => {
-    if (!mounted) return "";
-    return format(new Date(), "dd 'de' MMMM, yyyy", { locale: es });
+  const calculateEquity = (amount: number) => {
+    return (amount / FUNDING_GOAL) * EQUITY_TOTAL;
+  };
+
+  const generateContractPDF = () => {
+    if (!invName || !invRut || !invAddress || !invAmount) {
+      alert("Por favor completa todos los campos para generar tu contrato.");
+      return;
+    }
+
+    const doc = new jsPDF();
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    const addText = (text: string, fontSize = 10, isBold = false, align: "left" | "center" | "justify" = "left") => {
+      doc.setFont("helvetica", isBold ? "bold" : "normal");
+      doc.setFontSize(fontSize);
+      if (align === "justify") {
+        const lines = doc.splitTextToSize(text, pageWidth - (margin * 2));
+        doc.text(lines, margin, y);
+        y += (lines.length * (fontSize / 2)) + 5;
+      } else {
+        doc.text(text, margin, y, { align: align === "center" ? "center" : "left" });
+        y += fontSize / 2 + 5;
+      }
+    };
+
+    const currentDay = format(new Date(), "d");
+    const currentMonth = format(new Date(), "MMMM", { locale: es });
+    const equityPct = calculateEquity(Number(invAmount)).toFixed(4);
+    const returnAmount = Number(invAmount) * 0.2;
+    const totalReturn = Number(invAmount) + returnAmount;
+
+    // Header
+    addText("CONTRATO PRIVADO DE FINANCIAMIENTO E PARTICIPACIÓN ECONÓMICA", 12, true, "center");
+    y += 10;
+
+    addText(`En Santiago de Chile, a ${currentDay} de ${currentMonth} de 2026, comparecen:`, 10, false, "justify");
+    
+    addText("Por una parte, TRESNA SpA, RUT N° 77.023.697-5, domiciliada en Avenida Apoquindo N° 3990, Oficina 605, comuna de Las Condes, Región Metropolitana, representada legalmente por don PAULO CÓRDOVA, cédula nacional de identidad N° 12.901.912-3, ambos domiciliados para estos efectos en la misma dirección, en adelante \"TRESNA\" o la \"Empresa\".", 10, false, "justify");
+
+    addText("Y por la otra:", 10, true);
+    addText(`Don(ña) ${invName}, cédula nacional de identidad N° ${invRut}, domiciliado(a) en ${invAddress}, en adelante el \"Inversionista\".`, 10, false, "justify");
+
+    addText("Las partes acuerdan celebrar el presente Contrato Privado de Financiamiento e Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
+
+    addText("PRIMERA: ANTECEDENTES", 10, true);
+    addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento, habilitación de infraestructura y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends\".", 10, false, "justify");
+
+    addText("SEGUNDA: APORTE", 10, true);
+    addText(`El Inversionista aporta a TRESNA SpA la suma de $${Number(invAmount).toLocaleString()} pesos. La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
+
+    addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
+    addText("Los recursos serán utilizados para: a) Compra e importación del analizador Sunvou DA7349. b) Habilitación de la consulta ORALAB. c) Capital de trabajo y gastos operacionales iniciales.", 10, false, "justify");
+
+    addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
+    addText(`La Empresa se obliga a devolver al Inversionista: a) El 100% del capital aportado. b) Un retorno adicional equivalente al 20% del monto aportado ($${returnAmount.toLocaleString()}). La suma total de $${totalReturn.toLocaleString()} será pagada en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte.`, 10, false, "justify");
+
+    addText("QUINTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
+    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten los $13.500.000 requeridos.`, 10, false, "justify");
+    
+    addText(`La participación económica individual para este aporte se calcula en un ${equityPct}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, true, "justify");
+
+    if (y > 250) { doc.addPage(); y = 20; }
+
+    addText("SEXTA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
+    addText("La participación económica otorgada: a) No constituye acciones de TRESNA SpA. b) No otorga calidad de socio ni accionista. c) No concede derecho a voto. d) No concede facultades de administración. e) Corresponde únicamente a un derecho económico asociado a ORALAB.", 10, false, "justify");
+
+    addText("SÉPTIMA: DISTRIBUCIÓN DE UTILIDADES", 10, true);
+    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica.", 10, false, "justify");
+
+    addText("OCTAVA: INFORMACIÓN", 10, true);
+    addText("La Empresa enviará al Inversionista un resumen anual de resultados de ORALAB, indicando ingresos, costos, utilidad y monto distribuido.", 10, false, "justify");
+
+    addText("NOVENA: CESIÓN", 10, true);
+    addText("La participación económica podrá ser transferida a terceros únicamente con autorización escrita de TRESNA SpA.", 10, false, "justify");
+
+    addText("DÉCIMA: VIGENCIA", 10, true);
+    addText("La participación económica otorgada mediante este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA.", 10, false, "justify");
+
+    addText("DÉCIMO PRIMERA: JURISDICCIÓN", 10, true);
+    addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago y se someten a la jurisdicción de sus tribunales ordinarios de justicia.", 10, false, "justify");
+
+    y += 10;
+    addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
+    
+    y += 20;
+    doc.line(margin, y, margin + 60, y);
+    doc.line(pageWidth - margin - 60, y, pageWidth - margin, y);
+    y += 5;
+    doc.setFontSize(8);
+    doc.text("PAULO CÓRDOVA", margin, y);
+    doc.text("INVERSIONISTA", pageWidth - margin, y, { align: "right" });
+    y += 4;
+    doc.text("Representante Legal TRESNA SpA", margin, y);
+    doc.text(invName.toUpperCase(), pageWidth - margin, y, { align: "right" });
+
+    doc.save(`Contrato_Participacion_Oralab_${invName.replace(/\s+/g, '_')}.pdf`);
   };
 
   return (
@@ -211,6 +323,94 @@ export default function InvestorsDashboardPage() {
             </div>
           </div>
         </Card>
+
+        {/* Generador de Contrato */}
+        <section className="mb-16">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="bg-primary/10 p-2 rounded-xl">
+              <FileText className="h-6 w-6 text-primary" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-primary italic">Generar Contrato de Participación</h2>
+          </div>
+
+          <Card className="bg-white shadow-2xl rounded-[2.5rem] border-primary/10 overflow-hidden">
+            <div className="grid lg:grid-cols-2">
+              <div className="p-8 lg:p-12 space-y-8 bg-muted/20">
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-primary">Formaliza tu Aporte</h3>
+                  <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                    Completa tus datos para generar el borrador de contrato. Los cálculos de retorno y participación se aplican según la cláusula cuarta y quinta.
+                  </p>
+                </div>
+
+                <div className="grid gap-6">
+                  <div className="space-y-2">
+                    <Label className="font-bold flex items-center gap-2"><User className="h-4 w-4" /> Nombre Completo</Label>
+                    <Input placeholder="Ej: Juan Pérez González" value={invName} onChange={(e) => setInvName(e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT / Identificación</Label>
+                      <Input placeholder="12.345.678-9" value={invRut} onChange={(e) => setInvRut(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold flex items-center gap-2"><HandCoins className="h-4 w-4" /> Monto del Aporte (CLP)</Label>
+                      <Input type="number" placeholder="1000000" value={invAmount} onChange={(e) => setInvAmount(Number(e.target.value) || "")} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Domicilio</Label>
+                    <Input placeholder="Calle, número, comuna" value={invAddress} onChange={(e) => setInvAddress(e.target.value)} />
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={generateContractPDF} 
+                  className="w-full h-14 rounded-2xl bg-primary hover:bg-secondary transition-all font-black text-lg shadow-xl"
+                  disabled={!invName || !invAmount}
+                >
+                  Generar y Descargar Contrato PDF <Download className="ml-2 h-5 w-5" />
+                </Button>
+              </div>
+
+              <div className="p-8 lg:p-12 flex flex-col justify-center bg-white">
+                 <div className="space-y-6">
+                    <div className="p-6 rounded-3xl bg-secondary/5 border border-secondary/10">
+                       <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-2 flex items-center gap-1">
+                         <Percent className="h-3 w-3" /> Participación Permanente
+                       </p>
+                       <p className="text-4xl font-black text-primary italic">
+                         {invAmount ? calculateEquity(Number(invAmount)).toFixed(4) : "0.0000"}%
+                       </p>
+                       <p className="text-xs font-medium text-muted-foreground mt-2">Sobre las utilidades distribuibles de Oralab.</p>
+                    </div>
+
+                    <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10">
+                       <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-1">
+                         <Clock className="h-3 w-3" /> Retorno Año 1 (Mes 6-12)
+                       </p>
+                       <p className="text-3xl font-black text-primary italic">
+                         {invAmount ? formatCurrency(Number(invAmount) * 1.2) : "$0"}
+                       </p>
+                       <p className="text-xs font-medium text-muted-foreground mt-2">Corresponde a la devolución del capital + 20% fijo.</p>
+                    </div>
+
+                    <div className="bg-amber-50/50 p-6 rounded-3xl border border-amber-200/50">
+                       <div className="flex items-start gap-3">
+                          <AlertCircle className="h-5 w-5 text-amber-600 mt-1 shrink-0" />
+                          <div className="space-y-1">
+                            <p className="text-xs font-bold text-amber-800 uppercase tracking-tight">Nota Legal</p>
+                            <p className="text-[11px] text-amber-700 leading-relaxed">
+                              Este generador emite un borrador del "Contrato Privado de Financiamiento e Participación Económica". Para que tenga plena validez, debe ser firmado digitalmente o en dos ejemplares físicos por ambas partes.
+                            </p>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          </Card>
+        </section>
 
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
@@ -408,7 +608,7 @@ export default function InvestorsDashboardPage() {
         <div className="mt-12 text-center px-4">
           <div className="flex flex-col items-center gap-2 mb-6">
             <p className="text-[10px] md:text-xs font-black text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Calendar className="h-3 w-3" /> Última actualización: {getUpdateDate()}
+              <Calendar className="h-3 w-3" /> Última actualización: {mounted ? format(new Date(), "dd 'de' MMMM, yyyy", { locale: es }) : ""}
             </p>
             <p className="text-[10px] md:text-xs font-bold text-primary max-w-2xl mx-auto leading-relaxed mt-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
               * Dividendo anual estimado en régimen (10 pac/día). Año 1: capital + 20% en cuotas mes 6–12. Desde año 2: % del negocio genera dividendos permanentes.
@@ -419,3 +619,4 @@ export default function InvestorsDashboardPage() {
     </div>
   );
 }
+
