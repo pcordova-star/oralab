@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -35,7 +35,8 @@ import {
   CreditCard,
   Percent,
   HandCoins,
-  Mail
+  Mail,
+  Banknote
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,6 +49,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { jsPDF } from "jspdf";
 
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
@@ -342,20 +344,20 @@ export default function InvestorsDashboardPage() {
           </div>
         </Card>
 
-        {/* Generador de Contrato */}
+        {/* Generador de Contrato y Datos de Pago */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-primary/10 p-2 rounded-xl">
               <FileText className="h-6 w-6 text-primary" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-black text-primary italic">Generar Contrato de Participación</h2>
+            <h2 className="text-2xl md:text-3xl font-black text-primary italic">Formalización del Aporte</h2>
           </div>
 
-          <Card className="bg-white shadow-2xl rounded-[2.5rem] border-primary/10 overflow-hidden">
+          <Card className="bg-white shadow-2xl rounded-[2.5rem] border-primary/10 overflow-hidden mb-8">
             <div className="grid lg:grid-cols-2">
               <div className="p-8 lg:p-12 space-y-8 bg-muted/20">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-primary">Formaliza tu Aporte</h3>
+                  <h3 className="text-2xl font-black text-primary">Generar Contrato de Participación</h3>
                   <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                     Completa tus datos para generar el borrador de contrato. Los cálculos de retorno y participación se aplican según la cláusula cuarta y quinta.
                   </p>
@@ -437,6 +439,59 @@ export default function InvestorsDashboardPage() {
               </div>
             </div>
           </Card>
+
+          {/* Datos de Transferencia */}
+          <div className="max-w-2xl mx-auto">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="payment-data" className="border-none">
+                <AccordionTrigger className="flex items-center gap-3 px-8 py-4 bg-white hover:bg-primary/5 rounded-2xl shadow-lg transition-all no-underline hover:no-underline border border-primary/5">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 p-2 rounded-lg">
+                      <Banknote className="h-5 w-5 text-primary" />
+                    </div>
+                    <span className="text-lg font-black text-primary italic">Ver Datos para Depósito / Transferencia</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4">
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-8 bg-white rounded-2xl border border-primary/10 shadow-inner grid gap-6"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Titular</p>
+                        <p className="font-bold text-primary">Tresna SpA</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">RUT</p>
+                        <p className="font-bold text-primary">77.023.697-5</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Banco</p>
+                        <p className="font-bold text-primary">Itaú</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Tipo de Cuenta</p>
+                        <p className="font-bold text-primary">Cuenta Corriente</p>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Número de Cuenta</p>
+                      <p className="text-xl font-black text-primary tracking-tighter">0 002 15 07469 6</p>
+                    </div>
+                    <div className="pt-4 border-t border-dashed">
+                      <p className="text-[11px] font-medium text-muted-foreground italic">
+                        * Por favor enviar comprobante a <span className="font-bold text-primary">contacto@oralab.cl</span> indicando el folio del contrato generado.
+                      </p>
+                    </div>
+                  </motion.div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
         </section>
 
         <section className="mb-16">
