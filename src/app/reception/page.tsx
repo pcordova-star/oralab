@@ -55,7 +55,10 @@ import {
   TrendingUp,
   Calendar as CalendarViewIcon,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  History,
+  ListChecks,
+  Activity
 } from "lucide-react";
 import { format, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -93,6 +96,7 @@ export default function ReceptionPage() {
   const [investorStatus, setInvestorStatus] = useState<"confirmed" | "pending">("confirmed");
 
   const [editingBooking, setEditingBooking] = useState<any>(null);
+  const [viewingLogsBooking, setViewingLogsBooking] = useState<any>(null);
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
   const [newTime, setNewTime] = useState<string>("");
 
@@ -336,13 +340,26 @@ export default function ReceptionPage() {
                               <TableCell><Badge variant="outline" className="bg-secondary/5 font-bold">{b.examType}</Badge></TableCell>
                               <TableCell><Badge className={cn("font-black text-[10px]", getStatusBadgeClass(b.status))}>{getStatusLabel(b.status)}</Badge></TableCell>
                               <TableCell className="text-right pr-6">
-                                <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 text-primary" onClick={() => {
-                                  setEditingBooking(b);
-                                  setNewDate(selectedDate);
-                                  setNewTime(b.scheduledTime);
-                                }}>
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
+                                <div className="flex justify-end gap-1">
+                                  {b.testLogs && b.testLogs.length > 0 && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="rounded-full hover:bg-secondary/10 text-secondary" 
+                                      onClick={() => setViewingLogsBooking(b)}
+                                      title="Ver Bitácora de Test"
+                                    >
+                                      <History className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                  <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 text-primary" onClick={() => {
+                                    setEditingBooking(b);
+                                    setNewDate(selectedDate);
+                                    setNewTime(b.scheduledTime);
+                                  }}>
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))
@@ -485,6 +502,53 @@ export default function ReceptionPage() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Diálogo Bitácora de Test */}
+      <Dialog open={!!viewingLogsBooking} onOpenChange={() => setViewingLogsBooking(null)}>
+        <DialogContent className="rounded-[2.5rem] max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+              <ListChecks className="h-6 w-6 text-secondary" /> Bitácora Clínica del Paciente
+            </DialogTitle>
+            <CardDescription className="font-bold">
+              Historial de muestras registradas por {viewingLogsBooking?.firstName} {viewingLogsBooking?.lastNameFather}.
+            </CardDescription>
+          </DialogHeader>
+          <div className="py-4">
+             <div className="bg-primary/5 rounded-2xl border border-primary/10 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-primary/10">
+                      <TableHead className="font-black text-[10px] uppercase">Muestra / Paso</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase text-right">Hora Registro</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewingLogsBooking?.testLogs?.map((log: any, idx: number) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-bold text-primary flex items-center gap-2">
+                          <CheckCircle2 className="h-3 w-3 text-green-500" /> {log.stepName}
+                        </TableCell>
+                        <TableCell className="text-right font-black text-primary">
+                          {format(new Date(log.timestamp), "HH:mm:ss")} hrs
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+             </div>
+             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
+               <Activity className="h-5 w-5 text-blue-600 shrink-0" />
+               <p className="text-xs text-blue-800 font-medium">
+                 Use estos tiempos para validar si el paciente respetó los intervalos del protocolo Sunvou® (20/30 minutos entre muestras).
+               </p>
+             </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setViewingLogsBooking(null)} className="rounded-full bg-primary font-black px-8">Cerrar Bitácora</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isInvestorDialogOpen} onOpenChange={setIsInvestorDialogOpen}>
         <DialogContent className="rounded-[2rem]">
