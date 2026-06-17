@@ -57,38 +57,38 @@ import { toast } from "@/hooks/use-toast";
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 const PENDING_COLOR = '#94a3b8';
 const REMAINING_COLOR = '#f1f5f9'; 
-// Meta ajustada: Eliminamos habilitación ($1.3M) para cerrar fase de equipo.
-// Nueva meta: 9,102,116 (Equipo) + 3,097,884 (Capital) = 12,200,000
-const FUNDING_GOAL = 12200000;
-const EQUITY_TOTAL = 10; // 10% total equity para esta fase de capital
+
+// Meta Ronda Family & Friends 01
+const FUNDING_GOAL = 10800000;
+const EQUITY_TOTAL = 8; // 8% total equity para esta fase de capital
 
 const MILESTONES = [
   {
     id: "m1",
-    title: "Equipo + importación",
-    target: 9102116,
+    title: "Equipo + Permisos + Logística",
+    target: 8100000,
     percentage: 75,
     color: "bg-[#1c68b6]",
     textColor: "text-[#1c68b6]",
     icon: <Microscope className="h-8 w-8" />,
     items: [
-      "Sunvou DA7349 FOB China: $6.734.600",
-      "Logística importación (flete, seguro, arancel): $968.860",
-      "IVA 19% importación (recuperable): $1.398.656"
+      "Analizador Sunvou DA7349",
+      "Permisos y certificaciones laboratorio",
+      "Logística de importación y puesta en marcha"
     ]
   },
   {
     id: "m3",
-    title: "Capital de trabajo",
-    target: 3097884,
+    title: "Capital de trabajo inicial",
+    target: 2700000,
     percentage: 25,
     color: "bg-[#065f46]",
     textColor: "text-[#065f46]",
     icon: <Briefcase className="h-8 w-8" />,
     items: [
-      "Gastos operacionales primeros 3 meses",
-      "Respaldo logístico y stock de insumos",
-      "Aseguramiento de puesta en marcha"
+      "Sustentabilidad operativa primeros meses",
+      "Stock inicial de insumos diagnósticos",
+      "Marketing y lanzamiento clínico"
     ]
   }
 ];
@@ -203,7 +203,7 @@ export default function InvestorsDashboardPage() {
       if (align === "justify") {
         const lines = doc.splitTextToSize(text, pageWidth - (margin * 2));
         doc.text(lines, margin, y);
-        y += (lines.length * (fontSize / 2)) + 5;
+        y += (lines.length * (fontSize / 2.5)) + 5;
       } else if (align === "center") {
         doc.text(text, pageWidth / 2, y, { align: "center" });
         y += fontSize / 2 + 5;
@@ -222,64 +222,69 @@ export default function InvestorsDashboardPage() {
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO Y PARTICIPACIÓN ECONÓMICA", 12, true, "center");
     y += 10;
 
-    addText(`En Santiago de Chile, a ${currentDay} de ${currentMonth} de 2025, comparecen:`, 10, false, "justify");
+    addText(`En Santiago de Chile, a ${currentDay} de ${currentMonth} de 2026, comparecen:`, 10, false, "justify");
     addText("Por una parte, TRESNA SpA, RUT N° 77.023.697-5, domiciliada en Avenida Apoquindo N° 3990, Oficina 605, comuna de Las Condes, Región Metropolitana, representada legalmente por don PAULO CÓRDOVA, cédula nacional de identidad N° 12.901.912-3, ambos domiciliados para estos efectos en la misma dirección, en adelante \"TRESNA\" o la \"Empresa\".", 10, false, "justify");
     addText("Y por la otra:", 10, true);
     addText(`Don(ña) ${invName}, cédula nacional de identidad N° ${invRut}, domiciliado(a) en ${invAddress}, email ${invEmail}, en adelante el \"Inversionista\".`, 10, false, "justify");
     addText("Las partes acuerdan celebrar el presente Contrato Privado de Financiamiento y Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
 
     addText("PRIMERA: ANTECEDENTES", 10, true);
-    addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends\".", 10, false, "justify");
+    addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento con los permisos y logística necesarios para operar en el laboratorio y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
 
     addText("SEGUNDA: APORTE", 10, true);
-    addText(`El Inversionista aporta a TRESNA SpA la suma de $${Number(invAmount).toLocaleString('es-CL')} pesos. La Empresa declara recibir dicho aporte a su entera satisfacción con el fin de destinarlo al proyecto indicado.`, 10, false, "justify");
+    addText(`El Inversionista aporta a TRESNA SpA la suma de $${Number(invAmount).toLocaleString('es-CL')} (_____________ pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
 
     addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
-    addText("Los recursos serán utilizados exclusivamente para: a) Compra e importación del analizador Sunvou DA7349. b) Capital de trabajo y gastos operacionales de puesta en marcha.", 10, false, "justify");
+    addText("Los recursos serán utilizados para: a) Compra e importación del analizador Sunvou DA7349. b) Capital de trabajo y gastos operacionales iniciales.", 10, false, "justify");
 
-    addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO VARIABLE", 10, true);
-    addText(`Dada la naturaleza de inversión de riesgo del proyecto, la Empresa proyecta devolver al Inversionista: a) El 100% del capital aportado. b) Un retorno adicional equivalente al 20% del monto aportado ($${returnAmount.toLocaleString('es-CL')}).`, 10, false, "justify");
-    addText("Dicha devolución estará condicionada a la rentabilidad, flujo de caja y resultados operacionales de la unidad de negocio ORALAB. Se estima el inicio del pago de la suma total de $" + totalReturn.toLocaleString('es-CL') + " en siete cuotas mensuales sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte, sujeto al cumplimiento de las proyecciones comerciales.", 10, false, "justify");
+    addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
+    addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${Number(invAmount).toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${returnAmount.toLocaleString('es-CL')}).`, 10, false, "justify");
+    addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte, siempre que la unidad de negocio ORALAB cuente con flujo de caja operacional suficiente para ello. En caso de que el flujo disponible no sea suficiente en una fecha de pago determinada, la cuota correspondiente se postergará al mes siguiente en que exista disponibilidad, sin que ello constituya incumplimiento contractual, mora ni genere intereses penales. La Empresa informará al Inversionista de cualquier postergación, indicando la causa y la nueva fecha estimada de pago.", 10, false, "justify");
 
     addText("QUINTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
-    addText(`Adicionalmente a la devolución señalada anteriormente, el Inversionista adquiere una participación económica permanente sobre los beneficios netos de ORALAB.`, 10, false, "justify");
-    addText(`La participación económica individual para este aporte se fija en un ${equityPctStr}% sobre las utilidades distribuibles generadas por la unidad de negocio ORALAB.`, 10, true, "justify");
+    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 8% de participación económica total a quienes aporten $10.800.000 requeridos.`, 10, false, "justify");
+    addText(`La participación económica individual para este aporte se calcula en un ${equityPctStr}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, true, "justify");
 
     if (y > 250) { doc.addPage(); y = 20; }
 
     addText("SEXTA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
-    addText("El Inversionista comparece en calidad de Aportante de Capital con derechos de participación económica. Dicha participación: a) No constituye acciones de TRESNA SpA. b) No otorga calidad de socio administrador. c) No concede derecho a voto en la administración de la Empresa. d) Corresponde a un derecho económico preferente asociado a los resultados de ORALAB.", 10, false, "justify");
+    addText("La participación económica otorgada: a) No constituye acciones de TRESNA SpA. b) No otorga calidad de socio ni accionista. c) No concede derecho a voto. d) No concede facultades de administración. e) Corresponde únicamente a un derecho económico asociado a ORALAB.", 10, false, "justify");
 
     addText("SÉPTIMA: DISTRIBUCIÓN DE UTILIDADES", 10, true);
-    addText("Una vez completado el período de retorno de capital señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades que corresponda a su participación económica, según el balance de cierre de cada ejercicio fiscal.", 10, false, "justify");
+    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica. La determinación de dichas utilidades será realizada por la administración de TRESNA SpA sobre la base de los estados financieros y resultados del negocio.", 10, false, "justify");
 
     addText("OCTAVA: INFORMACIÓN", 10, true);
-    addText("La Empresa enviará al Inversionista un resumen anual de resultados de ORALAB, indicando ingresos, costos y utilidad neta para transparencia de los participantes.", 10, false, "justify");
+    addText("La Empresa enviará al Inversionista un resumen anual de resultados de ORALAB, indicando ingresos, costos, utilidad y monto distribuido.", 10, false, "justify");
 
     addText("NOVENA: CESIÓN", 10, true);
-    addText("La participación económica podrá ser transferida a terceros únicamente con autorización previa y escrita de TRESNA SpA.", 10, false, "justify");
+    addText("La participación económica no podrá ser transferida a terceros.", 10, false, "justify");
 
     addText("DÉCIMA: VIGENCIA", 10, true);
-    addText("Este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA o sucesores legales.", 10, false, "justify");
+    addText("La participación económica otorgada mediante este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA o de cualquier entidad sucesora que continúe desarrollando dicha actividad.", 10, false, "justify");
 
     addText("DÉCIMO PRIMERA: JURISDICCIÓN", 10, true);
-    addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago.", 10, false, "justify");
+    addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago y se someten a la jurisdicción de sus tribunales ordinarios de justicia.", 10, false, "justify");
 
-    y += 10;
+    y += 15;
     addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
     
-    y += 20;
-    doc.line(margin, y, margin + 60, y);
-    doc.line(pageWidth - margin - 60, y, pageWidth - margin, y);
+    y += 25;
+    doc.line(margin, y, margin + 70, y);
+    doc.line(pageWidth - margin - 70, y, pageWidth - margin, y);
     y += 5;
     doc.setFontSize(8);
     doc.text("PAULO CÓRDOVA", margin, y);
     doc.text("INVERSIONISTA", pageWidth - margin, y, { align: "right" });
     y += 4;
     doc.text("Representante Legal TRESNA SpA", margin, y);
-    doc.text(invName.toUpperCase(), pageWidth - margin, y, { align: "right" });
+    doc.text("Nombre: " + invName.toUpperCase(), pageWidth - margin, y, { align: "right" });
+    y += 4;
+    doc.text("RUT 77.023.697-5", margin, y);
+    doc.text("RUT: " + invRut, pageWidth - margin, y, { align: "right" });
+    y += 4;
+    doc.text("Fecha: " + format(new Date(), "dd/MM/yyyy"), pageWidth - margin, y, { align: "right" });
 
-    doc.save(`Contrato_Participacion_Oralab_${invName.replace(/\s+/g, '_')}.pdf`);
+    doc.save(`Contrato_Oralab_FF01_${invName.replace(/\s+/g, '_')}.pdf`);
     toast({ title: "Documento Generado", description: "Se ha descargado tu borrador de contrato. Por favor envíalo firmado a pcordova@oralab.cl" });
   };
 
@@ -289,10 +294,10 @@ export default function InvestorsDashboardPage() {
       
       <main className="container mx-auto px-4 py-12 max-w-6xl">
         <div className="text-center mb-12 space-y-4">
-          <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold uppercase tracking-widest">DASHBOARD ESTRATÉGICO</Badge>
+          <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold uppercase tracking-widest">RONDA FAMILY & FRIENDS 01</Badge>
           <h1 className="text-3xl md:text-6xl font-black text-primary italic leading-tight">Estructura de Capital Oralab</h1>
           <p className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl mx-auto">
-            Visualización transparente del financiamiento y aportes que impulsan la tecnología Sunvou® en Chile.
+            Visualización transparente del financiamiento que impulsa la tecnología Sunvou® en Chile.
           </p>
         </div>
 
@@ -302,9 +307,9 @@ export default function InvestorsDashboardPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] md:text-xs tracking-widest">
-                  <Target className="h-4 w-4 text-secondary" /> Meta Ronda Fase 1 (Equipo)
+                  <Target className="h-4 w-4 text-secondary" /> Meta Fase Equipamiento (FF01)
                 </div>
-                <h2 className="text-2xl md:text-3xl font-black text-primary italic">Recaudación Equipamiento</h2>
+                <h2 className="text-2xl md:text-3xl font-black text-primary italic">Recaudación de Capital</h2>
               </div>
               <div className="text-left md:text-right">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Estado de la Ronda</p>
@@ -390,7 +395,7 @@ export default function InvestorsDashboardPage() {
                        <Progress value={mounted ? m.progress : 0} className="h-1.5" />
                     </div>
                     <div className={cn("p-4 text-center text-white font-black uppercase text-[9px] md:text-[10px] tracking-widest", m.color)}>
-                      {m.percentage}% del total {mounted && m.progress === 100 && "• COMPLETADO"}
+                      {m.percentage}% del total FF01 {mounted && m.progress === 100 && "• COMPLETADO"}
                     </div>
                   </div>
                 </Card>
@@ -506,7 +511,7 @@ export default function InvestorsDashboardPage() {
                 <div className="space-y-2">
                   <h3 className="text-2xl font-black text-primary">Generar Contrato de Participación</h3>
                   <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                    Completa tus datos para generar el borrador de contrato. La devolución del capital y retorno están condicionados a la rentabilidad del proyecto ORALAB.
+                    Completa tus datos para generar el contrato de la ronda FF01. La devolución y retorno están sujetos al flujo de caja de ORALAB.
                   </p>
                 </div>
 
@@ -558,12 +563,12 @@ export default function InvestorsDashboardPage() {
                  <div className="space-y-6">
                     <div className="p-6 rounded-3xl bg-secondary/5 border border-secondary/10">
                        <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-2 flex items-center gap-1">
-                         <Percent className="h-3 w-3" /> Participación Permanente (Est.)
+                         <Percent className="h-3 w-3" /> Participación Permanente FF01 (Est.)
                        </p>
                        <p className="text-4xl font-black text-primary italic">
                          {invAmount ? calculateEquity(Number(invAmount)).toFixed(4) : "0.0000"}%
                        </p>
-                       <p className="text-xs font-medium text-muted-foreground mt-2">Sobre las utilidades líquidas de Oralab.</p>
+                       <p className="text-xs font-medium text-muted-foreground mt-2">Sobre las utilidades de la unidad de negocio Oralab.</p>
                     </div>
 
                     <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10">
@@ -573,7 +578,7 @@ export default function InvestorsDashboardPage() {
                        <p className="text-3xl font-black text-primary italic">
                          {invAmount ? formatCurrency(Number(invAmount) * 1.2) : "$0"}
                        </p>
-                       <p className="text-xs font-medium text-muted-foreground mt-2">Devolución del capital + 20% según rentabilidad.</p>
+                       <p className="text-xs font-medium text-muted-foreground mt-2">Devolución del capital + 20% según flujo de caja.</p>
                     </div>
 
                     <div className="bg-amber-50/50 p-6 rounded-3xl border border-amber-200/50">
@@ -636,7 +641,7 @@ export default function InvestorsDashboardPage() {
                     </div>
                     <div className="pt-4 border-t border-dashed">
                       <p className="text-[11px] font-medium text-muted-foreground italic">
-                        * Por favor enviar comprobante a <span className="font-bold text-primary">pcordova@oralab.cl</span> indicando el folio del contrato generado.
+                        * Por favor enviar comprobante a <span className="font-bold text-primary">pcordova@oralab.cl</span> indicando el nombre del inversionista.
                       </p>
                     </div>
                   </motion.div>
@@ -650,7 +655,7 @@ export default function InvestorsDashboardPage() {
         <div className="mt-12 text-center px-4">
           <div className="flex flex-col items-center gap-2 mb-6">
             <p className="text-[10px] md:text-xs font-black text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Calendar className="h-3 w-3" /> Última actualización: {mounted ? format(new Date(), "dd 'de' MMMM, yyyy", { locale: es }) : ""}
+              <Calendar className="h-3 w-3" /> Última actualización Ronda FF01: {mounted ? format(new Date(), "dd 'de' MMMM, yyyy", { locale: es }) : ""}
             </p>
             <p className="text-[10px] md:text-xs font-bold text-primary max-w-2xl mx-auto leading-relaxed mt-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
               * Nota: La participación permanente es sobre utilidades líquidas del negocio. La rentabilidad y devolución de capital dependen de los resultados operacionales reales de la unidad ORALAB.
