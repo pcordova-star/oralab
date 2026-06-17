@@ -93,6 +93,67 @@ const MILESTONES = [
   }
 ];
 
+/**
+ * Convierte un número a su representación en palabras (Español).
+ */
+function numeroALetras(num: number): string {
+  const UNIDADES = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
+  const DECENAS = ['', 'diez', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+  const DIEZ_DIEZ = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
+  const VEINTE_DIEZ = ['veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'];
+  const CENTENAS = ['', 'cien', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+
+  function leerTres(n: number): string {
+    let output = '';
+    const c = Math.floor(n / 100);
+    const d = Math.floor((n % 100) / 10);
+    const u = n % 10;
+
+    if (c > 0) {
+      if (c === 1 && d === 0 && u === 0) output += 'cien';
+      else if (c === 1) output += 'ciento ';
+      else output += CENTENAS[c] + ' ';
+    }
+
+    if (d > 0) {
+      if (d === 1) output += DIEZ_DIEZ[u];
+      else if (d === 2) output += VEINTE_DIEZ[u];
+      else {
+        output += DECENAS[d];
+        if (u > 0) output += ' y ' + UNIDADES[u];
+      }
+    } else if (u > 0) {
+      output += UNIDADES[u];
+    }
+
+    return output.trim();
+  }
+
+  if (num === 0) return 'cero';
+  if (num < 0) return 'menos ' + numeroALetras(Math.abs(num));
+
+  let total = '';
+  const millones = Math.floor(num / 1000000);
+  const miles = Math.floor((num % 1000000) / 1000);
+  const unidades = num % 1000;
+
+  if (millones > 0) {
+    if (millones === 1) total += 'un millón ';
+    else total += leerTres(millones) + ' millones ';
+  }
+
+  if (miles > 0) {
+    if (miles === 1) total += 'mil ';
+    else total += leerTres(miles) + ' mil ';
+  }
+
+  if (unidades > 0) {
+    total += leerTres(unidades);
+  }
+
+  return total.trim();
+}
+
 export default function InvestorsDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
@@ -218,6 +279,7 @@ export default function InvestorsDashboardPage() {
     const equityPctStr = calculateEquity(Number(invAmount)).toFixed(4);
     const returnAmount = Number(invAmount) * 0.2;
     const totalReturn = Number(invAmount) + returnAmount;
+    const amountInWords = numeroALetras(Number(invAmount));
 
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO Y PARTICIPACIÓN ECONÓMICA", 12, true, "center");
     y += 10;
@@ -232,7 +294,7 @@ export default function InvestorsDashboardPage() {
     addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento con los permisos y logística necesarios para operar en el laboratorio y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
 
     addText("SEGUNDA: APORTE", 10, true);
-    addText(`El Inversionista aporta a TRESNA SpA la suma de $${Number(invAmount).toLocaleString('es-CL')} (_____________ pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
+    addText(`El Inversionista aporta a TRESNA SpA la suma de $${Number(invAmount).toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
 
     addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
     addText("Los recursos serán utilizados para: a) Compra e importación del analizador Sunvou DA7349. b) Capital de trabajo y gastos operacionales iniciales.", 10, false, "justify");
