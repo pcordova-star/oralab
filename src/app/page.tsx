@@ -474,7 +474,9 @@ export default function HomePage() {
           <div className="flex flex-col gap-4">
             <h5 className="font-black text-primary mb-2 uppercase tracking-widest">Accesos</h5>
             <Link href="/login" className="text-xs text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-2"><Lock className="h-3 w-3" /> Acceso Administrativo</Link>
-            <Link href="/investors" className="text-xs text-muted-foreground/40 hover:text-secondary transition-colors flex items-center gap-2"><Coins className="h-3 w-3" /> Dashboard Inversionistas</Link>
+            <Link href="/investors" className="text-xs opacity-0 hover:opacity-100 text-muted-foreground/40 hover:text-secondary transition-all flex items-center gap-2 duration-500">
+              <Coins className="h-3 w-3" /> Dashboard Inversionistas
+            </Link>
           </div>
         </div>
       </footer>
