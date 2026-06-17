@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Navbar } from "@/components/navbar";
@@ -213,7 +212,7 @@ export default function HowItWorksPage() {
           <div className="flex flex-col items-center gap-4 mb-6">
             <div className="flex items-center gap-3">
                <MapPin className="h-5 w-5 text-secondary" />
-               <p className="text-sm font-bold opacity-80 uppercase tracking-widest">Apoquindo 3992, Las Condes. Chile.</p>
+               <p className="text-sm font-bold opacity-80 uppercase tracking-widest">Apoquindo 3990, Las Condes. Chile.</p>
             </div>
             <p className="text-primary-foreground/50 text-xs font-medium">© 2024 Oralab Clinical Lab. Tecnología especializada Sunvou®.</p>
           </div>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -371,7 +370,7 @@ const InteractiveAssistantSim = () => {
 };
 
 export default function HomePage() {
-  const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Apoquindo+3992+oficina+605+Las+Condes+Santiago+Chile";
+  const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Apoquindo+3990+oficina+605+Las+Condes+Santiago+Chile";
   const whatsappUrl = "https://wa.me/56936850468";
 
   return (
@@ -468,7 +467,7 @@ export default function HomePage() {
             <h5 className="font-black text-primary mb-6 uppercase tracking-widest">Sede Las Condes</h5>
             <div className="flex items-start gap-3 text-muted-foreground text-sm">
               <MapPin className="h-5 w-5 text-secondary shrink-0 mt-1" />
-              <span>Apoquindo 3992, Of. 605, Las Condes.</span>
+              <span>Apoquindo 3990, Of. 605, Las Condes.</span>
             </div>
           </div>
           <div className="flex flex-col gap-4">

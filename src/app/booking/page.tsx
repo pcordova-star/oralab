@@ -285,7 +285,7 @@ export default function BookingPage() {
     
     doc.setTextColor(150, 150, 150);
     doc.setFontSize(8);
-    doc.text("Apoquindo 3992, Of. 605, Las Condes, Santiago.", margin, pageHeight - 15);
+    doc.text("Apoquindo 3990, Of. 605, Las Condes, Santiago.", margin, pageHeight - 15);
     doc.text("contacto@oralab.cl | www.oralab.cl", margin, pageHeight - 10);
     
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
@@ -419,7 +419,7 @@ export default function BookingPage() {
               </div>
             </div>
 
-            <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-6 text-left mb-8 max-w-xl mx-auto">
+            <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-6 text-left mb-8 max-xl mx-auto">
               <h3 className="flex items-center gap-2 font-bold text-blue-700 mb-2">
                 <HelpCircle className="h-5 w-5" /> ¿Necesitas cancelar o reprogramar?
               </h3>
