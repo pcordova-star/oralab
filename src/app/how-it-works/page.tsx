@@ -91,7 +91,7 @@ export default function HowItWorksPage() {
               <div>
                 <h3 className="text-2xl font-black text-primary mb-3">Opción de Test en Casa</h3>
                 <p className="text-muted-foreground leading-relaxed text-lg font-medium">
-                  Si no puedes venir a la clínica, puedes retirar un kit con todos los insumos y las instrucciones detalladas para recolectar tus muestras cómodamente en tu hogar y luego traerlas para su análisis.
+                  Si no puedes venir al laboratorio, puedes retirar un kit con todos los insumos y las instrucciones detalladas para recolectar tus muestras cómodamente en tu hogar y luego traerlas para su análisis.
                 </p>
               </div>
             </motion.div>
