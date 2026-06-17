@@ -42,7 +42,8 @@ import {
   RotateCcw,
   CheckCircle2,
   Flag,
-  Coins
+  Coins,
+  XCircle
 } from "lucide-react";
 import { 
   LineChart, 
@@ -208,6 +209,91 @@ const TechScannerAnimation = () => {
   );
 };
 
+const SIBOEducationSection = () => {
+  return (
+    <section className="py-24 bg-primary text-white overflow-hidden relative">
+      <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="space-y-8"
+          >
+            <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">¿Qué es el SIBO?</Badge>
+            <h2 className="text-4xl md:text-6xl font-black italic leading-tight">
+              Entendiendo el <span className="text-secondary">Sobrecrecimiento Bacteriano</span>
+            </h2>
+            <div className="space-y-6 text-lg md:text-xl opacity-90 leading-relaxed font-medium">
+              <p>
+                El SIBO (Small Intestinal Bacterial Overgrowth) ocurre cuando hay un exceso de bacterias en el <strong>intestino delgado</strong>, una sección que normalmente es casi estéril.
+              </p>
+              <p>
+                A diferencia del intestino grueso, rico en microbiota vital, el delgado se mantiene limpio para evitar la competencia en la absorción de nutrientes. Cuando las bacterias del colon migran hacia arriba, se produce el desequilibrio.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
+               {[
+                 { icon: <Zap className="h-6 w-6 text-secondary" />, title: "Robo de Nutrientes", desc: "Las bacterias consumen tus alimentos antes que tú." },
+                 { icon: <AlertCircle className="h-6 w-6 text-secondary" />, title: "Gases y Toxinas", desc: "La fermentación produce Hidrógeno y Metano." },
+               ].map((item, i) => (
+                 <div key={i} className="bg-white/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-sm">
+                   <div className="mb-4">{item.icon}</div>
+                   <h4 className="font-black text-lg mb-2">{item.title}</h4>
+                   <p className="text-sm opacity-70 leading-relaxed">{item.desc}</p>
+                 </div>
+               ))}
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="relative"
+          >
+            <div className="glass-panel !bg-white/5 rounded-[3rem] p-8 md:p-12 border-white/10 shadow-2xl">
+              <h3 className="text-2xl font-black text-secondary italic mb-8 flex items-center gap-3">
+                <Stethoscope className="h-6 w-6" /> Síntomas Comunes
+              </h3>
+              <div className="space-y-4">
+                {[
+                  { label: "Dolor y Distensión Abdominal", level: 95 },
+                  { label: "Flatulencia y Malestar Estomacal", level: 88 },
+                  { label: "Diarrea o Estreñimiento Crónico", level: 75 },
+                  { label: "Deficiencias Nutricionales (B12, Hierro)", level: 60 },
+                ].map((symptom, i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="flex justify-between text-sm font-bold">
+                      <span>{symptom.label}</span>
+                      <span className="text-secondary">{symptom.level}% frecuencia</span>
+                    </div>
+                    <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                       <motion.div 
+                         initial={{ width: 0 }}
+                         whileInView={{ width: `${symptom.level}%` }}
+                         transition={{ duration: 1, delay: i * 0.2 }}
+                         className="h-full bg-secondary"
+                       />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-10 p-6 bg-secondary/20 rounded-2xl border border-secondary/30">
+                <p className="text-sm italic font-bold leading-relaxed">
+                  "El SIBO no es una enfermedad per se, sino un síntoma de un desajuste subyacente que requiere un mapa metabólico preciso para su tratamiento."
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 const InteractiveAssistantSim = () => {
   const [step, setStep] = useState(0);
 
@@ -273,7 +359,7 @@ const InteractiveAssistantSim = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setStep((prev) => (prev + 1) % simSteps.length);
-    }, 4500); // Avanza solo cada 4.5 segundos
+    }, 4500); 
     return () => clearInterval(timer);
   }, [simSteps.length]);
 
@@ -281,7 +367,6 @@ const InteractiveAssistantSim = () => {
 
   return (
     <div className="relative w-full max-w-sm mx-auto">
-      {/* AI Clinical Insight Bubble */}
       <AnimatePresence mode="wait">
         <motion.div
           key={step}
@@ -300,7 +385,6 @@ const InteractiveAssistantSim = () => {
       </AnimatePresence>
 
       <div className="relative glass-panel !bg-white rounded-[3rem] p-8 shadow-2xl border-primary/10 overflow-hidden min-h-[500px] flex flex-col">
-        {/* Step Progress Bar */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-muted">
            <motion.div 
              key={step}
@@ -402,7 +486,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Sección Educativa */}
+        {/* Nueva Sección Educativa SIBO */}
+        <SIBOEducationSection />
+
+        {/* Sección Educativa Resumen */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
@@ -428,7 +515,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Asistente Simulador Reordenado */}
+        {/* Asistente Simulador */}
         <section className="py-24 bg-muted/20 border-y">
            <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
              <div className="space-y-6 lg:order-1">
