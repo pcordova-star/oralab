@@ -13,8 +13,13 @@ import {
   Pie, 
   Cell, 
   ResponsiveContainer, 
-  Tooltip, 
-  Legend 
+  Tooltip as ChartTooltip, 
+  Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid
 } from "recharts";
 import { 
   Coins, 
@@ -40,7 +45,13 @@ import {
   ShieldCheck,
   PenTool,
   Building2,
-  Sparkles
+  Sparkles,
+  Activity,
+  ArrowUpRight,
+  Users,
+  LayoutDashboard,
+  Search,
+  MonitorPlay
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -107,6 +118,23 @@ const MILESTONES = [
       "Hasta completar los $13.500.000"
     ]
   }
+];
+
+// Mock Data para el Simulador Operacional
+const MOCK_OPS_DATA = [
+  { day: 'Lun', exams: 8, income: 480000 },
+  { day: 'Mar', exams: 12, income: 720000 },
+  { day: 'Mie', exams: 10, income: 600000 },
+  { day: 'Jue', exams: 15, income: 900000 },
+  { day: 'Vie', exams: 14, income: 840000 },
+  { day: 'Sab', exams: 6, income: 360000 },
+];
+
+const MOCK_PATIENTS_TODAY = [
+  { time: '08:30', name: 'Claudia R.', test: 'Lactulosa', status: 'completed' },
+  { time: '09:15', name: 'Andrés M.', test: 'Fructosa', status: 'in_progress' },
+  { time: '10:00', name: 'Sofía G.', test: 'Lactulosa', status: 'arrived' },
+  { time: '11:30', name: 'Javier L.', test: 'Lactosa', status: 'pending' },
 ];
 
 function numeroALetras(num: number): string {
@@ -612,7 +640,7 @@ export default function InvestorsDashboardPage() {
                               />
                             ))}
                           </Pie>
-                          <Tooltip 
+                          <ChartTooltip 
                             contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
                             formatter={(value: number, name: string) => [formatCurrency(value), name]}
                           />
@@ -629,7 +657,7 @@ export default function InvestorsDashboardPage() {
           </Card>
         </div>
 
-        <section className="mb-16">
+        <section className="mb-24">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-primary/10 p-2 rounded-xl">
               <FileText className="h-6 w-6 text-primary" />
@@ -855,6 +883,111 @@ export default function InvestorsDashboardPage() {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+          </div>
+        </section>
+
+        {/* SECCIÓN SIMULADOR OPERACIONAL (LIVE ROI) */}
+        <section className="mt-32 mb-16 space-y-12">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-primary/20 pb-6">
+            <div className="space-y-2">
+               <Badge className="bg-secondary text-primary font-black uppercase text-[10px] px-3">Proyección Operacional</Badge>
+               <h2 className="text-3xl md:text-5xl font-black text-primary italic">Live ROI & Seguimiento</h2>
+               <p className="text-muted-foreground font-medium max-w-xl">
+                 Una vez que el laboratorio inicie operaciones, podrás monitorear el flujo de pacientes e ingresos en tiempo real desde este panel.
+               </p>
+            </div>
+            <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
+               <span className="relative flex h-3 w-3">
+                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                 <span className="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
+               </span>
+               <span className="text-[10px] font-black text-primary uppercase tracking-widest">Simulación Sincronizada</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+             {/* Métricas Principales */}
+             <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {[
+                  { label: "Consultas Totales (Mes)", value: "142", icon: <Users className="h-5 w-5" />, trend: "+12%", color: "text-blue-600" },
+                  { label: "Tasa Ocupación Sala", value: "85%", icon: <MonitorPlay className="h-5 w-5" />, trend: "Óptima", color: "text-emerald-600" },
+                  { label: "Ingreso Bruto Est.", value: "$8.520.000", icon: <ArrowUpRight className="h-5 w-5" />, trend: "Proyectado", color: "text-primary" },
+                ].map((stat, i) => (
+                  <Card key={i} className="bg-white border-primary/5 shadow-lg rounded-2xl p-6 hover:translate-y-[-4px] transition-all">
+                    <div className="flex justify-between items-start mb-4">
+                       <div className={cn("p-2 rounded-lg bg-slate-50", stat.color)}>{stat.icon}</div>
+                       <Badge variant="outline" className="text-[9px] font-bold border-slate-200">{stat.trend}</Badge>
+                    </div>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">{stat.label}</p>
+                    <p className={cn("text-2xl font-black italic", stat.color)}>{stat.value}</p>
+                  </Card>
+                ))}
+
+                {/* Gráfico de Actividad */}
+                <Card className="sm:col-span-3 bg-white border-primary/5 shadow-xl rounded-[2rem] p-6 md:p-8">
+                   <div className="flex items-center justify-between mb-8">
+                      <h3 className="font-black text-primary italic flex items-center gap-2"><TrendingUp className="h-5 w-5 text-secondary" /> Flujo Diario de Exámenes</h3>
+                      <Select defaultValue="week">
+                         <SelectTrigger className="w-[140px] h-8 text-[10px] font-bold rounded-full">
+                           <SelectValue placeholder="Periodo" />
+                         </SelectTrigger>
+                         <SelectContent>
+                            <SelectItem value="week">Esta Semana</SelectItem>
+                            <SelectItem value="month">Mes Pasado</SelectItem>
+                         </SelectContent>
+                      </Select>
+                   </div>
+                   <div className="h-[300px] w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={MOCK_OPS_DATA}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} hide={isMobile} />
+                          <ChartTooltip 
+                             cursor={{ fill: '#f8fafc' }}
+                             contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                          />
+                          <Bar dataKey="exams" fill="#1c68b6" radius={[4, 4, 0, 0]} barSize={isMobile ? 20 : 40} />
+                        </BarChart>
+                     </ResponsiveContainer>
+                   </div>
+                </Card>
+             </div>
+
+             {/* Agenda en Tiempo Real */}
+             <div className="lg:col-span-4">
+                <Card className="bg-primary text-white shadow-2xl rounded-[2rem] h-full flex flex-col overflow-hidden border-none">
+                   <div className="p-8 border-b border-white/10">
+                      <h3 className="text-xl font-black italic flex items-center gap-2"><LayoutDashboard className="h-5 w-5 text-secondary" /> Agenda del Día</h3>
+                      <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">Hoy, {format(new Date(), "d 'de' MMMM", { locale: es })}</p>
+                   </div>
+                   <div className="flex-grow p-4 space-y-3 bg-white/5 backdrop-blur-sm">
+                      {MOCK_PATIENTS_TODAY.map((p, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-default">
+                           <div className="flex items-center gap-4">
+                              <span className="text-xs font-black text-secondary font-mono">{p.time}</span>
+                              <div className="flex flex-col">
+                                 <span className="text-sm font-bold">{p.name}</span>
+                                 <span className="text-[9px] font-black text-white/40 uppercase">{p.test}</span>
+                              </div>
+                           </div>
+                           <Badge className={cn(
+                             "text-[8px] font-black uppercase border-none",
+                             p.status === 'completed' ? "bg-green-500/20 text-green-400" :
+                             p.status === 'in_progress' ? "bg-amber-500/20 text-amber-400" : "bg-white/10 text-white/40"
+                           )}>
+                              {p.status === 'completed' ? 'Listo' : p.status === 'in_progress' ? 'En Test' : 'Por Llegar'}
+                           </Badge>
+                        </div>
+                      ))}
+                   </div>
+                   <div className="p-6 bg-white/10 mt-auto text-center">
+                      <Button variant="ghost" className="w-full text-white font-black hover:bg-white/10 rounded-xl text-xs flex items-center justify-center gap-2">
+                         Ver Reporte Completo <ChevronRight className="h-4 w-4" />
+                      </Button>
+                   </div>
+                </Card>
+             </div>
           </div>
         </section>
 
