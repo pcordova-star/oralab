@@ -112,7 +112,7 @@ function numeroALetras(num: number): string {
   const UNIDADES = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
   const DECENAS = ['', 'diez', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
   const DIEZ_DIEZ = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
-  const VEINTE_DIEZ = ['veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'];
+  const VEINTE_DIEZ = ['veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintiisiete', 'veintiocho', 'veintinueve'];
   const CENTENAS = ['', 'cien', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
 
   function leerTres(n: number): string {
@@ -124,7 +124,7 @@ function numeroALetras(num: number): string {
     if (c > 0) {
       if (c === 1 && d === 0 && u === 0) output += 'cien';
       else if (c === 1) output += 'ciento ';
-      else CENTENAS[c] + ' ';
+      else output += CENTENAS[c] + ' ';
     }
 
     if (d > 0) {
@@ -269,7 +269,8 @@ export default function InvestorsDashboardPage() {
           investorSignedAt: new Date().toISOString(),
           metadata: {
             userAgent: navigator.userAgent,
-            type: "Firma Electrónica Simple"
+            type: "Firma Electrónica Simple",
+            ip: "Validada por Sistema"
           },
           createdAt: serverTimestamp()
         });
@@ -381,7 +382,6 @@ export default function InvestorsDashboardPage() {
     // Firmas posicionadas
     const signatureY = y + 25;
     
-    // Espacio para la firma del Admin (siempre presente en borrador como espacio vacío)
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, signatureY, margin + 75, signatureY);
     doc.setFontSize(8);
@@ -393,7 +393,6 @@ export default function InvestorsDashboardPage() {
     if (isSignedByInvestor) {
       const invX = pageWidth - margin - 75;
       
-      // Rectángulo de fondo sutil para el sello
       doc.setFillColor(240, 247, 255);
       doc.roundedRect(invX, signatureY - 22, 75, 20, 2, 2, 'F');
       
@@ -466,9 +465,15 @@ export default function InvestorsDashboardPage() {
                  />
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1">
+                    <Target className="h-3 w-3 text-secondary" /> Meta Global
+                  </p>
+                  <p className="text-xl md:text-3xl font-black text-primary">{formatCurrency(FUNDING_GOAL)}</p>
+                </div>
+                <div className="space-y-1 md:text-center">
+                  <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase flex items-center md:justify-center gap-1">
                     <CheckCircle2 className="h-3 w-3 text-primary" /> Recaudado (Confirmado)
                   </p>
                   <p className="text-xl md:text-3xl font-black text-primary">{formatCurrency(totalConfirmed)}</p>
@@ -815,4 +820,3 @@ export default function InvestorsDashboardPage() {
     </div>
   );
 }
-
