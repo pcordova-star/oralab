@@ -291,7 +291,7 @@ export default function InvestorsDashboardPage() {
     addText("Las partes acuerdan celebrar el presente Contrato Privado de Financiamiento y Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
 
     addText("PRIMERA: ANTECEDENTES", 10, true);
-    addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento con los permisos y logística necesarios para operar en el laboratorio y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
+    addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento con los permisos y logística necesarios para operar en el laboratorio. y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
 
     addText("SEGUNDA: APORTE", 10, true);
     addText(`El Inversionista aporta a TRESNA SpA la suma de $${Number(invAmount).toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
@@ -303,28 +303,36 @@ export default function InvestorsDashboardPage() {
     addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${Number(invAmount).toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${returnAmount.toLocaleString('es-CL')}).`, 10, false, "justify");
     addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte, siempre que la unidad de negocio ORALAB cuente con flujo de caja operacional suficiente para ello. En caso de que el flujo disponible no sea suficiente en una fecha de pago determinada, la cuota correspondiente se postergará al mes siguiente en que exista disponibilidad, sin que ello constituya incumplimiento contractual, mora ni genere intereses penales. La Empresa informará al Inversionista de cualquier postergación, indicando la causa y la nueva fecha estimada de pago.", 10, false, "justify");
 
-    addText("QUINTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
-    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 8% de participación económica total a quienes aporten $10.800.000 requeridos.`, 10, false, "justify");
-    addText(`La participación económica individual para este aporte se calcula en un ${equityPctStr}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, true, "justify");
+    addText("QUINTA: RESGUARDO SOBRE EL EQUIPO", 10, true);
+    addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido, transferido, dado en garantía a terceros, ni sujeto a cualquier gravamen, sin autorización escrita de la mayoría de dichos inversionistas.", 10, false, "justify");
+    addText("En caso de cese de operaciones de ORALAB, liquidación de sus activos, o venta del equipo señalado, el producto de dicha venta o liquidación se destinará prioritariamente al pago de los saldos pendientes a los inversionistas de la Ronda Family & Friends 01, antes de cualquier otro destino, hasta el monto total adeudado a cada uno según su aporte.", 10, false, "justify");
 
     if (y > 250) { doc.addPage(); y = 20; }
 
-    addText("SEXTA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
+    addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
+    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 8% de participación económica total a quienes aporten $10.800.000 requeridos.`, 10, false, "justify");
+    addText(`La participación económica individual para este aporte se calcula en un ${equityPctStr}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, true, "justify");
+
+    addText("SÉPTIMA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
     addText("La participación económica otorgada: a) No constituye acciones de TRESNA SpA. b) No otorga calidad de socio ni accionista. c) No concede derecho a voto. d) No concede facultades de administración. e) Corresponde únicamente a un derecho económico asociado a ORALAB.", 10, false, "justify");
 
-    addText("SÉPTIMA: DISTRIBUCIÓN DE UTILIDADES", 10, true);
-    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica. La determinación de dichas utilidades será realizada por la administración de TRESNA SpA sobre la base de los estados financieros y resultados del negocio.", 10, false, "justify");
+    addText("OCTAVA: DISTRIBUCIÓN DE UTILIDADES", 10, true);
+    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica.", 10, false, "justify");
+    addText("Para efectos de esta cláusula, se entenderá por “utilidades distribuibles de ORALAB” los ingresos percibidos directamente atribuibles a la operación del laboratorio, deducidos los costos directos e indirectos razonablemente imputables a dicha unidad de negocio, incluyendo arriendo, remuneraciones del personal clínico, insumos, depreciación del equipo y gastos generales de operación. No se podrán imputar a ORALAB gastos corporativos generales de TRESNA SpA, ni remuneraciones de personas no vinculadas directamente a la operación del laboratorio, ni honorarios entre empresas relacionadas que excedan valores de mercado. La administración comunicará anualmente la metodología de asignación de costos a los inversionistas.", 10, false, "justify");
 
-    addText("OCTAVA: INFORMACIÓN", 10, true);
-    addText("La Empresa enviará al Inversionista un resumen anual de resultados de ORALAB, indicando ingresos, costos, utilidad y monto distribuido.", 10, false, "justify");
+    if (y > 250) { doc.addPage(); y = 20; }
 
-    addText("NOVENA: CESIÓN", 10, true);
+    addText("NOVENA: INFORMACIÓN", 10, true);
+    addText("TRESNA SpA entregará al Inversionista un reporte trimestral de resultados de ORALAB, dentro de los 30 días siguientes al cierre de cada trimestre calendario. Dicho reporte incluirá al menos: (a) ingresos brutos del período; (b) número de pacientes atendidos; (c) costos directos e indirectos asignados a ORALAB; (d) utilidad neta antes de distribución; y (e) monto distribuido o acumulado para distribución.", 10, false, "justify");
+
+    addText("DÉCIMA: CESIÓN", 10, true);
     addText("La participación económica no podrá ser transferida a terceros.", 10, false, "justify");
 
-    addText("DÉCIMA: VIGENCIA", 10, true);
+    addText("DÉCIMO PRIMERA: VIGENCIA", 10, true);
     addText("La participación económica otorgada mediante este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA o de cualquier entidad sucesora que continúe desarrollando dicha actividad.", 10, false, "justify");
+    addText("En caso de que TRESNA SpA enajene, transfiera, escinda o de cualquier forma traspase la unidad de negocio ORALAB o sus activos principales a un tercero, el adquirente deberá subrogarse en todas las obligaciones del presente contrato respecto del Inversionista como condición de dicha transferencia.", 10, false, "justify");
 
-    addText("DÉCIMO PRIMERA: JURISDICCIÓN", 10, true);
+    addText("DÉCIMO SEGUNDA: JURISDICCIÓN", 10, true);
     addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago y se someten a la jurisdicción de sus tribunales ordinarios de justicia.", 10, false, "justify");
 
     y += 15;
