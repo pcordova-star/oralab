@@ -111,8 +111,8 @@ const MILESTONES = [
 function numeroALetras(num: number): string {
   const UNIDADES = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
   const DECENAS = ['', 'diez', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
-  const DIEZ_DIEZ = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
-  const VEINTE_DIEZ = ['veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintiisiete', 'veintiocho', 'veintinueve'];
+  const DIEZ_DIEZ = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'diecinueve'];
+  const VEINTE_DIEZ = ['veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'];
   const CENTENAS = ['', 'cien', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
 
   function leerTres(n: number): string {
@@ -317,9 +317,9 @@ export default function InvestorsDashboardPage() {
 
     const currentDay = format(new Date(), "d");
     const currentMonth = format(new Date(), "MMMM", { locale: es });
+    const amountInWords = numeroALetras(Number(invAmount));
     const equityPctStr = calculateEquity(Number(invAmount)).toFixed(4);
     const returnAmount = Number(invAmount) * 0.2;
-    const amountInWords = numeroALetras(Number(invAmount));
 
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO Y PARTICIPACIÓN ECONÓMICA", 12, true, "center");
     y += 10;
@@ -351,7 +351,7 @@ export default function InvestorsDashboardPage() {
     if (y > 250) { doc.addPage(); y = 20; }
 
     addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
-    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos.`, 10, false, "justify");
+    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquiriría una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos.`, 10, false, "justify");
     addText(`La participación económica individual para este aporte se calcula en un ${equityPctStr}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, true, "justify");
 
     addText("SÉPTIMA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
@@ -379,7 +379,6 @@ export default function InvestorsDashboardPage() {
     
     y += 10;
 
-    // Firmas posicionadas
     const signatureY = y + 25;
     
     doc.setDrawColor(200, 200, 200);
@@ -389,18 +388,14 @@ export default function InvestorsDashboardPage() {
     doc.text("Representante Legal TRESNA SpA", margin, signatureY + 9);
     doc.text("RUT 77.023.697-5", margin, signatureY + 13);
 
-    // Sello de Firma Digital Inversionista (sobre la línea derecha)
     if (isSignedByInvestor) {
       const invX = pageWidth - margin - 75;
-      
       doc.setFillColor(240, 247, 255);
       doc.roundedRect(invX, signatureY - 22, 75, 20, 2, 2, 'F');
-      
       doc.setTextColor(28, 104, 182);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7);
       doc.text("FIRMADO ELECTRÓNICAMENTE", invX + 37.5, signatureY - 17, { align: "center" });
-      
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6);
       doc.text(`Identidad: ${invName.toUpperCase()}`, invX + 5, signatureY - 13);
@@ -647,7 +642,7 @@ export default function InvestorsDashboardPage() {
                 <div className="space-y-2">
                   <h3 className="text-2xl font-black text-primary">Firmar Contrato de Participación</h3>
                   <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                    Completa tus datos para formalizar digitalmente tu compromiso. Una vez firmado por ti, pasará a la validación del Representante Legal de TRESNA SpA.
+                    Completa tus datos para formalizar digitalmente tu compromiso. Para efectos de este contrato privado, tu <strong>Firma Electrónica Simple (FES)</strong> es legalmente suficiente y vinculante. Una vez firmado por ti, el documento pasará a la validación final del Representante Legal de TRESNA SpA, quien suscribirá el instrumento mediante <strong>Firma Electrónica Avanzada (FEA)</strong>.
                   </p>
                 </div>
 
@@ -743,7 +738,7 @@ export default function InvestorsDashboardPage() {
                           <div className="space-y-1">
                             <p className="text-xs font-bold text-blue-800 uppercase tracking-tight">Firma Digital Segura</p>
                             <p className="text-[11px] text-blue-700 leading-relaxed">
-                              Este sistema utiliza Firma Electrónica Simple, registrando tu IP, navegador y marca de tiempo como evidencia legal de tu aceptación de los términos.
+                              Este sistema utiliza Firma Electrónica Simple para el inversionista y Firma Electrónica Avanzada para la representación legal, registrando IP y marca de tiempo como evidencia legal.
                             </p>
                           </div>
                        </div>
