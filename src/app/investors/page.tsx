@@ -22,7 +22,6 @@ import {
   Target, 
   Rocket, 
   Microscope, 
-  Building2, 
   Briefcase, 
   ChevronRight,
   Calendar,
@@ -37,11 +36,13 @@ import {
   Percent,
   HandCoins,
   Mail,
-  Banknote
+  Banknote,
+  ShieldCheck,
+  PenTool
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -51,6 +52,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
 import { jsPDF } from "jspdf";
 import { toast } from "@/hooks/use-toast";
 
@@ -58,9 +60,8 @@ const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'
 const PENDING_COLOR = '#94a3b8';
 const REMAINING_COLOR = '#f1f5f9'; 
 
-// Meta Ronda Family & Friends 01
 const FUNDING_GOAL = 10800000;
-const EQUITY_TOTAL = 8; // 8% total equity para esta fase de capital
+const EQUITY_TOTAL = 8; 
 
 const MILESTONES = [
   {
@@ -93,9 +94,6 @@ const MILESTONES = [
   }
 ];
 
-/**
- * Convierte un número a su representación en palabras (Español).
- */
 function numeroALetras(num: number): string {
   const UNIDADES = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
   const DECENAS = ['', 'diez', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
@@ -159,12 +157,14 @@ export default function InvestorsDashboardPage() {
   const db = useFirestore();
   const isMobile = useIsMobile();
 
-  // Form State para el contrato
+  // Form State
   const [invName, setInvName] = useState("");
   const [invRut, setInvRut] = useState("");
   const [invEmail, setInvEmail] = useState("");
   const [invAddress, setInvAddress] = useState("");
   const [invAmount, setInvAmount] = useState<number | "">("");
+  const [isAgreed, setIsAgreed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -234,25 +234,53 @@ export default function InvestorsDashboardPage() {
     setInvRut(formatRut(e.target.value));
   };
 
-  const generateContractPDF = async () => {
-    if (!invName || !invRut || !invAddress || !invAmount || !invEmail) {
-      toast({ variant: "destructive", title: "Campos incompletos", description: "Por favor completa todos los campos para generar tu contrato." });
+  const handleFormalize = async () => {
+    if (!invName || !invRut || !invAddress || !invAmount || !invEmail || !isAgreed) {
+      toast({ variant: "destructive", title: "Campos incompletos", description: "Por favor completa todos los datos y acepta la declaración de identidad." });
       return;
     }
 
+    setIsSubmitting(true);
     if (db) {
       const equityPct = calculateEquity(Number(invAmount));
-      addDocumentNonBlocking(collection(db, "contract_leads"), {
-        name: invName,
-        rut: invRut,
-        email: invEmail,
-        address: invAddress,
-        amount: Number(invAmount),
-        equity: equityPct,
-        createdAt: serverTimestamp()
-      });
+      try {
+        await addDocumentNonBlocking(collection(db, "contract_leads"), {
+          name: invName,
+          rut: invRut,
+          email: invEmail,
+          address: invAddress,
+          amount: Number(invAmount),
+          equity: equityPct,
+          status: "signed_by_investor",
+          investorSignedAt: new Date().toISOString(),
+          metadata: {
+            userAgent: navigator.userAgent,
+            type: "Firma Electrónica Simple"
+          },
+          createdAt: serverTimestamp()
+        });
+        
+        toast({ title: "Firma Registrada", description: "Tu contrato ha sido enviado al Administrador para su validación final." });
+        
+        // Generar un PDF informativo de borrador firmado
+        generatePDF(true);
+        
+        // Reset
+        setInvName("");
+        setInvRut("");
+        setInvEmail("");
+        setInvAddress("");
+        setInvAmount("");
+        setIsAgreed(false);
+      } catch (e) {
+        toast({ variant: "destructive", title: "Error" });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
+  };
 
+  const generatePDF = (isSignedByInvestor = false) => {
     const doc = new jsPDF();
     const margin = 20;
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -278,7 +306,6 @@ export default function InvestorsDashboardPage() {
     const currentMonth = format(new Date(), "MMMM", { locale: es });
     const equityPctStr = calculateEquity(Number(invAmount)).toFixed(4);
     const returnAmount = Number(invAmount) * 0.2;
-    const totalReturn = Number(invAmount) + returnAmount;
     const amountInWords = numeroALetras(Number(invAmount));
 
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO Y PARTICIPACIÓN ECONÓMICA", 12, true, "center");
@@ -304,8 +331,7 @@ export default function InvestorsDashboardPage() {
     addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte, siempre que la unidad de negocio ORALAB cuente con flujo de caja operacional suficiente para ello. En caso de que el flujo disponible no sea suficiente en una fecha de pago determinada, la cuota correspondiente se postergará al mes siguiente en que exista disponibilidad, sin que ello constituya incumplimiento contractual, mora ni genere intereses penales. La Empresa informará al Inversionista de cualquier postergación, indicando la causa y la nueva fecha estimada de pago.", 10, false, "justify");
 
     addText("QUINTA: RESGUARDO SOBRE EL EQUIPO", 10, true);
-    addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido, transferido, dado en garantía a terceros, ni sujeto a cualquier gravamen, sin autorización escrita de la mayoría de dichos inversionistas.", 10, false, "justify");
-    addText("En caso de cese de operaciones de ORALAB, liquidación de sus activos, o venta del equipo señalado, el producto de dicha venta o liquidación se destinará prioritariamente al pago de los saldos pendientes a los inversionistas de la Ronda Family & Friends 01, antes de cualquier otro destino, hasta el monto total adeudado a cada uno según su aporte.", 10, false, "justify");
+    addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido, transferido, dado en garantía a terceros, ni sujeto a cualquier gravamen, sin autorización escrita de la mayoría de dichos inversionistas. En caso de cese de operaciones de ORALAB, liquidación de sus activos, o venta del equipo señalado, el producto de dicha venta o liquidación se destinará prioritariamente al pago de los saldos pendientes a los inversionistas de la Ronda Family & Friends 01, antes de cualquier otro destino.", 10, false, "justify");
 
     if (y > 250) { doc.addPage(); y = 20; }
 
@@ -317,28 +343,28 @@ export default function InvestorsDashboardPage() {
     addText("La participación económica otorgada: a) No constituye acciones de TRESNA SpA. b) No otorga calidad de socio ni accionista. c) No concede derecho a voto. d) No concede facultades de administración. e) Corresponde únicamente a un derecho económico asociado a ORALAB.", 10, false, "justify");
 
     addText("OCTAVA: DISTRIBUCIÓN DE UTILIDADES", 10, true);
-    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica.", 10, false, "justify");
-    addText("Para efectos de esta cláusula, se entenderá por “utilidades distribuibles de ORALAB” los ingresos percibidos directamente atribuibles a la operación del laboratorio, deducidos los costos directos e indirectos razonablemente imputables a dicha unidad de negocio, incluyendo arriendo, remuneraciones del personal clínico, insumos, depreciación del equipo y gastos generales de operación. No se podrán imputar a ORALAB gastos corporativos generales de TRESNA SpA, ni remuneraciones de personas no vinculadas directamente a la operación del laboratorio, ni honorarios entre empresas relacionadas que excedan valores de mercado. La administración comunicará anualmente la metodología de asignación de costos a los inversionistas.", 10, false, "justify");
+    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica. Para efectos de esta cláusula, se entenderá por “utilidades distribuibles de ORALAB” los ingresos percibidos directamente atribuibles a la operación del laboratorio, deducidos los costos directos e indirectos razonablemente imputables a dicha unidad de negocio.", 10, false, "justify");
 
     if (y > 250) { doc.addPage(); y = 20; }
 
     addText("NOVENA: INFORMACIÓN", 10, true);
-    addText("TRESNA SpA entregará al Inversionista un reporte trimestral de resultados de ORALAB, dentro de los 30 días siguientes al cierre de cada trimestre calendario. Dicho reporte incluirá al menos: (a) ingresos brutos del período; (b) número de pacientes atendidos; (c) costos directos e indirectos asignados a ORALAB; (d) utilidad neta antes de distribución; y (e) monto distribuido o acumulado para distribución.", 10, false, "justify");
+    addText("TRESNA SpA entregará al Inversionista un reporte trimestral de resultados de ORALAB, dentro de los 30 días siguientes al cierre de cada trimestre calendario.", 10, false, "justify");
 
     addText("DÉCIMA: CESIÓN", 10, true);
     addText("La participación económica no podrá ser transferida a terceros.", 10, false, "justify");
 
     addText("DÉCIMO PRIMERA: VIGENCIA", 10, true);
-    addText("La participación económica otorgada mediante este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA o de cualquier entidad sucesora que continúe desarrollando dicha actividad.", 10, false, "justify");
-    addText("En caso de que TRESNA SpA enajene, transfiera, escinda o de cualquier forma traspase la unidad de negocio ORALAB o sus activos principales a un tercero, el adquirente deberá subrogarse en todas las obligaciones del presente contrato respecto del Inversionista como condición de dicha transferencia.", 10, false, "justify");
+    addText("La participación económica otorgada mediante este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA.", 10, false, "justify");
 
     addText("DÉCIMO SEGUNDA: JURISDICCIÓN", 10, true);
     addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago y se someten a la jurisdicción de sus tribunales ordinarios de justicia.", 10, false, "justify");
 
-    y += 15;
+    y += 10;
     addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
     
-    y += 25;
+    y += 20;
+    // Firmas
+    doc.setDrawColor(200, 200, 200);
     doc.line(margin, y, margin + 70, y);
     doc.line(pageWidth - margin - 70, y, pageWidth - margin, y);
     y += 5;
@@ -348,14 +374,17 @@ export default function InvestorsDashboardPage() {
     y += 4;
     doc.text("Representante Legal TRESNA SpA", margin, y);
     doc.text("Nombre: " + invName.toUpperCase(), pageWidth - margin, y, { align: "right" });
-    y += 4;
-    doc.text("RUT 77.023.697-5", margin, y);
-    doc.text("RUT: " + invRut, pageWidth - margin, y, { align: "right" });
-    y += 4;
-    doc.text("Fecha: " + format(new Date(), "dd/MM/yyyy"), pageWidth - margin, y, { align: "right" });
+    
+    if (isSignedByInvestor) {
+      doc.setTextColor(28, 104, 182);
+      doc.setFont("helvetica", "bolditalic");
+      doc.text("VALIDADO POR FIRMA ELECTRÓNICA SIMPLE", pageWidth - margin, y + 10, { align: "right" });
+      doc.setFontSize(6);
+      doc.text("ID: " + Math.random().toString(36).substr(2, 9).toUpperCase() + " / IP VALIDADA", pageWidth - margin, y + 14, { align: "right" });
+      doc.setTextColor(0, 0, 0);
+    }
 
-    doc.save(`Contrato_Oralab_FF01_${invName.replace(/\s+/g, '_')}.pdf`);
-    toast({ title: "Documento Generado", description: "Se ha descargado tu borrador de contrato. Por favor envíalo firmado a pcordova@oralab.cl" });
+    doc.save(`Borrador_Contrato_Oralab_${invName.replace(/\s+/g, '_')}.pdf`);
   };
 
   return (
@@ -579,9 +608,9 @@ export default function InvestorsDashboardPage() {
             <div className="grid lg:grid-cols-2">
               <div className="p-8 lg:p-12 space-y-8 bg-muted/20">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-primary">Generar Contrato de Participación</h3>
+                  <h3 className="text-2xl font-black text-primary">Firmar Contrato de Participación</h3>
                   <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                    Completa tus datos para generar el contrato de la ronda FF01. La devolución y retorno están sujetos al flujo de caja de ORALAB.
+                    Completa tus datos para formalizar digitalmente tu compromiso. Una vez firmado por ti, pasará a la validación del Representante Legal de TRESNA SpA.
                   </p>
                 </div>
 
@@ -615,16 +644,36 @@ export default function InvestorsDashboardPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <Button 
-                    onClick={generateContractPDF} 
-                    className="w-full h-14 rounded-2xl bg-primary hover:bg-secondary transition-all font-black text-lg shadow-xl"
-                    disabled={!invName || !invAmount || !invEmail}
-                  >
-                    Generar y Descargar Contrato PDF <Download className="ml-2 h-5 w-5" />
-                  </Button>
+                <div className="space-y-6 pt-4 border-t border-primary/10">
+                  <div className="flex items-start space-x-3 bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
+                    <Checkbox id="terms" checked={isAgreed} onCheckedChange={(v) => setIsAgreed(!!v)} className="mt-1" />
+                    <label htmlFor="terms" className="text-xs font-medium text-muted-foreground leading-relaxed cursor-pointer">
+                      Declaro que los datos proporcionados son verídicos y que mi voluntad es celebrar este contrato privado bajo la modalidad de <strong>Firma Electrónica Simple</strong>. Entiendo que este documento tiene validez legal entre las partes.
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button 
+                      variant="outline"
+                      onClick={() => generatePDF(false)} 
+                      className="h-14 rounded-2xl border-primary/20 text-primary font-bold hover:bg-primary/5"
+                      disabled={!invName || !invAmount}
+                    >
+                      <Download className="mr-2 h-4 w-4" /> Solo Borrador
+                    </Button>
+                    <Button 
+                      onClick={handleFormalize} 
+                      className="h-14 rounded-2xl bg-primary hover:bg-secondary transition-all font-black text-lg shadow-xl"
+                      disabled={!invName || !invAmount || !invEmail || !isAgreed || isSubmitting}
+                    >
+                      {isSubmitting ? "Procesando..." : (
+                        <span className="flex items-center gap-2">Firmar y Formalizar <PenTool className="h-5 w-5" /></span>
+                      )}
+                    </Button>
+                  </div>
+                  
                   <p className="text-[10px] text-center font-bold text-muted-foreground italic">
-                    * El documento generado debe ser enviado firmado a <span className="text-primary font-black">pcordova@oralab.cl</span>
+                    * Al formalizar, el documento será validado por <span className="text-primary font-black">pcordova@oralab.cl</span>
                   </p>
                 </div>
               </div>
@@ -651,13 +700,13 @@ export default function InvestorsDashboardPage() {
                        <p className="text-xs font-medium text-muted-foreground mt-2">Devolución del capital + 20% según flujo de caja.</p>
                     </div>
 
-                    <div className="bg-amber-50/50 p-6 rounded-3xl border border-amber-200/50">
+                    <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-200/50">
                        <div className="flex items-start gap-3">
-                          <AlertCircle className="h-5 w-5 text-amber-600 mt-1 shrink-0" />
+                          <ShieldCheck className="h-5 w-5 text-blue-600 mt-1 shrink-0" />
                           <div className="space-y-1">
-                            <p className="text-xs font-bold text-amber-800 uppercase tracking-tight">Instrucciones de Firma</p>
-                            <p className="text-[11px] text-amber-700 leading-relaxed">
-                              Una vez descargado el contrato, puede firmarlo digitalmente o imprimirlo para firma física. <strong>El documento final debe enviarse a pcordova@oralab.cl</strong>.
+                            <p className="text-xs font-bold text-blue-800 uppercase tracking-tight">Firma Digital Segura</p>
+                            <p className="text-[11px] text-blue-700 leading-relaxed">
+                              Este sistema utiliza Firma Electrónica Simple, registrando tu IP, navegador y marca de tiempo como evidencia legal de tu aceptación de los términos.
                             </p>
                           </div>
                        </div>

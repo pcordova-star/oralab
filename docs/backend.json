@@ -86,17 +86,17 @@
       "description": "Registro de inversión y aportes de capital.",
       "type": "object",
       "properties": {
-        "realName": { "type": "string", "description": "Nombre real visible solo para admin." },
-        "investorNumber": { "type": "number", "description": "Número secuencial para vista pública." },
-        "amount": { "type": "number", "description": "Monto aportado en CLP." },
-        "status": { "type": "string", "enum": ["confirmed", "pending"], "description": "Estado del aporte: confirmado o por confirmar." },
+        "realName": { "type": "string" },
+        "investorNumber": { "type": "number" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["confirmed", "pending"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["realName", "investorNumber", "amount", "status", "createdAt"]
     },
     "ContractLead": {
       "title": "ContractLead",
-      "description": "Registro de inversionistas que han completado el formulario y descargado el borrador de contrato.",
+      "description": "Registro de inversionistas con firma electrónica simple.",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
@@ -105,9 +105,19 @@
         "address": { "type": "string" },
         "amount": { "type": "number" },
         "equity": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "signed_by_investor", "fully_signed"] },
+        "investorSignedAt": { "type": "string", "format": "date-time" },
+        "adminSignedAt": { "type": "string", "format": "date-time" },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "ip": { "type": "string" },
+            "userAgent": { "type": "string" }
+          }
+        },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "rut", "email", "amount", "createdAt"]
+      "required": ["name", "rut", "email", "amount", "status", "createdAt"]
     }
   },
   "auth": {
@@ -120,23 +130,23 @@
   "firestore": {
     "/bookings/{bookingId}": {
       "schema": "Booking",
-      "description": "Colección de solicitudes de reserva gestionadas por el administrador."
+      "description": "Colección de solicitudes de reserva."
     },
     "/quotations/{quotationId}": {
       "schema": "Quotation",
-      "description": "Colección de cotizaciones comerciales generadas por el representante Sunvou."
+      "description": "Colección de cotizaciones comerciales."
     },
     "/leads/{leadId}": {
       "schema": "Lead",
-      "description": "Consultas comerciales recibidas por el representante."
+      "description": "Consultas comerciales."
     },
     "/investors/{investorId}": {
       "schema": "Investor",
-      "description": "Colección de inversionistas gestionada por el Super Admin."
+      "description": "Colección de inversionistas."
     },
     "/contract_leads/{leadId}": {
       "schema": "ContractLead",
-      "description": "Colección de interesados que generaron borradores de contrato."
+      "description": "Colección de contratos con firma digital simple."
     }
   }
 }
