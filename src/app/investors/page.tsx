@@ -38,7 +38,8 @@ import {
   Mail,
   Banknote,
   ShieldCheck,
-  PenTool
+  PenTool,
+  Building2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,36 +61,49 @@ const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'
 const PENDING_COLOR = '#94a3b8';
 const REMAINING_COLOR = '#f1f5f9'; 
 
-const FUNDING_GOAL = 10800000;
-const EQUITY_TOTAL = 8; 
+const FUNDING_GOAL = 13500000;
+const EQUITY_TOTAL = 10; 
 
 const MILESTONES = [
   {
     id: "m1",
-    title: "Equipo + Permisos + Logística",
-    target: 8100000,
-    percentage: 75,
+    title: "Equipo + Importación",
+    target: 9102116,
+    percentage: 67,
     color: "bg-[#1c68b6]",
     textColor: "text-[#1c68b6]",
     icon: <Microscope className="h-8 w-8" />,
     items: [
-      "Analizador Sunvou DA7349",
-      "Permisos y certificaciones laboratorio",
-      "Logística de importación y puesta en marcha"
+      "Sunvou DA7349 FOB China: $6.734.600",
+      "Logística (Flete, seguro, aduana): $968.860",
+      "IVA 19% importación: $1.398.656"
+    ]
+  },
+  {
+    id: "m2",
+    title: "Habilitación Consulta",
+    target: 1300000,
+    percentage: 10,
+    color: "bg-[#19cccc]",
+    textColor: "text-[#19cccc]",
+    icon: <Building2 className="h-8 w-8" />,
+    items: [
+      "Revestimiento vinílico piso y muro",
+      "Televisión sala de espera",
+      "Lavamanos portátil"
     ]
   },
   {
     id: "m3",
-    title: "Capital de trabajo inicial",
-    target: 2700000,
-    percentage: 25,
+    title: "Capital de Trabajo",
+    target: 3097884,
+    percentage: 23,
     color: "bg-[#065f46]",
     textColor: "text-[#065f46]",
     icon: <Briefcase className="h-8 w-8" />,
     items: [
-      "Sustentabilidad operativa primeros meses",
-      "Stock inicial de insumos diagnósticos",
-      "Marketing y lanzamiento clínico"
+      "Gastos operacionales primeros 3 meses",
+      "Hasta completar los $13.500.000"
     ]
   }
 ];
@@ -336,7 +350,7 @@ export default function InvestorsDashboardPage() {
     if (y > 250) { doc.addPage(); y = 20; }
 
     addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
-    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 8% de participación económica total a quienes aporten $10.800.000 requeridos.`, 10, false, "justify");
+    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos.`, 10, false, "justify");
     addText(`La participación económica individual para este aporte se calcula en un ${equityPctStr}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, true, "justify");
 
     addText("SÉPTIMA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
@@ -406,7 +420,7 @@ export default function InvestorsDashboardPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] md:text-xs tracking-widest">
-                  <Target className="h-4 w-4 text-secondary" /> Meta Fase Equipamiento (FF01)
+                  <Target className="h-4 w-4 text-secondary" /> Meta Global FF01 (Equipamiento + Habilitación)
                 </div>
                 <h2 className="text-2xl md:text-3xl font-black text-primary italic">Recaudación de Capital</h2>
               </div>
@@ -459,7 +473,7 @@ export default function InvestorsDashboardPage() {
             <h2 className="text-2xl md:text-3xl font-black text-primary italic">Uso de los Fondos</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {milestonesWithProgress.map((m, idx) => (
               <motion.div
                 key={m.id}
@@ -470,7 +484,8 @@ export default function InvestorsDashboardPage() {
                 className="flex flex-col"
               >
                 <Card className="flex-grow bg-white border-none shadow-xl rounded-[1.5rem] md:rounded-[2rem] overflow-hidden flex flex-col">
-                  <div className={cn("p-6 md:p-8 flex flex-col items-center text-center space-y-6 flex-grow", m.id === 'm1' ? 'bg-blue-50/30' : 'bg-emerald-50/30')}>
+                  <div className={cn("p-6 md:p-8 flex flex-col items-center text-center space-y-6 flex-grow", 
+                    m.id === 'm1' ? 'bg-blue-50/30' : m.id === 'm2' ? 'bg-cyan-50/30' : 'bg-emerald-50/30')}>
                     <div className={cn("p-4 rounded-2xl bg-white shadow-sm", m.textColor)}>
                       {m.icon}
                     </div>
@@ -494,7 +509,7 @@ export default function InvestorsDashboardPage() {
                        <Progress value={mounted ? m.progress : 0} className="h-1.5" />
                     </div>
                     <div className={cn("p-4 text-center text-white font-black uppercase text-[9px] md:text-[10px] tracking-widest", m.color)}>
-                      {m.percentage}% del total FF01 {mounted && m.progress === 100 && "• COMPLETADO"}
+                      {m.percentage}% del total {mounted && m.progress === 100 && "• COMPLETADO"}
                     </div>
                   </div>
                 </Card>

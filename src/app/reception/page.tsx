@@ -76,7 +76,7 @@ import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase
 import { jsPDF } from "jspdf";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
-const FUNDING_GOAL = 10800000;
+const FUNDING_GOAL = 13500000;
 
 const timeSlots = [];
 for (let hour = 8; hour <= 12; hour++) {
