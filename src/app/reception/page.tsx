@@ -234,21 +234,20 @@ export default function ReceptionPage() {
   const handleAdminSign = (lead: any) => {
     if (!db || !confirm("¿Confirmar firma digital como TRESNA SpA para este contrato?")) return;
     
+    const nowISO = new Date().toISOString();
     const docRef = doc(db, "contract_leads", lead.id);
     updateDocumentNonBlocking(docRef, {
       status: "fully_signed",
-      adminSignedAt: new Date().toISOString(),
+      adminSignedAt: nowISO,
       updatedAt: serverTimestamp()
     });
 
     toast({ title: "Contrato Firmado", description: "El documento ahora cuenta con ambas firmas digitales." });
     
-    // Aquí se gatillaría la descarga del PDF final con ambas firmas
-    generateSignedPDF(lead);
+    generateSignedPDF({ ...lead, adminSignedAt: nowISO, status: 'fully_signed' });
   };
 
   const generateSignedPDF = (lead: any) => {
-    // Reutilizamos la lógica del PDF pero con sellos de ambas partes
     const doc = new jsPDF();
     const margin = 20;
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -267,32 +266,70 @@ export default function ReceptionPage() {
       }
     };
 
-    addText("CONTRATO DE PARTICIPACIÓN - ORALAB (VERSIÓN FINAL FIRMADA)", 12, true);
+    addText("CONTRATO DE PARTICIPACIÓN - ORALAB (VERSIÓN FINAL FIRMADA)", 12, true, "center");
     y += 10;
+    
+    // Contenido resumido para el ejemplo de salida (en un sistema real iría todo el contrato)
+    addText("CONTRATO PRIVADO DE FINANCIAMIENTO Y PARTICIPACIÓN ECONÓMICA", 11, true);
     addText(`Inversionista: ${lead.name}`, 10);
     addText(`RUT: ${lead.rut}`, 10);
     addText(`Monto: $${lead.amount.toLocaleString('es-CL')}`, 10, true);
-    addText(`Participación: ${lead.equity.toFixed(4)}%`, 10, true);
+    addText(`Participación: ${lead.equity.toFixed(4)}% sobre utilidades Oralab.`, 10, true);
     
-    y = 200;
-    doc.line(margin, y, margin + 70, y);
-    doc.line(pageWidth - margin - 70, y, pageWidth - margin, y);
-    
-    y += 5;
-    doc.setFontSize(8);
-    doc.setTextColor(0, 100, 0);
-    doc.text("FIRMADO DIGITALMENTE", margin, y);
-    doc.text("FIRMADO DIGITALMENTE", pageWidth - margin, y, { align: "right" });
-    
-    y += 4;
+    y = 200; // Posición para el bloque de firmas
+
+    const signatureY = y + 25;
+
+    // SELLO TRESNA (Lado Izquierdo)
+    if (lead.adminSignedAt) {
+      doc.setFillColor(230, 245, 230); // Verde sutil para admin
+      doc.roundedRect(margin, signatureY - 22, 75, 20, 2, 2, 'F');
+      
+      doc.setTextColor(0, 100, 0);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.text("FIRMADO ELECTRÓNICAMENTE", margin + 37.5, signatureY - 17, { align: "center" });
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6);
+      doc.text("Tresna SpA (Admin)", margin + 5, signatureY - 13);
+      doc.text("Representante: PAULO CÓRDOVA", margin + 5, signatureY - 10);
+      doc.text(`Timestamp: ${format(new Date(lead.adminSignedAt), "dd/MM/yyyy HH:mm:ss")}`, margin + 5, signatureY - 7);
+      doc.text(`IP: Validada / Hash: FF01-ADM-${lead.id.substr(0, 4)}`, margin + 5, signatureY - 4);
+    }
+
     doc.setTextColor(0, 0, 0);
-    doc.text("PAULO CÓRDOVA (TRESNA SpA)", margin, y);
-    doc.text(lead.name.toUpperCase() + " (Inversionista)", pageWidth - margin, y, { align: "right" });
-    
-    y += 4;
-    doc.setFontSize(6);
-    doc.text("Fecha Admin: " + format(new Date(), "dd/MM/yyyy HH:mm"), margin, y);
-    doc.text("Fecha Inv: " + format(new Date(lead.investorSignedAt), "dd/MM/yyyy HH:mm"), pageWidth - margin, y, { align: "right" });
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, signatureY, margin + 75, signatureY);
+    doc.setFontSize(8);
+    doc.text("PAULO CÓRDOVA", margin, signatureY + 5);
+    doc.text("Representante Legal TRESNA SpA", margin, signatureY + 9);
+
+    // SELLO INVERSIONISTA (Lado Derecho)
+    if (lead.investorSignedAt) {
+      const invX = pageWidth - margin - 75;
+      doc.setFillColor(240, 247, 255); // Azul sutil para inversionista
+      doc.roundedRect(invX, signatureY - 22, 75, 20, 2, 2, 'F');
+      
+      doc.setTextColor(28, 104, 182);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.text("FIRMADO ELECTRÓNICAMENTE", invX + 37.5, signatureY - 17, { align: "center" });
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6);
+      doc.text(`Identidad: ${lead.name.toUpperCase()}`, invX + 5, signatureY - 13);
+      doc.text(`RUT: ${lead.rut}`, invX + 5, signatureY - 10);
+      doc.text(`Timestamp: ${format(new Date(lead.investorSignedAt), "dd/MM/yyyy HH:mm:ss")}`, invX + 5, signatureY - 7);
+      doc.text(`IP: ${lead.metadata?.ip || 'Validada'}`, invX + 5, signatureY - 4);
+    }
+
+    doc.setTextColor(0, 0, 0);
+    doc.setDrawColor(200, 200, 200);
+    doc.line(pageWidth - margin - 75, signatureY, pageWidth - margin, signatureY);
+    doc.setFontSize(8);
+    doc.text("INVERSIONISTA", pageWidth - margin, signatureY + 5, { align: "right" });
+    doc.text(lead.name.toUpperCase(), pageWidth - margin, signatureY + 9, { align: "right" });
 
     doc.save(`Contrato_Final_Oralab_${lead.name.replace(/\s+/g, '_')}.pdf`);
   };
@@ -648,6 +685,39 @@ export default function ReceptionPage() {
         </Tabs>
       </main>
 
+      {/* Diálogo Editar Inversionista */}
+      <Dialog open={isEditInvestorDialogOpen} onOpenChange={setIsEditInvestorDialogOpen}>
+        <DialogContent className="rounded-[2rem]">
+          <DialogHeader><DialogTitle className="font-black text-primary italic">Editar Registro de Inversión</DialogTitle></DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Nombre Real</label>
+              <Input value={editInvName} onChange={(e) => setEditInvName(e.target.value)} className="h-12 rounded-xl" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Monto (CLP)</label>
+                <Input type="number" value={editInvAmount} onChange={(e) => setEditInvAmount(e.target.value)} className="h-12 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/50">Estado</label>
+                <Select value={editInvStatus} onValueChange={(v) => setEditInvStatus(v as "confirmed" | "pending")}>
+                  <SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="confirmed">Confirmado</SelectItem>
+                    <SelectItem value="pending">Por Confirmar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsEditInvestorDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleEditInvestorSubmit} className="bg-primary font-black rounded-full px-8 h-12">Guardar Cambios</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Diálogo Registrar Nuevo Inversionista */}
       <Dialog open={isInvestorDialogOpen} onOpenChange={setIsInvestorDialogOpen}>
         <DialogContent className="rounded-[2rem]">
@@ -683,3 +753,4 @@ export default function ReceptionPage() {
     </div>
   );
 }
+

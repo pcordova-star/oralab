@@ -124,7 +124,7 @@ function numeroALetras(num: number): string {
     if (c > 0) {
       if (c === 1 && d === 0 && u === 0) output += 'cien';
       else if (c === 1) output += 'ciento ';
-      else output += CENTENAS[c] + ' ';
+      else CENTENAS[c] + ' ';
     }
 
     if (d > 0) {
@@ -276,10 +276,8 @@ export default function InvestorsDashboardPage() {
         
         toast({ title: "Firma Registrada", description: "Tu contrato ha sido enviado al Administrador para su validación final." });
         
-        // Generar un PDF informativo de borrador firmado
         generatePDF(true);
         
-        // Reset
         setInvName("");
         setInvRut("");
         setInvEmail("");
@@ -338,14 +336,16 @@ export default function InvestorsDashboardPage() {
     addText(`El Inversionista aporta a TRESNA SpA la suma de $${Number(invAmount).toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
 
     addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
-    addText("Los recursos serán utilizados para: a) Compra e importación del analizador Sunvou DA7349. b) Capital de trabajo y gastos operacionales iniciales.", 10, false, "justify");
+    addText("Los recursos serán utilizados para:", 10, false, "justify");
+    addText("a) Compra e importación del analizador Sunvou DA7349.", 10);
+    addText("b) Capital de trabajo y gastos operacionales iniciales.", 10);
 
     addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
     addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${Number(invAmount).toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${returnAmount.toLocaleString('es-CL')}).`, 10, false, "justify");
     addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte, siempre que la unidad de negocio ORALAB cuente con flujo de caja operacional suficiente para ello. En caso de que el flujo disponible no sea suficiente en una fecha de pago determinada, la cuota correspondiente se postergará al mes siguiente en que exista disponibilidad, sin que ello constituya incumplimiento contractual, mora ni genere intereses penales. La Empresa informará al Inversionista de cualquier postergación, indicando la causa y la nueva fecha estimada de pago.", 10, false, "justify");
 
     addText("QUINTA: RESGUARDO SOBRE EL EQUIPO", 10, true);
-    addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido, transferido, dado en garantía a terceros, ni sujeto a cualquier gravamen, sin autorización escrita de la mayoría de dichos inversionistas. En caso de cese de operaciones de ORALAB, liquidación de sus activos, o venta del equipo señalado, el producto de dicha venta o liquidación se destinará prioritariamente al pago de los saldos pendientes a los inversionistas de la Ronda Family & Friends 01, antes de cualquier otro destino.", 10, false, "justify");
+    addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido, transferido, dado en garantía a terceros, ni sujeto a cualquier gravamen, sin autorización escrita de la mayoría de dichos inversionistas. En caso de cese de operaciones de ORALAB, liquidación de sus activos, o venta del equipo señalado, el producto de dicha venta o liquidación se destinará prioritariamente al pago de los saldos pendientes a los inversionistas de la Ronda Family & Friends 01, antes de cualquier otro destino, hasta el monto total adeudado a cada uno según su aporte.", 10, false, "justify");
 
     if (y > 250) { doc.addPage(); y = 20; }
 
@@ -357,18 +357,18 @@ export default function InvestorsDashboardPage() {
     addText("La participación económica otorgada: a) No constituye acciones de TRESNA SpA. b) No otorga calidad de socio ni accionista. c) No concede derecho a voto. d) No concede facultades de administración. e) Corresponde únicamente a un derecho económico asociado a ORALAB.", 10, false, "justify");
 
     addText("OCTAVA: DISTRIBUCIÓN DE UTILIDADES", 10, true);
-    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica. Para efectos de esta cláusula, se entenderá por “utilidades distribuibles de ORALAB” los ingresos percibidos directamente atribuibles a la operación del laboratorio, deducidos los costos directos e indirectos razonablemente imputables a dicha unidad de negocio.", 10, false, "justify");
+    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica. Para efectos de esta cláusula, se entenderá por “utilidades distribuibles de ORALAB” los ingresos percibidos directamente atribuibles a la operación del laboratorio, deducidos los costos directos e indirectos razonablemente imputables a dicha unidad de negocio, incluyendo arriendo, remuneraciones del personal clínico, insumos, depreciación del equipo y gastos generales de operación. No se podrán imputar a ORALAB gastos corporativos generales de TRESNA SpA, ni remuneraciones de personas no vinculadas directamente a la operación del laboratorio, ni honorarios entre empresas relacionadas que excedan valores de mercado. La administración comunicará anualmente la metodología de asignación de costos a los inversionistas.", 10, false, "justify");
 
     if (y > 250) { doc.addPage(); y = 20; }
 
     addText("NOVENA: INFORMACIÓN", 10, true);
-    addText("TRESNA SpA entregará al Inversionista un reporte trimestral de resultados de ORALAB, dentro de los 30 días siguientes al cierre de cada trimestre calendario.", 10, false, "justify");
+    addText("TRESNA SpA entregará al Inversionista un reporte trimestral de resultados de ORALAB, dentro de los 30 días siguientes al cierre de cada trimestre calendario. Dicho reporte incluirá al menos: (a) ingresos brutos del período; (b) número de pacientes atendidos; (c) costos directos e indirectos asignados a ORALAB; (d) utilidad neta antes de distribución; y (e) monto distribuido o acumulado para distribución.", 10, false, "justify");
 
     addText("DÉCIMA: CESIÓN", 10, true);
     addText("La participación económica no podrá ser transferida a terceros.", 10, false, "justify");
 
     addText("DÉCIMO PRIMERA: VIGENCIA", 10, true);
-    addText("La participación económica otorgada mediante este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA.", 10, false, "justify");
+    addText("La participación económica otorgada mediante este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA o de cualquier entidad sucesora que continúe desarrollando dicha actividad. En caso de que TRESNA SpA enajene, transfiera, escinda o de cualquier forma traspase la unidad de negocio ORALAB o sus activos principales a un tercero, el adquirente deberá subrogarse en todas las obligaciones del presente contrato respecto del Inversionista como condición de dicha transferencia.", 10, false, "justify");
 
     addText("DÉCIMO SEGUNDA: JURISDICCIÓN", 10, true);
     addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago y se someten a la jurisdicción de sus tribunales ordinarios de justicia.", 10, false, "justify");
@@ -376,29 +376,50 @@ export default function InvestorsDashboardPage() {
     y += 10;
     addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
     
-    y += 20;
-    // Firmas
-    doc.setDrawColor(200, 200, 200);
-    doc.line(margin, y, margin + 70, y);
-    doc.line(pageWidth - margin - 70, y, pageWidth - margin, y);
-    y += 5;
-    doc.setFontSize(8);
-    doc.text("PAULO CÓRDOVA", margin, y);
-    doc.text("INVERSIONISTA", pageWidth - margin, y, { align: "right" });
-    y += 4;
-    doc.text("Representante Legal TRESNA SpA", margin, y);
-    doc.text("Nombre: " + invName.toUpperCase(), pageWidth - margin, y, { align: "right" });
+    y += 10;
+
+    // Firmas posicionadas
+    const signatureY = y + 25;
     
+    // Espacio para la firma del Admin (siempre presente en borrador como espacio vacío)
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, signatureY, margin + 75, signatureY);
+    doc.setFontSize(8);
+    doc.text("PAULO CÓRDOVA", margin, signatureY + 5);
+    doc.text("Representante Legal TRESNA SpA", margin, signatureY + 9);
+    doc.text("RUT 77.023.697-5", margin, signatureY + 13);
+
+    // Sello de Firma Digital Inversionista (sobre la línea derecha)
     if (isSignedByInvestor) {
+      const invX = pageWidth - margin - 75;
+      
+      // Rectángulo de fondo sutil para el sello
+      doc.setFillColor(240, 247, 255);
+      doc.roundedRect(invX, signatureY - 22, 75, 20, 2, 2, 'F');
+      
       doc.setTextColor(28, 104, 182);
-      doc.setFont("helvetica", "bolditalic");
-      doc.text("VALIDADO POR FIRMA ELECTRÓNICA SIMPLE", pageWidth - margin, y + 10, { align: "right" });
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.text("FIRMADO ELECTRÓNICAMENTE", invX + 37.5, signatureY - 17, { align: "center" });
+      
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(6);
-      doc.text("ID: " + Math.random().toString(36).substr(2, 9).toUpperCase() + " / IP VALIDADA", pageWidth - margin, y + 14, { align: "right" });
+      doc.text(`Identidad: ${invName.toUpperCase()}`, invX + 5, signatureY - 13);
+      doc.text(`RUT: ${invRut}`, invX + 5, signatureY - 10);
+      doc.text(`Timestamp: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}`, invX + 5, signatureY - 7);
+      doc.text(`ID Validación: ${Math.random().toString(36).substr(2, 9).toUpperCase()}`, invX + 5, signatureY - 4);
       doc.setTextColor(0, 0, 0);
     }
 
-    doc.save(`Borrador_Contrato_Oralab_${invName.replace(/\s+/g, '_')}.pdf`);
+    doc.setDrawColor(200, 200, 200);
+    doc.line(pageWidth - margin - 75, signatureY, pageWidth - margin, signatureY);
+    doc.setFontSize(8);
+    doc.text("INVERSIONISTA", pageWidth - margin, signatureY + 5, { align: "right" });
+    doc.text("Nombre: " + invName.toUpperCase(), pageWidth - margin, signatureY + 9, { align: "right" });
+    doc.text("RUT: " + invRut, pageWidth - margin, signatureY + 13, { align: "right" });
+    doc.text("Fecha: " + format(new Date(), "dd/MM/yyyy"), pageWidth - margin, signatureY + 17, { align: "right" });
+
+    doc.save(`Contrato_Oralab_${invName.replace(/\s+/g, '_')}.pdf`);
   };
 
   return (
@@ -414,7 +435,6 @@ export default function InvestorsDashboardPage() {
           </p>
         </div>
 
-        {/* 1. Meta y Progreso */}
         <Card className="bg-white shadow-xl rounded-[2rem] md:rounded-[2.5rem] border-primary/5 mb-12 overflow-hidden">
           <div className="bg-primary/5 p-6 md:p-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
@@ -464,7 +484,6 @@ export default function InvestorsDashboardPage() {
           </div>
         </Card>
 
-        {/* 2. Uso de Fondos */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-secondary/10 p-2 rounded-xl">
@@ -518,7 +537,6 @@ export default function InvestorsDashboardPage() {
           </div>
         </section>
 
-        {/* 3. Distribución Visual */}
         <div className="mb-16 max-w-4xl mx-auto">
           <Card className="bg-white shadow-xl rounded-[2rem] md:rounded-[2.5rem] border-primary/5 p-4 md:p-8">
             <CardHeader className="p-4 md:p-0 mb-6 md:mb-8 text-center">
@@ -610,7 +628,6 @@ export default function InvestorsDashboardPage() {
           </Card>
         </div>
 
-        {/* 4. Formalización del Aporte */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-primary/10 p-2 rounded-xl">
@@ -731,7 +748,6 @@ export default function InvestorsDashboardPage() {
             </div>
           </Card>
 
-          {/* Datos de Transferencia */}
           <div className="max-w-2xl mx-auto">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="payment-data" className="border-none">
@@ -785,7 +801,6 @@ export default function InvestorsDashboardPage() {
           </div>
         </section>
 
-        {/* 5. Footer Text */}
         <div className="mt-12 text-center px-4">
           <div className="flex flex-col items-center gap-2 mb-6">
             <p className="text-[10px] md:text-xs font-black text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -800,3 +815,4 @@ export default function InvestorsDashboardPage() {
     </div>
   );
 }
+
