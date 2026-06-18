@@ -39,7 +39,8 @@ import {
   Banknote,
   ShieldCheck,
   PenTool,
-  Building2
+  Building2,
+  Sparkles
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -637,113 +638,169 @@ export default function InvestorsDashboardPage() {
           </div>
 
           <Card className="bg-white shadow-2xl rounded-[2.5rem] border-primary/10 overflow-hidden mb-8">
-            <div className="grid lg:grid-cols-2">
-              <div className="p-8 lg:p-12 space-y-8 bg-muted/20">
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-primary">Firmar Contrato de Participación</h3>
-                  <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                    Completa tus datos para formalizar digitalmente tu compromiso. Para efectos de este contrato privado, tu <strong>Firma Electrónica Simple (FES)</strong> es legalmente suficiente y vinculante. Una vez firmado por ti, el documento pasará a la validación final del Representante Legal de TRESNA SpA, quien suscribirá el instrumento mediante <strong>Firma Electrónica Avanzada (FEA)</strong>.
-                  </p>
-                </div>
+            <div className="p-8 lg:p-12 space-y-10">
+              <div className="space-y-3">
+                <h3 className="text-2xl md:text-3xl font-black text-primary italic">Suscribir Contrato de Participación</h3>
+                <p className="text-sm md:text-base text-muted-foreground font-medium leading-relaxed max-w-4xl">
+                  Completa tus datos para formalizar digitalmente tu compromiso. Para efectos de este contrato privado, tu <strong>Firma Electrónica Simple (FES)</strong> es legalmente suficiente y vinculante. Una vez firmado por ti, el documento pasará a la validación final del Representante Legal de TRESNA SpA, quien suscribirá el instrumento mediante <strong>Firma Electrónica Avanzada (FEA)</strong>.
+                </p>
+              </div>
 
-                <div className="grid gap-6">
+              <div className="grid gap-8">
+                {/* Datos de Identidad */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="font-bold flex items-center gap-2"><User className="h-4 w-4" /> Nombre Completo</Label>
-                    <Input placeholder="Ej: Juan Pérez González" value={invName} onChange={(e) => setInvName(e.target.value)} />
+                    <Label className="font-bold flex items-center gap-2 text-primary/80"><User className="h-4 w-4" /> Nombre Completo</Label>
+                    <Input 
+                      placeholder="Ej: Juan Pérez González" 
+                      value={invName} 
+                      onChange={(e) => setInvName(e.target.value)} 
+                      className="h-12 rounded-xl border-primary/10 focus:ring-primary/20" 
+                    />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT / Identificación</Label>
-                      <Input placeholder="12.345.678-9" value={invRut} onChange={handleRutChange} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="font-bold flex items-center gap-2"><Mail className="h-4 w-4" /> Correo Electrónico</Label>
-                      <Input type="email" placeholder="inversionista@correo.com" value={invEmail} onChange={(e) => setInvEmail(e.target.value)} />
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold flex items-center gap-2 text-primary/80"><CreditCard className="h-4 w-4" /> RUT / Identificación</Label>
+                    <Input 
+                      placeholder="12.345.678-9" 
+                      value={invRut} 
+                      onChange={handleRutChange} 
+                      className="h-12 rounded-xl border-primary/10 focus:ring-primary/20"
+                    />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="font-bold flex items-center gap-2"><HandCoins className="h-4 w-4" /> Monto del Aporte (CLP)</Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-3 text-muted-foreground font-bold">$</span>
-                        <Input type="number" placeholder="1.000.000" className="pl-7" value={invAmount} onChange={(e) => setInvAmount(Number(e.target.value) || "")} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="font-bold flex items-center gap-2 text-primary/80"><Mail className="h-4 w-4" /> Correo Electrónico</Label>
+                    <Input 
+                      type="email" 
+                      placeholder="inversionista@correo.com" 
+                      value={invEmail} 
+                      onChange={(e) => setInvEmail(e.target.value)} 
+                      className="h-12 rounded-xl border-primary/10 focus:ring-primary/20"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold flex items-center gap-2 text-primary/80"><MapPin className="h-4 w-4" /> Domicilio</Label>
+                    <Input 
+                      placeholder="Calle, número, comuna" 
+                      value={invAddress} 
+                      onChange={(e) => setInvAddress(e.target.value)} 
+                      className="h-12 rounded-xl border-primary/10 focus:ring-primary/20"
+                    />
+                  </div>
+                </div>
+
+                {/* BLOQUE DE MONTO Y CALCULADORA DINÁMICA */}
+                <div className="bg-primary/5 p-6 md:p-8 rounded-[2rem] border border-primary/10">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    {/* Input de Monto */}
+                    <div className="lg:col-span-4 space-y-3">
+                      <Label className="font-black flex items-center gap-2 text-primary text-base">
+                        <HandCoins className="h-5 w-5 text-secondary" /> Monto del Aporte (CLP)
+                      </Label>
+                      <div className="relative group">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-black text-2xl group-focus-within:text-secondary transition-colors">$</span>
+                        <Input 
+                          type="number" 
+                          placeholder="1.000.000" 
+                          className="pl-10 h-20 rounded-2xl border-primary/20 bg-white text-3xl font-black text-primary focus:ring-secondary/20 transition-all shadow-inner" 
+                          value={invAmount} 
+                          onChange={(e) => setInvAmount(Number(e.target.value) || "")} 
+                        />
                       </div>
+                      <p className="text-[10px] font-bold text-muted-foreground italic ml-2">
+                        * Ingrese el monto para proyectar su participación.
+                      </p>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Domicilio</Label>
-                      <Input placeholder="Calle, número, comuna" value={invAddress} onChange={(e) => setInvAddress(e.target.value)} />
+
+                    {/* Resultados Dinámicos */}
+                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <AnimatePresence mode="wait">
+                        <motion.div 
+                          key={invAmount ? 'active-equity' : 'empty-equity'}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="bg-white p-6 rounded-2xl shadow-xl border border-primary/5 flex flex-col justify-center relative overflow-hidden"
+                        >
+                          <div className="absolute top-0 right-0 p-3 opacity-5">
+                             <Percent className="h-12 w-12 text-primary" />
+                          </div>
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
+                            <Sparkles className="h-3 w-3 text-secondary" /> Participación Est.
+                          </p>
+                          <motion.p 
+                            animate={{ scale: invAmount ? [1, 1.05, 1] : 1 }}
+                            className="text-3xl md:text-4xl font-black text-primary italic"
+                          >
+                            {invAmount ? calculateEquity(Number(invAmount)).toFixed(4) : "0.0000"}%
+                          </motion.p>
+                          <p className="text-[9px] font-bold text-muted-foreground mt-1">Sobre utilidades Oralab.</p>
+                        </motion.div>
+                      </AnimatePresence>
+
+                      <AnimatePresence mode="wait">
+                        <motion.div 
+                          key={invAmount ? 'active-return' : 'empty-return'}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="bg-primary text-white p-6 rounded-2xl shadow-xl border-none flex flex-col justify-center relative overflow-hidden"
+                        >
+                           <div className="absolute top-0 right-0 p-3 opacity-10">
+                             <TrendingUp className="h-12 w-12 text-white" />
+                          </div>
+                          <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mb-1 flex items-center gap-1">
+                            <Clock className="h-3 w-3 text-secondary" /> Retorno Proyectado
+                          </p>
+                          <motion.p 
+                             animate={{ scale: invAmount ? [1, 1.02, 1] : 1 }}
+                             className="text-2xl md:text-3xl font-black italic"
+                          >
+                            {invAmount ? formatCurrency(Number(invAmount) * 1.2) : "$0"}
+                          </motion.p>
+                          <p className="text-[9px] font-bold text-white/50 mt-1">Devolución + 20% (Mes 6-12).</p>
+                        </motion.div>
+                      </AnimatePresence>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-6 pt-4 border-t border-primary/10">
-                  <div className="flex items-start space-x-3 bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
-                    <Checkbox id="terms" checked={isAgreed} onCheckedChange={(v) => setIsAgreed(!!v)} className="mt-1" />
-                    <label htmlFor="terms" className="text-xs font-medium text-muted-foreground leading-relaxed cursor-pointer">
-                      Declaro que los datos proporcionados son verídicos y que mi voluntad es celebrar este contrato privado bajo la modalidad de <strong>Firma Electrónica Simple</strong>. Entiendo que este documento tiene validez legal entre las partes.
+                <div className="space-y-6 pt-6 border-t border-primary/10">
+                  <div className="flex items-start space-x-3 bg-blue-50/30 p-5 rounded-2xl border border-blue-100 shadow-sm">
+                    <Checkbox id="terms" checked={isAgreed} onCheckedChange={(v) => setIsAgreed(!!v)} className="mt-1 border-primary" />
+                    <label htmlFor="terms" className="text-xs md:text-sm font-medium text-primary/70 leading-relaxed cursor-pointer">
+                      Yo, <span className="font-black text-primary underline">{invName || "_________________"}</span>, declaro que los datos proporcionados son verídicos y que mi voluntad es suscribir este contrato privado bajo la modalidad de <strong>Firma Electrónica Simple</strong>. Entiendo que este documento es legalmente vinculante entre las partes.
                     </label>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col md:flex-row gap-4">
                     <Button 
                       variant="outline"
                       onClick={() => generatePDF(false)} 
-                      className="h-14 rounded-2xl border-primary/20 text-primary font-bold hover:bg-primary/5"
+                      className="h-16 flex-1 rounded-2xl border-primary/20 text-primary font-bold hover:bg-primary/5 text-lg"
                       disabled={!invName || !invAmount}
                     >
-                      <Download className="mr-2 h-4 w-4" /> Solo Borrador
+                      <Download className="mr-2 h-5 w-5" /> Revisar Borrador
                     </Button>
                     <Button 
                       onClick={handleFormalize} 
-                      className="h-14 rounded-2xl bg-primary hover:bg-secondary transition-all font-black text-lg shadow-xl"
+                      className="h-16 flex-[2] rounded-2xl bg-primary hover:bg-secondary transition-all font-black text-xl shadow-2xl active:scale-95 group"
                       disabled={!invName || !invAmount || !invEmail || !isAgreed || isSubmitting}
                     >
-                      {isSubmitting ? "Procesando..." : (
-                        <span className="flex items-center gap-2">Firmar y Formalizar <PenTool className="h-5 w-5" /></span>
+                      {isSubmitting ? (
+                        <span className="flex items-center gap-2">Procesando firma...</span>
+                      ) : (
+                        <span className="flex items-center gap-2">Firmar y Formalizar Aporte <PenTool className="h-6 w-6 group-hover:rotate-12 transition-transform" /></span>
                       )}
                     </Button>
                   </div>
                   
-                  <p className="text-[10px] text-center font-bold text-muted-foreground italic">
-                    * Al formalizar, el documento será validado por <span className="text-primary font-black">pcordova@oralab.cl</span>
-                  </p>
+                  <div className="flex items-center justify-center gap-3 text-[10px] font-bold text-muted-foreground italic">
+                    <ShieldCheck className="h-4 w-4 text-blue-500" />
+                    Registro de IP y Timestamp habilitado para validez legal de la FES.
+                  </div>
                 </div>
-              </div>
-
-              <div className="p-8 lg:p-12 flex flex-col justify-center bg-white">
-                 <div className="space-y-6">
-                    <div className="p-6 rounded-3xl bg-secondary/5 border border-secondary/10">
-                       <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-2 flex items-center gap-1">
-                         <Percent className="h-3 w-3" /> Participación Permanente FF01 (Est.)
-                       </p>
-                       <p className="text-4xl font-black text-primary italic">
-                         {invAmount ? calculateEquity(Number(invAmount)).toFixed(4) : "0.0000"}%
-                       </p>
-                       <p className="text-xs font-medium text-muted-foreground mt-2">Sobre las utilidades de la unidad de negocio Oralab.</p>
-                    </div>
-
-                    <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10">
-                       <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-1">
-                         <Clock className="h-3 w-3" /> Retorno Proyectado (Mes 6-12)
-                       </p>
-                       <p className="text-3xl font-black text-primary italic">
-                         {invAmount ? formatCurrency(Number(invAmount) * 1.2) : "$0"}
-                       </p>
-                       <p className="text-xs font-medium text-muted-foreground mt-2">Devolución del capital + 20% según flujo de caja.</p>
-                    </div>
-
-                    <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-200/50">
-                       <div className="flex items-start gap-3">
-                          <ShieldCheck className="h-5 w-5 text-blue-600 mt-1 shrink-0" />
-                          <div className="space-y-1">
-                            <p className="text-xs font-bold text-blue-800 uppercase tracking-tight">Firma Digital Segura</p>
-                            <p className="text-[11px] text-blue-700 leading-relaxed">
-                              Este sistema utiliza Firma Electrónica Simple para el inversionista y Firma Electrónica Avanzada para la representación legal, registrando IP y marca de tiempo como evidencia legal.
-                            </p>
-                          </div>
-                       </div>
-                    </div>
-                 </div>
               </div>
             </div>
           </Card>
