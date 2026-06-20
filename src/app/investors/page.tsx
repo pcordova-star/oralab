@@ -181,6 +181,29 @@ function numeroALetras(num: number): string {
   return total.trim();
 }
 
+/** Formatea un string como RUT chileno */
+function formatRut(value: string) {
+  // Limpiar puntos y guion
+  let rut = value.replace(/\./g, "").replace("-", "");
+  if (!rut) return "";
+  
+  // Separar dígito verificador
+  const dv = rut.slice(-1);
+  const cuerpo = rut.slice(0, -1);
+  
+  // Formatear cuerpo con puntos
+  const cuerpoFormateado = cuerpo.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+  
+  return cuerpo.length > 0 ? `${cuerpoFormateado}-${dv}` : dv;
+}
+
+/** Formatea un número como moneda chilena */
+function formatCurrencyInput(value: string) {
+  const numericValue = value.replace(/\D/g, "");
+  if (!numericValue) return "";
+  return parseInt(numericValue).toLocaleString('es-CL');
+}
+
 export default function InvestorsDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
@@ -191,7 +214,8 @@ export default function InvestorsDashboardPage() {
   const [invRut, setInvRut] = useState("");
   const [invEmail, setInvEmail] = useState("");
   const [invAddress, setInvAddress] = useState("");
-  const [invAmount, setInvAmount] = useState<number | "">("");
+  const [invAmount, setInvAmount] = useState<number>(0);
+  const [invAmountDisplay, setInvAmountDisplay] = useState("");
   const [isAgreed, setIsAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -240,6 +264,20 @@ export default function InvestorsDashboardPage() {
     return (amount / FUNDING_GOAL) * EQUITY_TOTAL;
   };
 
+  const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatRut(e.target.value);
+    if (formatted.length <= 12) { // Límite estándar de RUT formateado
+      setInvRut(formatted);
+    }
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    const numeric = raw ? parseInt(raw) : 0;
+    setInvAmount(numeric);
+    setInvAmountDisplay(formatCurrencyInput(e.target.value));
+  };
+
   const handleFormalize = async () => {
     if (!invName) { toast({ variant: "destructive", title: "Falta Nombre Completo" }); return; }
     if (!invRut) { toast({ variant: "destructive", title: "Falta RUT" }); return; }
@@ -250,14 +288,14 @@ export default function InvestorsDashboardPage() {
     
     setIsSubmitting(true);
     if (db) {
-      const equityPct = calculateEquity(Number(invAmount));
+      const equityPct = calculateEquity(invAmount);
       try {
         await addDocumentNonBlocking(collection(db, "contract_leads"), {
           name: invName,
           rut: invRut,
           email: invEmail,
           address: invAddress,
-          amount: Number(invAmount),
+          amount: invAmount,
           equity: equityPct,
           status: "signed_by_investor",
           investorSignedAt: new Date().toISOString(),
@@ -273,7 +311,8 @@ export default function InvestorsDashboardPage() {
         setInvRut("");
         setInvEmail("");
         setInvAddress("");
-        setInvAmount("");
+        setInvAmount(0);
+        setInvAmountDisplay("");
         setIsAgreed(false);
       } catch (e) {
         toast({ variant: "destructive", title: "Error al guardar" });
@@ -307,8 +346,8 @@ export default function InvestorsDashboardPage() {
 
     const currentDay = format(new Date(), "d");
     const currentMonth = format(new Date(), "MMMM", { locale: es });
-    const amountInWords = numeroALetras(Number(invAmount) || 0);
-    const returnAmount = (Number(invAmount) || 0) * 0.2;
+    const amountInWords = numeroALetras(invAmount || 0);
+    const returnAmount = (invAmount || 0) * 0.2;
 
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO Y PARTICIPACIÓN ECONÓMICA", 12, true, "center");
     y += 5;
@@ -323,13 +362,13 @@ export default function InvestorsDashboardPage() {
     addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento con los permisos y logística necesarios para operar en el laboratorio. y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
 
     addText("SEGUNDA: APORTE", 10, true);
-    addText(`El Inversionista aporta a TRESNA SpA la suma de $${(Number(invAmount) || 0).toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
+    addText(`El Inversionista aporta a TRESNA SpA la suma de $${(invAmount || 0).toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
 
     addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
     addText("Los recursos serán utilizados para: a) Compra e importación del analizador Sunvou DA7349. b) Capital de trabajo y gastos operacionales iniciales.", 10, false, "justify");
 
     addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
-    addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${(Number(invAmount) || 0).toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${returnAmount.toLocaleString('es-CL')}).`, 10, false, "justify");
+    addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${(invAmount || 0).toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${returnAmount.toLocaleString('es-CL')}).`, 10, false, "justify");
     addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte, siempre que la unidad de negocio ORALAB cuente con flujo de caja operacional suficiente para ello. En caso de que el flujo disponible no sea suficiente en una fecha de pago determinada, la cuota correspondiente se postergará al mes siguiente en que exista disponibilidad, sin que ello constituya incumplimiento contractual, mora ni genere intereses penales. Se establece un plazo máximo para estas postergaciones de hasta 12 meses adicionales posteriores a los 12 meses mencionados al inicio de este párrafo.", 10, false, "justify");
 
     if (y > 250) { doc.addPage(); y = 20; }
@@ -338,7 +377,7 @@ export default function InvestorsDashboardPage() {
     addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido, transferido, dado en garantía a terceros, ni sujeto a cualquier gravamen, sin autorización escrita de la mayoría de dichos inversionistas. En caso de cese de operaciones de ORALAB, liquidación de sus activos, o venta del equipo señalado, el producto de dicha venta o liquidación se destinará prioritariamente al pago de los saldos pendientes.", 10, false, "justify");
 
     addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
-    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos. La participación económica individual para este aporte se calcula en un ${calculateEquity(Number(invAmount) || 0).toFixed(4)}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, false, "justify");
+    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos. La participación económica individual para este aporte se calcula en un ${calculateEquity(invAmount || 0).toFixed(4)}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, false, "justify");
 
     addText("SÉPTIMA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
     addText("La participación económica otorgada: a) No constituye acciones de TRESNA SpA. b) No otorga calidad de socio ni accionista. c) No concede derecho a voto. d) No concede facultades de administración. e) Corresponde únicamente a un derecho económico asociado a ORALAB.", 10, false, "justify");
@@ -486,7 +525,7 @@ export default function InvestorsDashboardPage() {
                     <Input 
                       placeholder="12.345.678-9" 
                       value={invRut} 
-                      onChange={(e) => setInvRut(e.target.value)} 
+                      onChange={handleRutChange} 
                       className="h-12 rounded-xl border-primary/10" 
                     />
                   </div>
@@ -518,13 +557,16 @@ export default function InvestorsDashboardPage() {
                       <Label className="font-black flex items-center gap-2 text-primary">
                         <HandCoins className="h-5 w-5 text-secondary" /> Monto Aporte (CLP)
                       </Label>
-                      <Input 
-                        type="number" 
-                        className="h-16 rounded-2xl text-2xl font-black border-primary/20 shadow-inner focus:ring-secondary" 
-                        placeholder="0"
-                        value={invAmount} 
-                        onChange={(e) => setInvAmount(Number(e.target.value) || "")} 
-                      />
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-xl text-primary">$</span>
+                        <Input 
+                          type="text" 
+                          className="h-16 pl-10 rounded-2xl text-2xl font-black border-primary/20 shadow-inner focus:ring-secondary" 
+                          placeholder="0"
+                          value={invAmountDisplay} 
+                          onChange={handleAmountChange} 
+                        />
+                      </div>
                       <p className="text-[10px] font-bold text-muted-foreground italic pl-2">Ingresa el monto para ver tu participación.</p>
                     </div>
                     
@@ -540,7 +582,7 @@ export default function InvestorsDashboardPage() {
                             <Sparkles className="h-3 w-3 text-secondary" /> Participación Permanente FF01 (Est.)
                           </p>
                           <p className="text-4xl font-black text-primary italic">
-                            {invAmount ? calculateEquity(Number(invAmount)).toFixed(4) : "0.0000"}%
+                            {invAmount ? calculateEquity(invAmount).toFixed(4) : "0.0000"}%
                           </p>
                           <p className="text-[9px] font-bold text-muted-foreground mt-2 leading-none">Sobre las utilidades de la unidad de negocio Oralab.</p>
                         </motion.div>
@@ -555,7 +597,7 @@ export default function InvestorsDashboardPage() {
                             <Clock className="h-3 w-3 text-secondary" /> Retorno Proyectado M6-M12
                           </p>
                           <p className="text-3xl font-black italic">
-                            {invAmount ? formatCurrency(Number(invAmount) * 1.2) : "$0"}
+                            {invAmount ? formatCurrency(invAmount * 1.2) : "$0"}
                           </p>
                           <p className="text-[9px] font-bold text-white/50 mt-2 leading-none">Devolución de capital + 20% de retorno fijo.</p>
                         </motion.div>
