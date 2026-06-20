@@ -317,6 +317,9 @@ export default function ReceptionPage() {
     addText("DÉCIMO SEGUNDA: JURISDICCIÓN", 10, true);
     addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago y se someten a la jurisdicción de sus tribunales ordinarios de justicia.", 10, false, "justify");
 
+    addText("DÉCIMO TERCERA: DERECHO DE PREFERENCIA", 10, true);
+    addText("En el evento de que TRESNA SpA decida la apertura de nuevas sucursales de la unidad de negocio ORALAB que requieran financiamiento externo, o se acuerden nuevas rondas de levantamiento de capital para la expansión de la misma, los inversionistas suscritos a la presente ronda Family & Friends 01 tendrán un derecho preferente para participar en dichas instancias, en igualdad de condiciones comerciales que se ofrezcan a terceros.", 10, false, "justify");
+
     y += 10;
     addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
     
@@ -462,7 +465,7 @@ export default function ReceptionPage() {
                             <TableCell className="text-right pr-6">
                                <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 text-primary">
                                   <Pencil className="h-4 w-4" />
-                               </Button>
+                                </Button>
                             </TableCell>
                           </TableRow>
                         ))}

@@ -399,6 +399,9 @@ export default function InvestorsDashboardPage() {
     addText("DÉCIMO SEGUNDA: JURISDICCIÓN", 10, true);
     addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago y se someten a la jurisdicción de sus tribunales ordinarios de justicia.", 10, false, "justify");
 
+    addText("DÉCIMO TERCERA: DERECHO DE PREFERENCIA", 10, true);
+    addText("En el evento de que TRESNA SpA decida la apertura de nuevas sucursales de la unidad de negocio ORALAB que requieran financiamiento externo, o se acuerden nuevas rondas de levantamiento de capital para la expansión de la misma, los inversionistas suscritos a la presente ronda Family & Friends 01 tendrán un derecho preferente para participar en dichas instancias, en igualdad de condiciones comerciales que se ofrezcan a terceros.", 10, false, "justify");
+
     y += 10;
     addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
     
@@ -694,7 +697,7 @@ export default function InvestorsDashboardPage() {
                      <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={MOCK_OPS_DATA} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }} />
+                          <XAxis dataKey="day" axisLine={false} textAnchor="end" interval={0} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }} />
                           <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }} hide={isMobile} />
                           <ChartTooltip 
                             cursor={{ fill: 'rgba(28, 104, 182, 0.05)', radius: 10 }}
