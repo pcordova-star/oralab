@@ -65,7 +65,7 @@ import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase
 import { jsPDF } from "jspdf";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
-const FUNDING_GOAL = 10800000;
+const FUNDING_GOAL = 13500000;
 
 function numeroALetras(num: number): string {
   const UNIDADES = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
@@ -139,13 +139,6 @@ export default function ReceptionPage() {
   const [investorAmount, setInvestorAmount] = useState("");
   const [investorStatus, setInvestorStatus] = useState<"confirmed" | "pending">("confirmed");
 
-  // Edit Investor States
-  const [editingInvestor, setEditingInvestor] = useState<any>(null);
-  const [isEditInvestorDialogOpen, setIsEditInvestorDialogOpen] = useState(false);
-  const [editInvName, setEditInvName] = useState("");
-  const [editInvAmount, setEditInvAmount] = useState("");
-  const [editInvStatus, setEditInvStatus] = useState<"confirmed" | "pending">("confirmed");
-
   useEffect(() => {
     setIsMounted(true);
     setSelectedDate(startOfToday());
@@ -216,44 +209,22 @@ export default function ReceptionPage() {
 
   async function handleInvestorSubmit() {
     if (!db || !investorName || !investorAmount) return;
-    
     const newNumber = (investors?.length || 0) + 1;
-    const investorData = {
+    await addDoc(collection(db, "investors"), {
       realName: investorName,
       investorNumber: newNumber,
       amount: parseInt(investorAmount),
       status: investorStatus,
       createdAt: serverTimestamp(),
-    };
-
-    try {
-      await addDoc(collection(db, "investors"), investorData);
-      toast({ title: "Inversionista agregado", description: "El aporte ha sido registrado." });
-      setInvestorName("");
-      setInvestorAmount("");
-      setInvestorStatus("confirmed");
-      setIsInvestorDialogOpen(false);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
-    }
+    });
+    toast({ title: "Inversionista agregado" });
+    setIsInvestorDialogOpen(false);
+    setInvestorName("");
+    setInvestorAmount("");
   }
 
-  const handleEditInvestorSubmit = () => {
-    if (!db || !editingInvestor || !editInvName || !editInvAmount) return;
-    const docRef = doc(db, "investors", editingInvestor.id);
-    updateDocumentNonBlocking(docRef, {
-      realName: editInvName,
-      amount: parseInt(editInvAmount),
-      status: editInvStatus,
-      updatedAt: serverTimestamp()
-    });
-    toast({ title: "Registro actualizado" });
-    setIsEditInvestorDialogOpen(true);
-    setEditingInvestor(null);
-  };
-
   const handleAdminMarkAsSigned = (lead: any) => {
-    if (!db || !confirm("¿Marcar este contrato como 'Procesado'? (Recuerda que debes firmarlo externamente)")) return;
+    if (!db || !confirm("¿Marcar este contrato como 'Procesado'? (Recuerda que debes haberlo firmado en tu plataforma externa)")) return;
     const docRef = doc(db, "contract_leads", lead.id);
     updateDocumentNonBlocking(docRef, {
       status: "fully_signed",
@@ -264,7 +235,7 @@ export default function ReceptionPage() {
   };
 
   const handleDeleteContractLead = (id: string) => {
-    if (!db || !confirm("¿Eliminar este contrato? Esta acción no se puede deshacer.")) return;
+    if (!db || !confirm("¿Eliminar este registro de contrato? Esta acción es permanente.")) return;
     deleteDocumentNonBlocking(doc(db, "contract_leads", id));
     toast({ title: "Contrato eliminado" });
   };
@@ -324,13 +295,13 @@ export default function ReceptionPage() {
     addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido, transferido, dado en garantía a terceros, ni sujeto a cualquier gravamen, sin autorización escrita de la mayoría de dichos inversionistas. En caso de cese de operaciones de ORALAB, liquidación de sus activos, o venta del equipo señalado, el producto de dicha venta o liquidación se destinará prioritariamente al pago de los saldos pendientes.", 10, false, "justify");
 
     addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
-    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 8% de participación económica total a quienes aporten $10.800.000 requeridos. La participación económica individual para este aporte se calcula en un ${lead.equity.toFixed(4)}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, false, "justify");
+    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos. La participación económica individual para este aporte se calcula en un ${lead.equity.toFixed(4)}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, false, "justify");
 
     addText("SÉPTIMA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
     addText("La participación económica otorgada: a) No constituye acciones de TRESNA SpA. b) No otorga calidad de socio ni accionista. c) No concede derecho a voto. d) No concede facultades de administración. e) Corresponde únicamente a un derecho económico asociado a ORALAB.", 10, false, "justify");
 
     addText("OCTAVA: DISTRIBUCIÓN DE UTILIDADES", 10, true);
-    addText("Una vez finalizado el período de devolución, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB. Se entenderá por “utilidades distribuibles” los ingresos percibidos atribuibles a la operación del laboratorio, deducidos los costos directos e indirectos. No se podrán imputar gastos corporativos generales de TRESNA SpA ajenos al laboratorio.", 10, false, "justify");
+    addText("Una vez finalizado el período de devolución, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB. Se entenderá por “utilidades distribuibles” los ingresos percibidos directamente atribuibles a la operación del laboratorio, deducidos los costos directos e indirectos. No se podrán imputar gastos corporativos generales de TRESNA SpA ajenos al laboratorio.", 10, false, "justify");
 
     if (y > 250) { doc.addPage(); y = 20; }
 
@@ -352,7 +323,7 @@ export default function ReceptionPage() {
     y += 15;
     const signatureY = y + 25;
     
-    // FIRMA ADMIN (Izquierda - Vacía para firma externa)
+    // FIRMA ADMIN (Izquierda - Vacía para firma externa FEA)
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, signatureY, margin + 75, signatureY);
     doc.setFontSize(8);
@@ -360,7 +331,7 @@ export default function ReceptionPage() {
     doc.text("Representante Legal TRESNA SpA", margin, signatureY + 9);
     doc.text("RUT 12.901.912-3", margin, signatureY + 13);
 
-    // FIRMA INVERSIONISTA (Derecha - Sello de Validación)
+    // FIRMA INVERSIONISTA (Derecha - Sello de Validación FES)
     const invX = pageWidth - margin - 75;
     doc.setFillColor(240, 247, 255);
     doc.roundedRect(invX, signatureY - 22, 75, 20, 2, 2, 'F');
@@ -538,7 +509,7 @@ export default function ReceptionPage() {
                   <h3 className="text-3xl font-black italic">${totalInvestment.toLocaleString('es-CL')}</h3>
                   <div className="mt-4 space-y-2">
                     <div className="flex justify-between text-[10px] font-bold">
-                      <span>Progreso Meta</span>
+                      <span>Progreso Meta ($13.5M)</span>
                       <span>{progressPercentage.toFixed(1)}%</span>
                     </div>
                     <Progress value={progressPercentage} className="h-1.5 bg-white/20" />
@@ -601,7 +572,12 @@ export default function ReceptionPage() {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right pr-8">
-                               <Button variant="ghost" size="icon" className="text-red-300 hover:text-red-600 rounded-full h-8 w-8" onClick={() => deleteDocumentNonBlocking(doc(db!, "investors", inv.id))}>
+                               <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="text-red-300 hover:text-red-600 rounded-full h-8 w-8" 
+                                  onClick={() => deleteDocumentNonBlocking(doc(db!, "investors", inv.id))}
+                               >
                                   <Trash2 className="h-4 w-4" />
                                </Button>
                             </TableCell>
