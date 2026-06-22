@@ -367,7 +367,7 @@ export default function InvestorsDashboardPage() {
                         dataKey="value"
                       >
                         {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color.replace('bg-[', '').replace(']', '')} />
+                          <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
                       <ChartTooltip formatter={(v: number) => `$${v.toLocaleString('es-CL')}`} />

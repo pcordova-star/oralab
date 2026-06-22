@@ -13,12 +13,10 @@ service cloud.firestore {
       allow create: if true;
       
       // 2. SEPARACIÓN FÍSICA DE PERMISOS DE LISTADO
-      // Esto evita que Firestore intente validar filtros de query al Administrador
       // Puerta A: El administrador puede listar TODO sin filtros.
       allow list: if isAdmin();
       
       // Puerta B: El público puede listar SOLO si aplica el filtro de 'fully_signed'.
-      // Usamos una validación de query estricta para el dashboard público.
       allow list: if request.query.status == 'fully_signed';
       
       // Lectura individual permitida para validación (ej. descarga de PDF)
