@@ -101,7 +101,8 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
-const OPERATIONS_START_DATE = new Date(2025, 6, 15);
+// CONFIGURACIÓN: Inicio de operaciones Agosto 2026
+const OPERATIONS_START_DATE = new Date(2026, 7, 1);
 
 export default function BookingPage() {
   const [step, setStep] = useState(1);
@@ -567,7 +568,7 @@ export default function BookingPage() {
                   <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                     <div className="flex items-center gap-2 p-4 bg-amber-50 border border-amber-200 rounded-xl mb-4">
                        <AlertCircle className="h-5 w-5 text-amber-600" />
-                       <p className="text-xs font-bold text-amber-800">Agendas disponibles desde el 15 de Julio de 2025 (Inicio de Operaciones).</p>
+                       <p className="text-xs font-bold text-amber-800">Agendas disponibles desde el 1 de Agosto de 2026 (Inicio de Operaciones).</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FormField
