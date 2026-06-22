@@ -48,7 +48,8 @@ import {
   ArrowUpRight,
   Users,
   LayoutDashboard,
-  MonitorPlay
+  MonitorPlay,
+  RotateCcw
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,9 +69,6 @@ import { jsPDF } from "jspdf";
 import { toast } from "@/hooks/use-toast";
 
 const COLORS = ['#1c68b6', '#19cccc', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-const PENDING_COLOR = '#94a3b8';
-const REMAINING_COLOR = '#f1f5f9'; 
-
 const FUNDING_GOAL = 13500000;
 const EQUITY_TOTAL = 10; 
 
@@ -120,12 +118,12 @@ const MILESTONES = [
 ];
 
 const MOCK_OPS_DATA = [
-  { day: 'Lun', exams: 8, income: 480000 },
-  { day: 'Mar', exams: 12, income: 720000 },
-  { day: 'Mie', exams: 10, income: 600000 },
-  { day: 'Jue', exams: 15, income: 900000 },
-  { day: 'Vie', exams: 14, income: 840000 },
-  { day: 'Sab', exams: 6, income: 360000 },
+  { day: 'Lun', exams: 8 },
+  { day: 'Mar', exams: 12 },
+  { day: 'Mie', exams: 10 },
+  { day: 'Jue', exams: 15 },
+  { day: 'Vie', exams: 14 },
+  { day: 'Sab', exams: 6 },
 ];
 
 const MOCK_PATIENTS_TODAY = [
@@ -338,6 +336,24 @@ export default function InvestorsDashboardPage() {
     addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
     addText(`El Inversionista adquirirá una participación económica permanente sobre ORALAB del ${calculateEquity(invAmount || 0).toFixed(4)}% sobre las utilidades, calculada sobre la meta total de $13.500.000 para un 10% total de la ronda.`, 10, false, "justify");
 
+    addText("SÉPTIMA: INFORMACIÓN Y TRANSPARENCIA", 10, true);
+    addText("La Empresa se compromete a mantener un sistema de información digital (Dashboard) donde el Inversionista podrá consultar en tiempo real el flujo de pacientes y el rendimiento operacional de la unidad Oralab.", 10, false, "justify");
+
+    addText("OCTAVA: PLAZOS DE PAGO", 10, true);
+    addText("El pago de las utilidades correspondientes a la participación económica se realizará de forma trimestral, dentro de los primeros 15 días del mes siguiente al cierre de cada trimestre calendario.", 10, false, "justify");
+
+    addText("NOVENA: NATURALEZA DEL ACUERDO", 10, true);
+    addText("El presente instrumento constituye un contrato de financiamiento con participación económica sobre los flujos de una unidad de negocio específica, y no otorga al Inversionista la calidad de socio accionista de TRESNA SpA ni responsabilidad sobre sus deudas legales.", 10, false, "justify");
+
+    addText("DÉCIMA: CONFIDENCIALIDAD", 10, true);
+    addText("Las partes se obligan a mantener estricta reserva sobre los términos de este contrato y sobre la información técnica y comercial de Oralab a la que tengan acceso.", 10, false, "justify");
+
+    addText("UNDÉCIMA: DOMICILIO Y COMPETENCIA", 10, true);
+    addText("Para todos los efectos legales, las partes fijan su domicilio en la ciudad y comuna de Santiago y se someten a la jurisdicción de sus Tribunales Ordinarios de Justicia.", 10, false, "justify");
+
+    addText("DUODÉCIMA: PERSONERÍA", 10, true);
+    addText("La personería de don PAULO CÓRDOVA para representar a TRESNA SpA consta en la escritura pública de constitución de la sociedad.", 10, false, "justify");
+
     addText("DÉCIMO TERCERA: DERECHO DE PREFERENCIA", 10, true);
     addText("En el evento de que TRESNA SpA decida la apertura de nuevas sucursales de la unidad de negocio ORALAB que requieran financiamiento externo, o se acuerden nuevas rondas de levantamiento de capital, los inversionistas suscritos a la presente ronda Family & Friends 01 tendrán un derecho preferente para participar en dichas instancias, en igualdad de condiciones comerciales que se ofrezcan a terceros.", 10, false, "justify");
 
@@ -539,7 +555,9 @@ export default function InvestorsDashboardPage() {
                    <div className="flex items-center justify-between mb-10">
                       <h3 className="font-black text-primary italic flex items-center gap-2"><TrendingUp className="h-5 w-5 text-secondary" /> Flujo Diario de Exámenes</h3>
                       <Select defaultValue="week">
-                         <SelectTrigger className="w-[140px] h-8 text-[10px] font-bold rounded-full"><SelectValue /></SelectTrigger>
+                         <SelectTrigger className="w-[140px] h-8 text-[10px] font-bold rounded-full">
+                           <SelectValue placeholder="Periodo" />
+                         </SelectTrigger>
                          <SelectContent>
                             <SelectItem value="week">Esta Semana</SelectItem>
                             <SelectItem value="month">Mes Pasado</SelectItem>

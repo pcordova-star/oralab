@@ -147,16 +147,6 @@ export default function ReceptionPage() {
     return query(collection(db, "bookings"), where("scheduledDate", "==", dateString));
   }, [db, dateString]);
 
-  const allBookingsQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, "bookings"), where("status", "not-in", ["cancelled"]));
-  }, [db]);
-
-  const leadsQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, "leads"), orderBy("createdAt", "desc"));
-  }, [db]);
-
   const investorsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "investors"), orderBy("investorNumber", "asc"));
@@ -168,8 +158,6 @@ export default function ReceptionPage() {
   }, [db]);
 
   const { data: rawBookings } = useCollection(bookingsQuery);
-  const { data: allBookingsData } = useCollection(allBookingsQuery);
-  const { data: leads } = useCollection(leadsQuery);
   const { data: investors } = useCollection(investorsQuery);
   const { data: contractLeads } = useCollection(contractLeadsQuery);
 
@@ -179,8 +167,7 @@ export default function ReceptionPage() {
 
   const filteredBookings = bookings?.filter(b => 
     b.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.lastNameFather?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    b.lastNameFather?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalInvestment = investors?.reduce((acc, inv) => acc + (inv.amount || 0), 0) || 0;
@@ -222,9 +209,9 @@ export default function ReceptionPage() {
   };
 
   const handleDeleteContractLead = (id: string) => {
-    if (!db || !confirm("¿Eliminar registro?")) return;
+    if (!db || !confirm("¿Eliminar registro del contrato?")) return;
     deleteDocumentNonBlocking(doc(db, "contract_leads", id));
-    toast({ title: "Contrato eliminado" });
+    toast({ title: "Registro eliminado" });
   };
 
   const generateFullPDF = (lead: any) => {
@@ -252,48 +239,67 @@ export default function ReceptionPage() {
     const currentDay = format(new Date(), "d");
     const currentMonth = format(new Date(), "MMMM", { locale: es });
     const amountInWords = numeroALetras(lead.amount);
+    const returnAmount = lead.amount * 0.2;
 
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO Y PARTICIPACIÓN ECONÓMICA", 12, true, "center");
     y += 5;
-    addText(`En Santiago, a ${currentDay} de ${currentMonth} de 2026, comparecen:`, 10, false, "justify");
-    addText("Por una parte, TRESNA SpA, RUT N° 77.023.697-5, representada legalmente por don PAULO CÓRDOVA, RUT N° 12.901.912-3, en adelante \"TRESNA\".", 10, false, "justify");
+    addText(`En Santiago de Chile, a ${currentDay} de ${currentMonth} de 2026, comparecen:`, 10, false, "justify");
+    addText("Por una parte, TRESNA SpA, RUT N° 77.023.697-5, domiciliada en Avenida Apoquindo N° 3990, Oficina 605, comuna de Las Condes, Región Metropolitana, representada legalmente por don PAULO CÓRDOVA, cédula nacional de identidad N° 12.901.912-3, en adelante \"TRESNA\".", 10, false, "justify");
     addText("Y por la otra:", 10, true);
-    addText(`Don(ña) ${lead.name}, RUT N° ${lead.rut}, domiciliado(a) en ${lead.address}, en adelante el \"Inversionista\".`, 10, false, "justify");
+    addText(`Don(ña) ${lead.name}, RUT N° ${lead.rut}, domiciliado(a) en ${lead.address}, email ${lead.email}, en adelante el \"Inversionista\".`, 10, false, "justify");
 
     addText("PRIMERA: ANTECEDENTES", 10, true);
-    addText("ORALAB es una unidad de negocio de TRESNA SpA. La Empresa ha abierto una ronda denominada \"Family & Friends 01\".", 10, false, "justify");
+    addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA. La Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
 
     addText("SEGUNDA: APORTE", 10, true);
     addText(`El Inversionista aporta a TRESNA SpA la suma de $${lead.amount.toLocaleString('es-CL')} (${amountInWords} pesos).`, 10, false, "justify");
 
     addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
-    addText("Los recursos serán utilizados para: a) Compra del analizador Sunvou DA7349. b) Capital de trabajo.", 10, false, "justify");
+    addText("Los recursos serán utilizados para: a) Compra e importación del analizador Sunvou DA7349. b) Capital de trabajo inicial.", 10, false, "justify");
 
-    addText("CUARTA: DEVOLUCIÓN Y RETORNO", 10, true);
-    addText(`La Empresa devolverá el 100% del capital más un retorno del 20%. Se establece un plazo máximo para postergaciones de hasta 12 meses adicionales posteriores a los 12 meses iniciales.`, 10, false, "justify");
+    addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
+    addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${lead.amount.toLocaleString('es-CL')}), y b) un retorno adicional del 20% ($${returnAmount.toLocaleString('es-CL')}). Se establece un plazo máximo para postergaciones de hasta 12 meses adicionales posteriores a los 12 meses mencionados al inicio de este párrafo.`, 10, false, "justify");
 
-    addText("QUINTA: RESGUARDO", 10, true);
-    addText("Mientras existan pagos pendientes, el equipo Sunvou DA7349 no podrá ser vendido sin autorización.", 10, false, "justify");
+    addText("QUINTA: RESGUARDO SOBRE EL EQUIPO", 10, true);
+    addText("Mientras existan pagos pendientes, el equipo Sunvou DA7349 no podrá ser vendido ni transferido sin autorización de los inversionistas.", 10, false, "justify");
 
-    addText("SEXTA: PARTICIPACIÓN", 10, true);
-    addText(`El Inversionista adquiere una participación del ${lead.equity.toFixed(4)}% sobre las utilidades de Oralab.`, 10, false, "justify");
+    addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
+    addText(`El Inversionista adquirirá una participación económica permanente sobre ORALAB del ${lead.equity.toFixed(4)}% sobre las utilidades, calculada sobre la meta total de $13.500.000 para un 10% total de la ronda.`, 10, false, "justify");
+
+    addText("SÉPTIMA: INFORMACIÓN Y TRANSPARENCIA", 10, true);
+    addText("La Empresa se compromete a mantener un sistema de información digital (Dashboard) donde el Inversionista podrá consultar en tiempo real el flujo de pacientes y el rendimiento operacional de la unidad Oralab.", 10, false, "justify");
+
+    addText("OCTAVA: PLAZOS DE PAGO", 10, true);
+    addText("El pago de las utilidades correspondientes a la participación económica se realizará de forma trimestral, dentro de los primeros 15 días del mes siguiente al cierre de cada trimestre calendario.", 10, false, "justify");
+
+    addText("NOVENA: NATURALEZA DEL ACUERDO", 10, true);
+    addText("El presente instrumento constituye un contrato de financiamiento con participación económica sobre los flujos de una unidad de negocio específica, y no otorga al Inversionista la calidad de socio accionista de TRESNA SpA ni responsabilidad sobre sus deudas legales.", 10, false, "justify");
+
+    addText("DÉCIMA: CONFIDENCIALIDAD", 10, true);
+    addText("Las partes se obligan a mantener estricta reserva sobre los términos de este contrato y sobre la información técnica y comercial de Oralab a la que tengan acceso.", 10, false, "justify");
+
+    addText("UNDÉCIMA: DOMICILIO Y COMPETENCIA", 10, true);
+    addText("Para todos los efectos legales, las partes fijan su domicilio en la ciudad y comuna de Santiago y se someten a la jurisdicción de sus Tribunales Ordinarios de Justicia.", 10, false, "justify");
+
+    addText("DUODÉCIMA: PERSONERÍA", 10, true);
+    addText("La personería de don PAULO CÓRDOVA para representar a TRESNA SpA consta en la escritura pública de constitución de la sociedad.", 10, false, "justify");
 
     addText("DÉCIMO TERCERA: DERECHO DE PREFERENCIA", 10, true);
-    addText("En el evento de que TRESNA SpA decida la apertura de nuevas sucursales de la unidad de negocio ORALAB que requieran financiamiento externo, o se acuerden nuevas rondas de levantamiento de capital para la expansión de la misma, los inversionistas suscritos a la presente ronda Family & Friends 01 tendrán un derecho preferente para participar en dichas instancias, en igualdad de condiciones comerciales que se ofrezcan a terceros.", 10, false, "justify");
+    addText("En el evento de que TRESNA SpA decida la apertura de nuevas sucursales de la unidad de negocio ORALAB que requieran financiamiento externo, o se acuerden nuevas rondas de levantamiento de capital, los inversionistas suscritos a la presente ronda Family & Friends 01 tendrán un derecho preferente para participar en dichas instancias, en igualdad de condiciones comerciales que se ofrezcan a terceros.", 10, false, "justify");
 
     y += 10;
-    addText("Firmado en dos ejemplares.", 10, false);
+    addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
     
     y += 15;
     const signatureY = y + 25;
     
-    // Admin Side (Left) - Empty for FEA
+    // Paulo Córdova (Admin) - Espacio Vacío para FEA
     doc.line(margin, signatureY, margin + 75, signatureY);
     doc.setFontSize(8);
     doc.text("PAULO CÓRDOVA", margin, signatureY + 5);
     doc.text("Representante Legal TRESNA SpA", margin, signatureY + 9);
 
-    // Investor Side (Right) - Sello FES Digital
+    // Inversionista (Sello FES)
     const invX = pageWidth - margin - 75;
     doc.setFillColor(240, 247, 255);
     doc.roundedRect(invX, signatureY - 22, 75, 20, 2, 2, 'F');
@@ -301,16 +307,17 @@ export default function ReceptionPage() {
     doc.setFontSize(7);
     doc.text("FIRMADO ELECTRÓNICAMENTE", invX + 37.5, signatureY - 17, { align: "center" });
     doc.setFontSize(6);
-    doc.text(`Identidad: ${lead.name.toUpperCase()}`, invX + 5, signatureY - 13);
-    doc.text(`Timestamp: ${format(new Date(lead.investorSignedAt), "dd/MM/yyyy HH:mm:ss")}`, invX + 5, signatureY - 10);
-    doc.text(`IP: ${lead.metadata?.ip || 'Validada'}`, invX + 5, signatureY - 7);
+    doc.text(`Nombre: ${lead.name.toUpperCase()}`, invX + 5, signatureY - 13);
+    doc.text(`RUT: ${lead.rut}`, invX + 5, signatureY - 10);
+    doc.text(`Fecha: ${format(new Date(lead.investorSignedAt), "dd/MM/yyyy HH:mm:ss")}`, invX + 5, signatureY - 7);
+    doc.text(`IP: ${lead.metadata?.ip || 'Validada'}`, invX + 5, signatureY - 4);
 
     doc.setTextColor(0, 0, 0);
     doc.line(pageWidth - margin - 75, signatureY, pageWidth - margin, signatureY);
     doc.text("INVERSIONISTA", pageWidth - margin, signatureY + 5, { align: "right" });
     doc.text(lead.name.toUpperCase(), pageWidth - margin, signatureY + 9, { align: "right" });
 
-    doc.save(`Contrato_Para_Firmar_Oralab_${lead.name.replace(/\s+/g, '_')}.pdf`);
+    doc.save(`Contrato_Oralab_Final_${lead.name.replace(/\s+/g, '_')}.pdf`);
   };
 
   if (isUserLoading || !user || !isMounted) return null;
@@ -409,8 +416,8 @@ export default function ReceptionPage() {
                           </TableCell>
                           <TableCell className="font-black text-secondary">${lead.amount.toLocaleString('es-CL')}</TableCell>
                           <TableCell className="text-right flex justify-end gap-2">
-                             <Button onClick={() => generateFullPDF(lead)} variant="outline" size="sm" className="rounded-full h-8"><Download className="h-3 w-3 mr-1" /> Descargar</Button>
-                             {lead.status !== 'fully_signed' && <Button onClick={() => handleAdminMarkAsSigned(lead)} className="bg-primary h-8 text-[10px] rounded-full">Procesar</Button>}
+                             <Button onClick={() => generateFullPDF(lead)} variant="outline" size="sm" className="rounded-full h-8"><Download className="h-3 w-3 mr-1" /> Descargar para Firma</Button>
+                             {lead.status !== 'fully_signed' && <Button onClick={() => handleAdminMarkAsSigned(lead)} className="bg-primary h-8 text-[10px] rounded-full">Marcar Procesado</Button>}
                              <Button variant="ghost" size="icon" onClick={() => handleDeleteContractLead(lead.id)}><Trash2 className="h-4 w-4 text-red-300" /></Button>
                           </TableCell>
                         </TableRow>
