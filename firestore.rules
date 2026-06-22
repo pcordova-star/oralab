@@ -2,30 +2,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Función de Administrador robusta
+    // Función de Administrador directa
     function isAdmin() {
-      return request.auth != null && 
-             request.auth.token != null && 
-             request.auth.token.email == 'admin@oralab.cl';
+      return request.auth != null && request.auth.token.email == 'admin@oralab.cl';
     }
 
-    // Reglas para Contratos de Inversión
+    // Reglas para Contratos de Inversión (PÚBLICA - Sin filtros de servidor)
     match /contract_leads/{leadId} {
-      // 1. Creación pública permitida
       allow create: if true;
-      
-      // 2. SEPARACIÓN DE LISTADO (Solución al error de permisos)
-      // Puerta A: El administrador puede listar TODO sin filtros.
-      allow list: if isAdmin();
-      
-      // Puerta B: El público puede listar solo si aplica el filtro exacto.
-      // Usamos una condición que no interfiera con la query global del Admin.
-      allow list: if request.query.status == 'fully_signed';
-      
-      // Lectura individual permitida para validación (ej. descarga de PDF)
-      allow get: if true; 
-      
-      // Escritura solo para el Administrador
+      allow read, list: if true; 
       allow write: if isAdmin();
     }
 
@@ -35,24 +20,24 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    // Reglas para Consultas Comerciales desde la Web
+    // Reglas para Consultas Comerciales
     match /leads/{leadId} {
       allow create: if true;
       allow read, write: if isAdmin();
     }
 
-    // Reglas para Cotizaciones CRM
+    // Reglas para Cotizaciones (CRM)
     match /quotations/{quotationId} {
       allow read, write: if isAdmin();
     }
 
-    // Reglas para el Registro histórico de Inversionistas
+    // Reglas para Registro de Inversionistas
     match /investors/{investorId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Regla de respaldo para cualquier otra ruta
+    // Regla de respaldo
     match /{document=**} {
       allow read, write: if isAdmin();
     }
