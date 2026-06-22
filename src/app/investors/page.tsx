@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, serverTimestamp, where } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -106,6 +106,12 @@ const MILESTONES = [
   }
 ];
 
+const chartData = MILESTONES.map(m => ({
+  name: m.title,
+  value: m.target,
+  color: m.id === 'm1' ? '#1c68b6' : m.id === 'm2' ? '#19cccc' : '#10b981'
+}));
+
 function numeroALetras(num: number): string {
   const UNIDADES = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
   const DECENAS = ['', 'diez', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
@@ -172,6 +178,7 @@ export default function InvestorsDashboardPage() {
   const db = useFirestore();
   const isMobile = useIsMobile();
 
+  // Form State
   const [invName, setInvName] = useState("");
   const [invRut, setInvRut] = useState("");
   const [invEmail, setInvEmail] = useState("");
@@ -184,6 +191,23 @@ export default function InvestorsDashboardPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch confirmed partners
+  const confirmedPartnersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(
+      collection(db, "contract_leads"),
+      where("status", "==", "fully_signed"),
+      orderBy("createdAt", "desc")
+    );
+  }, [db]);
+
+  const { data: partners, isLoading: loadingPartners } = useCollection(confirmedPartnersQuery);
+
+  // Dynamic calculations
+  const totalRaised = partners?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+  const progressValue = (totalRaised / FUNDING_GOAL) * 100;
+  const partnersCount = partners?.length || 0;
 
   const calculateEquity = (amount: number) => {
     return (amount / FUNDING_GOAL) * EQUITY_TOTAL;
@@ -347,9 +371,143 @@ export default function InvestorsDashboardPage() {
         <div className="text-center mb-12 space-y-4">
           <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold uppercase tracking-widest">RONDA FAMILY & FRIENDS 01</Badge>
           <h1 className="text-3xl md:text-6xl font-black text-primary italic leading-tight">Estructura de Capital FF01</h1>
+          <p className="text-lg text-muted-foreground font-medium max-w-2xl mx-auto">Únete a la primera clínica especializada en SIBO de Chile como socio estratégico de Tresna SpA.</p>
         </div>
 
+        {/* Sección de Resumen y Progreso */}
+        <section className="mb-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Card className="lg:col-span-2 bg-white shadow-xl rounded-[2.5rem] border-primary/10 overflow-hidden">
+            <CardHeader className="bg-primary/5 pb-8">
+              <div className="flex justify-between items-center mb-4">
+                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                  <Target className="h-6 w-6 text-secondary" /> Estado de Recaudación
+                </CardTitle>
+                <Badge className="bg-secondary font-black uppercase text-[10px]">Meta: $13.5M</Badge>
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Fondo Real en Banco</p>
+                    <p className="text-4xl md:text-5xl font-black text-primary italic">${totalRaised.toLocaleString('es-CL')}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-black text-secondary">{progressValue.toFixed(1)}%</p>
+                  </div>
+                </div>
+                <Progress value={progressValue} className="h-4 rounded-full bg-muted border border-primary/5" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div className="h-[250px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip formatter={(v: number) => `$${v.toLocaleString('es-CL')}`} />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="space-y-4">
+                  <h4 className="font-black text-primary uppercase text-xs tracking-widest mb-4">Asignación de Fondos</h4>
+                  {MILESTONES.map((m) => (
+                    <div key={m.id} className="flex items-center gap-3">
+                      <div className={cn("w-3 h-3 rounded-full", m.color)} />
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-muted-foreground">{m.title}</span>
+                          <span className="text-xs font-black text-primary">{m.percentage}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-6">
+            <Card className="bg-secondary text-white shadow-xl rounded-[2.5rem] border-none p-6 relative overflow-hidden">
+               <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+               <Users className="h-10 w-10 mb-4 opacity-50" />
+               <p className="text-xs font-bold uppercase tracking-widest opacity-80">Socios Cerrados</p>
+               <h3 className="text-5xl font-black italic">{partnersCount}</h3>
+               <p className="text-sm mt-2 font-medium opacity-80 italic">De un máximo de 10 socios en esta ronda.</p>
+            </Card>
+
+            <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/10 p-6">
+               <h4 className="font-black text-primary uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
+                 <CheckCircle2 className="h-4 w-4 text-secondary" /> Nuestros Socios Confirmados
+               </h4>
+               <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                  {loadingPartners ? (
+                    <p className="text-xs text-muted-foreground italic">Cargando socios...</p>
+                  ) : partners?.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic">Esperando al primer socio estratégico.</p>
+                  ) : (
+                    partners?.map((p, i) => (
+                      <div key={p.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl border border-primary/5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">S{partnersCount - i}</div>
+                          <span className="text-xs font-black text-primary">{p.name.split(' ')[0]} ***</span>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] font-black border-secondary/20 text-secondary">${p.amount?.toLocaleString('es-CL')}</Badge>
+                      </div>
+                    ))
+                  )}
+               </div>
+            </Card>
+          </div>
+        </section>
+
+        {/* Hitos Detallados */}
+        <section className="mb-24">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-4xl font-black text-primary italic">Plan de Inversión</h2>
+            <div className="h-1 w-20 bg-secondary mx-auto mt-2 rounded-full" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {MILESTONES.map((m) => (
+              <Card key={m.id} className="bg-white shadow-lg rounded-[2.5rem] border-primary/5 hover:border-secondary/30 transition-all group">
+                <CardHeader className="text-center p-8">
+                  <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-inner text-white", m.color)}>
+                    {m.icon}
+                  </div>
+                  <CardTitle className="text-xl font-black text-primary italic">{m.title}</CardTitle>
+                  <p className={cn("text-2xl font-black mt-2", m.textColor)}>${m.target.toLocaleString('es-CL')}</p>
+                </CardHeader>
+                <CardContent className="px-8 pb-8">
+                  <ul className="space-y-3">
+                    {m.items.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground font-medium italic">
+                        <CheckCircle2 className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
         <section id="formalize" className="mb-24 scroll-mt-20">
+          <div className="text-center mb-12 space-y-4">
+            <h2 className="text-2xl md:text-4xl font-black text-primary italic">Formaliza tu Aporte</h2>
+            <p className="text-muted-foreground font-medium">Completa tus datos para generar el contrato de participación económica.</p>
+          </div>
           <Card className="bg-white shadow-2xl rounded-[2.5rem] border-primary/10 overflow-hidden">
             <div className="p-8 lg:p-12 space-y-10">
               <div className="grid gap-8">
