@@ -1,10 +1,48 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REGLAS ABIERTAS PARA DESARROLLO Y DEPURACIÓN
-    // Permite lectura y escritura a cualquier usuario sin restricciones.
+    
+    // Función de Administrador infalible y directa
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'admin@oralab.cl';
+    }
+
+    // Reglas para Contratos de Inversión
+    match /contract_leads/{leadId} {
+      allow create: if true;
+      
+      // SEPARACIÓN DE PERMISOS DE LISTADO
+      // Puerta A: Acceso total para el administrador (sin filtros obligatorios)
+      allow list: if isAdmin();
+      
+      // Puerta B: Acceso público filtrado (obligatorio filtrar por status en el código)
+      allow list: if request.query.status == 'fully_signed';
+      
+      allow get: if true; 
+      allow write: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      allow create: if true;
+      allow read, write: if isAdmin();
+    }
+
+    match /leads/{leadId} {
+      allow create: if true;
+      allow read, write: if isAdmin();
+    }
+
+    match /quotations/{quotationId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /investors/{investorId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if isAdmin();
     }
   }
 }

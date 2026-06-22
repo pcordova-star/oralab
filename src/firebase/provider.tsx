@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -58,11 +57,16 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   firestore,
   auth,
 }) => {
+  const [isMounted, setIsMounted] = useState(false);
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
     user: null,
     isUserLoading: true,
     userError: null,
   });
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!auth) {
@@ -94,6 +98,21 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       userError: userAuthState.userError,
     };
   }, [firebaseApp, firestore, auth, userAuthState]);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  if (userAuthState.isUserLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-muted/30">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground font-bold italic">Sincronizando con Oralab...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <FirebaseContext.Provider value={contextValue}>

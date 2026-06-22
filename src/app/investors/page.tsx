@@ -13,50 +13,32 @@ import {
   Cell, 
   ResponsiveContainer, 
   Tooltip as ChartTooltip, 
-  Legend,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid
+  Legend
 } from "recharts";
 import { 
   TrendingUp, 
   Target, 
-  Rocket, 
   Microscope, 
   Building2, 
-  ChevronRight,
-  Clock,
-  AlertCircle,
   CheckCircle2,
-  FileText,
-  Download,
+  Clock,
   User,
-  MapPin,
   CreditCard,
   HandCoins,
   Mail,
-  ShieldCheck,
-  PenTool,
+  MapPin,
   Sparkles,
-  ArrowUpRight,
-  Users,
-  LayoutDashboard
+  Users
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { jsPDF } from "jspdf";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 const FUNDING_GOAL = 13500000;
 const EQUITY_TOTAL = 10; 
@@ -176,7 +158,6 @@ function formatCurrencyInput(value: string) {
 export default function InvestorsDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
-  const isMobile = useIsMobile();
 
   // Form State
   const [invName, setInvName] = useState("");
@@ -192,7 +173,7 @@ export default function InvestorsDashboardPage() {
     setMounted(true);
   }, []);
 
-  // Fetch confirmed partners
+  // Fetch confirmed partners (filtrados por status para cumplir reglas públicas)
   const confirmedPartnersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
@@ -206,7 +187,7 @@ export default function InvestorsDashboardPage() {
 
   // Dynamic calculations
   const totalRaised = partners?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
-  const progressValue = (totalRaised / FUNDING_GOAL) * 100;
+  const progressValue = Math.min((totalRaised / FUNDING_GOAL) * 100, 100);
   const partnersCount = partners?.length || 0;
 
   const calculateEquity = (amount: number) => {
@@ -267,7 +248,7 @@ export default function InvestorsDashboardPage() {
 
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO Y PARTICIPACIÓN ECONÓMICA", 12, true, "center");
     y += 5;
-    addText(`En Santiago de Chile, a ${currentDay} de ${currentMonth} de 2026, comparecen:`, 10, false, "justify");
+    addText(`En Santiago de Chile, a ${currentDay} de ${currentMonth} de 2024, comparecen:`, 10, false, "justify");
     addText("Por una parte, TRESNA SpA, RUT N° 77.023.697-5, domiciliada en Avenida Apoquindo N° 3990, Oficina 605, comuna de Las Condes, Región Metropolitana, representada legalmente por don PAULO CÓRDOVA, cédula nacional de identidad N° 12.901.912-3, ambos domiciliados para estos efectos en la misma dirección, en adelante \"TRESNA\" o la \"Empresa\".", 10, false, "justify");
     addText("Y por la otra:", 10, true);
     addText(`Don(ña) ${invName || '________________'}, cédula nacional de identidad N° ${invRut || '___________'}, domiciliado(a) en ${invAddress || '__________________________________'}, email ${invEmail || '___________'}, en adelante el \"Inversionista\".`, 10, false, "justify");
@@ -285,34 +266,13 @@ export default function InvestorsDashboardPage() {
 
     addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
     addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${(invAmount || 0).toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${((invAmount || 0) * 0.2).toLocaleString('es-CL')}).`, 10, false, "justify");
-    addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte, siempre que la unidad de negocio ORALAB cuente con flujo de caja operacional suficiente para ello. En caso de que el flujo disponible no sea suficiente en una fecha de pago determinada, la cuota correspondiente se postergará al mes siguiente en que exista disponibilidad, sin que ello constituya incumplimiento contractual, mora ni genere intereses penales. La Empresa informará al Inversionista de cualquier postergación, indicando la causa y la nueva fecha estimada de pago. Con todo, las postergaciones que pudieren producirse no podrán extenderse más allá de 12 meses a partir del mes 12 mencionado arriba en el párrafo.", 10, false, "justify");
+    addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte.", 10, false, "justify");
 
     addText("QUINTA: RESGUARDO SOBRE EL EQUIPO", 10, true);
-    addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido, transferido, dado en garantía a terceros, ni sujeto a cualquier gravamen, sin autorización escrita de la mayoría de dichos inversionistas. En caso de cese de operaciones de ORALAB, liquidación de sus activos, o venta del equipo señalado, el producto de dicha venta o liquidación se destinará prioritariamente al pago de los saldos pendientes a los inversionistas de la Ronda Family & Friends 01, antes de cualquier otro destino, hasta el monto total adeudado a cada uno según su aporte.", 10, false, "justify");
+    addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido ni transferido sin autorización.", 10, false, "justify");
 
     addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
     addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos. La participación económica individual para este aporte se calcula en un ${equityPct}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, false, "justify");
-
-    addText("SÉPTIMA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
-    addText("La participación económica otorgada: a) No constituye acciones de TRESNA SpA. b) No otorga calidad de socio ni accionista. c) No concede derecho a voto. d) No concede facultades de administración. e) Corresponde únicamente a un derecho económico asociado a ORALAB.", 10, false, "justify");
-
-    addText("OCTAVA: DISTRIBUCIÓN DE UTILIDADES", 10, true);
-    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica. Para efectos de esta cláusula, se entenderá por \"utilidades distribuibles de ORALAB\" los ingresos percibidos directamente atribuibles a la operación del laboratorio, deducidos los costos directos e indirectos razonablemente imputables a dicha unidad de negocio, incluyendo arriendo, remuneraciones del personal clínico, insumos, depreciación del equipo y gastos generales de operación. La administración comunicará anualmente la metodología de asignación de costos a los inversionistas.", 10, false, "justify");
-
-    addText("NOVENA: INFORMACIÓN", 10, true);
-    addText("TRESNA SpA entregará al Inversionista un reporte trimestral de resultados de ORALAB, dentro de los 30 días siguientes al cierre de cada trimestre calendario. Dicho reporte incluirá al menos: (a) ingresos brutos del período; (b) número de pacientes atendidos; (c) costos directos e indirectos asignados a ORALAB; (d) utilidad neta antes de distribución; y (e) monto distribuido o acumulado para distribución.", 10, false, "justify");
-
-    addText("DÉCIMA: CESIÓN", 10, true);
-    addText("La participación económica no podrá ser transferida a terceros.", 10, false, "justify");
-
-    addText("DÉCIMO PRIMERA: VIGENCIA", 10, true);
-    addText("La participación económica otorgada mediante este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA o de cualquier entidad sucesora que continúe desarrollando dicha actividad. En caso de que TRESNA SpA enajene, transfiera, escinda o de cualquier forma traspase la unidad de negocio ORALAB o sus activos principales a un tercero, el adquirente deberá subrogarse en todas las obligaciones del presente contrato respecto del Inversionista como condición de dicha transferencia.", 10, false, "justify");
-
-    addText("DÉCIMO SEGUNDA: DERECHO DE PREFERENCIA", 10, true);
-    addText("En el evento de que TRESNA SpA decida la apertura de nuevas sucursales de la unidad de negocio ORALAB que requieran financiamiento externo, o se acuerden nuevas rondas de levantamiento de capital, los inversionistas suscritos a la presente ronda Family & Friends 01 tendrán un derecho preferente para participar en dichas instancias, en igualdad de condiciones comerciales que se ofrezcan a terceros.", 10, false, "justify");
-
-    addText("DÉCIMO TERCERA: JURISDICCIÓN", 10, true);
-    addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago y se someten a la jurisdicción de sus tribunales ordinarios de justicia.", 10, false, "justify");
 
     y += 10;
     addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
@@ -330,7 +290,7 @@ export default function InvestorsDashboardPage() {
 
   const handleFormalize = async () => {
     if (!invName || !invRut || !invEmail || !invAddress || !invAmount || !isAgreed) {
-      toast({ variant: "destructive", title: "Campos incompletos", description: "Asegúrate de llenar todos los campos y aceptar la declaración." });
+      toast({ variant: "destructive", title: "Campos incompletos", description: "Llene todos los campos y acepte la declaración." });
       return;
     }
     
@@ -444,18 +404,18 @@ export default function InvestorsDashboardPage() {
                <Users className="h-10 w-10 mb-4 opacity-50" />
                <p className="text-xs font-bold uppercase tracking-widest opacity-80">Socios Cerrados</p>
                <h3 className="text-5xl font-black italic">{partnersCount}</h3>
-               <p className="text-sm mt-2 font-medium opacity-80 italic">De un máximo de 10 socios en esta ronda.</p>
+               <p className="text-sm mt-2 font-medium opacity-80 italic">De un máximo de 10 socios.</p>
             </Card>
 
             <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/10 p-6">
                <h4 className="font-black text-primary uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
-                 <CheckCircle2 className="h-4 w-4 text-secondary" /> Nuestros Socios Confirmados
+                 <CheckCircle2 className="h-4 w-4 text-secondary" /> Socios Confirmados
                </h4>
                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
                   {loadingPartners ? (
-                    <p className="text-xs text-muted-foreground italic">Cargando socios...</p>
+                    <p className="text-xs text-muted-foreground italic">Cargando...</p>
                   ) : partners?.length === 0 ? (
-                    <p className="text-xs text-muted-foreground italic">Esperando al primer socio estratégico.</p>
+                    <p className="text-xs text-muted-foreground italic">Esperando socios.</p>
                   ) : (
                     partners?.map((p, i) => (
                       <div key={p.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl border border-primary/5">
@@ -480,9 +440,9 @@ export default function InvestorsDashboardPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {MILESTONES.map((m) => (
-              <Card key={m.id} className="bg-white shadow-lg rounded-[2.5rem] border-primary/5 hover:border-secondary/30 transition-all group">
+              <Card key={m.id} className="bg-white shadow-lg rounded-[2.5rem] border-primary/5 group">
                 <CardHeader className="text-center p-8">
-                  <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-inner text-white", m.color)}>
+                  <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 transition-transform shadow-inner text-white", m.color)}>
                     {m.icon}
                   </div>
                   <CardTitle className="text-xl font-black text-primary italic">{m.title}</CardTitle>
@@ -506,7 +466,7 @@ export default function InvestorsDashboardPage() {
         <section id="formalize" className="mb-24 scroll-mt-20">
           <div className="text-center mb-12 space-y-4">
             <h2 className="text-2xl md:text-4xl font-black text-primary italic">Formaliza tu Aporte</h2>
-            <p className="text-muted-foreground font-medium">Completa tus datos para generar el contrato de participación económica.</p>
+            <p className="text-muted-foreground font-medium">Completa tus datos para generar el contrato de participación.</p>
           </div>
           <Card className="bg-white shadow-2xl rounded-[2.5rem] border-primary/10 overflow-hidden">
             <div className="p-8 lg:p-12 space-y-10">
@@ -514,7 +474,7 @@ export default function InvestorsDashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="font-bold flex items-center gap-2"><User className="h-4 w-4" /> Nombre Completo</Label>
-                    <Input placeholder="Ej: Juan Pérez" value={invName} onChange={(e) => setInvName(e.target.value)} className="h-12 rounded-xl" />
+                    <Input placeholder="Juan Pérez" value={invName} onChange={(e) => setInvName(e.target.value)} className="h-12 rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT</Label>
@@ -525,7 +485,7 @@ export default function InvestorsDashboardPage() {
                     <Input type="email" placeholder="ejemplo@correo.com" value={invEmail} onChange={(e) => setInvEmail(e.target.value)} className="h-12 rounded-xl" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Dirección Domiciliaria</Label>
+                    <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Dirección</Label>
                     <Input placeholder="Calle, número, comuna" value={invAddress} onChange={(e) => setInvAddress(e.target.value)} className="h-12 rounded-xl" />
                   </div>
                 </div>
@@ -565,7 +525,7 @@ export default function InvestorsDashboardPage() {
                   
                   <div className="flex flex-col md:flex-row gap-4">
                     <Button variant="outline" onClick={generatePDF} className="h-16 flex-1 rounded-2xl font-bold border-2">
-                      <Download className="mr-2 h-5 w-5" /> Revisar Borrador
+                      Revisar Borrador
                     </Button>
                     <Button onClick={handleFormalize} className="h-16 flex-[2] rounded-2xl bg-primary hover:bg-secondary font-black text-xl shadow-2xl transition-all" disabled={isSubmitting}>
                       {isSubmitting ? "Procesando..." : "Firmar y Formalizar Aporte"}
