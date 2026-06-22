@@ -11,11 +11,9 @@ service cloud.firestore {
     match /contract_leads/{leadId} {
       allow create: if true;
       
-      // SEPARACIÓN DE PERMISOS DE LISTADO
-      // Puerta A: Acceso total para el administrador (sin filtros obligatorios)
+      // SEPARACIÓN FÍSICA DE PERMISOS DE LISTADO
+      // Esto evita que Firestore intente validar filtros de query al Administrador
       allow list: if isAdmin();
-      
-      // Puerta B: Acceso público filtrado (obligatorio filtrar por status en el código)
       allow list: if request.query.status == 'fully_signed';
       
       allow get: if true; 

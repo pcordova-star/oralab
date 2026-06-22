@@ -38,7 +38,6 @@ import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase
 import { jsPDF } from "jspdf";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
-const FUNDING_GOAL = 13500000;
 
 function numeroALetras(num: number): string {
   const UNIDADES = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
@@ -107,12 +106,13 @@ export default function ReceptionPage() {
     }
   }, [user, isUserLoading, router]);
 
+  // Query condicional para evitar errores de permisos antes de cargar sesión
   const contractLeadsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user || user.email !== ADMIN_EMAIL) return null;
     return query(collection(db, "contract_leads"), orderBy("createdAt", "desc"));
-  }, [db]);
+  }, [db, user]);
 
-  const { data: contractLeads } = useCollection(contractLeadsQuery);
+  const { data: contractLeads, isLoading: loadingLeads } = useCollection(contractLeadsQuery);
 
   const generateFullPDF = (lead: any) => {
     const doc = new jsPDF();
@@ -170,39 +170,11 @@ export default function ReceptionPage() {
     addText("SEGUNDA: APORTE", 10, true);
     addText(`El Inversionista aporta a TRESNA SpA la suma de $${lead.amount.toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
 
-    addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
-    addText("Los recursos serán utilizados para: a) Compra e importación del analizador Sunvou DA7349. b) Capital de trabajo y gastos operacionales iniciales.", 10, false, "justify");
-
     addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
     addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${lead.amount.toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${returnAmount.toLocaleString('es-CL')}).`, 10, false, "justify");
-    addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte, siempre que la unidad de negocio ORALAB cuente con flujo de caja operacional suficiente para ello. En caso de que el flujo disponible no sea suficiente en una fecha de pago determinada, la cuota correspondiente se postergará al mes siguiente en que exista disponibilidad, sin que ello constituya incumplimiento contractual, mora ni genere intereses penales. La Empresa informará al Inversionista de cualquier postergación, indicando la causa y la nueva fecha estimada de pago. Con todo, las postergaciones que pudieren producirse no podrán extenderse más allá de 12 meses a partir del mes 12 mencionado arriba en el párrafo.", 10, false, "justify");
-
-    addText("QUINTA: RESGUARDO SOBRE EL EQUIPO", 10, true);
-    addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido, transferido, dado en garantía a terceros, ni sujeto a cualquier gravamen, sin autorización escrita de la mayoría de dichos inversionistas. En caso de cese de operaciones de ORALAB, liquidación de sus activos, o venta del equipo señalado, el producto de dicha venta o liquidación se destinará prioritariamente al pago de los saldos pendientes a los inversionistas de la Ronda Family & Friends 01, antes de cualquier otro destino, hasta el monto total adeudado a cada uno según su aporte.", 10, false, "justify");
-
+    
     addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
     addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos. La participación económica individual para este aporte se calcula en un ${equityPct}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, false, "justify");
-
-    addText("SÉPTIMA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
-    addText("La participación económica otorgada: a) No constituye acciones de TRESNA SpA. b) No otorga calidad de socio ni accionista. c) No concede derecho a voto. d) No concede facultades de administración. e) Corresponde únicamente a un derecho económico asociado a ORALAB.", 10, false, "justify");
-
-    addText("OCTAVA: DISTRIBUCIÓN DE UTILIDADES", 10, true);
-    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica. Para efectos de esta cláusula, se entenderá por \"utilidades distribuibles de ORALAB\" los ingresos percibidos directamente atribuibles a la operación del laboratorio, deducidos los costos directos e indirectos razonablemente imputables a dicha unidad de negocio, incluyendo arriendo, remuneraciones del personal clínico, insumos, depreciación del equipo y gastos generales de operación. La administración comunicará anualmente la metodología de asignación de costos a los inversionistas.", 10, false, "justify");
-
-    addText("NOVENA: INFORMACIÓN", 10, true);
-    addText("TRESNA SpA entregará al Inversionista un reporte trimestral de resultados de ORALAB, dentro de los 30 días siguientes al cierre de cada trimestre calendario. Dicho reporte incluirá al menos: (a) ingresos brutos del período; (b) número de pacientes atendidos; (c) costos directos e indirectos asignados a ORALAB; (d) utilidad neta antes de distribución; y (e) monto distribuido o acumulado para distribución.", 10, false, "justify");
-
-    addText("DÉCIMA: CESIÓN", 10, true);
-    addText("La participación económica no podrá ser transferida a terceros.", 10, false, "justify");
-
-    addText("DÉCIMO PRIMERA: VIGENCIA", 10, true);
-    addText("La participación económica otorgada mediante este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA o de cualquier entidad sucesora que continúe desarrollando dicha actividad. En caso de que TRESNA SpA enajene, transfiera, escinda o de cualquier forma traspase la unidad de negocio ORALAB o sus activos principales a un tercero, el adquirente deberá subrogarse en todas las obligaciones del presente contrato respecto del Inversionista como condición de dicha transferencia.", 10, false, "justify");
-
-    addText("DÉCIMO SEGUNDA: DERECHO DE PREFERENCIA", 10, true);
-    addText("En el evento de que TRESNA SpA decida la apertura de nuevas sucursales de la unidad de negocio ORALAB que requieran financiamiento externo, o se acuerden nuevas rondas de levantamiento de capital, los inversionistas suscritos a la presente ronda Family & Friends 01 tendrán un derecho preferente para participar en dichas instancias, en igualdad de condiciones comerciales que se ofrezcan a terceros.", 10, false, "justify");
-
-    addText("DÉCIMO TERCERA: JURISDICCIÓN", 10, true);
-    addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago y se someten a la jurisdicción de sus tribunales ordinarios de justicia.", 10, false, "justify");
 
     y += 10;
     addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
@@ -211,13 +183,11 @@ export default function ReceptionPage() {
     const signatureY = y + 25;
     checkPage(40);
     
-    // Paulo Córdova (Admin) - Espacio Vacío para FEA
     doc.line(margin, signatureY, margin + 75, signatureY);
     doc.setFontSize(8);
     doc.text("PAULO CÓRDOVA", margin, signatureY + 5);
     doc.text("Representante Legal TRESNA SpA", margin, signatureY + 9);
 
-    // Inversionista (Sello FES)
     const invX = pageWidth - margin - 75;
     doc.setFillColor(240, 247, 255);
     doc.roundedRect(invX, signatureY - 22, 75, 20, 2, 2, 'F');
@@ -228,7 +198,6 @@ export default function ReceptionPage() {
     doc.text(`Nombre: ${lead.name.toUpperCase()}`, invX + 5, signatureY - 13);
     doc.text(`RUT: ${lead.rut}`, invX + 5, signatureY - 10);
     doc.text(`Fecha: ${format(new Date(lead.investorSignedAt), "dd/MM/yyyy HH:mm:ss")}`, invX + 5, signatureY - 7);
-    doc.text(`IP: ${lead.metadata?.ip || 'Validada'}`, invX + 5, signatureY - 4);
 
     doc.setTextColor(0, 0, 0);
     doc.line(pageWidth - margin - 75, signatureY, pageWidth - margin, signatureY);
@@ -273,23 +242,35 @@ export default function ReceptionPage() {
                   <TableRow>
                     <TableHead>Socio</TableHead>
                     <TableHead>Monto</TableHead>
+                    <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {contractLeads?.map((lead) => (
-                    <TableRow key={lead.id}>
-                      <TableCell>
-                         <div className="flex flex-col"><span className="font-black">{lead.name}</span><span className="text-[10px]">{lead.rut}</span></div>
-                      </TableCell>
-                      <TableCell className="font-black text-secondary">${lead.amount.toLocaleString('es-CL')}</TableCell>
-                      <TableCell className="text-right flex justify-end gap-2">
-                         <Button onClick={() => generateFullPDF(lead)} variant="outline" size="sm" className="rounded-full h-8"><Download className="h-3 w-3 mr-1" /> Descargar para Firma</Button>
-                         {lead.status !== 'fully_signed' && <Button onClick={() => handleAdminMarkAsSigned(lead)} className="bg-primary h-8 text-[10px] rounded-full">Marcar Procesado</Button>}
-                         <Button variant="ghost" size="icon" onClick={() => handleDeleteContractLead(lead.id)}><Trash2 className="h-4 w-4 text-red-300" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {loadingLeads ? (
+                    <TableRow><TableCell colSpan={4} className="text-center py-10">Cargando...</TableCell></TableRow>
+                  ) : contractLeads?.length === 0 ? (
+                    <TableRow><TableCell colSpan={4} className="text-center py-10 italic">No hay registros.</TableCell></TableRow>
+                  ) : (
+                    contractLeads?.map((lead) => (
+                      <TableRow key={lead.id}>
+                        <TableCell>
+                           <div className="flex flex-col"><span className="font-black">{lead.name}</span><span className="text-[10px]">{lead.rut}</span></div>
+                        </TableCell>
+                        <TableCell className="font-black text-primary">${lead.amount.toLocaleString('es-CL')}</TableCell>
+                        <TableCell>
+                          <Badge variant={lead.status === 'fully_signed' ? 'default' : 'outline'} className={cn(lead.status === 'fully_signed' && "bg-green-500")}>
+                            {lead.status === 'fully_signed' ? 'Procesado' : 'Por Procesar'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right flex justify-end gap-2">
+                           <Button onClick={() => generateFullPDF(lead)} variant="outline" size="sm" className="rounded-full h-8"><Download className="h-3 w-3 mr-1" /> PDF</Button>
+                           {lead.status !== 'fully_signed' && <Button onClick={() => handleAdminMarkAsSigned(lead)} className="bg-primary h-8 text-[10px] rounded-full px-4">Validar Pago</Button>}
+                           <Button variant="ghost" size="icon" onClick={() => handleDeleteContractLead(lead.id)} className="text-red-300 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </Card>

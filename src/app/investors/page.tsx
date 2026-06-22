@@ -174,7 +174,7 @@ export default function InvestorsDashboardPage() {
     setMounted(true);
   }, []);
 
-  // Fetch confirmed partners
+  // Fetch confirmed partners - Only fully signed ones
   const confirmedPartnersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
@@ -262,15 +262,9 @@ export default function InvestorsDashboardPage() {
     addText("SEGUNDA: APORTE", 10, true);
     addText(`El Inversionista aporta a TRESNA SpA la suma de $${(invAmount || 0).toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
 
-    addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
-    addText("Los recursos serán utilizados para: a) Compra e importación del analizador Sunvou DA7349. b) Capital de trabajo y gastos operacionales iniciales.", 10, false, "justify");
-
     addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
     addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${(invAmount || 0).toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${((invAmount || 0) * 0.2).toLocaleString('es-CL')}).`, 10, false, "justify");
     addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte.", 10, false, "justify");
-
-    addText("QUINTA: RESGUARDO SOBRE EL EQUIPO", 10, true);
-    addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido ni transferido sin autorización.", 10, false, "justify");
 
     addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
     addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos. La participación económica individual para este aporte se calcula en un ${equityPct}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, false, "justify");
@@ -373,7 +367,7 @@ export default function InvestorsDashboardPage() {
                         dataKey="value"
                       >
                         {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                          <Cell key={`cell-${index}`} fill={entry.color.replace('bg-[', '').replace(']', '')} />
                         ))}
                       </Pie>
                       <ChartTooltip formatter={(v: number) => `$${v.toLocaleString('es-CL')}`} />
@@ -433,10 +427,10 @@ export default function InvestorsDashboardPage() {
           </div>
         </section>
 
-        {/* Hitos Detallados */}
+        {/* Plan de Inversión */}
         <section className="mb-24">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-4xl font-black text-primary italic">Plan de Inversión</h2>
+            <h2 className="text-2xl md:text-4xl font-black text-primary italic">Plan de Inversión Detallado</h2>
             <div className="h-1 w-20 bg-secondary mx-auto mt-2 rounded-full" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
