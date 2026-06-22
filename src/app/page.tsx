@@ -44,7 +44,8 @@ import {
   Flag,
   Coins,
   XCircle,
-  Coffee
+  Coffee,
+  Briefcase
 } from "lucide-react";
 import { 
   LineChart, 
@@ -520,9 +521,9 @@ export default function HomePage() {
         <section className="py-24 bg-background overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
-              <Badge className="bg-primary/10 text-primary font-black px-4 py-1 border-none uppercase tracking-widest">¿Cómo funciona el test?</Badge>
-              <h2 className="text-3xl md:text-5xl font-black text-primary italic">Un procedimiento <span className="text-secondary">Simple y No Invasivo</span></h2>
-              <p className="text-lg text-muted-foreground font-medium italic">Sin pinchazos, sin dolor. Solo necesitamos tu aliento para conocer tu salud digestiva.</p>
+              <Badge className="bg-primary/10 text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Experiencia en Consulta</Badge>
+              <h2 className="text-3xl md:text-5xl font-black text-primary italic">Procedimiento Estándar <span className="text-secondary">en Laboratorio</span></h2>
+              <p className="text-lg text-muted-foreground font-medium italic">Así es la experiencia presencial guiada por nuestros profesionales en Las Condes.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -594,10 +595,21 @@ export default function HomePage() {
         <section className="py-24 bg-muted/20 border-y">
            <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
              <div className="space-y-6 lg:order-1">
-                <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">Test en Casa con <br/><span className="text-secondary">Guía Inteligente</span></h2>
-                <p className="text-lg text-muted-foreground font-medium">Ahora que conoces el procedimiento, nuestro asistente digital te acompaña en cada soplido y espera. El sistema cronometra tus intervalos y valida tu toma de muestra para asegurar la máxima calidad desde tu hogar.</p>
-                <div className="flex flex-wrap gap-4">
-                  <Link href="/home-test"><Button className="rounded-full h-14 px-8 font-black text-lg bg-primary shadow-xl">Probar Asistente Real</Button></Link>
+                <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Flexibilidad Total</Badge>
+                <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">También en tu <br/><span className="text-secondary">Domicilio o Trabajo</span></h2>
+                <p className="text-lg text-muted-foreground font-medium">Lleva la misma precisión clínica a donde estés. Retira tu kit y nuestro asistente digital te guiará paso a paso en cada soplido y espera, cronometrando tus intervalos para asegurar la máxima calidad.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                  <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
+                    <Home className="h-5 w-5 text-secondary" />
+                    <span className="text-sm font-bold text-primary">Comodidad de tu hogar</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
+                    <Briefcase className="h-5 w-5 text-secondary" />
+                    <span className="text-sm font-bold text-primary">Sin pausar tu jornada</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-4 pt-6">
+                  <Link href="/home-test"><Button className="rounded-full h-14 px-8 font-black text-lg bg-primary shadow-xl">Probar Asistente Digital</Button></Link>
                   <Link href="/how-it-works"><Button variant="outline" className="rounded-full h-14 px-8 font-bold border-primary text-primary">Ver Protocolos</Button></Link>
                 </div>
              </div>
