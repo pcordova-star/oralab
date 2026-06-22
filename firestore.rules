@@ -7,11 +7,17 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email == 'admin@oralab.cl';
     }
 
-    // Reglas para Contratos de Inversión (PÚBLICA - Sin filtros de servidor)
-    // Se permite el listado total para evitar bloqueos por análisis de consultas.
+    // Reglas para Contratos de Inversión (TOTALMENTE ABIERTAS PARA LECTURA PÚBLICA)
+    // Se permite el acceso total de lectura para que el Dashboard sea igual al Landing.
     match /contract_leads/{leadId} {
-      allow create, read, list: if true;
+      allow read, list, create: if true;
       allow update, delete: if isAdmin();
+    }
+
+    // Reglas para Registro de Inversionistas (TOTALMENTE ABIERTAS)
+    match /investors/{investorId} {
+      allow read, list, create: if true;
+      allow write: if isAdmin();
     }
 
     // Reglas para Reservas de Pacientes
@@ -31,13 +37,7 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    // Reglas para Registro de Inversionistas
-    match /investors/{investorId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Regla de respaldo
+    // Regla de respaldo estricta
     match /{document=**} {
       allow read, write: if isAdmin();
     }
