@@ -52,7 +52,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   firestore,
   auth,
 }) => {
-  // Flag para evitar errores de hidratación en Next.js 15
+  // Flag crítico para evitar errores de hidratación en Next.js 15
   const [isMounted, setIsMounted] = useState(false);
   
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
@@ -96,12 +96,12 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     };
   }, [firebaseApp, firestore, auth, userAuthState]);
 
-  // Si no está montado, devolvemos null para evitar el Hydration Error
+  // Si no está montado, devolvemos null para que el servidor y el cliente coincidan inicialmente
   if (!isMounted) {
     return null;
   }
 
-  // Mientras carga el usuario inicial, mostramos sincronización
+  // Mientras carga el usuario inicial, mostramos sincronización profesional
   if (userAuthState.isUserLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/30">

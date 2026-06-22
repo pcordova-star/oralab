@@ -8,10 +8,10 @@ service cloud.firestore {
     }
 
     // Reglas para Contratos de Inversión (PÚBLICA - Sin filtros de servidor)
+    // Se permite el listado total para evitar bloqueos por análisis de consultas.
     match /contract_leads/{leadId} {
-      allow create: if true;
-      allow read, list: if true; 
-      allow write: if isAdmin();
+      allow create, read, list: if true;
+      allow update, delete: if isAdmin();
     }
 
     // Reglas para Reservas de Pacientes
