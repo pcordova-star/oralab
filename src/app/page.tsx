@@ -43,7 +43,8 @@ import {
   CheckCircle2,
   Flag,
   Coins,
-  XCircle
+  XCircle,
+  Coffee
 } from "lucide-react";
 import { 
   LineChart, 
@@ -515,12 +516,86 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* NUEVA SECCIÓN: Procedimiento Didáctico */}
+        <section className="py-24 bg-background overflow-hidden">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
+              <Badge className="bg-primary/10 text-primary font-black px-4 py-1 border-none uppercase tracking-widest">¿Cómo funciona el test?</Badge>
+              <h2 className="text-3xl md:text-5xl font-black text-primary italic">Un procedimiento <span className="text-secondary">Simple y No Invasivo</span></h2>
+              <p className="text-lg text-muted-foreground font-medium italic">Sin pinchazos, sin dolor. Solo necesitamos tu aliento para conocer tu salud digestiva.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { 
+                  step: "01", 
+                  title: "Preparación", 
+                  desc: "Un ayuno de 12h y dieta blanda el día anterior aseguran que tu sistema esté en reposo absoluto.",
+                  icon: <Coffee className="h-6 w-6" />,
+                  color: "bg-blue-50 text-blue-600"
+                },
+                { 
+                  step: "02", 
+                  title: "Toma Basal", 
+                  desc: "Realizamos una primera medición soplando en un tubo para establecer tu punto de partida.",
+                  icon: <Wind className="h-6 w-6" />,
+                  color: "bg-emerald-50 text-emerald-600"
+                },
+                { 
+                  step: "03", 
+                  title: "El Sustrato", 
+                  desc: "Beberás una solución líquida dulce que servirá de estímulo controlado para las bacterias.",
+                  icon: <Beaker className="h-6 w-6" />,
+                  color: "bg-amber-50 text-amber-600"
+                },
+                { 
+                  step: "04", 
+                  title: "Seguimiento", 
+                  desc: "Durante 2-3 horas tomaremos muestras seriadas para construir tu curva metabólica.",
+                  icon: <Timer className="h-6 w-6" />,
+                  color: "bg-primary/5 text-primary"
+                },
+              ].map((item, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="relative group"
+                >
+                  <Card className="h-full border-primary/5 shadow-lg rounded-[2.5rem] p-8 hover:shadow-2xl transition-all duration-500 overflow-hidden bg-white">
+                    <div className="absolute -right-4 -top-4 text-8xl font-black opacity-[0.03] italic group-hover:scale-110 transition-transform">{item.step}</div>
+                    <div className={cn("p-4 rounded-2xl w-fit mb-6", item.color)}>
+                      {item.icon}
+                    </div>
+                    <h4 className="text-xl font-black text-primary mb-3 italic">{item.title}</h4>
+                    <p className="text-sm text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
+                  </Card>
+                  {i < 3 && (
+                    <div className="hidden lg:block absolute top-1/2 -right-4 translate-x-1/2 -translate-y-1/2 z-10">
+                      <ChevronRight className="h-6 w-6 text-primary/20" />
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+            
+            <div className="mt-16 text-center">
+               <div className="inline-flex items-center gap-3 bg-amber-50 border border-amber-100 p-4 rounded-2xl">
+                  <AlertCircle className="h-5 w-5 text-amber-600" />
+                  <p className="text-xs font-bold text-amber-800 italic">Es fundamental seguir los tiempos exactos para que los resultados sean clínicamente válidos.</p>
+               </div>
+            </div>
+          </div>
+        </section>
+
         {/* Asistente Simulador */}
         <section className="py-24 bg-muted/20 border-y">
            <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
              <div className="space-y-6 lg:order-1">
                 <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">Test en Casa con <br/><span className="text-secondary">Guía Inteligente</span></h2>
-                <p className="text-lg text-muted-foreground font-medium">Nuestro asistente guía al paciente paso a paso, explicando cada etapa para asegurar un resultado válido y profesional desde su hogar. Una experiencia interactiva que garantiza la calidad clínica de tu muestra.</p>
+                <p className="text-lg text-muted-foreground font-medium">Ahora que conoces el procedimiento, nuestro asistente digital te acompaña en cada soplido y espera. El sistema cronometra tus intervalos y valida tu toma de muestra para asegurar la máxima calidad desde tu hogar.</p>
                 <div className="flex flex-wrap gap-4">
                   <Link href="/home-test"><Button className="rounded-full h-14 px-8 font-black text-lg bg-primary shadow-xl">Probar Asistente Real</Button></Link>
                   <Link href="/how-it-works"><Button variant="outline" className="rounded-full h-14 px-8 font-bold border-primary text-primary">Ver Protocolos</Button></Link>
