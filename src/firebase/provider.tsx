@@ -96,13 +96,13 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     };
   }, [firebaseApp, firestore, auth, userAuthState]);
 
-  // Si no está montado, devolvemos null para que el servidor y el cliente coincidan
+  // Si no está montado, devolvemos null para que el servidor y el cliente coincidan (Evita Hydration Error)
   if (!isMounted) {
     return null;
   }
 
   // Mientras carga el usuario, mostramos la pantalla de sincronización
-  // Esto previene que los hooks de Firestore (useCollection) se disparen sin token
+  // Esto previene que los hooks de Firestore se disparen antes de tener el token de Admin
   if (userAuthState.isUserLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/30">

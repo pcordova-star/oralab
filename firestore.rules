@@ -2,27 +2,30 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Función de Administrador infalible y directa
+    // Función de Administrador robusta
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'admin@oralab.cl';
+      return request.auth != null && 
+             request.auth.token != null && 
+             request.auth.token.email == 'admin@oralab.cl';
     }
 
     // Reglas para Contratos de Inversión
     match /contract_leads/{leadId} {
-      // 1. Creación pública permitida para nuevos interesados
+      // 1. Creación pública permitida
       allow create: if true;
       
-      // 2. SEPARACIÓN FÍSICA DE PERMISOS DE LISTADO
+      // 2. SEPARACIÓN DE LISTADO (Solución al error de permisos)
       // Puerta A: El administrador puede listar TODO sin filtros.
       allow list: if isAdmin();
       
-      // Puerta B: El público puede listar SOLO si aplica el filtro de 'fully_signed'.
+      // Puerta B: El público puede listar solo si aplica el filtro exacto.
+      // Usamos una condición que no interfiera con la query global del Admin.
       allow list: if request.query.status == 'fully_signed';
       
       // Lectura individual permitida para validación (ej. descarga de PDF)
       allow get: if true; 
       
-      // Escritura (validar pagos, borrar, etc.) solo para el Administrador
+      // Escritura solo para el Administrador
       allow write: if isAdmin();
     }
 
