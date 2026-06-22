@@ -288,19 +288,32 @@ export default function InvestorsDashboardPage() {
     const doc = new jsPDF();
     const margin = 20;
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     let y = 20;
+
+    const checkPage = (neededHeight: number) => {
+      if (y + neededHeight > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    };
 
     const addText = (text: string, fontSize = 10, isBold = false, align: "left" | "center" | "justify" = "left") => {
       doc.setFont("helvetica", isBold ? "bold" : "normal");
       doc.setFontSize(fontSize);
+      
       if (align === "justify") {
         const lines = doc.splitTextToSize(text, pageWidth - (margin * 2));
+        const estimatedHeight = lines.length * (fontSize / 2.5) + 4;
+        checkPage(estimatedHeight);
         doc.text(lines, margin, y);
-        y += (lines.length * (fontSize / 2.5)) + 4;
+        y += estimatedHeight;
       } else if (align === "center") {
+        checkPage(fontSize / 2 + 5);
         doc.text(text, pageWidth / 2, y, { align: "center" });
         y += fontSize / 2 + 5;
       } else {
+        checkPage(fontSize / 2 + 5);
         doc.text(text, margin, y);
         y += fontSize / 2 + 5;
       }
@@ -362,6 +375,7 @@ export default function InvestorsDashboardPage() {
     
     y += 15;
     const signatureY = y + 25;
+    checkPage(30);
     doc.line(margin, signatureY, margin + 75, signatureY);
     doc.text("PAULO CÓRDOVA", margin, signatureY + 5);
     doc.line(pageWidth - margin - 75, signatureY, pageWidth - margin, signatureY);
