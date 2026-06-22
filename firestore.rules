@@ -9,36 +9,49 @@ service cloud.firestore {
 
     // Reglas para Contratos de Inversión
     match /contract_leads/{leadId} {
+      // 1. Creación pública permitida para nuevos interesados
       allow create: if true;
       
-      // SEPARACIÓN FÍSICA DE PERMISOS DE LISTADO
+      // 2. SEPARACIÓN FÍSICA DE PERMISOS DE LISTADO
       // Esto evita que Firestore intente validar filtros de query al Administrador
+      // Puerta A: El administrador puede listar TODO sin filtros.
       allow list: if isAdmin();
+      
+      // Puerta B: El público puede listar SOLO si aplica el filtro de 'fully_signed'.
+      // Usamos una validación de query estricta para el dashboard público.
       allow list: if request.query.status == 'fully_signed';
       
+      // Lectura individual permitida para validación (ej. descarga de PDF)
       allow get: if true; 
+      
+      // Escritura (validar pagos, borrar, etc.) solo para el Administrador
       allow write: if isAdmin();
     }
 
+    // Reglas para Reservas de Pacientes
     match /bookings/{bookingId} {
       allow create: if true;
       allow read, write: if isAdmin();
     }
 
+    // Reglas para Consultas Comerciales desde la Web
     match /leads/{leadId} {
       allow create: if true;
       allow read, write: if isAdmin();
     }
 
+    // Reglas para Cotizaciones CRM
     match /quotations/{quotationId} {
       allow read, write: if isAdmin();
     }
 
+    // Reglas para el Registro histórico de Inversionistas
     match /investors/{investorId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    // Regla de respaldo para cualquier otra ruta
     match /{document=**} {
       allow read, write: if isAdmin();
     }
