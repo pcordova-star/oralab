@@ -21,38 +21,12 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
   Search, 
-  LogOut,
-  UserCheck,
-  Trash2,
+  Trash2, 
   CalendarDays,
   Clock,
-  Pencil,
-  FileText,
-  Mail,
-  Coins,
-  Plus,
-  Target,
-  TrendingUp,
-  Calendar as CalendarViewIcon,
-  CheckCircle2,
-  History,
-  PenTool,
-  Download
+  Download,
+  Plus
 } from "lucide-react";
 import { format, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -116,14 +90,8 @@ export default function ReceptionPage() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isMounted, setIsMounted] = useState(false);
-  
-  const [isInvestorDialogOpen, setIsInvestorDialogOpen] = useState(false);
-  const [investorName, setInvestorName] = useState("");
-  const [investorAmount, setInvestorAmount] = useState("");
-  const [investorStatus, setInvestorStatus] = useState<"confirmed" | "pending">("confirmed");
 
   useEffect(() => {
     setIsMounted(true);
@@ -139,79 +107,12 @@ export default function ReceptionPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const dateString = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : "";
-
-  const bookingsQuery = useMemoFirebase(() => {
-    if (!db || !dateString) return null;
-    return query(collection(db, "bookings"), where("scheduledDate", "==", dateString));
-  }, [db, dateString]);
-
-  const investorsQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, "investors"), orderBy("investorNumber", "asc"));
-  }, [db]);
-
   const contractLeadsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "contract_leads"), orderBy("createdAt", "desc"));
   }, [db]);
 
-  const { data: rawBookings } = useCollection(bookingsQuery);
-  const { data: investors } = useCollection(investorsQuery);
   const { data: contractLeads } = useCollection(contractLeadsQuery);
-
-  const bookings = rawBookings ? [...rawBookings].sort((a, b) => 
-    (a.scheduledTime || "").localeCompare(b.scheduledTime || "")
-  ) : [];
-
-  const filteredBookings = bookings?.filter(b => 
-    b.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.lastNameFather?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const totalInvestment = investors?.reduce((acc, inv) => acc + (inv.amount || 0), 0) || 0;
-  const progressPercentage = Math.min((totalInvestment / FUNDING_GOAL) * 100, 100);
-
-  async function handleLogout() {
-    const auth = getAuth();
-    if (auth) {
-      await signOut(auth);
-      router.push("/");
-    }
-  }
-
-  async function handleInvestorSubmit() {
-    if (!db || !investorName || !investorAmount) return;
-    const newNumber = (investors?.length || 0) + 1;
-    await addDoc(collection(db, "investors"), {
-      realName: investorName,
-      investorNumber: newNumber,
-      amount: parseInt(investorAmount),
-      status: investorStatus,
-      createdAt: serverTimestamp(),
-    });
-    toast({ title: "Inversionista agregado" });
-    setIsInvestorDialogOpen(false);
-    setInvestorName("");
-    setInvestorAmount("");
-  }
-
-  const handleAdminMarkAsSigned = (lead: any) => {
-    if (!db || !confirm("¿Marcar como 'Procesado'?")) return;
-    const docRef = doc(db, "contract_leads", lead.id);
-    updateDocumentNonBlocking(docRef, {
-      status: "fully_signed",
-      adminSignedAt: new Date().toISOString(),
-      updatedAt: serverTimestamp()
-    });
-    toast({ title: "Estado Actualizado" });
-  };
-
-  const handleDeleteContractLead = (id: string) => {
-    if (!db || !confirm("¿Eliminar registro del contrato?")) return;
-    deleteDocumentNonBlocking(doc(db, "contract_leads", id));
-    toast({ title: "Registro eliminado" });
-  };
 
   const generateFullPDF = (lead: any) => {
     const doc = new jsPDF();
@@ -337,129 +238,64 @@ export default function ReceptionPage() {
     doc.save(`Contrato_Oralab_Final_${lead.name.replace(/\s+/g, '_')}.pdf`);
   };
 
+  const handleAdminMarkAsSigned = (lead: any) => {
+    if (!db || !confirm("¿Marcar como 'Procesado'?")) return;
+    updateDocumentNonBlocking(doc(db, "contract_leads", lead.id), {
+      status: "fully_signed",
+      adminSignedAt: new Date().toISOString(),
+      updatedAt: serverTimestamp()
+    });
+    toast({ title: "Estado Actualizado" });
+  };
+
+  const handleDeleteContractLead = (id: string) => {
+    if (!db || !confirm("¿Eliminar registro?")) return;
+    deleteDocumentNonBlocking(doc(db, "contract_leads", id));
+    toast({ title: "Registro eliminado" });
+  };
+
   if (isUserLoading || !user || !isMounted) return null;
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/30 pb-20 font-body">
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-black text-primary italic">Panel Super Admin</h1>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleLogout} className="rounded-full border-red-200 text-red-600">Salir</Button>
-          </div>
-        </div>
-
-        <Tabs defaultValue="patients" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-full w-full max-w-2xl mx-auto grid grid-cols-3">
-            <TabsTrigger value="patients" className="rounded-full font-black uppercase text-xs">Agenda</TabsTrigger>
-            <TabsTrigger value="leads" className="rounded-full font-black uppercase text-xs">Leads Sunvou</TabsTrigger>
-            <TabsTrigger value="investors" className="rounded-full font-black uppercase text-xs">Inversionistas</TabsTrigger>
+        <Tabs defaultValue="investors" className="space-y-6">
+          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-2">
+            <TabsTrigger value="patients" className="rounded-full font-bold px-8">Agenda</TabsTrigger>
+            <TabsTrigger value="investors" className="rounded-full font-bold px-8">Inversionistas</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="patients">
-             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-4">
-                <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] p-4">
-                   <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} locale={es} />
-                </Card>
-              </div>
-              <div className="lg:col-span-8">
-                <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-                   <Table>
-                      <TableHeader><TableRow><TableHead>Hora</TableHead><TableHead>Paciente</TableHead><TableHead>Examen</TableHead></TableRow></TableHeader>
-                      <TableBody>
-                        {filteredBookings?.map((b) => (
-                          <TableRow key={b.id}>
-                            <TableCell className="font-black">{b.scheduledTime}</TableCell>
-                            <TableCell className="font-bold">{b.firstName} {b.lastNameFather}</TableCell>
-                            <TableCell><Badge variant="outline">{b.examType}</Badge></TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                   </Table>
-                </Card>
-              </div>
-             </div>
-          </TabsContent>
-
           <TabsContent value="investors">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              <Card className="bg-primary text-white p-6 rounded-2xl">
-                 <p className="text-xs uppercase opacity-70">Total Invertido</p>
-                 <h3 className="text-3xl font-black">${totalInvestment.toLocaleString('es-CL')}</h3>
-                 <Progress value={progressPercentage} className="h-1.5 mt-4 bg-white/20" />
-              </Card>
-              <Card className="bg-white p-6 rounded-2xl border-primary/5 flex items-center justify-center">
-                 <Button onClick={() => setIsInvestorDialogOpen(true)} className="rounded-full bg-secondary font-black">Registrar Aporte</Button>
-              </Card>
-            </div>
-
-            <Tabs defaultValue="confirmed_investors" className="space-y-6">
-              <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-2">
-                <TabsTrigger value="confirmed_investors" className="rounded-full font-bold px-8">Socios Fundadores</TabsTrigger>
-                <TabsTrigger value="contract_leads" className="rounded-full font-bold px-8">Contratos por Firmar</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="confirmed_investors">
-                <Card className="bg-white shadow-xl border-primary/20 rounded-[2rem]">
-                  <Table>
-                    <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Nombre</TableHead><TableHead>Monto</TableHead><TableHead>Acción</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {investors?.map((inv) => (
-                        <TableRow key={inv.id}>
-                          <TableCell className="font-black">#{inv.investorNumber}</TableCell>
-                          <TableCell className="font-bold">{inv.realName}</TableCell>
-                          <TableCell className="font-black text-primary">${inv.amount.toLocaleString('es-CL')}</TableCell>
-                          <TableCell><Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "investors", inv.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button></TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="contract_leads">
-                <Card className="bg-white shadow-xl border-secondary/20 rounded-[2rem]">
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Socio</TableHead><TableHead>Monto</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {contractLeads?.map((lead) => (
-                        <TableRow key={lead.id}>
-                          <TableCell>
-                             <div className="flex flex-col"><span className="font-black">{lead.name}</span><span className="text-[10px]">{lead.rut}</span></div>
-                          </TableCell>
-                          <TableCell className="font-black text-secondary">${lead.amount.toLocaleString('es-CL')}</TableCell>
-                          <TableCell className="text-right flex justify-end gap-2">
-                             <Button onClick={() => generateFullPDF(lead)} variant="outline" size="sm" className="rounded-full h-8"><Download className="h-3 w-3 mr-1" /> Descargar para Firma</Button>
-                             {lead.status !== 'fully_signed' && <Button onClick={() => handleAdminMarkAsSigned(lead)} className="bg-primary h-8 text-[10px] rounded-full">Marcar Procesado</Button>}
-                             <Button variant="ghost" size="icon" onClick={() => handleDeleteContractLead(lead.id)}><Trash2 className="h-4 w-4 text-red-300" /></Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Card>
-              </TabsContent>
-            </Tabs>
+            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Socio</TableHead>
+                    <TableHead>Monto</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contractLeads?.map((lead) => (
+                    <TableRow key={lead.id}>
+                      <TableCell>
+                         <div className="flex flex-col"><span className="font-black">{lead.name}</span><span className="text-[10px]">{lead.rut}</span></div>
+                      </TableCell>
+                      <TableCell className="font-black text-secondary">${lead.amount.toLocaleString('es-CL')}</TableCell>
+                      <TableCell className="text-right flex justify-end gap-2">
+                         <Button onClick={() => generateFullPDF(lead)} variant="outline" size="sm" className="rounded-full h-8"><Download className="h-3 w-3 mr-1" /> Descargar para Firma</Button>
+                         {lead.status !== 'fully_signed' && <Button onClick={() => handleAdminMarkAsSigned(lead)} className="bg-primary h-8 text-[10px] rounded-full">Marcar Procesado</Button>}
+                         <Button variant="ghost" size="icon" onClick={() => handleDeleteContractLead(lead.id)}><Trash2 className="h-4 w-4 text-red-300" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
-
-      <Dialog open={isInvestorDialogOpen} onOpenChange={setIsInvestorDialogOpen}>
-        <DialogContent className="rounded-[2rem]">
-          <DialogHeader><DialogTitle className="font-black text-primary italic">Registrar Nuevo Aporte</DialogTitle></DialogHeader>
-          <div className="grid gap-6 py-4">
-            <Input value={investorName} onChange={(e) => setInvestorName(e.target.value)} placeholder="Nombre" />
-            <Input type="number" value={investorAmount} onChange={(e) => setInvestorAmount(e.target.value)} placeholder="Monto" />
-          </div>
-          <DialogFooter>
-            <Button onClick={handleInvestorSubmit} className="bg-primary font-black rounded-full">Guardar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

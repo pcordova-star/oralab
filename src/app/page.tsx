@@ -517,12 +517,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* NUEVA SECCIÓN: Procedimiento Didáctico */}
+        {/* PROCEDIMIENTO: Experiencia en Consulta */}
         <section className="py-24 bg-background overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
-              <Badge className="bg-primary/10 text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Experiencia en Consulta</Badge>
-              <h2 className="text-3xl md:text-5xl font-black text-primary italic">Procedimiento Estándar <span className="text-secondary">en Laboratorio</span></h2>
+              <Badge className="bg-primary/10 text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Procedimiento en Consulta</Badge>
+              <h2 className="text-3xl md:text-5xl font-black text-primary italic">Atención Presencial <span className="text-secondary">en Laboratorio</span></h2>
               <p className="text-lg text-muted-foreground font-medium italic">Así es la experiencia presencial guiada por nuestros profesionales en Las Condes.</p>
             </div>
 
@@ -581,23 +581,16 @@ export default function HomePage() {
                 </motion.div>
               ))}
             </div>
-            
-            <div className="mt-16 text-center">
-               <div className="inline-flex items-center gap-3 bg-amber-50 border border-amber-100 p-4 rounded-2xl">
-                  <AlertCircle className="h-5 w-5 text-amber-600" />
-                  <p className="text-xs font-bold text-amber-800 italic">Es fundamental seguir los tiempos exactos para que los resultados sean clínicamente válidos.</p>
-               </div>
-            </div>
           </div>
         </section>
 
-        {/* Asistente Simulador */}
+        {/* ALTERNATIVA: Test en Domicilio o Trabajo */}
         <section className="py-24 bg-muted/20 border-y">
            <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
              <div className="space-y-6 lg:order-1">
-                <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Flexibilidad Total</Badge>
+                <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Máxima Flexibilidad</Badge>
                 <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">También en tu <br/><span className="text-secondary">Domicilio o Trabajo</span></h2>
-                <p className="text-lg text-muted-foreground font-medium">Lleva la misma precisión clínica a donde estés. Retira tu kit y nuestro asistente digital te guiará paso a paso en cada soplido y espera, cronometrando tus intervalos para asegurar la máxima calidad.</p>
+                <p className="text-lg text-muted-foreground font-medium">Lleva la misma precisión clínica a donde estés. Retira tu kit y nuestro asistente digital te guiará paso a paso en cada soplido y espera, cronometrando tus intervalos para asegurar la máxima calidad sin salir de tu entorno.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                   <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
                     <Home className="h-5 w-5 text-secondary" />
@@ -605,7 +598,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
                     <Briefcase className="h-5 w-5 text-secondary" />
-                    <span className="text-sm font-bold text-primary">Sin pausar tu jornada</span>
+                    <span className="text-sm font-bold text-primary">Sin pausar tu jornada laboral</span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-4 pt-6">
