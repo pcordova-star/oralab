@@ -7,6 +7,7 @@ import { collection, query, orderBy, serverTimestamp, where } from "firebase/fir
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 import { 
   PieChart, 
   Pie, 
@@ -173,7 +174,7 @@ export default function InvestorsDashboardPage() {
     setMounted(true);
   }, []);
 
-  // Fetch confirmed partners (filtrados por status para cumplir reglas públicas)
+  // Fetch confirmed partners
   const confirmedPartnersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
