@@ -101,18 +101,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     return null;
   }
 
-  // Mientras carga el usuario inicial, mostramos sincronización profesional
-  if (userAuthState.isUserLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-muted/30">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground font-bold italic">Sincronizando con Oralab...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <FirebaseContext.Provider value={contextValue}>
       <FirebaseErrorListener />

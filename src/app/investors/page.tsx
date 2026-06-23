@@ -179,8 +179,7 @@ export default function InvestorsDashboardPage() {
     if (!db) return null;
     return query(
       collection(db, "contract_leads"),
-      where("status", "==", "fully_signed"),
-      orderBy("createdAt", "desc")
+      where("status", "==", "fully_signed")
     );
   }, [db]);
 
