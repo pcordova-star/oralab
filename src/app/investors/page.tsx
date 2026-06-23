@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, serverTimestamp, where } from "firebase/firestore";
+import { collection, query, serverTimestamp } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -17,7 +17,6 @@ import {
   Legend
 } from "recharts";
 import { 
-  TrendingUp, 
   Target, 
   Microscope, 
   Building2, 
@@ -29,7 +28,8 @@ import {
   Mail,
   MapPin,
   Sparkles,
-  Users
+  Users,
+  TrendingUp
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -174,22 +174,26 @@ export default function InvestorsDashboardPage() {
     setMounted(true);
   }, []);
 
-  // Fetch partners - Totalmente público
-  const confirmedPartnersQuery = useMemoFirebase(() => {
+  // Fetch partners - Consulta ultra simplificada para evitar errores de permisos
+  const partnersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(
-      collection(db, "contract_leads"),
-      where("status", "==", "fully_signed"),
-      orderBy("createdAt", "asc")
-    );
+    return collection(db, "contract_leads");
   }, [db]);
 
-  const { data: partners, isLoading: loadingPartners } = useCollection(confirmedPartnersQuery);
+  const { data: rawLeads, isLoading: loadingPartners } = useCollection(partnersQuery);
 
-  // Dynamic calculations
-  const totalRaised = partners?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+  // Filtrado y procesamiento en el cliente para máxima estabilidad
+  const partners = (rawLeads || [])
+    .filter(lead => lead.status === "fully_signed")
+    .sort((a, b) => {
+      const dateA = a.createdAt?.seconds || 0;
+      const dateB = b.createdAt?.seconds || 0;
+      return dateA - dateB;
+    });
+
+  const totalRaised = partners.reduce((acc, p) => acc + (p.amount || 0), 0);
   const progressValue = Math.min((totalRaised / FUNDING_GOAL) * 100, 100);
-  const partnersCount = partners?.length || 0;
+  const partnersCount = partners.length;
 
   const calculateEquity = (amount: number) => {
     return (amount / FUNDING_GOAL) * EQUITY_TOTAL;
@@ -409,10 +413,10 @@ export default function InvestorsDashboardPage() {
                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
                   {loadingPartners ? (
                     <p className="text-xs text-muted-foreground italic">Cargando...</p>
-                  ) : partners?.length === 0 ? (
+                  ) : partners.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">Esperando socios.</p>
                   ) : (
-                    partners?.map((p, i) => (
+                    partners.map((p, i) => (
                       <div key={p.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl border border-primary/5">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">S{i + 1}</div>

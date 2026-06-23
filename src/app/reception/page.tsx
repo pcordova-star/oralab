@@ -4,14 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, deleteDoc, doc, updateDoc, where, orderBy, serverTimestamp, addDoc } from "firebase/firestore";
+import { collection, query, doc, orderBy, serverTimestamp } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import Link from "next/link";
 import { 
   Table, 
   TableBody, 
@@ -21,19 +18,14 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { 
-  Search, 
   Trash2, 
-  CalendarDays,
-  Clock,
-  Download,
-  Plus
+  Download
 } from "lucide-react";
 import { format, startOfToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { getAuth, signOut } from "firebase/auth";
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
 import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { jsPDF } from "jspdf";
 
@@ -89,12 +81,10 @@ export default function ReceptionPage() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    setSelectedDate(startOfToday());
   }, []);
 
   useEffect(() => {
@@ -106,13 +96,20 @@ export default function ReceptionPage() {
     }
   }, [user, isUserLoading, router]);
 
-  // Query condicional para evitar errores de permisos antes de cargar sesión
-  const contractLeadsQuery = useMemoFirebase(() => {
+  // Query ultra simplificada para evitar errores de permisos
+  const contractLeadsRef = useMemoFirebase(() => {
     if (!db || !user || user.email !== ADMIN_EMAIL) return null;
-    return query(collection(db, "contract_leads"), orderBy("createdAt", "desc"));
+    return collection(db, "contract_leads");
   }, [db, user]);
 
-  const { data: contractLeads, isLoading: loadingLeads } = useCollection(contractLeadsQuery);
+  const { data: rawContractLeads, isLoading: loadingLeads } = useCollection(contractLeadsRef);
+
+  // Ordenamiento en el cliente
+  const contractLeads = (rawContractLeads || []).sort((a, b) => {
+    const dateA = a.createdAt?.seconds || 0;
+    const dateB = b.createdAt?.seconds || 0;
+    return dateB - dateA;
+  });
 
   const generateFullPDF = (lead: any) => {
     const doc = new jsPDF();
@@ -249,10 +246,10 @@ export default function ReceptionPage() {
                 <TableBody>
                   {loadingLeads ? (
                     <TableRow><TableCell colSpan={4} className="text-center py-10">Cargando...</TableCell></TableRow>
-                  ) : contractLeads?.length === 0 ? (
+                  ) : contractLeads.length === 0 ? (
                     <TableRow><TableCell colSpan={4} className="text-center py-10 italic">No hay registros.</TableCell></TableRow>
                   ) : (
-                    contractLeads?.map((lead) => (
+                    contractLeads.map((lead) => (
                       <TableRow key={lead.id}>
                         <TableCell>
                            <div className="flex flex-col"><span className="font-black">{lead.name}</span><span className="text-[10px]">{lead.rut}</span></div>
