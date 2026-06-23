@@ -2,9 +2,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // ACCESO TOTAL ABSOLUTO
+    // ACCESO TOTAL ABSOLUTO (MODO DESARROLLO / LANDING PÚBLICO)
     // Se permite lectura y escritura pública en todo el sistema para 
-    // garantizar que los inversionistas y el admin puedan operar sin bloqueos.
+    // eliminar cualquier error de permisos "insufficient permissions".
+    // Esto garantiza que el Dashboard de Inversionistas y el Panel de Recepción
+    // funcionen sin importar el estado de la sesión o la verificación de datos.
     match /{document=**} {
       allow read, write: if true;
     }
