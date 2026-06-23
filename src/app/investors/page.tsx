@@ -176,7 +176,7 @@ export default function InvestorsDashboardPage() {
     setMounted(true);
   }, []);
 
-  // Consulta simplificada para evitar errores de permisos por análisis estático de reglas
+  // Consulta sin filtros para evitar errores de permisos
   const partnersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, "contract_leads");
@@ -460,7 +460,7 @@ export default function InvestorsDashboardPage() {
                       <div key={p.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl border border-primary/5">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">S{i + 1}</div>
-                          <span className="text-xs font-black text-primary italic">Inversionista #{i + 1}</span>
+                          <span className="text-xs font-black text-primary italic text-muted-foreground">Inversionista #{i + 1}</span>
                         </div>
                         <Badge variant="outline" className="text-[10px] font-black border-secondary/20 text-secondary">${p.amount?.toLocaleString('es-CL')}</Badge>
                       </div>

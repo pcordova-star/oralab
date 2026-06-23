@@ -476,12 +476,51 @@ export default function HomePage() {
                     <Activity className="h-3.5 w-3.5" /> Laboratorio Especializado
                   </span>
                 </motion.div>
-                <motion.h1 variants={fadeIn} className="text-3xl md:text-5xl lg:text-7xl font-black text-primary leading-[1.1]">
-                  Test SIBO con <br />precisión clínica. <span className="text-gradient italic">Reserva tu cita.</span>
-                </motion.h1>
-                <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <Link href="/booking"><Button size="lg" className="rounded-full h-16 px-10 text-lg font-bold shadow-2xl bg-primary">Agendar mi Test</Button></Link>
-                </motion.div>
+                
+                {/* HEADLINE ANIMADO Y TECNOLÓGICO */}
+                <div className="space-y-2">
+                  <motion.h1 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1 }}
+                    className="text-4xl md:text-6xl lg:text-8xl font-black text-primary leading-[0.95] tracking-tighter"
+                  >
+                    Test <span className="text-secondary italic relative inline-block">
+                      SIBO
+                      <motion.span 
+                        className="absolute bottom-0 left-0 w-full h-[4px] bg-secondary/30 rounded-full"
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ delay: 0.5, duration: 0.8 }}
+                      />
+                    </span>
+                  </motion.h1>
+                  
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3, duration: 0.8 }}
+                    className="flex flex-col md:flex-row items-center justify-center lg:justify-start gap-3"
+                  >
+                    <div className="h-px w-12 bg-secondary hidden lg:block" />
+                    <p className="text-xl md:text-3xl font-bold text-primary/60 tracking-tight italic">
+                      con <span className="text-primary font-black uppercase tracking-widest bg-primary/5 px-2 rounded">precisión clínica</span>
+                    </p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.8, duration: 0.5 }}
+                    className="pt-4"
+                  >
+                    <Link href="/booking">
+                      <Button size="lg" className="group rounded-full h-16 px-10 text-xl font-black shadow-2xl bg-primary hover:bg-secondary transition-all hover:scale-105 active:scale-95">
+                        Reserva tu cita <ChevronRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                  </motion.div>
+                </div>
               </motion.div>
               <div className="hidden lg:block relative"><TechScannerAnimation /></div>
             </div>
