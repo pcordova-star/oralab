@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, serverTimestamp } from "firebase/firestore";
+import { collection, serverTimestamp } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -263,15 +263,26 @@ export default function InvestorsDashboardPage() {
     addText("PRIMERA: ANTECEDENTES", 10, true);
     addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento con los permisos y logística necesarios para operar en el laboratorio y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
 
-    addText("SEGUNDA: APORTE", 10, true);
-    addText(`El Inversionista aporta a TRESNA SpA la suma de $${(invAmount || 0).toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
+    addText("SEGUNDA: EL APORTE", 10, true);
+    addText(`El Inversionista aporta a TRESNA SpA la suma de $${(invAmount || 0).toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción, el cual será destinado íntegramente al proyecto ORALAB para su puesta en marcha y operación.`, 10, false, "justify");
+
+    addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
+    addText("Los fondos recaudados en esta ronda se destinarán prioritariamente a la adquisición e importación del analizador Breath Diagnostics Sunvou DA7349, la habilitación técnica de la consulta clínica en Las Condes y el capital de trabajo necesario para los primeros meses de operación del laboratorio.", 10, false, "justify");
 
     addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
-    addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${(invAmount || 0).toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${((invAmount || 0) * 0.2).toLocaleString('es-CL')}).`, 10, false, "justify");
-    addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte.", 10, false, "justify");
+    addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${(invAmount || 0).toLocaleString('es-CL')}), y b) un retorno adicional preferente equivalente al 20% del monto aportado ($${((invAmount || 0) * 0.2).toLocaleString('es-CL')}).`, 10, false, "justify");
 
-    addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
-    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos. La participación económica individual para este aporte se calcula en un ${equityPct}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, false, "justify");
+    addText("QUINTA: PLAZO Y FORMA DE PAGO", 10, true);
+    addText("La suma total señalada en la cláusula anterior se pagará en siete (7) cuotas mensuales, iguales y sucesivas, comenzando el pago de la primera cuota en el mes seis (6) contado desde la fecha de este instrumento, y finalizando íntegramente en el mes doce (12).", 10, false, "justify");
+
+    addText("SEXTA: PARTICIPACIÓN ECONÓMICA PERMANENTE", 10, true);
+    addText(`Adicionalmente a la devolución del capital y retorno preferente, el Inversionista adquirirá una participación económica permanente sobre las utilidades líquidas de la unidad de negocio ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total. La participación económica individual para este aporte se fija en un ${equityPct}% sobre las utilidades anuales de ORALAB.`, 10, false, "justify");
+
+    addText("SÉPTIMA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
+    addText("Se deja expresa constancia que este instrumento constituye un contrato de financiamiento con participación económica y no otorga al Inversionista la calidad de socio accionista directo de TRESNA SpA, sino un derecho de crédito y una participación económica sobre el flujo de beneficios de la unidad de negocio ORALAB.", 10, false, "justify");
+
+    addText("OCTAVA: DOMICILIO Y JURISDICCIÓN", 10, true);
+    addText("Para todos los efectos legales derivados de este contrato, las partes fijan su domicilio en la ciudad y comuna de Santiago y se someten a la jurisdicción de sus Tribunales Ordinarios de Justicia.", 10, false, "justify");
 
     y += 10;
     addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
@@ -281,10 +292,12 @@ export default function InvestorsDashboardPage() {
     checkPage(30);
     doc.line(margin, signatureY, margin + 75, signatureY);
     doc.text("PAULO CÓRDOVA", margin, signatureY + 5);
+    doc.text("Representante Legal TRESNA SpA", margin, signatureY + 9);
     doc.line(pageWidth - margin - 75, signatureY, pageWidth - margin, signatureY);
     doc.text("INVERSIONISTA", pageWidth - margin, signatureY + 5, { align: "right" });
+    doc.text((invName || "Firma del Inversionista").toUpperCase(), pageWidth - margin, signatureY + 9, { align: "right" });
 
-    doc.save(`Borrador_Contrato_Oralab_${invName.replace(/\s+/g, '_') || 'Nuevo_Socio'}.pdf`);
+    doc.save(`Contrato_Oralab_${invName.replace(/\s+/g, '_') || 'Nuevo_Socio'}.pdf`);
   };
 
   const handleFormalize = async () => {
