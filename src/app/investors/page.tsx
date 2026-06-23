@@ -176,7 +176,7 @@ export default function InvestorsDashboardPage() {
     setMounted(true);
   }, []);
 
-  // Consulta simplificada para evitar errores de permisos
+  // Consulta simplificada para evitar errores de permisos por análisis estático de reglas
   const partnersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, "contract_leads");

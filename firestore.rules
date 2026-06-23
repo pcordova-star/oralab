@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // ACCESO TOTAL ABSOLUTO PARA GARANTIZAR EL FUNCIONAMIENTO INMEDIATO
-    // Se permite lectura y escritura pública en todo el sistema.
+    // Se permite lectura y escritura pública en todo el sistema para evitar bloqueos por validación de consultas.
     match /{document=**} {
       allow read, write: if true;
     }
