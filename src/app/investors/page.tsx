@@ -174,7 +174,7 @@ export default function InvestorsDashboardPage() {
     setMounted(true);
   }, []);
 
-  // Fetch confirmed partners - Only fully signed ones
+  // Fetch partners - Totalmente público
   const confirmedPartnersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
@@ -416,6 +416,7 @@ export default function InvestorsDashboardPage() {
                       <div key={p.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl border border-primary/5">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">S{i + 1}</div>
+                          {/* INFO PRIVADA: Nombres anonimizados */}
                           <span className="text-xs font-black text-primary italic">Inversionista #{i + 1}</span>
                         </div>
                         <Badge variant="outline" className="text-[10px] font-black border-secondary/20 text-secondary">${p.amount?.toLocaleString('es-CL')}</Badge>

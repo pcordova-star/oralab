@@ -96,7 +96,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     };
   }, [firebaseApp, firestore, auth, userAuthState]);
 
-  // Si no está montado, devolvemos null para que el servidor y el cliente coincidan inicialmente
+  // Si no está montado, no renderizamos nada para evitar discrepancias servidor/cliente
   if (!isMounted) {
     return null;
   }

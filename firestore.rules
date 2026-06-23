@@ -2,32 +2,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // ACCESO TOTAL SIMPLIFICADO
-    // Se permite lectura y escritura en todo el sistema para evitar bloqueos
-    // por falta de instancias de datos o sesiones incompletas.
+    // ACCESO TOTAL ABSOLUTO
+    // Se permite lectura y escritura pública en todo el sistema para 
+    // garantizar que los inversionistas y el admin puedan operar sin bloqueos.
     match /{document=**} {
       allow read, write: if true;
-    }
-    
-    // Reglas específicas para asegurar compatibilidad con queries del dashboard
-    match /contract_leads/{leadId} {
-      allow read, list, create, update, delete: if true;
-    }
-
-    match /bookings/{bookingId} {
-      allow read, list, create, update, delete: if true;
-    }
-
-    match /leads/{leadId} {
-      allow read, list, create, update, delete: if true;
-    }
-
-    match /quotations/{quotationId} {
-      allow read, list, create, update, delete: if true;
-    }
-
-    match /investors/{investorId} {
-      allow read, list, create, update, delete: if true;
     }
   }
 }
