@@ -28,7 +28,8 @@ import {
   CheckCircle2,
   Coins,
   Coffee,
-  Briefcase
+  Briefcase,
+  Users // Corregido importación faltante
 } from "lucide-react";
 import { 
   LineChart, 
@@ -71,6 +72,50 @@ const reportData = [
   { time: 150, h2: 25, h2_alert: false, ch4: 4, h2s: 1.2, co2: 'OK', symptoms: 'Final' },
   { time: 180, h2: 15, ch4: 3, h2s: 1.0, co2: 'OK', symptoms: 'Ninguno' },
 ];
+
+const TechnologicalHeroTitle = () => {
+  return (
+    <div className="space-y-4">
+      <div className="relative inline-block overflow-hidden">
+        <motion.h1 
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
+          className="text-5xl md:text-7xl lg:text-8xl font-black text-primary leading-[0.95] tracking-tighter italic"
+        >
+          Test <span className="text-secondary relative">
+            SIBO
+            <motion.span 
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.8, duration: 1 }}
+              className="absolute -bottom-2 left-0 w-full h-2 bg-secondary/20 rounded-full origin-left"
+            />
+          </span>
+        </motion.h1>
+      </div>
+      
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.5, duration: 1 }}
+        className="flex flex-col md:flex-row items-center justify-center lg:justify-start gap-4"
+      >
+        <div className="h-[2px] w-12 bg-secondary/50 hidden lg:block" />
+        <p className="text-2xl md:text-4xl font-bold text-primary/40 tracking-tighter">
+          con <span className="text-primary font-black uppercase tracking-widest relative group cursor-default">
+            precisión clínica
+            <motion.span 
+              animate={{ left: ["-100%", "100%"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              className="absolute bottom-0 h-[2px] w-full bg-secondary/50 blur-[2px]"
+            />
+          </span>
+        </p>
+      </motion.div>
+    </div>
+  );
+};
 
 const ClinicalReportVisualizer = () => {
   const isMobile = useIsMobile();
@@ -459,58 +504,20 @@ export default function HomePage() {
                   </span>
                 </motion.div>
                 
-                <div className="space-y-4">
-                  <div className="relative inline-block overflow-hidden">
-                    <motion.h1 
-                      initial={{ y: "100%" }}
-                      animate={{ y: 0 }}
-                      transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
-                      className="text-5xl md:text-7xl lg:text-8xl font-black text-primary leading-[0.95] tracking-tighter italic"
-                    >
-                      Test <span className="text-secondary relative">
-                        SIBO
-                        <motion.span 
-                          initial={{ scaleX: 0 }}
-                          animate={{ scaleX: 1 }}
-                          transition={{ delay: 0.8, duration: 1 }}
-                          className="absolute -bottom-2 left-0 w-full h-2 bg-secondary/20 rounded-full origin-left"
-                        />
-                      </span>
-                    </motion.h1>
-                  </div>
-                  
-                  <motion.div
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5, duration: 1 }}
-                    className="flex flex-col md:flex-row items-center justify-center lg:justify-start gap-4"
-                  >
-                    <div className="h-[2px] w-12 bg-secondary/50 hidden lg:block" />
-                    <p className="text-2xl md:text-4xl font-bold text-primary/40 tracking-tighter">
-                      con <span className="text-primary font-black uppercase tracking-widest relative group cursor-default">
-                        precisión clínica
-                        <motion.span 
-                          animate={{ left: ["-100%", "100%"] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                          className="absolute bottom-0 h-[2px] w-full bg-secondary/50 blur-[2px]"
-                        />
-                      </span>
-                    </p>
-                  </motion.div>
+                <TechnologicalHeroTitle />
 
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1, duration: 0.5 }}
-                    className="pt-8 flex justify-center lg:justify-start"
-                  >
-                    <Link href="/booking">
-                      <Button size="lg" className="group rounded-full h-20 px-12 text-2xl font-black shadow-2xl bg-primary hover:bg-secondary transition-all hover:scale-105 active:scale-95 border-4 border-white/10">
-                        Reserva tu cita <ChevronRight className="ml-2 h-8 w-8 group-hover:translate-x-2 transition-transform" />
-                      </Button>
-                    </Link>
-                  </motion.div>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 1, duration: 0.5 }}
+                  className="pt-8 flex justify-center lg:justify-start"
+                >
+                  <Link href="/booking">
+                    <Button size="lg" className="group rounded-full h-20 px-12 text-2xl font-black shadow-2xl bg-primary hover:bg-secondary transition-all hover:scale-105 active:scale-95 border-4 border-white/10">
+                      Reserva tu cita <ChevronRight className="ml-2 h-8 w-8 group-hover:translate-x-2 transition-transform" />
+                    </Button>
+                  </Link>
+                </motion.div>
               </motion.div>
               <div className="hidden lg:block relative"><TechScannerAnimation /></div>
             </div>

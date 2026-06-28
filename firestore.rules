@@ -2,7 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // ACCESO TOTAL PARA DESARROLLO Y CAPTACIÓN PÚBLICA
-    // Se permite lectura y escritura pública para evitar errores de permisos en el dashboard de inversión.
     match /{document=**} {
       allow read, write: if true;
     }
