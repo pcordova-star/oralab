@@ -350,7 +350,9 @@ export default function ReceptionPage() {
                         <TableRow key={b.id} className="hover:bg-primary/5 transition-colors">
                           <TableCell>
                             <div className="flex flex-col">
-                              <span className="font-black text-primary">{format(new Date(b.scheduledDate + 'T00:00:00'), "dd/MM/yyyy")}</span>
+                              <span className="font-black text-primary">
+                                {b.scheduledDate ? format(new Date(b.scheduledDate + 'T00:00:00'), "dd/MM/yyyy") : "Pendiente"}
+                              </span>
                               <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
                                 <Clock className="h-3 w-3" /> {b.scheduledTime} hrs
                               </span>
