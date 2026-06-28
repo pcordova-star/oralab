@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, serverTimestamp, doc, query } from "firebase/firestore";
+import { collection, serverTimestamp, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/table";
+} from "@/components/ui/table";
 import { 
   Trash2, 
   Download,
@@ -24,10 +24,8 @@ import {
   Calendar,
   Clock,
   User,
-  Stethoscope,
   MapPin,
-  CheckCircle2,
-  AlertCircle
+  CheckCircle2
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -104,7 +102,6 @@ export default function ReceptionPage() {
     }
   }, [user, isUserLoading, router]);
 
-  // Consultas simplificadas para evitar errores de permisos estáticos
   const bookingsRef = useMemoFirebase(() => {
     if (!db || !user || user.email !== ADMIN_EMAIL) return null;
     return collection(db, "bookings");
@@ -118,7 +115,6 @@ export default function ReceptionPage() {
   const { data: rawBookings, isLoading: loadingBookings } = useCollection(bookingsRef);
   const { data: rawContractLeads, isLoading: loadingLeads } = useCollection(contractLeadsRef);
 
-  // Ordenamiento manual en el cliente para mayor estabilidad
   const bookings = (rawBookings || []).sort((a, b) => {
     const dateA = a.scheduledDate || "";
     const dateB = b.scheduledDate || "";
@@ -187,7 +183,7 @@ export default function ReceptionPage() {
     addText(`En Santiago de Chile, a ${currentDay} de ${currentMonth} de 2026, comparecen:`, 10, false, "justify");
     addText("Por una parte, TRESNA SpA, RUT N° 77.023.697-5, domiciliada en Avenida Apoquindo N° 3990, Oficina 605, comuna de Las Condes, Región Metropolitana, representada legalmente por don PAULO CÓRDOVA, cédula nacional de identidad N° 12.901.912-3, ambos domiciliados para estos efectos en la misma dirección, en adelante \"TRESNA\" o la \"Empresa\".", 10, false, "justify");
     addText("Y por la otra:", 10, true);
-    addText(`Don(ña) ${lead.name}, cédula nacional de identidad N° ${lead.rut}, domiciliado(a) en ${lead.address}, email ${lead.email}, en adelante el \"Inversionista\".`, 10, false, "justify");
+    addText(`Don(ña) ${lead.name.toUpperCase()}, cédula nacional de identidad N° ${lead.rut}, domiciliado(a) en ${lead.address.toUpperCase()}, email ${lead.email.toLowerCase()}, en adelante el \"Inversionista\".`, 10, false, "justify");
 
     addText("Las partes acuerdan celebrar el presente Contrato Privado de Financiamiento y Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
 
@@ -318,7 +314,6 @@ export default function ReceptionPage() {
             <TabsTrigger value="investors" className="rounded-full font-bold px-8">Inversionistas</TabsTrigger>
           </TabsList>
 
-          {/* CONTENIDO: AGENDA DE PACIENTES (RESTAURADO) */}
           <TabsContent value="patients">
             <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
               <CardHeader className="bg-primary/5 border-b">
@@ -410,7 +405,6 @@ export default function ReceptionPage() {
             </Card>
           </TabsContent>
 
-          {/* CONTENIDO: INVERSIONISTAS (MANTENIDO) */}
           <TabsContent value="investors">
             <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
               <CardHeader className="bg-primary/5 border-b">
@@ -419,73 +413,75 @@ export default function ReceptionPage() {
                 </CardTitle>
                 <CardDescription>Revisión de aportes y validación de contratos Family & Friends.</CardDescription>
               </CardHeader>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="font-bold">Socio</TableHead>
-                    <TableHead className="font-bold">Monto</TableHead>
-                    <TableHead className="font-bold">Estado</TableHead>
-                    <TableHead className="text-right font-bold">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loadingLeads ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-10">Cargando socios...</TableCell></TableRow>
-                  ) : contractLeads.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-10 italic">No hay registros de inversión.</TableCell></TableRow>
-                  ) : (
-                    contractLeads.map((lead) => (
-                      <TableRow key={lead.id} className="hover:bg-primary/5 transition-colors">
-                        <TableCell>
-                           <div className="flex flex-col">
-                             <span className="font-black text-primary">{lead.name}</span>
-                             <span className="text-[10px] font-bold text-muted-foreground">{lead.rut}</span>
-                           </div>
-                        </TableCell>
-                        <TableCell className="font-black text-primary">
-                          ${(lead.amount || 0).toLocaleString('es-CL')}
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={lead.status === 'fully_signed' ? 'default' : 'outline'} 
-                            className={cn(lead.status === 'fully_signed' && "bg-green-500")}
-                          >
-                            {lead.status === 'fully_signed' ? 'Procesado' : 'Por Procesar'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                           <div className="flex justify-end gap-2">
-                             <Button 
-                               onClick={() => generateFullPDF(lead)} 
-                               variant="outline" 
-                               size="sm" 
-                               className="rounded-full h-8 font-bold"
-                             >
-                               <Download className="h-3 w-3 mr-1" /> PDF
-                             </Button>
-                             {lead.status !== 'fully_signed' && (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-bold">Socio</TableHead>
+                      <TableHead className="font-bold">Monto</TableHead>
+                      <TableHead className="font-bold">Estado</TableHead>
+                      <TableHead className="text-right font-bold">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingLeads ? (
+                      <TableRow><TableCell colSpan={4} className="text-center py-10">Cargando socios...</TableCell></TableRow>
+                    ) : contractLeads.length === 0 ? (
+                      <TableRow><TableCell colSpan={4} className="text-center py-10 italic">No hay registros de inversión.</TableCell></TableRow>
+                    ) : (
+                      contractLeads.map((lead) => (
+                        <TableRow key={lead.id} className="hover:bg-primary/5 transition-colors">
+                          <TableCell>
+                             <div className="flex flex-col">
+                               <span className="font-black text-primary">{lead.name}</span>
+                               <span className="text-[10px] font-bold text-muted-foreground">{lead.rut}</span>
+                             </div>
+                          </TableCell>
+                          <TableCell className="font-black text-primary">
+                            ${(lead.amount || 0).toLocaleString('es-CL')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={lead.status === 'fully_signed' ? 'default' : 'outline'} 
+                              className={cn(lead.status === 'fully_signed' && "bg-green-500")}
+                            >
+                              {lead.status === 'fully_signed' ? 'Procesado' : 'Por Procesar'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                             <div className="flex justify-end gap-2">
                                <Button 
-                                 onClick={() => handleAdminMarkAsSigned(lead)} 
-                                 className="bg-primary h-8 text-[10px] rounded-full px-4 font-black shadow-md"
+                                 onClick={() => generateFullPDF(lead)} 
+                                 variant="outline" 
+                                 size="sm" 
+                                 className="rounded-full h-8 font-bold"
                                >
-                                 Validar Pago
+                                 <Download className="h-3 w-3 mr-1" /> PDF
                                </Button>
-                             )}
-                             <Button 
-                               variant="ghost" 
-                               size="icon" 
-                               onClick={() => handleDeleteContractLead(lead.id)} 
-                               className="text-red-300 hover:text-red-600 h-8 w-8"
-                             >
-                               <Trash2 className="h-4 w-4" />
-                             </Button>
-                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                               {lead.status !== 'fully_signed' && (
+                                 <Button 
+                                   onClick={() => handleAdminMarkAsSigned(lead)} 
+                                   className="bg-primary h-8 text-[10px] rounded-full px-4 font-black shadow-md"
+                                 >
+                                   Validar Pago
+                                 </Button>
+                               )}
+                               <Button 
+                                 variant="ghost" 
+                                 size="icon" 
+                                 onClick={() => handleDeleteContractLead(lead.id)} 
+                                 className="text-red-300 hover:text-red-600 h-8 w-8"
+                               >
+                                 <Trash2 className="h-4 w-4" />
+                               </Button>
+                             </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </Card>
           </TabsContent>
         </Tabs>

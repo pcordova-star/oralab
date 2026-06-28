@@ -30,8 +30,7 @@ import {
   Sparkles,
   Users,
   TrendingUp,
-  FileText,
-  ShieldCheck
+  FileText
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -162,7 +161,6 @@ export default function InvestorsDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
 
-  // Form State
   const [invName, setInvName] = useState("");
   const [invRut, setInvRut] = useState("");
   const [invEmail, setInvEmail] = useState("");
@@ -176,7 +174,6 @@ export default function InvestorsDashboardPage() {
     setMounted(true);
   }, []);
 
-  // Consulta sin filtros para evitar errores de permisos
   const partnersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, "contract_leads");
@@ -257,7 +254,7 @@ export default function InvestorsDashboardPage() {
     addText(`En Santiago de Chile, a ${currentDay} de ${currentMonth} de 2026, comparecen:`, 10, false, "justify");
     addText("Por una parte, TRESNA SpA, RUT N° 77.023.697-5, domiciliada en Avenida Apoquindo N° 3990, Oficina 605, comuna de Las Condes, Región Metropolitana, representada legalmente por don PAULO CÓRDOVA, cédula nacional de identidad N° 12.901.912-3, ambos domiciliados para estos efectos en la misma dirección, en adelante \"TRESNA\" o la \"Empresa\".", 10, false, "justify");
     addText("Y por la otra:", 10, true);
-    addText(`Don(ña) ${invName || '________________'}, cédula nacional de identidad N° ${invRut || '___________'}, domiciliado(a) en ${invAddress || '__________________________________'}, email ${invEmail || '___________'}, en adelante el \"Inversionista\".`, 10, false, "justify");
+    addText(`Don(ña) ${invName.toUpperCase() || '________________'}, cédula nacional de identidad N° ${invRut || '___________'}, domiciliado(a) en ${invAddress.toUpperCase() || '__________________________________'}, email ${invEmail.toLowerCase() || '___________'}, en adelante el \"Inversionista\".`, 10, false, "justify");
 
     addText("Las partes acuerdan celebrar el presente Contrato Privado de Financiamiento y Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
 
@@ -323,7 +320,7 @@ export default function InvestorsDashboardPage() {
     doc.text("Representante Legal TRESNA SpA", margin, signatureY + 9);
     doc.line(pageWidth - margin - 75, signatureY, pageWidth - margin, signatureY);
     doc.text("INVERSIONISTA", pageWidth - margin, signatureY + 5, { align: "right" });
-    doc.text((invName || "Firma del Inversionista").toUpperCase(), pageWidth - margin, signatureY + 9, { align: "right" });
+    doc.text((invName.toUpperCase() || "Firma del Inversionista"), pageWidth - margin, signatureY + 9, { align: "right" });
 
     doc.save(`Contrato_Oralab_${invName.replace(/\s+/g, '_') || 'Nuevo_Socio'}.pdf`);
   };

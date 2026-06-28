@@ -7,43 +7,26 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Activity, 
-  ArrowRight, 
   Microscope, 
-  ShieldCheck, 
   Zap,
   Beaker,
   AlertCircle,
-  Award,
-  Search,
   CheckCircle,
   Stethoscope,
   ClipboardCheck,
-  CalendarDays,
   MapPin,
-  MessageCircle,
   Lock,
   ChevronRight,
   Sparkles,
-  UserRoundCheck,
   Wind,
-  TrendingUp,
-  FileText,
-  Users,
-  PieChart as PieChartIcon,
   BarChart3,
-  Info,
-  HelpCircle,
   Building2,
-  Smartphone,
   Timer,
   Home,
-  Database,
   Droplets,
   RotateCcw,
   CheckCircle2,
-  Flag,
   Coins,
-  XCircle,
   Coffee,
   Briefcase
 } from "lucide-react";
@@ -58,7 +41,7 @@ import {
   Legend, 
   ReferenceArea 
 } from 'recharts';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -456,7 +439,6 @@ const InteractiveAssistantSim = () => {
 };
 
 export default function HomePage() {
-  const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Apoquindo+3990+oficina+605+Las+Condes+Santiago+Chile";
   const whatsappUrl = "https://wa.me/56936850468";
 
   return (
@@ -477,7 +459,6 @@ export default function HomePage() {
                   </span>
                 </motion.div>
                 
-                {/* HEADLINE ANIMADO Y TECNOLÓGICO */}
                 <div className="space-y-2">
                   <motion.h1 
                     initial={{ opacity: 0 }}
@@ -527,10 +508,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Nueva Sección Educativa SIBO */}
         <SIBOEducationSection />
 
-        {/* Sección Educativa Resumen */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
@@ -556,7 +535,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* PROCEDIMIENTO: Experiencia en Consulta */}
         <section className="py-24 bg-background overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
@@ -623,7 +601,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ALTERNATIVA: Test en Domicilio o Trabajo */}
         <section className="py-24 bg-muted/20 border-y">
            <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
              <div className="space-y-6 lg:order-1">
@@ -651,7 +628,6 @@ export default function HomePage() {
            </div>
         </section>
 
-        {/* Informe Visual */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-6">
