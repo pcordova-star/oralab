@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, serverTimestamp, doc } from "firebase/firestore";
+import { collection, serverTimestamp, doc, query } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +16,18 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
+} from "@/table";
 import { 
   Trash2, 
   Download,
   Users,
-  Calendar
+  Calendar,
+  Clock,
+  User,
+  Stethoscope,
+  MapPin,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -98,18 +104,43 @@ export default function ReceptionPage() {
     }
   }, [user, isUserLoading, router]);
 
+  // Consultas simplificadas para evitar errores de permisos estáticos
+  const bookingsRef = useMemoFirebase(() => {
+    if (!db || !user || user.email !== ADMIN_EMAIL) return null;
+    return collection(db, "bookings");
+  }, [db, user]);
+
   const contractLeadsRef = useMemoFirebase(() => {
     if (!db || !user || user.email !== ADMIN_EMAIL) return null;
     return collection(db, "contract_leads");
   }, [db, user]);
 
+  const { data: rawBookings, isLoading: loadingBookings } = useCollection(bookingsRef);
   const { data: rawContractLeads, isLoading: loadingLeads } = useCollection(contractLeadsRef);
+
+  // Ordenamiento manual en el cliente para mayor estabilidad
+  const bookings = (rawBookings || []).sort((a, b) => {
+    const dateA = a.scheduledDate || "";
+    const dateB = b.scheduledDate || "";
+    return dateB.localeCompare(dateA);
+  });
 
   const contractLeads = (rawContractLeads || []).sort((a, b) => {
     const dateA = a.createdAt?.seconds || 0;
     const dateB = b.createdAt?.seconds || 0;
     return dateB - dateA;
   });
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200">Pendiente</Badge>;
+      case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">Llegó</Badge>;
+      case "in_progress": return <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">En Curso</Badge>;
+      case "completed": return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">Completado</Badge>;
+      case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-500 border-red-200">Cancelado</Badge>;
+      default: return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
   const generateFullPDF = (lead: any) => {
     const doc = new jsPDF();
@@ -149,7 +180,7 @@ export default function ReceptionPage() {
     const currentDay = format(new Date(), "d");
     const currentMonth = format(new Date(), "MMMM", { locale: es });
     const amountInWords = numeroALetras(lead.amount);
-    const equityPct = lead.equity.toFixed(4);
+    const equityPct = (lead.equity || 0).toFixed(4);
 
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO Y PARTICIPACIÓN ECONÓMICA", 12, true, "center");
     y += 5;
@@ -164,7 +195,7 @@ export default function ReceptionPage() {
     addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento con los permisos y logística necesarios para operar en el laboratorio y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
 
     addText("SEGUNDA: APORTE", 10, true);
-    addText(`El Inversionista aporta a TRESNA SpA la suma de $${lead.amount.toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
+    addText(`El Inversionista aporta a TRESNA SpA la suma de $${(lead.amount || 0).toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
 
     addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
     addText("Los recursos serán utilizados para:", 10, false);
@@ -172,7 +203,7 @@ export default function ReceptionPage() {
     addText("b) Capital de trabajo y gastos operacionales iniciales.", 10, false);
 
     addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
-    addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${lead.amount.toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${(lead.amount * 0.2).toLocaleString('es-CL')}).`, 10, false, "justify");
+    addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${(lead.amount || 0).toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${((lead.amount || 0) * 0.2).toLocaleString('es-CL')}).`, 10, false, "justify");
     addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte, siempre que la unidad de negocio ORALAB cuente con flujo de caja operacional suficiente para ello. En caso de que el flujo disponible no sea suficiente en una fecha de pago determinada, la cuota correspondiente se postergará al mes siguiente en que exista disponibilidad, sin que ello constituya incumplimiento contractual, mora ni genere intereses penales. La Empresa informará al Inversionista de cualquier postergación, indicando la causa y la nueva fecha estimada de pago. Con todo, las postergaciones que pudieren producirse no podrán extenderse más allá de 12 meses a partir del mes 12 mencionado arriba en el párrafo.", 10, false, "justify");
 
     addText("QUINTA: RESGUARDO SOBRE EL EQUIPO", 10, true);
@@ -224,15 +255,17 @@ export default function ReceptionPage() {
     doc.text("Representante Legal TRESNA SpA", margin, signatureY + 9);
 
     const invX = pageWidth - margin - 75;
-    doc.setFillColor(240, 247, 255);
-    doc.roundedRect(invX, signatureY - 22, 75, 20, 2, 2, 'F');
-    doc.setTextColor(28, 104, 182);
-    doc.setFontSize(7);
-    doc.text("FIRMADO ELECTRÓNICAMENTE", invX + 37.5, signatureY - 17, { align: "center" });
-    doc.setFontSize(6);
-    doc.text(`Nombre: ${lead.name.toUpperCase()}`, invX + 5, signatureY - 13);
-    doc.text(`RUT: ${lead.rut}`, invX + 5, signatureY - 10);
-    doc.text(`Fecha: ${format(new Date(lead.investorSignedAt), "dd/MM/yyyy HH:mm:ss")}`, invX + 5, signatureY - 7);
+    if (lead.investorSignedAt) {
+      doc.setFillColor(240, 247, 255);
+      doc.roundedRect(invX, signatureY - 22, 75, 20, 2, 2, 'F');
+      doc.setTextColor(28, 104, 182);
+      doc.setFontSize(7);
+      doc.text("FIRMADO ELECTRÓNICAMENTE", invX + 37.5, signatureY - 17, { align: "center" });
+      doc.setFontSize(6);
+      doc.text(`Nombre: ${lead.name.toUpperCase()}`, invX + 5, signatureY - 13);
+      doc.text(`RUT: ${lead.rut}`, invX + 5, signatureY - 10);
+      doc.text(`Fecha: ${format(new Date(lead.investorSignedAt), "dd/MM/yyyy HH:mm:ss")}`, invX + 5, signatureY - 7);
+    }
 
     doc.setTextColor(0, 0, 0);
     doc.line(pageWidth - margin - 75, signatureY, pageWidth - margin, signatureY);
@@ -258,50 +291,195 @@ export default function ReceptionPage() {
     toast({ title: "Registro eliminado" });
   };
 
+  const handleDeleteBooking = (id: string) => {
+    if (!db || !confirm("¿Deseas eliminar esta reserva de la agenda?")) return;
+    deleteDocumentNonBlocking(doc(db, "bookings", id));
+    toast({ title: "Cita eliminada" });
+  };
+
+  const handleStatusChange = (id: string, newStatus: string) => {
+    if (!db) return;
+    updateDocumentNonBlocking(doc(db, "bookings", id), {
+      status: newStatus,
+      updatedAt: serverTimestamp()
+    });
+    toast({ title: "Estado actualizado" });
+  };
+
   if (isUserLoading || !user || !isMounted) return null;
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/30 pb-20 font-body">
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <Tabs defaultValue="investors" className="space-y-6">
+        <Tabs defaultValue="patients" className="space-y-6">
           <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-2">
             <TabsTrigger value="patients" className="rounded-full font-bold px-8">Agenda</TabsTrigger>
             <TabsTrigger value="investors" className="rounded-full font-bold px-8">Inversionistas</TabsTrigger>
           </TabsList>
 
+          {/* CONTENIDO: AGENDA DE PACIENTES (RESTAURADO) */}
+          <TabsContent value="patients">
+            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+              <CardHeader className="bg-primary/5 border-b">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                      <Calendar className="h-6 w-6 text-secondary" /> Control de Agenda
+                    </CardTitle>
+                    <CardDescription>Gestión de citas y kits de test de aire espirado.</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                     <Badge className="bg-secondary font-black">{bookings.length} Reservas</Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/10">
+                      <TableHead className="font-bold">Fecha / Hora</TableHead>
+                      <TableHead className="font-bold">Paciente</TableHead>
+                      <TableHead className="font-bold">Examen / Modalidad</TableHead>
+                      <TableHead className="font-bold">Estado</TableHead>
+                      <TableHead className="text-right font-bold">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingBookings ? (
+                      <TableRow><TableCell colSpan={5} className="text-center py-10">Cargando agenda...</TableCell></TableRow>
+                    ) : bookings.length === 0 ? (
+                      <TableRow><TableCell colSpan={5} className="text-center py-10 italic">No hay citas registradas.</TableCell></TableRow>
+                    ) : (
+                      bookings.map((b) => (
+                        <TableRow key={b.id} className="hover:bg-primary/5 transition-colors">
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-black text-primary">{format(new Date(b.scheduledDate + 'T00:00:00'), "dd/MM/yyyy")}</span>
+                              <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                                <Clock className="h-3 w-3" /> {b.scheduledTime} hrs
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-primary">{b.firstName} {b.lastNameFather}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase font-black">{b.email}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                             <div className="flex flex-col">
+                                <span className="font-black text-secondary italic">Test {b.examType}</span>
+                                <span className="text-[10px] font-bold flex items-center gap-1">
+                                  {b.modality === 'home_kit' ? (
+                                    <><MapPin className="h-3 w-3" /> Retiro de Kit</>
+                                  ) : (
+                                    <><User className="h-3 w-3" /> Presencial</>
+                                  )}
+                                </span>
+                             </div>
+                          </TableCell>
+                          <TableCell>{getStatusBadge(b.status)}</TableCell>
+                          <TableCell className="text-right">
+                             <div className="flex justify-end gap-2">
+                               <Button 
+                                 variant="ghost" 
+                                 size="icon" 
+                                 onClick={() => handleStatusChange(b.id, 'arrived')}
+                                 title="Marcar Llegada"
+                                 className="h-8 w-8 text-blue-500 hover:bg-blue-50"
+                               >
+                                 <CheckCircle2 className="h-4 w-4" />
+                               </Button>
+                               <Button 
+                                 variant="ghost" 
+                                 size="icon" 
+                                 onClick={() => handleDeleteBooking(b.id)}
+                                 className="h-8 w-8 text-red-300 hover:text-red-600 hover:bg-red-50"
+                               >
+                                 <Trash2 className="h-4 w-4" />
+                               </Button>
+                             </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* CONTENIDO: INVERSIONISTAS (MANTENIDO) */}
           <TabsContent value="investors">
-            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem]">
+            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+              <CardHeader className="bg-primary/5 border-b">
+                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                  <Users className="h-6 w-6 text-secondary" /> Gestión de Socios
+                </CardTitle>
+                <CardDescription>Revisión de aportes y validación de contratos Family & Friends.</CardDescription>
+              </CardHeader>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Socio</TableHead>
-                    <TableHead>Monto</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead className="font-bold">Socio</TableHead>
+                    <TableHead className="font-bold">Monto</TableHead>
+                    <TableHead className="font-bold">Estado</TableHead>
+                    <TableHead className="text-right font-bold">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loadingLeads ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-10">Cargando...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-10">Cargando socios...</TableCell></TableRow>
                   ) : contractLeads.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-10 italic">No hay registros.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-10 italic">No hay registros de inversión.</TableCell></TableRow>
                   ) : (
                     contractLeads.map((lead) => (
-                      <TableRow key={lead.id}>
+                      <TableRow key={lead.id} className="hover:bg-primary/5 transition-colors">
                         <TableCell>
-                           <div className="flex flex-col"><span className="font-black">{lead.name}</span><span className="text-[10px]">{lead.rut}</span></div>
+                           <div className="flex flex-col">
+                             <span className="font-black text-primary">{lead.name}</span>
+                             <span className="text-[10px] font-bold text-muted-foreground">{lead.rut}</span>
+                           </div>
                         </TableCell>
-                        <TableCell className="font-black text-primary">${lead.amount.toLocaleString('es-CL')}</TableCell>
+                        <TableCell className="font-black text-primary">
+                          ${(lead.amount || 0).toLocaleString('es-CL')}
+                        </TableCell>
                         <TableCell>
-                          <Badge variant={lead.status === 'fully_signed' ? 'default' : 'outline'} className={cn(lead.status === 'fully_signed' && "bg-green-500")}>
+                          <Badge 
+                            variant={lead.status === 'fully_signed' ? 'default' : 'outline'} 
+                            className={cn(lead.status === 'fully_signed' && "bg-green-500")}
+                          >
                             {lead.status === 'fully_signed' ? 'Procesado' : 'Por Procesar'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right flex justify-end gap-2">
-                           <Button onClick={() => generateFullPDF(lead)} variant="outline" size="sm" className="rounded-full h-8"><Download className="h-3 w-3 mr-1" /> PDF</Button>
-                           {lead.status !== 'fully_signed' && <Button onClick={() => handleAdminMarkAsSigned(lead)} className="bg-primary h-8 text-[10px] rounded-full px-4">Validar Pago</Button>}
-                           <Button variant="ghost" size="icon" onClick={() => handleDeleteContractLead(lead.id)} className="text-red-300 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
+                        <TableCell className="text-right">
+                           <div className="flex justify-end gap-2">
+                             <Button 
+                               onClick={() => generateFullPDF(lead)} 
+                               variant="outline" 
+                               size="sm" 
+                               className="rounded-full h-8 font-bold"
+                             >
+                               <Download className="h-3 w-3 mr-1" /> PDF
+                             </Button>
+                             {lead.status !== 'fully_signed' && (
+                               <Button 
+                                 onClick={() => handleAdminMarkAsSigned(lead)} 
+                                 className="bg-primary h-8 text-[10px] rounded-full px-4 font-black shadow-md"
+                               >
+                                 Validar Pago
+                               </Button>
+                             )}
+                             <Button 
+                               variant="ghost" 
+                               size="icon" 
+                               onClick={() => handleDeleteContractLead(lead.id)} 
+                               className="text-red-300 hover:text-red-600 h-8 w-8"
+                             >
+                               <Trash2 className="h-4 w-4" />
+                             </Button>
+                           </div>
                         </TableCell>
                       </TableRow>
                     ))
