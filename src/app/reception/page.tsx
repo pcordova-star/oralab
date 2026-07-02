@@ -351,7 +351,7 @@ export default function ReceptionPage() {
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-black text-primary">
-                                {b.scheduledDate ? format(new Date(b.scheduledDate + 'T00:00:00'), "dd/MM/yyyy") : "Pendiente"}
+                                {b.scheduledDate && b.scheduledDate.trim() !== "" ? format(new Date(b.scheduledDate + 'T00:00:00'), "dd/MM/yyyy") : "Pendiente"}
                               </span>
                               <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
                                 <Clock className="h-3 w-3" /> {b.scheduledTime} hrs
