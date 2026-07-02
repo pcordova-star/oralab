@@ -26,9 +26,7 @@ import {
   CheckCircle2,
   Coffee,
   Briefcase,
-  Users,
-  Target,
-  TrendingUp
+  Users
 } from "lucide-react";
 import { 
   LineChart, 
