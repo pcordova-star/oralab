@@ -167,7 +167,7 @@ export default function ReceptionPage() {
   const validatedRaised = contractLeads
     .filter(lead => lead.status === 'fully_signed')
     .reduce((acc, lead) => acc + (lead.amount || 0), 0);
-  const balanceRemaining = FUNDING_GOAL - validatedRaised;
+  const balanceRemaining = Math.max(0, FUNDING_GOAL - validatedRaised);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -226,19 +226,19 @@ export default function ReceptionPage() {
     doc.setTextColor(60, 60, 60);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`META RONDA FF01 (Funding Goal):`, labelX, y);
+    doc.text(`META DE RECAUDACIÓN RONDA FF01:`, labelX, y);
     doc.setFont("helvetica", "bold");
     doc.text(`$${FUNDING_GOAL.toLocaleString('es-CL')}`, valueX, y);
     y += 7;
 
     doc.setFont("helvetica", "normal");
-    doc.text(`CAPITAL COMPROMETIDO (Signed):`, labelX, y);
+    doc.text(`CAPITAL COMPROMETIDO:`, labelX, y);
     doc.setFont("helvetica", "bold");
     doc.text(`$${totalRaised.toLocaleString('es-CL')}`, valueX, y);
     y += 7;
 
     doc.setFont("helvetica", "normal");
-    doc.text(`CAPITAL REAL VALIDADO (Paid):`, labelX, y);
+    doc.text(`CAPITAL REAL VALIDADO:`, labelX, y);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(secondaryRGB[0], secondaryRGB[1], secondaryRGB[2]);
     doc.text(`$${validatedRaised.toLocaleString('es-CL')}`, valueX, y);
@@ -249,7 +249,7 @@ export default function ReceptionPage() {
     doc.rect(margin, y, 170, 12, 'F');
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFont("helvetica", "bold");
-    doc.text(`SALDO POR RECAUDAR (Remaining):`, labelX + 5, y + 8);
+    doc.text(`SALDO POR RECAUDAR:`, labelX + 5, y + 8);
     doc.text(`$${balanceRemaining.toLocaleString('es-CL')}`, valueX, y + 8);
     y += 20;
 
@@ -263,12 +263,12 @@ export default function ReceptionPage() {
     doc.setFont("helvetica", "bold");
     doc.text("Comprometido:", margin, y);
     doc.setFont("helvetica", "normal");
-    doc.text(" Suma de intenciones de inversión con contrato firmado, pendientes de validación bancaria.", margin + 22, y);
+    doc.text(" Representa una intención de aporte que no se ha materializado aún en el flujo de caja.", margin + 22, y);
     y += 4;
     doc.setFont("helvetica", "bold");
     doc.text("Validado:", margin, y);
     doc.setFont("helvetica", "normal");
-    doc.text(" Capital efectivamente recibido en la cuenta de Tresna SpA y formalizado administrativamente.", margin + 14, y);
+    doc.text(" Capital efectivamente recibido en la cuenta bancaria de Tresna SpA y formalizado administrativamente.", margin + 14, y);
     y += 15;
 
     // Tabla Anonimizada
@@ -285,7 +285,7 @@ export default function ReceptionPage() {
     doc.setFont("helvetica", "bold");
     doc.text("IDENTIFICADOR", margin + 5, y + 7);
     doc.text("MONTO APORTE", margin + 60, y + 7);
-    doc.text("EQUITY (%)", margin + 110, y + 7);
+    doc.text("PARTICIPACIÓN (%)", margin + 110, y + 7);
     doc.text("ESTADO", margin + 145, y + 7);
     y += 10;
 
@@ -712,9 +712,9 @@ export default function ReceptionPage() {
               <div className="bg-blue-50/50 p-4 border-b border-primary/5 flex items-center gap-3">
                 <Info className="h-5 w-5 text-primary shrink-0" />
                 <div className="text-[10px] md:text-xs text-primary/80 leading-relaxed font-medium">
-                  <strong>Comprometido:</strong> Suma de contratos firmados pendientes de pago. 
-                  <strong className="ml-2">Real:</strong> Capital recibido y validado en banco. 
-                  <strong className="ml-2 text-secondary">Saldo:</strong> Monto restante para alcanzar los $13.5M de la ronda.
+                  <strong>Comprometido:</strong> Intención de aporte suscrita pero no materializada aún. 
+                  <strong className="ml-2 text-secondary">Real:</strong> Capital efectivamente recibido y validado en banco. 
+                  <strong className="ml-2">Saldo:</strong> Monto pendiente para completar los $13.5M de la ronda.
                 </div>
               </div>
 
