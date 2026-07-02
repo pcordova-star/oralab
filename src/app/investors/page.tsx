@@ -459,7 +459,7 @@ export default function InvestorsDashboardPage() {
                           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">S{i + 1}</div>
                           <span className="text-xs font-black text-primary italic text-muted-foreground">Inversionista #{i + 1}</span>
                         </div>
-                        <Badge variant="outline" className="text-[10px] font-black border-secondary/20 text-secondary">${p.amount?.toLocaleString('es-CL')}</Badge>
+                        <Badge variant="outline" className="text-[10px] font-black border-secondary/20 text-secondary">${(p.amount || 0).toLocaleString('es-CL')}</Badge>
                       </div>
                     ))
                   )}

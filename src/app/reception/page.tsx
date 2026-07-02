@@ -20,12 +20,12 @@ import {
 import { 
   Trash2, 
   Download,
-  Users,
   Calendar,
   Clock,
   User,
   MapPin,
-  CheckCircle2
+  CheckCircle2,
+  Users
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -175,7 +175,7 @@ export default function ReceptionPage() {
 
     const currentDay = format(new Date(), "d");
     const currentMonth = format(new Date(), "MMMM", { locale: es });
-    const amountInWords = numeroALetras(lead.amount);
+    const amountInWords = numeroALetras(lead.amount || 0);
     const equityPct = (lead.equity || 0).toFixed(4);
 
     addText("CONTRATO PRIVADO DE FINANCIAMIENTO Y PARTICIPACIÓN ECONÓMICA", 12, true, "center");

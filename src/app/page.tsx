@@ -7,11 +7,9 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Activity, 
-  Microscope, 
   Zap,
   Beaker,
   AlertCircle,
-  CheckCircle,
   Stethoscope,
   ClipboardCheck,
   MapPin,
@@ -20,13 +18,11 @@ import {
   Sparkles,
   Wind,
   BarChart3,
-  Building2,
   Timer,
   Home,
   Droplets,
   RotateCcw,
   CheckCircle2,
-  Coins,
   Coffee,
   Briefcase,
   Users
@@ -48,20 +44,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const fadeIn = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 }
-};
-
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
 const reportData = [
   { time: 0, h2: 5, ch4: 2, h2s: 0.8, co2: 'OK', symptoms: 'Ninguno' },
   { time: 20, h2: 7, ch4: 3, h2s: 1.0, co2: 'OK', symptoms: 'Borborigmos' },
@@ -76,7 +58,6 @@ const reportData = [
 const TechnologicalHeroTitle = () => {
   return (
     <div className="space-y-6">
-      {/* Brand Header - AGRANDADO EN UN 50% (scale-150) */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -88,7 +69,6 @@ const TechnologicalHeroTitle = () => {
         </div>
       </motion.div>
 
-      {/* Main Phrase */}
       <div className="space-y-2">
         <div className="relative inline-block overflow-hidden">
           <motion.h1 
@@ -499,8 +479,6 @@ const InteractiveAssistantSim = () => {
 };
 
 export default function HomePage() {
-  const whatsappUrl = "https://wa.me/56936850468";
-
   return (
     <div className="flex flex-col min-h-screen selection:bg-secondary selection:text-white overflow-x-hidden font-body">
       <Navbar />
@@ -512,8 +490,8 @@ export default function HomePage() {
           </div>
           <div className="container mx-auto px-4 text-center lg:text-left">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-              <motion.div initial="initial" animate="animate" variants={staggerContainer} className="space-y-6 md:space-y-8">
-                <motion.div variants={fadeIn} className="flex flex-wrap justify-center lg:justify-start gap-2 md:gap-3">
+              <div className="space-y-6 md:space-y-8">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap justify-center lg:justify-start gap-2 md:gap-3">
                   <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20">
                     <Activity className="h-3.5 w-3.5" /> Laboratorio Especializado
                   </span>
@@ -533,7 +511,7 @@ export default function HomePage() {
                     </Button>
                   </Link>
                 </motion.div>
-              </motion.div>
+              </div>
               <div className="hidden lg:block relative"><TechScannerAnimation /></div>
             </div>
           </div>
@@ -686,9 +664,6 @@ export default function HomePage() {
           <div className="flex flex-col gap-4">
             <h5 className="font-black text-primary mb-2 uppercase tracking-widest">Accesos</h5>
             <Link href="/login" className="text-xs text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-2"><Lock className="h-3 w-3" /> Acceso Administrativo</Link>
-            <Link href="/investors" className="text-xs opacity-0 hover:opacity-100 text-muted-foreground/40 hover:text-secondary transition-all flex items-center gap-2 duration-500">
-              <Coins className="h-3 w-3" /> Dashboard Inversionistas
-            </Link>
           </div>
         </div>
       </footer>
