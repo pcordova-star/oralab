@@ -522,26 +522,6 @@ export default function HomePage() {
 
         <SIBOEducationSection />
 
-        <section className="py-24 bg-muted/30 border-y">
-          <div className="container mx-auto px-4 text-center">
-             <div className="max-w-3xl mx-auto space-y-6">
-                <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Oportunidad Estratégica</Badge>
-                <h2 className="text-3xl md:text-5xl font-black text-primary italic">Ronda Family & Friends 01</h2>
-                <p className="text-lg text-muted-foreground font-medium">Únete a la primera clínica de diagnóstico digestivo avanzado Sunvou® en Chile.</p>
-                <div className="flex flex-wrap justify-center gap-4 pt-4">
-                  <div className="bg-white p-4 rounded-2xl border border-primary/10 shadow-sm flex items-center gap-2">
-                    <Target className="h-5 w-5 text-secondary" />
-                    <span className="text-sm font-bold text-primary">Meta: $13.5M</span>
-                  </div>
-                  <div className="bg-white p-4 rounded-2xl border border-primary/10 shadow-sm flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-secondary" />
-                    <span className="text-sm font-bold text-primary">Retorno: 20%</span>
-                  </div>
-                </div>
-             </div>
-          </div>
-        </section>
-
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
