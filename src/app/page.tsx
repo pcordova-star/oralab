@@ -76,14 +76,14 @@ const reportData = [
 const TechnologicalHeroTitle = () => {
   return (
     <div className="space-y-6">
-      {/* Brand Header */}
+      {/* Brand Header - Agrandado un 50% (scale-150) */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="flex flex-col items-center lg:items-start gap-4 mb-2"
+        className="flex flex-col items-center lg:items-start gap-4 mb-12"
       >
-        <div className="flex items-center gap-4 bg-white/50 backdrop-blur-md p-3 px-6 rounded-3xl border border-primary/10 shadow-sm group">
+        <div className="flex items-center gap-4 bg-white/50 backdrop-blur-md p-4 px-8 rounded-[2.5rem] border border-primary/10 shadow-lg group scale-150 origin-center lg:origin-left transition-transform duration-500">
           <Logo />
         </div>
       </motion.div>
