@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, serverTimestamp, doc } from "firebase/firestore";
+import { collection, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Table, 
   TableBody, 
@@ -19,6 +21,14 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog";
+import { 
   Trash2, 
   Download,
   Calendar,
@@ -27,7 +37,11 @@ import {
   MapPin,
   CheckCircle2,
   Users,
-  Briefcase
+  Briefcase,
+  Pencil,
+  Save,
+  CreditCard,
+  Mail
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -38,6 +52,8 @@ import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase
 import { jsPDF } from "jspdf";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
+const FUNDING_GOAL = 13500000;
+const EQUITY_TOTAL = 10;
 
 function numeroALetras(num: number): string {
   const UNIDADES = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
@@ -90,6 +106,17 @@ export default function ReceptionPage() {
   const db = useFirestore();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+
+  // Edit Socio State
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    rut: "",
+    email: "",
+    address: "",
+    amount: 0
+  });
 
   useEffect(() => {
     setIsMounted(true);
@@ -273,12 +300,12 @@ export default function ReceptionPage() {
     doc.save(`Contrato_Oralab_Final_${lead.name.replace(/\s+/g, '_')}.pdf`);
   };
 
-  const handleAdminMarkAsSigned = (lead: any) => {
+  const handleAdminMarkAsSigned = async (lead: any) => {
     if (!db || !confirm("¿Confirmas la recepción del pago y formalización del socio?")) return;
     
     try {
       const leadRef = doc(db, "contract_leads", lead.id);
-      updateDocumentNonBlocking(leadRef, {
+      await updateDoc(leadRef, {
         status: "fully_signed",
         adminSignedAt: new Date().toISOString(),
         updatedAt: serverTimestamp()
@@ -293,6 +320,39 @@ export default function ReceptionPage() {
         title: "Error", 
         description: "No se pudo actualizar el estado del socio." 
       });
+    }
+  };
+
+  const handleEditClick = (lead: any) => {
+    setEditingLead(lead);
+    setEditForm({
+      name: lead.name || "",
+      rut: lead.rut || "",
+      email: lead.email || "",
+      address: lead.address || "",
+      amount: lead.amount || 0
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!db || !editingLead) return;
+    
+    try {
+      const leadRef = doc(db, "contract_leads", editingLead.id);
+      const newEquity = (editForm.amount / FUNDING_GOAL) * EQUITY_TOTAL;
+      
+      await updateDoc(leadRef, {
+        ...editForm,
+        equity: newEquity,
+        updatedAt: serverTimestamp()
+      });
+      
+      toast({ title: "Socio actualizado", description: "Los cambios se guardaron correctamente." });
+      setIsEditDialogOpen(false);
+      setEditingLead(null);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error al guardar" });
     }
   };
 
@@ -337,7 +397,7 @@ export default function ReceptionPage() {
                     <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
                       <Calendar className="h-6 w-6 text-secondary" /> Control de Agenda
                     </CardTitle>
-                    <CardDescription>Gestión de citas y kits de test de aire espirado.</CardDescription>
+                    <CardDescription>Gestión de citas y kits de test de aire espirado SIBO.</CardDescription>
                   </div>
                   <div className="flex gap-2">
                      <Badge className="bg-secondary font-black">{bookings.length} Reservas</Badge>
@@ -366,7 +426,7 @@ export default function ReceptionPage() {
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-black text-primary">
-                                {b.scheduledDate && b.scheduledDate.trim() !== "" ? format(new Date(b.scheduledDate + 'T00:00:00'), "dd/MM/yyyy") : "Pendiente"}
+                                {b.scheduledDate ? format(new Date(b.scheduledDate + 'T00:00:00'), "dd/MM/yyyy") : "Pendiente"}
                               </span>
                               <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
                                 <Clock className="h-3 w-3" /> {b.scheduledTime} hrs
@@ -426,9 +486,9 @@ export default function ReceptionPage() {
             <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
               <CardHeader className="bg-primary/5 border-b">
                 <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                  <Users className="h-6 w-6 text-secondary" /> Gestión de Socios
+                  <Users className="h-6 w-6 text-secondary" /> Gestión de Socios FF01
                 </CardTitle>
-                <CardDescription>Revisión de aportes y validación de pagos Family & Friends.</CardDescription>
+                <CardDescription>Revisión de aportes y validación de contratos Family & Friends.</CardDescription>
               </CardHeader>
               <div className="overflow-x-auto">
                 <Table>
@@ -476,6 +536,15 @@ export default function ReceptionPage() {
                           <TableCell className="text-right">
                              <div className="flex justify-end gap-2">
                                <Button 
+                                 onClick={() => handleEditClick(lead)}
+                                 variant="ghost"
+                                 size="icon"
+                                 className="h-8 w-8 text-primary hover:bg-primary/10"
+                                 title="Editar Socio"
+                               >
+                                 <Pencil className="h-4 w-4" />
+                               </Button>
+                               <Button 
                                  onClick={() => generateFullPDF(lead)} 
                                  variant="outline" 
                                  size="sm" 
@@ -510,6 +579,68 @@ export default function ReceptionPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Dialogo de Edición de Socio */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-md rounded-[2rem]">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black text-primary italic">Editar Socio</DialogTitle>
+              <DialogDescription>Modifica los datos del inversionista y su participación.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label className="font-bold flex items-center gap-2"><User className="h-4 w-4" /> Nombre Completo</Label>
+                <Input 
+                  value={editForm.name} 
+                  onChange={(e) => setEditForm({...editForm, name: e.target.value})} 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT</Label>
+                  <Input 
+                    value={editForm.rut} 
+                    onChange={(e) => setEditForm({...editForm, rut: e.target.value})} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-bold flex items-center gap-2"><Briefcase className="h-4 w-4" /> Monto Aporte</Label>
+                  <Input 
+                    type="number"
+                    value={editForm.amount} 
+                    onChange={(e) => setEditForm({...editForm, amount: parseInt(e.target.value) || 0})} 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-bold flex items-center gap-2"><Mail className="h-4 w-4" /> Correo</Label>
+                <Input 
+                  value={editForm.email} 
+                  onChange={(e) => setEditForm({...editForm, email: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Dirección</Label>
+                <Input 
+                  value={editForm.address} 
+                  onChange={(e) => setEditForm({...editForm, address: e.target.value})} 
+                />
+              </div>
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Nueva Participación Proyectada</p>
+                <p className="text-2xl font-black text-primary italic">
+                  {((editForm.amount / FUNDING_GOAL) * EQUITY_TOTAL).toFixed(4)}%
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" className="rounded-full" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSaveEdit} className="bg-primary font-black rounded-full px-8 shadow-lg">
+                <Save className="h-4 w-4 mr-2" /> Guardar Cambios
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
