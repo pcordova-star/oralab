@@ -41,7 +41,9 @@ import {
   Pencil,
   Save,
   CreditCard,
-  Mail
+  Mail,
+  TrendingUp,
+  Target
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -155,6 +157,11 @@ export default function ReceptionPage() {
     const dateB = b.createdAt?.seconds || 0;
     return dateB - dateA;
   });
+
+  const totalRaised = contractLeads.reduce((acc, lead) => acc + (lead.amount || 0), 0);
+  const validatedRaised = contractLeads
+    .filter(lead => lead.status === 'fully_signed')
+    .reduce((acc, lead) => acc + (lead.amount || 0), 0);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -485,10 +492,28 @@ export default function ReceptionPage() {
           <TabsContent value="investors">
             <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
               <CardHeader className="bg-primary/5 border-b">
-                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                  <Users className="h-6 w-6 text-secondary" /> Gestión de Socios FF01
-                </CardTitle>
-                <CardDescription>Revisión de aportes y validación de contratos Family & Friends.</CardDescription>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div>
+                    <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                      <Users className="h-6 w-6 text-secondary" /> Gestión de Socios FF01
+                    </CardTitle>
+                    <CardDescription>Revisión de aportes y validación de contratos Family & Friends.</CardDescription>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white p-4 rounded-2xl border border-primary/10 shadow-sm">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1 mb-1">
+                        <TrendingUp className="h-3 w-3 text-secondary" /> Total Registrado
+                      </p>
+                      <p className="text-xl font-black text-primary italic">${totalRaised.toLocaleString('es-CL')}</p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20 shadow-sm">
+                      <p className="text-[10px] font-black text-secondary uppercase flex items-center gap-1 mb-1">
+                        <Target className="h-3 w-3 text-primary" /> Recaudación Real
+                      </p>
+                      <p className="text-xl font-black text-secondary italic">${validatedRaised.toLocaleString('es-CL')}</p>
+                    </div>
+                  </div>
+                </div>
               </CardHeader>
               <div className="overflow-x-auto">
                 <Table>
