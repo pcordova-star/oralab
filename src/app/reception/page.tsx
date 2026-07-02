@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, serverTimestamp, doc, updateDoc } from "firebase/firestore";
+import { collection, serverTimestamp, doc, updateDoc, addDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +43,8 @@ import {
   CreditCard,
   Mail,
   TrendingUp,
-  Target
+  Target,
+  Plus
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -109,10 +110,11 @@ export default function ReceptionPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
-  // Edit Socio State
+  // Modal State
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<any>(null);
-  const [editForm, setEditForm] = useState({
+  const [leadForm, setLeadForm] = useState({
     name: "",
     rut: "",
     email: "",
@@ -332,7 +334,7 @@ export default function ReceptionPage() {
 
   const handleEditClick = (lead: any) => {
     setEditingLead(lead);
-    setEditForm({
+    setLeadForm({
       name: lead.name || "",
       rut: lead.rut || "",
       email: lead.email || "",
@@ -342,15 +344,37 @@ export default function ReceptionPage() {
     setIsEditDialogOpen(true);
   };
 
+  const handleCreateLead = async () => {
+    if (!db || !leadForm.name || !leadForm.amount) return;
+    
+    try {
+      const leadsRef = collection(db, "contract_leads");
+      await addDoc(leadsRef, {
+        ...leadForm,
+        equity: (leadForm.amount / FUNDING_GOAL) * EQUITY_TOTAL,
+        status: "signed_by_investor", // Se asume firmado al ser manual
+        investorSignedAt: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
+      toast({ title: "Socio Creado", description: "El nuevo inversionista se registró con éxito." });
+      setIsCreateDialogOpen(false);
+      resetForm();
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error al crear socio" });
+    }
+  };
+
   const handleSaveEdit = async () => {
     if (!db || !editingLead) return;
     
     try {
       const leadRef = doc(db, "contract_leads", editingLead.id);
-      const newEquity = (editForm.amount / FUNDING_GOAL) * EQUITY_TOTAL;
+      const newEquity = (leadForm.amount / FUNDING_GOAL) * EQUITY_TOTAL;
       
       await updateDoc(leadRef, {
-        ...editForm,
+        ...leadForm,
         equity: newEquity,
         updatedAt: serverTimestamp()
       });
@@ -361,6 +385,16 @@ export default function ReceptionPage() {
     } catch (e) {
       toast({ variant: "destructive", title: "Error al guardar" });
     }
+  };
+
+  const resetForm = () => {
+    setLeadForm({
+      name: "",
+      rut: "",
+      email: "",
+      address: "",
+      amount: 0
+    });
   };
 
   const handleDeleteContractLead = (id: string) => {
@@ -499,19 +533,27 @@ export default function ReceptionPage() {
                     </CardTitle>
                     <CardDescription>Revisión de aportes y validación de contratos Family & Friends.</CardDescription>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-2xl border border-primary/10 shadow-sm">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1 mb-1">
-                        <TrendingUp className="h-3 w-3 text-secondary" /> Total Registrado
-                      </p>
-                      <p className="text-xl font-black text-primary italic">${totalRaised.toLocaleString('es-CL')}</p>
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-white p-4 rounded-2xl border border-primary/10 shadow-sm">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1 mb-1">
+                          <TrendingUp className="h-3 w-3 text-secondary" /> Total Registrado
+                        </p>
+                        <p className="text-xl font-black text-primary italic">${totalRaised.toLocaleString('es-CL')}</p>
+                      </div>
+                      <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20 shadow-sm">
+                        <p className="text-[10px] font-black text-secondary uppercase flex items-center gap-1 mb-1">
+                          <Target className="h-3 w-3 text-primary" /> Recaudación Real
+                        </p>
+                        <p className="text-xl font-black text-secondary italic">${validatedRaised.toLocaleString('es-CL')}</p>
+                      </div>
                     </div>
-                    <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20 shadow-sm">
-                      <p className="text-[10px] font-black text-secondary uppercase flex items-center gap-1 mb-1">
-                        <Target className="h-3 w-3 text-primary" /> Recaudación Real
-                      </p>
-                      <p className="text-xl font-black text-secondary italic">${validatedRaised.toLocaleString('es-CL')}</p>
-                    </div>
+                    <Button 
+                      onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}
+                      className="rounded-full bg-primary font-black h-12 px-6 shadow-lg ml-2"
+                    >
+                      <Plus className="mr-2 h-5 w-5" /> Nuevo Socio
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -605,6 +647,67 @@ export default function ReceptionPage() {
           </TabsContent>
         </Tabs>
 
+        {/* Dialogo de Creación de Socio */}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent className="max-w-md rounded-[2rem]">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black text-primary italic">Registrar Nuevo Socio</DialogTitle>
+              <DialogDescription>Ingresa los datos del inversionista para la ronda FF01.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label className="font-bold flex items-center gap-2"><User className="h-4 w-4" /> Nombre Completo</Label>
+                <Input 
+                  placeholder="Ej: Paulo Córdova"
+                  value={leadForm.name} 
+                  onChange={(e) => setLeadForm({...leadForm, name: e.target.value})} 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT</Label>
+                  <Input 
+                    placeholder="12.345.678-9"
+                    value={leadForm.rut} 
+                    onChange={(e) => setLeadForm({...leadForm, rut: e.target.value})} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-bold flex items-center gap-2"><Briefcase className="h-4 w-4" /> Monto Aporte</Label>
+                  <Input 
+                    type="number"
+                    placeholder="1000000"
+                    value={leadForm.amount} 
+                    onChange={(e) => setLeadForm({...leadForm, amount: parseInt(e.target.value) || 0})} 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-bold flex items-center gap-2"><Mail className="h-4 w-4" /> Correo</Label>
+                <Input 
+                  placeholder="socio@correo.cl"
+                  value={leadForm.email} 
+                  onChange={(e) => setLeadForm({...leadForm, email: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Dirección</Label>
+                <Input 
+                  placeholder="Avenida Siempre Viva 123"
+                  value={leadForm.address} 
+                  onChange={(e) => setLeadForm({...leadForm, address: e.target.value})} 
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" className="rounded-full" onClick={() => setIsCreateDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleCreateLead} className="bg-primary font-black rounded-full px-8 shadow-lg">
+                <Plus className="h-4 w-4 mr-2" /> Crear Registro
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Dialogo de Edición de Socio */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-w-md rounded-[2rem]">
@@ -616,45 +719,45 @@ export default function ReceptionPage() {
               <div className="space-y-2">
                 <Label className="font-bold flex items-center gap-2"><User className="h-4 w-4" /> Nombre Completo</Label>
                 <Input 
-                  value={editForm.name} 
-                  onChange={(e) => setEditForm({...editForm, name: e.target.value})} 
+                  value={leadForm.name} 
+                  onChange={(e) => setLeadForm({...leadForm, name: e.target.value})} 
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT</Label>
                   <Input 
-                    value={editForm.rut} 
-                    onChange={(e) => setEditForm({...editForm, rut: e.target.value})} 
+                    value={leadForm.rut} 
+                    onChange={(e) => setLeadForm({...leadForm, rut: e.target.value})} 
                   />
                 </div>
                 <div className="space-y-2">
                   <Label className="font-bold flex items-center gap-2"><Briefcase className="h-4 w-4" /> Monto Aporte</Label>
                   <Input 
                     type="number"
-                    value={editForm.amount} 
-                    onChange={(e) => setEditForm({...editForm, amount: parseInt(e.target.value) || 0})} 
+                    value={leadForm.amount} 
+                    onChange={(e) => setLeadForm({...leadForm, amount: parseInt(e.target.value) || 0})} 
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label className="font-bold flex items-center gap-2"><Mail className="h-4 w-4" /> Correo</Label>
                 <Input 
-                  value={editForm.email} 
-                  onChange={(e) => setEditForm({...editForm, email: e.target.value})} 
+                  value={leadForm.email} 
+                  onChange={(e) => setLeadForm({...leadForm, email: e.target.value})} 
                 />
               </div>
               <div className="space-y-2">
                 <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Dirección</Label>
                 <Input 
-                  value={editForm.address} 
-                  onChange={(e) => setEditForm({...editForm, address: e.target.value})} 
+                  value={leadForm.address} 
+                  onChange={(e) => setLeadForm({...leadForm, address: e.target.value})} 
                 />
               </div>
               <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Nueva Participación Proyectada</p>
                 <p className="text-2xl font-black text-primary italic">
-                  {((editForm.amount / FUNDING_GOAL) * EQUITY_TOTAL).toFixed(4)}%
+                  {((leadForm.amount / FUNDING_GOAL) * EQUITY_TOTAL).toFixed(4)}%
                 </p>
               </div>
             </div>
