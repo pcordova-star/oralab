@@ -129,11 +129,11 @@ export default function ReceptionPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200">Pendiente</Badge>;
-      case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">Llegó</Badge>;
-      case "in_progress": return <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">En Curso</Badge>;
-      case "completed": return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">Completado</Badge>;
-      case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-500 border-red-200">Cancelado</Badge>;
+      case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">Pendiente</Badge>;
+      case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Llegó</Badge>;
+      case "in_progress": return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">En Curso</Badge>;
+      case "completed": return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completado</Badge>;
+      case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelado</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -445,7 +445,7 @@ export default function ReceptionPage() {
                           <TableCell>
                             <Badge 
                               variant={lead.status === 'fully_signed' ? 'default' : 'outline'} 
-                              className={cn(lead.status === 'fully_signed' && "bg-green-500")}
+                              className={cn(lead.status === 'fully_signed' && "bg-green-500 text-white border-none")}
                             >
                               {lead.status === 'fully_signed' ? 'Procesado' : 'Por Procesar'}
                             </Badge>
@@ -463,7 +463,7 @@ export default function ReceptionPage() {
                                {lead.status !== 'fully_signed' && (
                                  <Button 
                                    onClick={() => handleAdminMarkAsSigned(lead)} 
-                                   className="bg-primary h-8 text-[10px] rounded-full px-4 font-black shadow-md"
+                                   className="bg-primary text-white h-8 text-[10px] rounded-full px-4 font-black shadow-md"
                                  >
                                    Validar Pago
                                  </Button>

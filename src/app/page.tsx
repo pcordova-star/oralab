@@ -29,7 +29,7 @@ import {
   Coins,
   Coffee,
   Briefcase,
-  Users // Corregido importación faltante
+  Users
 } from "lucide-react";
 import { 
   LineChart, 
@@ -75,44 +75,59 @@ const reportData = [
 
 const TechnologicalHeroTitle = () => {
   return (
-    <div className="space-y-4">
-      <div className="relative inline-block overflow-hidden">
-        <motion.h1 
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
-          className="text-5xl md:text-7xl lg:text-8xl font-black text-primary leading-[0.95] tracking-tighter italic"
-        >
-          Test <span className="text-secondary relative">
-            SIBO
-            <motion.span 
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 0.8, duration: 1 }}
-              className="absolute -bottom-2 left-0 w-full h-2 bg-secondary/20 rounded-full origin-left"
-            />
-          </span>
-        </motion.h1>
-      </div>
-      
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.5, duration: 1 }}
-        className="flex flex-col md:flex-row items-center justify-center lg:justify-start gap-4"
+    <div className="space-y-6">
+      {/* Brand Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="flex flex-col items-center lg:items-start gap-4 mb-2"
       >
-        <div className="h-[2px] w-12 bg-secondary/50 hidden lg:block" />
-        <p className="text-2xl md:text-4xl font-bold text-primary/40 tracking-tighter">
-          con <span className="text-primary font-black uppercase tracking-widest relative group cursor-default">
-            precisión clínica
-            <motion.span 
-              animate={{ left: ["-100%", "100%"] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="absolute bottom-0 h-[2px] w-full bg-secondary/50 blur-[2px]"
-            />
-          </span>
-        </p>
+        <div className="flex items-center gap-4 bg-white/50 backdrop-blur-md p-3 px-6 rounded-3xl border border-primary/10 shadow-sm group">
+          <Logo />
+        </div>
       </motion.div>
+
+      {/* Main Phrase */}
+      <div className="space-y-2">
+        <div className="relative inline-block overflow-hidden">
+          <motion.h1 
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
+            className="text-5xl md:text-7xl lg:text-8xl font-black text-primary leading-[0.95] tracking-tighter italic"
+          >
+            Test <span className="text-secondary relative">
+              SIBO
+              <motion.span 
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.8, duration: 1 }}
+                className="absolute -bottom-2 left-0 w-full h-2 bg-secondary/20 rounded-full origin-left"
+              />
+            </span>
+          </motion.h1>
+        </div>
+        
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 1 }}
+          className="flex flex-col md:flex-row items-center justify-center lg:justify-start gap-4"
+        >
+          <div className="h-[2px] w-12 bg-secondary/50 hidden lg:block" />
+          <p className="text-2xl md:text-4xl font-bold text-primary/40 tracking-tighter">
+            con <span className="text-primary font-black uppercase tracking-widest relative group cursor-default">
+              precisión clínica
+              <motion.span 
+                animate={{ left: ["-100%", "100%"] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                className="absolute bottom-0 h-[2px] w-full bg-secondary/50 blur-[2px]"
+              />
+            </span>
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 };
