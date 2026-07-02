@@ -2,6 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // ACCESO TOTAL PARA DESARROLLO Y CAPTACIÓN PÚBLICA
+    // Simplificado para evitar errores de permisos durante la fase de lanzamiento
     match /{document=**} {
       allow read, write: if true;
     }

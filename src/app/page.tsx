@@ -76,7 +76,7 @@ const reportData = [
 const TechnologicalHeroTitle = () => {
   return (
     <div className="space-y-6">
-      {/* Brand Header - Agrandado un 50% (scale-150) y centrado o alineado a la izquierda */}
+      {/* Brand Header - AGRANDADO EN UN 50% (scale-150) */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
