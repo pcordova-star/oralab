@@ -26,7 +26,9 @@ import {
   CheckCircle2,
   Coffee,
   Briefcase,
-  Users
+  Users,
+  Target,
+  TrendingUp
 } from "lucide-react";
 import { 
   LineChart, 
@@ -520,6 +522,42 @@ export default function HomePage() {
 
         <SIBOEducationSection />
 
+        {/* Sección de Inversionistas */}
+        <section className="py-24 bg-muted/30 border-y">
+          <div className="container mx-auto px-4">
+             <div className="glass-panel !bg-white rounded-[3rem] p-8 md:p-16 shadow-2xl border-primary/10 flex flex-col lg:flex-row items-center gap-12">
+               <div className="space-y-6 flex-1">
+                 <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Oportunidad FF01</Badge>
+                 <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">Dashboard de <br/><span className="text-secondary">Inversionistas</span></h2>
+                 <p className="text-lg text-muted-foreground font-medium">Accede al seguimiento de la primera ronda de levantamiento Family & Friends. Revisa metas, capital comprometido y formaliza tu participación económica en el proyecto.</p>
+                 <div className="flex flex-wrap gap-4 pt-4">
+                    <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl">
+                      <Target className="h-5 w-5 text-secondary" />
+                      <span className="text-sm font-bold text-primary">Meta FF01: $13.5M</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl">
+                      <TrendingUp className="h-5 w-5 text-secondary" />
+                      <span className="text-sm font-bold text-primary">Retorno Proyectado 20%</span>
+                    </div>
+                 </div>
+                 <div className="pt-6">
+                   <Link href="/investors">
+                    <Button size="lg" className="rounded-full h-16 px-10 text-xl font-black bg-primary shadow-xl hover:bg-secondary transition-all">
+                      Ver Dashboard Inversionista
+                    </Button>
+                   </Link>
+                 </div>
+               </div>
+               <div className="flex-1 flex justify-center lg:justify-end">
+                  <div className="relative w-full max-w-sm aspect-square bg-primary/5 rounded-[3rem] border border-primary/10 flex items-center justify-center p-12 overflow-hidden group">
+                     <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent group-hover:opacity-20 transition-opacity" />
+                     <Users className="h-32 w-32 text-primary group-hover:scale-110 transition-transform duration-500" />
+                  </div>
+               </div>
+             </div>
+          </div>
+        </section>
+
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
@@ -664,6 +702,7 @@ export default function HomePage() {
           </div>
           <div className="flex flex-col gap-4">
             <h5 className="font-black text-primary mb-2 uppercase tracking-widest">Accesos</h5>
+            <Link href="/investors" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 font-bold"><Users className="h-3 w-3" /> Dashboard Inversionistas</Link>
             <Link href="/login" className="text-xs text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-2"><Lock className="h-3 w-3" /> Acceso Administrativo</Link>
           </div>
         </div>
