@@ -46,7 +46,8 @@ import {
   Target,
   Plus,
   FileBarChart,
-  ShieldCheck
+  ShieldCheck,
+  Info
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -166,6 +167,7 @@ export default function ReceptionPage() {
   const validatedRaised = contractLeads
     .filter(lead => lead.status === 'fully_signed')
     .reduce((acc, lead) => acc + (lead.amount || 0), 0);
+  const balanceRemaining = FUNDING_GOAL - validatedRaised;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -210,7 +212,7 @@ export default function ReceptionPage() {
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("KPIs DE RECAUDACIÓN", margin, y);
+    doc.text("ESTADO FINANCIERO DE LA RONDA", margin, y);
     y += 10;
 
     doc.setDrawColor(secondaryRGB[0], secondaryRGB[1], secondaryRGB[2]);
@@ -218,35 +220,67 @@ export default function ReceptionPage() {
     doc.line(margin, y, 190, y);
     y += 10;
 
+    const labelX = margin;
+    const valueX = 110;
+
     doc.setTextColor(60, 60, 60);
     doc.setFontSize(10);
-    doc.text(`META RONDA FF01:`, margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(`META RONDA FF01 (Funding Goal):`, labelX, y);
     doc.setFont("helvetica", "bold");
-    doc.text(`$${FUNDING_GOAL.toLocaleString('es-CL')}`, 100, y);
+    doc.text(`$${FUNDING_GOAL.toLocaleString('es-CL')}`, valueX, y);
     y += 7;
 
     doc.setFont("helvetica", "normal");
-    doc.text(`CAPITAL COMPROMETIDO:`, margin, y);
+    doc.text(`CAPITAL COMPROMETIDO (Signed):`, labelX, y);
     doc.setFont("helvetica", "bold");
-    doc.text(`$${totalRaised.toLocaleString('es-CL')}`, 100, y);
+    doc.text(`$${totalRaised.toLocaleString('es-CL')}`, valueX, y);
     y += 7;
 
     doc.setFont("helvetica", "normal");
-    doc.text(`CAPITAL REAL VALIDADO:`, margin, y);
+    doc.text(`CAPITAL REAL VALIDADO (Paid):`, labelX, y);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(secondaryRGB[0], secondaryRGB[1], secondaryRGB[2]);
-    doc.text(`$${validatedRaised.toLocaleString('es-CL')}`, 100, y);
+    doc.text(`$${validatedRaised.toLocaleString('es-CL')}`, valueX, y);
+    y += 10;
+
+    // Saldo
+    doc.setFillColor(245, 247, 249);
+    doc.rect(margin, y, 170, 12, 'F');
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFont("helvetica", "bold");
+    doc.text(`SALDO POR RECAUDAR (Remaining):`, labelX + 5, y + 8);
+    doc.text(`$${balanceRemaining.toLocaleString('es-CL')}`, valueX, y + 8);
+    y += 20;
+
+    // Glosario / Definiciones
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(11);
+    doc.text("GLOSARIO DE TÉRMINOS", margin, y);
+    y += 6;
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("Comprometido:", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(" Suma de intenciones de inversión con contrato firmado, pendientes de validación bancaria.", margin + 22, y);
+    y += 4;
+    doc.setFont("helvetica", "bold");
+    doc.text("Validado:", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(" Capital efectivamente recibido en la cuenta de Tresna SpA y formalizado administrativamente.", margin + 14, y);
     y += 15;
 
     // Tabla Anonimizada
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
     doc.text("LISTADO DE SOCIOS (ANONIMIZADO)", margin, y);
     y += 8;
 
-    doc.setFillColor(245, 247, 249);
+    doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.rect(margin, y, 170, 10, 'F');
-    doc.setTextColor(60, 60, 60);
+    doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text("IDENTIFICADOR", margin + 5, y + 7);
@@ -255,6 +289,7 @@ export default function ReceptionPage() {
     doc.text("ESTADO", margin + 145, y + 7);
     y += 10;
 
+    doc.setTextColor(60, 60, 60);
     doc.setFont("helvetica", "normal");
     contractLeads.forEach((lead, index) => {
       if (y > 270) {
@@ -272,15 +307,15 @@ export default function ReceptionPage() {
     });
 
     y += 15;
-    doc.setFillColor(252, 252, 252);
-    doc.roundedRect(margin, y, 170, 20, 2, 2, 'FD');
+    doc.setFillColor(245, 247, 249);
+    doc.rect(0, doc.internal.pageSize.height - 35, 210, 35, 'F');
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(8);
     doc.setFont("helvetica", "italic");
-    const notes = "Este reporte ha sido generado para fines de control administrativo interno. Los nombres y datos sensibles de los inversionistas han sido omitidos para garantizar la privacidad de los mismos según políticas de Tresna SpA.";
-    doc.text(doc.splitTextToSize(notes, 160), margin + 5, y + 8);
+    const disclaimer = "Este reporte es de carácter confidencial para uso exclusivo de la administración de Tresna SpA. Los datos presentados son un fiel reflejo de la base de datos de Oralab Clinical Lab al momento de su emisión.";
+    doc.text(doc.splitTextToSize(disclaimer, 170), margin, doc.internal.pageSize.height - 20);
 
-    doc.save(`Resumen_Inversionistas_Oralab_FF01.pdf`);
+    doc.save(`Reporte_Ejecutivo_Oralab_FF01_${format(new Date(), "yyyyMMdd")}.pdf`);
   };
 
   const generateFullPDF = (lead: any) => {
@@ -673,6 +708,16 @@ export default function ReceptionPage() {
                   </div>
                 </div>
               </CardHeader>
+
+              <div className="bg-blue-50/50 p-4 border-b border-primary/5 flex items-center gap-3">
+                <Info className="h-5 w-5 text-primary shrink-0" />
+                <div className="text-[10px] md:text-xs text-primary/80 leading-relaxed font-medium">
+                  <strong>Comprometido:</strong> Suma de contratos firmados pendientes de pago. 
+                  <strong className="ml-2">Real:</strong> Capital recibido y validado en banco. 
+                  <strong className="ml-2 text-secondary">Saldo:</strong> Monto restante para alcanzar los $13.5M de la ronda.
+                </div>
+              </div>
+
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
