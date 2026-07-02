@@ -44,7 +44,9 @@ import {
   Mail,
   TrendingUp,
   Target,
-  Plus
+  Plus,
+  FileBarChart,
+  ShieldCheck
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -174,6 +176,111 @@ export default function ReceptionPage() {
       case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelado</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  const downloadInvestorsSummaryPDF = () => {
+    const doc = new jsPDF();
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    const primaryRGB = [28, 104, 182];
+    const secondaryRGB = [25, 204, 204];
+
+    // Cabecera Corporativa
+    doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text("ORALAB", margin, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Resumen Ejecutivo de Inversión - Ronda FF01", margin, 32);
+
+    doc.setFontSize(9);
+    doc.text(`Generado: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 150, 25);
+    doc.text("ESTRICTAMENTE CONFIDENCIAL", 150, 30);
+
+    y = 55;
+
+    // Métricas de la Ronda
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("KPIs DE RECAUDACIÓN", margin, y);
+    y += 10;
+
+    doc.setDrawColor(secondaryRGB[0], secondaryRGB[1], secondaryRGB[2]);
+    doc.setLineWidth(1);
+    doc.line(margin, y, 190, y);
+    y += 10;
+
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(10);
+    doc.text(`META RONDA FF01:`, margin, y);
+    doc.setFont("helvetica", "bold");
+    doc.text(`$${FUNDING_GOAL.toLocaleString('es-CL')}`, 100, y);
+    y += 7;
+
+    doc.setFont("helvetica", "normal");
+    doc.text(`CAPITAL COMPROMETIDO:`, margin, y);
+    doc.setFont("helvetica", "bold");
+    doc.text(`$${totalRaised.toLocaleString('es-CL')}`, 100, y);
+    y += 7;
+
+    doc.setFont("helvetica", "normal");
+    doc.text(`CAPITAL REAL VALIDADO:`, margin, y);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(secondaryRGB[0], secondaryRGB[1], secondaryRGB[2]);
+    doc.text(`$${validatedRaised.toLocaleString('es-CL')}`, 100, y);
+    y += 15;
+
+    // Tabla Anonimizada
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(14);
+    doc.text("LISTADO DE SOCIOS (ANONIMIZADO)", margin, y);
+    y += 8;
+
+    doc.setFillColor(245, 247, 249);
+    doc.rect(margin, y, 170, 10, 'F');
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("IDENTIFICADOR", margin + 5, y + 7);
+    doc.text("MONTO APORTE", margin + 60, y + 7);
+    doc.text("EQUITY (%)", margin + 110, y + 7);
+    doc.text("ESTADO", margin + 145, y + 7);
+    y += 10;
+
+    doc.setFont("helvetica", "normal");
+    contractLeads.forEach((lead, index) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(`Inversionista #${contractLeads.length - index}`, margin + 5, y + 7);
+      doc.text(`$${(lead.amount || 0).toLocaleString('es-CL')}`, margin + 60, y + 7);
+      doc.text(`${(lead.equity || 0).toFixed(4)}%`, margin + 110, y + 7);
+      doc.text(lead.status === 'fully_signed' ? 'VALIDADO' : 'PENDIENTE', margin + 145, y + 7);
+      
+      doc.setDrawColor(240, 240, 240);
+      doc.line(margin, y + 10, margin + 170, y + 10);
+      y += 10;
+    });
+
+    y += 15;
+    doc.setFillColor(252, 252, 252);
+    doc.roundedRect(margin, y, 170, 20, 2, 2, 'FD');
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "italic");
+    const notes = "Este reporte ha sido generado para fines de control administrativo interno. Los nombres y datos sensibles de los inversionistas han sido omitidos para garantizar la privacidad de los mismos según políticas de Tresna SpA.";
+    doc.text(doc.splitTextToSize(notes, 160), margin + 5, y + 8);
+
+    doc.save(`Resumen_Inversionistas_Oralab_FF01.pdf`);
   };
 
   const generateFullPDF = (lead: any) => {
@@ -352,7 +459,7 @@ export default function ReceptionPage() {
       await addDoc(leadsRef, {
         ...leadForm,
         equity: (leadForm.amount / FUNDING_GOAL) * EQUITY_TOTAL,
-        status: "signed_by_investor", // Se asume firmado al ser manual
+        status: "signed_by_investor",
         investorSignedAt: new Date().toISOString(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -425,9 +532,9 @@ export default function ReceptionPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <Tabs defaultValue="patients" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-2">
-            <TabsTrigger value="patients" className="rounded-full font-bold px-8">Agenda</TabsTrigger>
-            <TabsTrigger value="investors" className="rounded-full font-bold px-8">Inversionistas</TabsTrigger>
+          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-2 shadow-inner border border-primary/5">
+            <TabsTrigger value="patients" className="rounded-full font-black px-10 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Agenda</TabsTrigger>
+            <TabsTrigger value="investors" className="rounded-full font-black px-10 data-[state=active]:bg-secondary data-[state=active]:text-white transition-all">Inversionistas</TabsTrigger>
           </TabsList>
 
           <TabsContent value="patients">
@@ -441,7 +548,7 @@ export default function ReceptionPage() {
                     <CardDescription>Gestión de citas y kits de test de aire espirado SIBO.</CardDescription>
                   </div>
                   <div className="flex gap-2">
-                     <Badge className="bg-secondary font-black">{bookings.length} Reservas</Badge>
+                     <Badge className="bg-secondary font-black h-8 px-4 rounded-full shadow-sm">{bookings.length} Reservas Activas</Badge>
                   </div>
                 </div>
               </CardHeader>
@@ -458,36 +565,36 @@ export default function ReceptionPage() {
                   </TableHeader>
                   <TableBody>
                     {loadingBookings ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-10">Cargando agenda...</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-20"><span className="animate-pulse font-bold text-muted-foreground italic">Sincronizando agenda...</span></TableCell></TableRow>
                     ) : bookings.length === 0 ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-10 italic">No hay citas registradas.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-20 italic font-medium text-muted-foreground">No hay citas registradas en la base de datos.</TableCell></TableRow>
                     ) : (
                       bookings.map((b) => (
-                        <TableRow key={b.id} className="hover:bg-primary/5 transition-colors">
+                        <TableRow key={b.id} className="hover:bg-primary/5 transition-colors group">
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-black text-primary">
                                 {b.scheduledDate ? format(new Date(b.scheduledDate + 'T00:00:00'), "dd/MM/yyyy") : "Pendiente"}
                               </span>
-                              <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
-                                <Clock className="h-3 w-3" /> {b.scheduledTime} hrs
+                              <span className="text-[10px] font-black text-muted-foreground flex items-center gap-1 uppercase tracking-tight">
+                                <Clock className="h-3 w-3 text-secondary" /> {b.scheduledTime} hrs
                               </span>
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
-                              <span className="font-bold text-primary">{b.firstName} {b.lastNameFather}</span>
-                              <span className="text-[10px] text-muted-foreground uppercase font-black">{b.email}</span>
+                              <span className="font-bold text-primary group-hover:underline">{b.firstName} {b.lastNameFather}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">{b.email}</span>
                             </div>
                           </TableCell>
                           <TableCell>
                              <div className="flex flex-col">
                                 <span className="font-black text-secondary italic">Test {b.examType}</span>
-                                <span className="text-[10px] font-bold flex items-center gap-1">
+                                <span className="text-[10px] font-bold flex items-center gap-1 text-muted-foreground">
                                   {b.modality === 'home_kit' ? (
-                                    <><MapPin className="h-3 w-3" /> Retiro de Kit</>
+                                    <><MapPin className="h-3 w-3 text-primary" /> Retiro de Kit</>
                                   ) : (
-                                    <><User className="h-3 w-3" /> Presencial</>
+                                    <><User className="h-3 w-3 text-primary" /> Presencial</>
                                   )}
                                 </span>
                              </div>
@@ -500,17 +607,17 @@ export default function ReceptionPage() {
                                  size="icon" 
                                  onClick={() => handleStatusChange(b.id, 'arrived')}
                                  title="Marcar Llegada"
-                                 className="h-8 w-8 text-blue-500 hover:bg-blue-50"
+                                 className="h-9 w-9 text-blue-500 hover:bg-blue-50 rounded-full transition-transform active:scale-90"
                                >
-                                 <CheckCircle2 className="h-4 w-4" />
+                                 <CheckCircle2 className="h-5 w-5" />
                                </Button>
                                <Button 
                                  variant="ghost" 
                                  size="icon" 
                                  onClick={() => handleDeleteBooking(b.id)}
-                                 className="h-8 w-8 text-red-300 hover:text-red-600 hover:bg-red-50"
+                                 className="h-9 w-9 text-red-300 hover:text-red-600 hover:bg-red-50 rounded-full transition-transform active:scale-90"
                                >
-                                 <Trash2 className="h-4 w-4" />
+                                 <Trash2 className="h-5 w-5" />
                                </Button>
                              </div>
                           </TableCell>
@@ -533,27 +640,36 @@ export default function ReceptionPage() {
                     </CardTitle>
                     <CardDescription>Revisión de aportes y validación de contratos Family & Friends.</CardDescription>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white p-4 rounded-2xl border border-primary/10 shadow-sm">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1 mb-1">
-                          <TrendingUp className="h-3 w-3 text-secondary" /> Total Registrado
+                  <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                    <div className="grid grid-cols-2 gap-4 flex-1">
+                      <div className="bg-white p-4 rounded-2xl border border-primary/10 shadow-sm group hover:border-primary/30 transition-all">
+                        <p className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1 mb-1">
+                          <TrendingUp className="h-3 w-3 text-secondary" /> comprometido
                         </p>
-                        <p className="text-xl font-black text-primary italic">${totalRaised.toLocaleString('es-CL')}</p>
+                        <p className="text-xl font-black text-primary italic group-hover:scale-105 transition-transform">${totalRaised.toLocaleString('es-CL')}</p>
                       </div>
-                      <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20 shadow-sm">
-                        <p className="text-[10px] font-black text-secondary uppercase flex items-center gap-1 mb-1">
-                          <Target className="h-3 w-3 text-primary" /> Recaudación Real
+                      <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20 shadow-sm group hover:border-secondary/40 transition-all">
+                        <p className="text-[9px] font-black text-secondary uppercase flex items-center gap-1 mb-1">
+                          <Target className="h-3 w-3 text-primary" /> recaudado real
                         </p>
-                        <p className="text-xl font-black text-secondary italic">${validatedRaised.toLocaleString('es-CL')}</p>
+                        <p className="text-xl font-black text-secondary italic group-hover:scale-105 transition-transform">${validatedRaised.toLocaleString('es-CL')}</p>
                       </div>
                     </div>
-                    <Button 
-                      onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}
-                      className="rounded-full bg-primary font-black h-12 px-6 shadow-lg ml-2"
-                    >
-                      <Plus className="mr-2 h-5 w-5" /> Nuevo Socio
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={downloadInvestorsSummaryPDF}
+                        variant="outline"
+                        className="rounded-full border-primary/20 text-primary font-black h-12 px-6 shadow-sm hover:bg-primary/5"
+                      >
+                        <FileBarChart className="mr-2 h-5 w-5" /> Resumen FF01 (PDF)
+                      </Button>
+                      <Button 
+                        onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}
+                        className="rounded-full bg-primary font-black h-12 px-8 shadow-lg hover:bg-secondary transition-all hover:scale-105"
+                      >
+                        <Plus className="mr-2 h-5 w-5" /> Nuevo Socio
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -561,79 +677,82 @@ export default function ReceptionPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/10">
-                      <TableHead className="font-bold">Socio</TableHead>
-                      <TableHead className="font-bold">Monto Aportado</TableHead>
-                      <TableHead className="font-bold">Participación</TableHead>
-                      <TableHead className="font-bold">Estado</TableHead>
-                      <TableHead className="text-right font-bold">Acciones</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase">Socio</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase">Monto Aportado</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase">Participación</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase">Estado</TableHead>
+                      <TableHead className="text-right font-black text-[10px] uppercase">Gestión Administrativa</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loadingLeads ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-10">Cargando socios...</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold text-muted-foreground italic animate-pulse">Conectando con base de socios...</TableCell></TableRow>
                     ) : contractLeads.length === 0 ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-10 italic">No hay registros de inversión.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-20 italic font-medium text-muted-foreground">Aún no hay registros de inversión en la ronda FF01.</TableCell></TableRow>
                     ) : (
                       contractLeads.map((lead) => (
-                        <TableRow key={lead.id} className="hover:bg-primary/5 transition-colors">
+                        <TableRow key={lead.id} className="hover:bg-primary/5 transition-colors group">
                           <TableCell>
                              <div className="flex flex-col">
-                               <span className="font-black text-primary uppercase">{lead.name}</span>
+                               <span className="font-black text-primary uppercase group-hover:underline cursor-default">{lead.name}</span>
                                <span className="text-[10px] font-bold text-muted-foreground">{lead.rut}</span>
                              </div>
                           </TableCell>
                           <TableCell>
-                            <span className="font-black text-primary">
+                            <span className="font-black text-primary text-lg">
                               ${(lead.amount || 0).toLocaleString('es-CL')}
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="border-secondary/20 text-secondary font-black">
+                            <Badge variant="outline" className="border-secondary/30 bg-secondary/5 text-secondary font-black px-3 py-1">
                               {(lead.equity || 0).toFixed(4)}%
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge 
                               variant={lead.status === 'fully_signed' ? 'default' : 'outline'} 
-                              className={cn(lead.status === 'fully_signed' ? "bg-green-500 text-white border-none" : "bg-amber-50 text-amber-600 border-amber-200")}
+                              className={cn(
+                                "rounded-full font-black text-[9px] uppercase px-3",
+                                lead.status === 'fully_signed' ? "bg-green-500 text-white border-none shadow-sm" : "bg-amber-50 text-amber-600 border-amber-200"
+                              )}
                             >
-                              {lead.status === 'fully_signed' ? 'Procesado' : 'Por Validar'}
+                              {lead.status === 'fully_signed' ? 'Socio Formalizado' : 'Pendiente Pago'}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                             <div className="flex justify-end gap-2">
+                             <div className="flex justify-end gap-2 items-center">
                                <Button 
                                  onClick={() => handleEditClick(lead)}
                                  variant="ghost"
                                  size="icon"
-                                 className="h-8 w-8 text-primary hover:bg-primary/10"
-                                 title="Editar Socio"
+                                 className="h-9 w-9 text-primary hover:bg-primary/10 rounded-full transition-all active:scale-90"
+                                 title="Editar Datos del Socio"
                                >
-                                 <Pencil className="h-4 w-4" />
+                                 <Pencil className="h-5 w-5" />
                                </Button>
                                <Button 
                                  onClick={() => generateFullPDF(lead)} 
                                  variant="outline" 
                                  size="sm" 
-                                 className="rounded-full h-8 font-bold text-[10px] border-primary/20 text-primary"
+                                 className="rounded-full h-9 font-black text-[10px] border-primary/20 text-primary hover:bg-primary hover:text-white transition-all"
                                >
-                                 <Download className="h-3 w-3 mr-1" /> CONTRATO
+                                 <Download className="h-4 w-4 mr-2" /> CONTRATO
                                </Button>
                                {lead.status !== 'fully_signed' && (
                                  <Button 
                                    onClick={() => handleAdminMarkAsSigned(lead)} 
-                                   className="bg-primary text-white h-8 text-[10px] rounded-full px-4 font-black shadow-md hover:bg-secondary transition-all"
+                                   className="bg-primary text-white h-9 text-[10px] rounded-full px-5 font-black shadow-md hover:bg-secondary transition-all hover:scale-105"
                                  >
-                                   <Briefcase className="h-3 w-3 mr-1" /> Validar Pago
+                                   <Briefcase className="h-4 w-4 mr-2" /> VALIDAR PAGO
                                  </Button>
                                )}
                                <Button 
                                  variant="ghost" 
                                  size="icon" 
                                  onClick={() => handleDeleteContractLead(lead.id)} 
-                                 className="text-red-300 hover:text-red-600 h-8 w-8"
+                                 className="text-red-300 hover:text-red-600 h-9 w-9 rounded-full transition-all active:scale-90"
                                >
-                                 <Trash2 className="h-4 w-4" />
+                                 <Trash2 className="h-5 w-5" />
                                </Button>
                              </div>
                           </TableCell>
@@ -649,60 +768,73 @@ export default function ReceptionPage() {
 
         {/* Dialogo de Creación de Socio */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogContent className="max-w-md rounded-[2rem]">
+          <DialogContent className="max-w-md rounded-[2rem] border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black text-primary italic">Registrar Nuevo Socio</DialogTitle>
-              <DialogDescription>Ingresa los datos del inversionista para la ronda FF01.</DialogDescription>
+              <DialogTitle className="text-3xl font-black text-primary italic flex items-center gap-2">
+                <User className="h-8 w-8 text-secondary" /> Registrar Nuevo Socio
+              </DialogTitle>
+              <DialogDescription className="font-medium text-muted-foreground">Ingresa los datos del inversionista para la ronda estratégica FF01.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-6 py-6">
               <div className="space-y-2">
-                <Label className="font-bold flex items-center gap-2"><User className="h-4 w-4" /> Nombre Completo</Label>
+                <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-2"><User className="h-3 w-3" /> Nombre Completo</Label>
                 <Input 
                   placeholder="Ej: Paulo Córdova"
                   value={leadForm.name} 
                   onChange={(e) => setLeadForm({...leadForm, name: e.target.value})} 
+                  className="h-12 rounded-xl focus:ring-secondary border-primary/10 font-bold"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT</Label>
+                  <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-2"><CreditCard className="h-3 w-3" /> RUT</Label>
                   <Input 
                     placeholder="12.345.678-9"
                     value={leadForm.rut} 
                     onChange={(e) => setLeadForm({...leadForm, rut: e.target.value})} 
+                    className="h-12 rounded-xl border-primary/10 font-bold"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="font-bold flex items-center gap-2"><Briefcase className="h-4 w-4" /> Monto Aporte</Label>
+                  <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-2"><Briefcase className="h-3 w-3" /> Monto Aporte</Label>
                   <Input 
                     type="number"
                     placeholder="1000000"
                     value={leadForm.amount} 
                     onChange={(e) => setLeadForm({...leadForm, amount: parseInt(e.target.value) || 0})} 
+                    className="h-12 rounded-xl border-primary/10 font-black text-primary text-lg"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="font-bold flex items-center gap-2"><Mail className="h-4 w-4" /> Correo</Label>
+                <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-2"><Mail className="h-3 w-3" /> Correo Institucional</Label>
                 <Input 
                   placeholder="socio@correo.cl"
                   value={leadForm.email} 
                   onChange={(e) => setLeadForm({...leadForm, email: e.target.value})} 
+                  className="h-12 rounded-xl border-primary/10 font-medium"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Dirección</Label>
+                <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-2"><MapPin className="h-3 w-3" /> Dirección Comercial/Particular</Label>
                 <Input 
-                  placeholder="Avenida Siempre Viva 123"
+                  placeholder="Avenida Apoquindo 3990, Las Condes"
                   value={leadForm.address} 
                   onChange={(e) => setLeadForm({...leadForm, address: e.target.value})} 
+                  className="h-12 rounded-xl border-primary/10 font-medium"
                 />
               </div>
+              <div className="bg-secondary/5 p-4 rounded-2xl border border-secondary/20 shadow-inner">
+                <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1">Participación Proyectada Oralab</p>
+                <p className="text-3xl font-black text-primary italic">
+                  {((leadForm.amount / FUNDING_GOAL) * EQUITY_TOTAL).toFixed(4)}%
+                </p>
+              </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" className="rounded-full" onClick={() => setIsCreateDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={handleCreateLead} className="bg-primary font-black rounded-full px-8 shadow-lg">
-                <Plus className="h-4 w-4 mr-2" /> Crear Registro
+            <DialogFooter className="gap-3">
+              <Button variant="outline" className="rounded-full h-12 px-8 font-bold border-primary/10" onClick={() => setIsCreateDialogOpen(false)}>Descartar</Button>
+              <Button onClick={handleCreateLead} className="bg-primary font-black rounded-full h-12 px-10 shadow-xl hover:bg-secondary transition-all">
+                <Save className="h-5 w-5 mr-2" /> Formalizar Registro
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -710,60 +842,67 @@ export default function ReceptionPage() {
 
         {/* Dialogo de Edición de Socio */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-md rounded-[2rem]">
+          <DialogContent className="max-w-md rounded-[2rem] border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black text-primary italic">Editar Socio</DialogTitle>
-              <DialogDescription>Modifica los datos del inversionista y su participación.</DialogDescription>
+              <DialogTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                <Pencil className="h-7 w-7 text-secondary" /> Modificar Ficha de Socio
+              </DialogTitle>
+              <DialogDescription className="font-medium">Ajusta los datos del inversionista y su participación en la ronda FF01.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-5 py-4">
               <div className="space-y-2">
-                <Label className="font-bold flex items-center gap-2"><User className="h-4 w-4" /> Nombre Completo</Label>
+                <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-1"><User className="h-3 w-3" /> Nombre Completo</Label>
                 <Input 
                   value={leadForm.name} 
                   onChange={(e) => setLeadForm({...leadForm, name: e.target.value})} 
+                  className="h-11 rounded-xl border-primary/10 font-bold"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="font-bold flex items-center gap-2"><CreditCard className="h-4 w-4" /> RUT</Label>
+                  <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-1"><CreditCard className="h-3 w-3" /> RUT</Label>
                   <Input 
                     value={leadForm.rut} 
                     onChange={(e) => setLeadForm({...leadForm, rut: e.target.value})} 
+                    className="h-11 rounded-xl border-primary/10 font-bold"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="font-bold flex items-center gap-2"><Briefcase className="h-4 w-4" /> Monto Aporte</Label>
+                  <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-1"><Briefcase className="h-3 w-3" /> Monto Aporte</Label>
                   <Input 
                     type="number"
                     value={leadForm.amount} 
                     onChange={(e) => setLeadForm({...leadForm, amount: parseInt(e.target.value) || 0})} 
+                    className="h-11 rounded-xl border-primary/10 font-black text-primary"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="font-bold flex items-center gap-2"><Mail className="h-4 w-4" /> Correo</Label>
+                <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-1"><Mail className="h-3 w-3" /> Correo</Label>
                 <Input 
                   value={leadForm.email} 
                   onChange={(e) => setLeadForm({...leadForm, email: e.target.value})} 
+                  className="h-11 rounded-xl border-primary/10"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4" /> Dirección</Label>
+                <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-1"><MapPin className="h-3 w-3" /> Dirección</Label>
                 <Input 
                   value={leadForm.address} 
                   onChange={(e) => setLeadForm({...leadForm, address: e.target.value})} 
+                  className="h-11 rounded-xl border-primary/10"
                 />
               </div>
-              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Nueva Participación Proyectada</p>
-                <p className="text-2xl font-black text-primary italic">
+              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 shadow-inner">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-2"><ShieldCheck className="h-3 w-3 text-secondary" /> Nueva Participación Proyectada</p>
+                <p className="text-3xl font-black text-primary italic">
                   {((leadForm.amount / FUNDING_GOAL) * EQUITY_TOTAL).toFixed(4)}%
                 </p>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" className="rounded-full" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={handleSaveEdit} className="bg-primary font-black rounded-full px-8 shadow-lg">
+              <Button variant="outline" className="rounded-full h-11 px-8" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSaveEdit} className="bg-primary font-black rounded-full h-11 px-10 shadow-lg hover:bg-secondary transition-all">
                 <Save className="h-4 w-4 mr-2" /> Guardar Cambios
               </Button>
             </DialogFooter>
