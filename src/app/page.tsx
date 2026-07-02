@@ -76,12 +76,12 @@ const reportData = [
 const TechnologicalHeroTitle = () => {
   return (
     <div className="space-y-6">
-      {/* Brand Header - Agrandado un 50% (scale-150) */}
+      {/* Brand Header - Agrandado un 50% (scale-150) y centrado o alineado a la izquierda */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="flex flex-col items-center lg:items-start gap-4 mb-12"
+        className="flex flex-col items-center lg:items-start gap-4 mb-16"
       >
         <div className="flex items-center gap-4 bg-white/50 backdrop-blur-md p-4 px-8 rounded-[2.5rem] border border-primary/10 shadow-lg group scale-150 origin-center lg:origin-left transition-transform duration-500">
           <Logo />
@@ -152,7 +152,7 @@ const ClinicalReportVisualizer = () => {
             <h3 className="text-base md:text-xl font-black text-primary italic">Resumen Técnico de Biomarcadores</h3>
           </div>
           <div className="text-left sm:text-right">
-            <Badge className="bg-red-500 text-white border-none animate-pulse text-[10px] md:text-xs">POSITIVO SIBO (H₂)</Badge>
+            <Badge className="bg-red-50 text-white border-none animate-pulse text-[10px] md:text-xs">POSITIVO SIBO (H₂)</Badge>
           </div>
         </div>
 
