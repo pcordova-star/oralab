@@ -118,6 +118,19 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "rut", "email", "amount", "status", "createdAt"]
+    },
+    "Milestone": {
+      "title": "Milestone",
+      "description": "Hito en el cronograma del proyecto para inversionistas.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "date", "status"]
     }
   },
   "auth": {
@@ -147,6 +160,10 @@
     "/contract_leads/{leadId}": {
       "schema": "ContractLead",
       "description": "Colección de contratos con firma digital simple."
+    },
+    "/milestones/{milestoneId}": {
+      "schema": "Milestone",
+      "description": "Colección de hitos del proyecto."
     }
   }
 }

@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, serverTimestamp } from "firebase/firestore";
+import { collection, serverTimestamp, query, orderBy } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -30,7 +31,8 @@ import {
   Sparkles,
   Users,
   TrendingUp,
-  FileText
+  FileText,
+  CalendarDays
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -45,7 +47,7 @@ import { es } from "date-fns/locale";
 const FUNDING_GOAL = 13500000;
 const EQUITY_TOTAL = 10; 
 
-const MILESTONES = [
+const MILESTONES_CATALOG = [
   {
     id: "m1",
     title: "Equipo + Importación",
@@ -90,7 +92,7 @@ const MILESTONES = [
   }
 ];
 
-const chartData = MILESTONES.map(m => ({
+const chartData = MILESTONES_CATALOG.map(m => ({
   name: m.title,
   value: m.target,
   color: m.id === 'm1' ? '#1c68b6' : m.id === 'm2' ? '#19cccc' : '#10b981'
@@ -179,7 +181,13 @@ export default function InvestorsDashboardPage() {
     return collection(db, "contract_leads");
   }, [db]);
 
+  const milestonesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "milestones"), orderBy("date", "asc"));
+  }, [db]);
+
   const { data: rawLeads, isLoading: loadingPartners } = useCollection(partnersQuery);
+  const { data: milestones, isLoading: loadingMilestones } = useCollection(milestonesQuery);
 
   const partners = (rawLeads || [])
     .filter(lead => lead.status === "fully_signed")
@@ -418,7 +426,7 @@ export default function InvestorsDashboardPage() {
                 </div>
                 <div className="space-y-4">
                   <h4 className="font-black text-primary uppercase text-xs tracking-widest mb-4">Asignación de Fondos</h4>
-                  {MILESTONES.map((m) => (
+                  {MILESTONES_CATALOG.map((m) => (
                     <div key={m.id} className="flex items-center gap-3">
                       <div className={cn("w-3 h-3 rounded-full", m.color)} />
                       <div className="flex-1">
@@ -468,33 +476,60 @@ export default function InvestorsDashboardPage() {
           </div>
         </section>
 
+        {/* Timeline Dinámica */}
         <section className="mb-24">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-4xl font-black text-primary italic">Plan de Inversión Detallado</h2>
-            <div className="h-1 w-20 bg-secondary mx-auto mt-2 rounded-full" />
+            <h2 className="text-2xl md:text-4xl font-black text-primary italic">Cronograma del Proyecto</h2>
+            <p className="text-muted-foreground font-medium mt-2">Hitos y avances en tiempo real para nuestros socios.</p>
+            <div className="h-1 w-20 bg-secondary mx-auto mt-4 rounded-full" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {MILESTONES.map((m) => (
-              <Card key={m.id} className="bg-white shadow-lg rounded-[2.5rem] border-primary/5 group">
-                <CardHeader className="text-center p-8">
-                  <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 transition-transform shadow-inner text-white", m.color)}>
-                    {m.icon}
+          
+          <div className="relative max-w-4xl mx-auto px-4">
+            <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 bg-primary/10 -translate-x-1/2 rounded-full hidden sm:block" />
+            
+            <div className="space-y-12">
+              {loadingMilestones ? (
+                <div className="text-center py-20 italic text-muted-foreground">Cargando cronograma institucional...</div>
+              ) : milestones?.length === 0 ? (
+                <div className="text-center py-20 italic text-muted-foreground">No se han registrado hitos oficiales aún.</div>
+              ) : (
+                milestones?.map((milestone, idx) => (
+                  <div key={milestone.id} className={cn(
+                    "relative flex flex-col md:flex-row items-center gap-8",
+                    idx % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
+                  )}>
+                    {/* Punto de la línea */}
+                    <div className="absolute left-8 md:left-1/2 w-6 h-6 rounded-full bg-white border-4 border-primary shadow-lg -translate-x-1/2 z-10 hidden sm:block" />
+                    
+                    {/* Contenido */}
+                    <Card className="flex-1 w-full bg-white shadow-xl border-primary/5 rounded-[2rem] hover:border-secondary/30 transition-all group overflow-hidden">
+                      <div className={cn(
+                        "h-2 w-full",
+                        milestone.status === 'completed' ? "bg-green-500" : "bg-primary"
+                      )} />
+                      <div className="p-6 md:p-8 space-y-4">
+                        <div className="flex justify-between items-start gap-4">
+                          <div>
+                            <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1 flex items-center gap-2">
+                              <CalendarDays className="h-3 w-3" /> {format(new Date(milestone.date + 'T00:00:00'), "MMMM yyyy", { locale: es }).toUpperCase()}
+                            </p>
+                            <h3 className="text-xl font-black text-primary italic leading-tight">{milestone.title}</h3>
+                          </div>
+                          <Badge variant={milestone.status === 'completed' ? 'default' : 'outline'} className={cn(
+                            "font-black text-[9px] uppercase",
+                            milestone.status === 'completed' ? "bg-green-500" : "text-primary border-primary/20"
+                          )}>
+                            {milestone.status === 'completed' ? 'Logrado' : 'En Proceso'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground font-medium leading-relaxed italic">{milestone.description}</p>
+                      </div>
+                    </Card>
+                    <div className="flex-1 hidden md:block" />
                   </div>
-                  <CardTitle className="text-xl font-black text-primary italic">{m.title}</CardTitle>
-                  <p className={cn("text-2xl font-black mt-2", m.textColor)}>${m.target.toLocaleString('es-CL')}</p>
-                </CardHeader>
-                <CardContent className="px-8 pb-8">
-                  <ul className="space-y-3">
-                    {m.items.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground font-medium italic">
-                        <CheckCircle2 className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
+                ))
+              )}
+            </div>
           </div>
         </section>
 

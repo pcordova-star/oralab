@@ -57,11 +57,6 @@ export function Navbar() {
                   Mi Test (En Casa)
                 </Button>
               </Link>
-              <Link href="/investors">
-                <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-black text-primary hover:text-secondary uppercase tracking-widest bg-primary/5 rounded-full px-4">
-                  Inversionistas
-                </Button>
-              </Link>
               <Link href="/sunvou">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-black text-primary hover:text-secondary uppercase tracking-widest">
                   Tecnología Sunvou
