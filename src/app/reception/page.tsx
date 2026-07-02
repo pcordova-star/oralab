@@ -526,6 +526,16 @@ export default function ReceptionPage() {
     }
   };
 
+  const handleDeleteContractLead = async (id: string) => {
+    if (!db || !confirm("¿Eliminar registro de socio?")) return;
+    try {
+      await deleteDoc(doc(db, "contract_leads", id));
+      toast({ title: "Registro eliminado" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error" });
+    }
+  };
+
   if (isUserLoading || !user || !isMounted) return null;
 
   return (
@@ -769,7 +779,7 @@ export default function ReceptionPage() {
            </DialogContent>
         </Dialog>
 
-        {/* Dialogos de Socios (Mantener iguales pero asegurar escala y diseño) */}
+        {/* Dialogos de Socios */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
            <DialogContent className="max-w-md rounded-[2rem] border-none shadow-2xl">
             <DialogHeader>
@@ -836,11 +846,23 @@ export default function ReceptionPage() {
             </div>
             <DialogFooter className="gap-3">
               <Button variant="outline" className="rounded-full h-12 px-8 font-bold border-primary/10" onClick={() => setIsCreateDialogOpen(false)}>Descartar</Button>
-              <Button onClick={handleCreateMilestone} className="bg-primary font-black rounded-full h-12 px-10 shadow-xl hover:bg-secondary transition-all">
+              <Button onClick={async () => {
+                if (!db || !leadForm.name || !leadForm.amount) return;
+                try {
+                  await addDoc(collection(db, "contract_leads"), {
+                    ...leadForm,
+                    equity: (leadForm.amount / FUNDING_GOAL) * EQUITY_TOTAL,
+                    status: "signed_by_investor",
+                    createdAt: serverTimestamp()
+                  });
+                  toast({ title: "Socio Registrado" });
+                  setIsCreateDialogOpen(false);
+                } catch (e) { toast({ variant: "destructive", title: "Error" }); }
+              }} className="bg-primary font-black rounded-full h-12 px-10 shadow-xl hover:bg-secondary transition-all">
                 <Save className="h-5 w-5 mr-2" /> Formalizar Registro
               </Button>
             </DialogFooter>
-          </DialogContent>
+           </DialogContent>
         </Dialog>
 
         {/* Dialogo Edicion de Socio */}
@@ -925,9 +947,4 @@ export default function ReceptionPage() {
       </main>
     </div>
   );
-}
-
-function handleDeleteContractLead(id: string) {
-  // Logic already defined inside ReceptionPage for non-blocking if needed, 
-  // but here I'm using component scope for direct Firestore access
 }
