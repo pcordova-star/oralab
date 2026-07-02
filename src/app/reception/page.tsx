@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -25,7 +26,8 @@ import {
   User,
   MapPin,
   CheckCircle2,
-  Users
+  Users,
+  Briefcase
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -272,13 +274,26 @@ export default function ReceptionPage() {
   };
 
   const handleAdminMarkAsSigned = (lead: any) => {
-    if (!db || !confirm("¿Marcar como 'Procesado'?")) return;
-    updateDocumentNonBlocking(doc(db, "contract_leads", lead.id), {
-      status: "fully_signed",
-      adminSignedAt: new Date().toISOString(),
-      updatedAt: serverTimestamp()
-    });
-    toast({ title: "Estado Actualizado" });
+    if (!db || !confirm("¿Confirmas la recepción del pago y formalización del socio?")) return;
+    
+    try {
+      const leadRef = doc(db, "contract_leads", lead.id);
+      updateDocumentNonBlocking(leadRef, {
+        status: "fully_signed",
+        adminSignedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp()
+      });
+      toast({ 
+        title: "Socio Validado", 
+        description: `${lead.name} ahora es parte oficial de Oralab.` 
+      });
+    } catch (e) {
+      toast({ 
+        variant: "destructive",
+        title: "Error", 
+        description: "No se pudo actualizar el estado del socio." 
+      });
+    }
   };
 
   const handleDeleteContractLead = (id: string) => {
@@ -413,41 +428,49 @@ export default function ReceptionPage() {
                 <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
                   <Users className="h-6 w-6 text-secondary" /> Gestión de Socios
                 </CardTitle>
-                <CardDescription>Revisión de aportes y validación de contratos Family & Friends.</CardDescription>
+                <CardDescription>Revisión de aportes y validación de pagos Family & Friends.</CardDescription>
               </CardHeader>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-muted/10">
                       <TableHead className="font-bold">Socio</TableHead>
-                      <TableHead className="font-bold">Monto</TableHead>
+                      <TableHead className="font-bold">Monto Aportado</TableHead>
+                      <TableHead className="font-bold">Participación</TableHead>
                       <TableHead className="font-bold">Estado</TableHead>
                       <TableHead className="text-right font-bold">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loadingLeads ? (
-                      <TableRow><TableCell colSpan={4} className="text-center py-10">Cargando socios...</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-10">Cargando socios...</TableCell></TableRow>
                     ) : contractLeads.length === 0 ? (
-                      <TableRow><TableCell colSpan={4} className="text-center py-10 italic">No hay registros de inversión.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-10 italic">No hay registros de inversión.</TableCell></TableRow>
                     ) : (
                       contractLeads.map((lead) => (
                         <TableRow key={lead.id} className="hover:bg-primary/5 transition-colors">
                           <TableCell>
                              <div className="flex flex-col">
-                               <span className="font-black text-primary">{lead.name}</span>
+                               <span className="font-black text-primary uppercase">{lead.name}</span>
                                <span className="text-[10px] font-bold text-muted-foreground">{lead.rut}</span>
                              </div>
                           </TableCell>
-                          <TableCell className="font-black text-primary">
-                            ${(lead.amount || 0).toLocaleString('es-CL')}
+                          <TableCell>
+                            <span className="font-black text-primary">
+                              ${(lead.amount || 0).toLocaleString('es-CL')}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="border-secondary/20 text-secondary font-black">
+                              {(lead.equity || 0).toFixed(4)}%
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge 
                               variant={lead.status === 'fully_signed' ? 'default' : 'outline'} 
-                              className={cn(lead.status === 'fully_signed' && "bg-green-500 text-white border-none")}
+                              className={cn(lead.status === 'fully_signed' ? "bg-green-500 text-white border-none" : "bg-amber-50 text-amber-600 border-amber-200")}
                             >
-                              {lead.status === 'fully_signed' ? 'Procesado' : 'Por Procesar'}
+                              {lead.status === 'fully_signed' ? 'Procesado' : 'Por Validar'}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
@@ -456,16 +479,16 @@ export default function ReceptionPage() {
                                  onClick={() => generateFullPDF(lead)} 
                                  variant="outline" 
                                  size="sm" 
-                                 className="rounded-full h-8 font-bold"
+                                 className="rounded-full h-8 font-bold text-[10px] border-primary/20 text-primary"
                                >
-                                 <Download className="h-3 w-3 mr-1" /> PDF
+                                 <Download className="h-3 w-3 mr-1" /> CONTRATO
                                </Button>
                                {lead.status !== 'fully_signed' && (
                                  <Button 
                                    onClick={() => handleAdminMarkAsSigned(lead)} 
-                                   className="bg-primary text-white h-8 text-[10px] rounded-full px-4 font-black shadow-md"
+                                   className="bg-primary text-white h-8 text-[10px] rounded-full px-4 font-black shadow-md hover:bg-secondary transition-all"
                                  >
-                                   Validar Pago
+                                   <Briefcase className="h-3 w-3 mr-1" /> Validar Pago
                                  </Button>
                                )}
                                <Button 
