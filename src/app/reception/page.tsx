@@ -21,7 +21,7 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/table";
+} from "@/components/ui/table";
 import { 
   Dialog, 
   DialogContent, 
@@ -70,7 +70,7 @@ import { toast } from "@/hooks/use-toast";
 import { getAuth, signOut } from "firebase/auth";
 import { cn } from "@/lib/utils";
 import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { jsPDF } from "jspdf";
+import { jsPDF } from "jsPDF";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
 const FUNDING_GOAL = 13500000;
