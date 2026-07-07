@@ -70,7 +70,7 @@ import { toast } from "@/hooks/use-toast";
 import { getAuth, signOut } from "firebase/auth";
 import { cn } from "@/lib/utils";
 import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { jsPDF } from "jsPDF";
+import { jsPDF } from "jspdf";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
 const FUNDING_GOAL = 13500000;
@@ -407,7 +407,7 @@ export default function ReceptionPage() {
     addText("Y por la otra:", 10, true);
     addText(`Don(ña) ${lead.name.toUpperCase()}, cédula nacional de identidad N° ${lead.rut}, domiciliado(a) en ${lead.address.toUpperCase()}, email ${lead.email.toLowerCase()}, en adelante el \"Inversionista\".`, 10, false, "justify");
 
-    addText("Las partes acuercas celebrar el presente Contrato Privado de Financiamiento y Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
+    addText("Las partes acuerdan celebrar el presente Contrato Privado de Financiamiento y Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
 
     addText("PRIMERA: ANTECEDENTES", 10, true);
     addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento con los permisos y logística necesarios para operar en el laboratorio y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
@@ -958,7 +958,7 @@ export default function ReceptionPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-2"><Mail className="h-3 w-3" /> Correo Institucional</Label>
+                <Label className="font-black text-[10px] uppercase text-primary tracking-widest flex items-center gap-2"><Mail className="h-3 w-3" /> Correo Electrónico</Label>
                 <Input 
                   placeholder="socio@correo.cl"
                   value={leadForm.email} 
