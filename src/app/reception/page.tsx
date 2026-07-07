@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, serverTimestamp, doc, updateDoc, addDoc, query, orderBy, deleteDoc } from "firebase/firestore";
+import { collection, serverTimestamp, doc, updateDoc, addDoc, query, orderBy, deleteDoc, where } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
 import { 
   Table, 
   TableBody, 
@@ -39,7 +40,7 @@ import {
 import { 
   Trash2, 
   Download,
-  Calendar,
+  Calendar as CalendarIcon,
   Clock,
   User,
   MapPin,
@@ -57,9 +58,10 @@ import {
   ShieldCheck,
   Info,
   CalendarDays,
-  History
+  History,
+  LayoutGrid
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, isSameDay, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { getAuth, signOut } from "firebase/auth";
@@ -128,6 +130,7 @@ export default function ReceptionPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isMilestoneDialogOpen, setIsMilestoneDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<any>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   
   const [leadForm, setLeadForm] = useState({
     name: "",
@@ -169,7 +172,7 @@ export default function ReceptionPage() {
 
   const milestonesRef = useMemoFirebase(() => {
     if (!db || !user || user.email !== ADMIN_EMAIL) return null;
-    return query(collection(db, "milestones"), orderBy("date", "desc"));
+    return query(collection(db, "milestones"), orderBy("date", "asc"));
   }, [db, user]);
 
   const { data: rawBookings, isLoading: loadingBookings } = useCollection(bookingsRef);
@@ -188,6 +191,12 @@ export default function ReceptionPage() {
     return dateB - dateA;
   });
 
+  // Citas del día seleccionado para la vista de calendario
+  const filteredBookings = bookings.filter((b) => {
+    if (!selectedDate || !b.scheduledDate) return false;
+    return b.scheduledDate === format(selectedDate, "yyyy-MM-dd");
+  });
+
   const totalRaised = contractLeads.reduce((acc, lead) => acc + (lead.amount || 0), 0);
   const validatedRaised = contractLeads
     .filter(lead => lead.status === 'fully_signed')
@@ -196,12 +205,12 @@ export default function ReceptionPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">Pendiente</Badge>;
-      case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Llegó</Badge>;
-      case "in_progress": return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">En Curso</Badge>;
-      case "completed": return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completado</Badge>;
-      case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelado</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
+      case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 uppercase font-black text-[9px]">Pendiente</Badge>;
+      case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 uppercase font-black text-[9px]">Llegó</Badge>;
+      case "in_progress": return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 uppercase font-black text-[9px]">En Curso</Badge>;
+      case "completed": return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 uppercase font-black text-[9px]">Completado</Badge>;
+      case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 uppercase font-black text-[9px]">Cancelado</Badge>;
+      default: return <Badge variant="outline" className="text-[9px] uppercase font-black">{status}</Badge>;
     }
   };
 
@@ -538,22 +547,26 @@ export default function ReceptionPage() {
 
   if (isUserLoading || !user || !isMounted) return null;
 
+  // Días con citas para marcar en el calendario
+  const daysWithBookings = bookings.map(b => b.scheduledDate).filter(Boolean);
+
   return (
     <div className="flex flex-col min-h-screen bg-muted/30 pb-20 font-body">
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <Tabs defaultValue="patients" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-3 shadow-inner border border-primary/5">
-            <TabsTrigger value="patients" className="rounded-full font-black px-10 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Agenda</TabsTrigger>
-            <TabsTrigger value="investors" className="rounded-full font-black px-10 data-[state=active]:bg-secondary data-[state=active]:text-white transition-all">Inversionistas</TabsTrigger>
-            <TabsTrigger value="milestones" className="rounded-full font-black px-10 data-[state=active]:bg-amber-500 data-[state=active]:text-white transition-all">Cronograma</TabsTrigger>
+          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-4 shadow-inner border border-primary/5">
+            <TabsTrigger value="patients" className="rounded-full font-black px-8 data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs">Agenda</TabsTrigger>
+            <TabsTrigger value="calendar-view" className="rounded-full font-black px-8 data-[state=active]:bg-secondary data-[state=active]:text-white transition-all text-xs">Calendario</TabsTrigger>
+            <TabsTrigger value="investors" className="rounded-full font-black px-8 data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs">Inversionistas</TabsTrigger>
+            <TabsTrigger value="milestones" className="rounded-full font-black px-8 data-[state=active]:bg-amber-500 data-[state=active]:text-white transition-all text-xs">Cronograma</TabsTrigger>
           </TabsList>
 
           <TabsContent value="patients">
             <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
               <CardHeader className="bg-primary/5 border-b">
                 <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                  <Calendar className="h-6 w-6 text-secondary" /> Control de Agenda
+                  <LayoutGrid className="h-6 w-6 text-secondary" /> Control de Agenda (Lista)
                 </CardTitle>
                 <CardDescription>Gestión de citas y kits de test de aire espirado SIBO.</CardDescription>
               </CardHeader>
@@ -571,11 +584,13 @@ export default function ReceptionPage() {
                   <TableBody>
                     {loadingBookings ? (
                       <TableRow><TableCell colSpan={5} className="text-center py-20 animate-pulse">Sincronizando...</TableCell></TableRow>
+                    ) : bookings.length === 0 ? (
+                      <TableRow><TableCell colSpan={5} className="text-center py-20 italic text-muted-foreground">No hay reservas registradas.</TableCell></TableRow>
                     ) : bookings.map((b) => (
                       <TableRow key={b.id}>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="font-black text-primary">{b.scheduledDate ? format(new Date(b.scheduledDate + 'T00:00:00'), "dd/MM/yyyy") : "Pendiente"}</span>
+                            <span className="font-black text-primary">{b.scheduledDate ? format(parseISO(b.scheduledDate), "dd/MM/yyyy") : "Pendiente"}</span>
                             <span className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1"><Clock className="h-3 w-3" /> {b.scheduledTime} hrs</span>
                           </div>
                         </TableCell>
@@ -593,8 +608,8 @@ export default function ReceptionPage() {
                         </TableCell>
                         <TableCell>{getStatusBadge(b.status)}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: "arrived" })} className="text-blue-500 rounded-full h-8 w-8"><CheckCircle2 className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "bookings", b.id))} className="text-red-300 rounded-full h-8 w-8 ml-2"><Trash2 className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: "arrived" })} className="text-blue-500 rounded-full h-8 w-8 hover:bg-blue-50"><CheckCircle2 className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "bookings", b.id))} className="text-red-300 rounded-full h-8 w-8 ml-2 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -602,6 +617,79 @@ export default function ReceptionPage() {
                 </Table>
               </div>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="calendar-view">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <Card className="lg:col-span-4 bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+                <CardHeader className="bg-secondary/5 border-b">
+                  <CardTitle className="text-xl font-black text-secondary italic flex items-center gap-2">
+                    <CalendarIcon className="h-5 w-5" /> Selector de Día
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 flex justify-center">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    locale={es}
+                    className="rounded-xl border border-primary/5"
+                    modifiers={{
+                      booked: (date) => daysWithBookings.includes(format(date, "yyyy-MM-dd"))
+                    }}
+                    modifiersClassNames={{
+                      booked: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full"
+                    }}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-8 bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+                <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center">
+                  <div>
+                    <CardTitle className="text-xl font-black text-primary italic">
+                      Citas para el {selectedDate ? format(selectedDate, "d 'de' MMMM, yyyy", { locale: es }) : "..."}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground font-medium">Listado detallado para el día seleccionado.</p>
+                  </div>
+                  <Badge className="bg-primary font-black px-4">{filteredBookings.length} Citas</Badge>
+                </CardHeader>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-bold">Hora</TableHead>
+                        <TableHead className="font-bold">Paciente</TableHead>
+                        <TableHead className="font-bold">Examen</TableHead>
+                        <TableHead className="font-bold">Estado</TableHead>
+                        <TableHead className="text-right font-bold">Gestión</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredBookings.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-20 italic text-muted-foreground font-medium">
+                            No hay horas agendadas para este día.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredBookings.map((b) => (
+                          <TableRow key={b.id}>
+                            <TableCell className="font-black text-primary">{b.scheduledTime} hrs</TableCell>
+                            <TableCell className="font-bold">{b.firstName} {b.lastNameFather}</TableCell>
+                            <TableCell className="italic text-secondary font-medium">Test {b.examType}</TableCell>
+                            <TableCell>{getStatusBadge(b.status)}</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="icon" onClick={() => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: "arrived" })} className="text-blue-500 rounded-full h-8 w-8 hover:bg-blue-50"><CheckCircle2 className="h-4 w-4" /></Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="investors">
@@ -715,7 +803,7 @@ export default function ReceptionPage() {
                           <TableRow><TableCell colSpan={4} className="text-center py-20 text-muted-foreground italic">No hay hitos registrados aún.</TableCell></TableRow>
                         ) : milestones?.map((m) => (
                           <TableRow key={m.id}>
-                             <TableCell className="font-black text-primary">{format(new Date(m.date + 'T00:00:00'), "dd/MM/yyyy")}</TableCell>
+                             <TableCell className="font-black text-primary">{format(parseISO(m.date), "dd/MM/yyyy")}</TableCell>
                              <TableCell>
                                 <div className="flex flex-col">
                                    <span className="font-bold text-primary">{m.title}</span>
@@ -948,3 +1036,4 @@ export default function ReceptionPage() {
     </div>
   );
 }
+
