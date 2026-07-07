@@ -21,7 +21,7 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
+} from "@/table";
 import { 
   Dialog, 
   DialogContent, 
@@ -59,7 +59,10 @@ import {
   Info,
   CalendarDays,
   History,
-  LayoutGrid
+  LayoutGrid,
+  Activity,
+  UserCheck,
+  AlertCircle
 } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -205,13 +208,23 @@ export default function ReceptionPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 uppercase font-black text-[9px]">Pendiente</Badge>;
-      case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 uppercase font-black text-[9px]">Llegó</Badge>;
-      case "in_progress": return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 uppercase font-black text-[9px]">En Curso</Badge>;
-      case "completed": return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 uppercase font-black text-[9px]">Completado</Badge>;
-      case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 uppercase font-black text-[9px]">Cancelado</Badge>;
+      case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 uppercase font-black text-[9px]"><Clock className="h-3 w-3 mr-1" /> Agendado</Badge>;
+      case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 uppercase font-black text-[9px]"><UserCheck className="h-3 w-3 mr-1" /> En Espera</Badge>;
+      case "in_progress": return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 uppercase font-black text-[9px]"><Activity className="h-3 w-3 mr-1" /> En Curso</Badge>;
+      case "completed": return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 uppercase font-black text-[9px]"><CheckCircle2 className="h-3 w-3 mr-1" /> Finalizado</Badge>;
+      case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 uppercase font-black text-[9px]"><AlertCircle className="h-3 w-3 mr-1" /> Cancelado</Badge>;
       default: return <Badge variant="outline" className="text-[9px] uppercase font-black">{status}</Badge>;
     }
+  };
+
+  const handleUpdateStatus = (bookingId: string, newStatus: string) => {
+    if (!db) return;
+    const bookingRef = doc(db, "bookings", bookingId);
+    updateDocumentNonBlocking(bookingRef, { status: newStatus, updatedAt: serverTimestamp() });
+    toast({
+      title: "Estado actualizado",
+      description: "El flujo del paciente ha sido modificado.",
+    });
   };
 
   const downloadInvestorsSummaryPDF = () => {
@@ -394,7 +407,7 @@ export default function ReceptionPage() {
     addText("Y por la otra:", 10, true);
     addText(`Don(ña) ${lead.name.toUpperCase()}, cédula nacional de identidad N° ${lead.rut}, domiciliado(a) en ${lead.address.toUpperCase()}, email ${lead.email.toLowerCase()}, en adelante el \"Inversionista\".`, 10, false, "justify");
 
-    addText("Las partes acuerdan celebrar el presente Contrato Privado de Financiamiento y Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
+    addText("Las partes acuercas celebrar el presente Contrato Privado de Financiamiento y Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
 
     addText("PRIMERA: ANTECEDENTES", 10, true);
     addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento con los permisos y logística necesarios para operar en el laboratorio y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
@@ -578,7 +591,7 @@ export default function ReceptionPage() {
                       <TableHead className="font-bold">Paciente</TableHead>
                       <TableHead className="font-bold">Examen / Modalidad</TableHead>
                       <TableHead className="font-bold">Estado</TableHead>
-                      <TableHead className="text-right font-bold">Acciones</TableHead>
+                      <TableHead className="text-right font-bold">Cambiar Estado / Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -608,8 +621,32 @@ export default function ReceptionPage() {
                         </TableCell>
                         <TableCell>{getStatusBadge(b.status)}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: "arrived" })} className="text-blue-500 rounded-full h-8 w-8 hover:bg-blue-50"><CheckCircle2 className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "bookings", b.id))} className="text-red-300 rounded-full h-8 w-8 ml-2 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Select 
+                              value={b.status} 
+                              onValueChange={(val) => handleUpdateStatus(b.id, val)}
+                            >
+                              <SelectTrigger className="w-[180px] h-8 text-[10px] font-bold rounded-full border-primary/20">
+                                <SelectValue placeholder="Estado..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Agendado</SelectItem>
+                                <SelectItem value="arrived">En sala de espera</SelectItem>
+                                <SelectItem value="in_progress">Test iniciado</SelectItem>
+                                <SelectItem value="completed">Finalizado</SelectItem>
+                                <SelectItem value="cancelled">Cancelado</SelectItem>
+                                <SelectItem value="rescheduled">Reagendado</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => deleteDocumentNonBlocking(doc(db!, "bookings", b.id))} 
+                              className="text-red-300 rounded-full h-8 w-8 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -680,7 +717,20 @@ export default function ReceptionPage() {
                             <TableCell className="italic text-secondary font-medium">Test {b.examType}</TableCell>
                             <TableCell>{getStatusBadge(b.status)}</TableCell>
                             <TableCell className="text-right">
-                              <Button variant="ghost" size="icon" onClick={() => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: "arrived" })} className="text-blue-500 rounded-full h-8 w-8 hover:bg-blue-50"><CheckCircle2 className="h-4 w-4" /></Button>
+                              <Select 
+                                value={b.status} 
+                                onValueChange={(val) => handleUpdateStatus(b.id, val)}
+                              >
+                                <SelectTrigger className="w-[140px] h-8 text-[9px] font-bold rounded-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">Agendado</SelectItem>
+                                  <SelectItem value="arrived">En espera</SelectItem>
+                                  <SelectItem value="in_progress">En curso</SelectItem>
+                                  <SelectItem value="completed">Finalizado</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </TableCell>
                           </TableRow>
                         ))
@@ -1036,4 +1086,3 @@ export default function ReceptionPage() {
     </div>
   );
 }
-
