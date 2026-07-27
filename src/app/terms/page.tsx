@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Navbar } from "@/components/navbar";
@@ -26,7 +25,7 @@ export default function TermsPage() {
                 <ShieldCheck className="h-10 w-10 text-secondary" /> Términos y Condiciones
               </h1>
               <p className="text-lg opacity-80 max-w-2xl font-medium">
-                Este documento regula la relación contractual y el uso técnico de la plataforma de Oralab Breath Diagnostics.
+                Este documento regula la relación contractual y el uso técnico de la plataforma de agendamiento de Oralab.
               </p>
             </motion.div>
           </div>
@@ -56,10 +55,10 @@ export default function TermsPage() {
 
               <div className="space-y-4">
                 <h2 className="text-2xl font-black text-primary italic flex items-center gap-3">
-                  <FileText className="h-6 w-6 text-secondary" /> 3. Registro y Responsabilidad
+                  <FileText className="h-6 w-6 text-secondary" /> 3. Registro y Responsabilidad de la Cuenta
                 </h2>
                 <p className="text-muted-foreground leading-relaxed font-medium">
-                  El Usuario es responsable de la veracidad y exactitud de los datos ingresados al momento del agendamiento. Oralab no se hace responsable por errores en la comunicación derivados de datos de contacto (email o teléfono) incorrectamente suministrados por el Usuario.
+                  El Usuario es responsable de la veracidad y exactitud de los datos ingresados al momento del agendamiento. Oralab no se hace responsable por errores en la comunicación derivados de datos de contacto incorrectamente suministrados o por el uso indebido de la cuenta por parte de terceros debido a negligencia del Usuario.
                 </p>
               </div>
 
