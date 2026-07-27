@@ -26,7 +26,8 @@ import {
   CheckCircle2,
   Coffee,
   Briefcase,
-  Users
+  Users,
+  FileText
 } from "lucide-react";
 import { 
   LineChart, 
@@ -669,6 +670,12 @@ export default function HomePage() {
               className="text-xs text-primary font-black opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center gap-2 hover:text-secondary"
             >
               <Users className="h-3 w-3" /> Dashboard Inversionistas
+            </Link>
+            <Link 
+              href="/terms" 
+              className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+            >
+              <FileText className="h-3 w-3" /> Términos y Condiciones
             </Link>
             <Link href="/login" className="text-xs text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-2"><Lock className="h-3 w-3" /> Acceso Administrativo</Link>
           </div>
