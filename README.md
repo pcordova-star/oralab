@@ -12,13 +12,19 @@ La configuración actual es CORRECTA:
 1. **Registros TXT**: Configurados para validación de propiedad (`fah-claim`).
 2. **Registro A**: Apuntando a la infraestructura de Google (`35.219.200.4`).
 3. **WWW Subdomain**: Configurado como CNAME hacia el raíz.
-4. **Proxy Status**: Debe permanecer en **Gris (DNS Only)** hasta que el dominio aparezca como "Activo" en Firebase Console.
+4. **Proxy Status**: Debe permanecer en **Gris (DNS Only)** hasta que el dominio aparezca como "Active" en Firebase Console.
 
 ## Configuración de Correos (Trigger Email Extension)
 Para que las confirmaciones de reserva lleguen a los pacientes, la extensión en Firebase Console debe configurarse así:
 - **Colección**: `mail`
-- **SMTP URI**: `smtps://usuario:clave@smtp.proveedor.com:465`
-- **From Address**: El correo oficial de Oralab.
+- **SMTP URI**: `smtps://tu-correo@gmail.com:clave_aplicacion@smtp.gmail.com:465`
+- **From Address**: El correo oficial de Oralab (ej. `Oralab <tu-correo@gmail.com>`).
+
+### Cómo obtener la Clave de Aplicación (Gmail)
+1. Ve a: [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+2. Asegúrate de tener activa la **Verificación en 2 pasos**.
+3. Selecciona "App" -> "Otros" y ponle un nombre (ej: "Firebase Oralab").
+4. Genera y copia el código de 16 caracteres. **Ese código es la "clave_aplicacion" para el SMTP URI.**
 
 ## Gestión de Administrador
 - **Acceso**: `/login`
@@ -34,7 +40,7 @@ Ejecuta estos comandos para subir tus cambios y activar un nuevo despliegue en F
 git add .
 
 # 2. Confirmar cambios con descripción técnica
-git commit -m "Mejora: Logo personalizado, narrativa clínica y estabilidad de sesión"
+git commit -m "Mejora: Documentación de correos y estabilidad del sistema"
 
 # 3. Subir a GitHub (esto activa App Hosting automáticamente)
 git push origin main
