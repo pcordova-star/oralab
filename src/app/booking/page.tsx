@@ -112,7 +112,6 @@ export default function BookingPage() {
   const [prepInstructions, setPrepInstructions] = useState<string>("");
   const [lastBookingValues, setLastBookingValues] = useState<BookingFormValues | null>(null);
   
-  // Disponibilidad de horarios
   const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   
@@ -347,10 +346,10 @@ export default function BookingPage() {
       const bookingsRef = collection(db, "bookings");
       await addDocumentNonBlocking(bookingsRef, bookingData);
       
-      // Trigger Correo Electrónico (Vía Trigger Email Extension)
+      // Trigger Correo Electrónico con formato robusto para la extensión
       const mailRef = collection(db, "mail");
       await addDocumentNonBlocking(mailRef, {
-        to: values.email,
+        to: [values.email],
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
           text: `¡Hola ${values.firstName}! Tu reserva para el Test de Aire Espirado (${values.examType}) ha sido procesada con éxito para el día ${formattedDate} a las ${values.scheduledTime} hrs. RECUERDA: Ayuno de 12 horas y dieta blanda el día anterior.`,
