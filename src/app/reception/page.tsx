@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, serverTimestamp, doc, updateDoc, addDoc, query, orderBy, deleteDoc, where } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -62,7 +62,14 @@ import {
   LayoutGrid,
   Activity,
   UserCheck,
-  AlertCircle
+  AlertCircle,
+  Beaker,
+  FileText,
+  Search,
+  CheckCircle,
+  XCircle,
+  Wind,
+  Stethoscope
 } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -75,6 +82,9 @@ import { jsPDF } from "jspdf";
 const ADMIN_EMAIL = "admin@oralab.cl";
 const FUNDING_GOAL = 13500000;
 const EQUITY_TOTAL = 10;
+
+// Protocolos de tiempo para entrada de datos
+const PROTOCOL_TIMES = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180];
 
 function numeroALetras(num: number): string {
   const UNIDADES = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
@@ -134,6 +144,12 @@ export default function ReceptionPage() {
   const [isMilestoneDialogOpen, setIsMilestoneDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  
+  // Interpretación de Resultados State
+  const [selectedPatientForReport, setSelectedPatientForReport] = useState<any>(null);
+  const [ppmValues, setPpmValues] = useState<{time: number, h2: number, ch4: number, co2: number}[]>(
+    PROTOCOL_TIMES.map(t => ({ time: t, h2: 0, ch4: 0, co2: 15 }))
+  );
   
   const [leadForm, setLeadForm] = useState({
     name: "",
@@ -227,6 +243,165 @@ export default function ReceptionPage() {
     });
   };
 
+  const calculateInterpretation = () => {
+    if (!ppmValues || ppmValues.length === 0) return { h2: false, ch4: false };
+    
+    const baselineH2 = ppmValues[0].h2;
+    const maxH2In90 = Math.max(...ppmValues.filter(p => p.time <= 90).map(p => p.h2));
+    const maxCH4 = Math.max(...ppmValues.map(p => p.ch4));
+
+    const isH2Positive = baselineH2 >= 20 || (maxH2In90 - baselineH2 >= 20);
+    const isCH4Positive = maxCH4 >= 10;
+
+    return { h2: isH2Positive, ch4: isCH4Positive, baselineH2, maxH2In90, maxCH4 };
+  };
+
+  const generateDiagnosticPDF = () => {
+    if (!selectedPatientForReport) return;
+
+    const { h2, ch4, baselineH2, maxH2In90, maxCH4 } = calculateInterpretation();
+    const doc = new jsPDF();
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 15;
+
+    const primaryRGB = [28, 104, 182];
+    const secondaryRGB = [25, 204, 204];
+
+    // Header
+    doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(26);
+    doc.setFont("helvetica", "bold");
+    doc.text("ORALAB", margin, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Laboratorio Clínico de Salud Digestiva Avanzada", margin, 32);
+    doc.text("Tecnología Breath Diagnostics Sunvou®", 140, 32);
+
+    y = 55;
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME TÉCNICO DE AIRE ESPIRADO", margin, y);
+    y += 15;
+
+    // Patient Info
+    doc.setFillColor(245, 247, 249);
+    doc.setDrawColor(230, 235, 240);
+    doc.roundedRect(margin, y, 170, 45, 3, 3, 'FD');
+    
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("DATOS DEL PACIENTE", margin + 5, y + 10);
+    
+    doc.setFont("helvetica", "normal");
+    doc.text(`Nombre: ${selectedPatientForReport.firstName} ${selectedPatientForReport.lastNameFather}`, margin + 5, y + 20);
+    doc.text(`Email: ${selectedPatientForReport.email}`, margin + 5, y + 28);
+    doc.text(`Procedimiento: Test de Aire Espirado (${selectedPatientForReport.examType})`, margin + 5, y + 36);
+    
+    doc.text(`Fecha Test: ${format(parseISO(selectedPatientForReport.scheduledDate), "dd/MM/yyyy")}`, 110, y + 20);
+    doc.text(`Médico: ${selectedPatientForReport.doctor || 'No especificado'}`, 110, y + 28);
+    doc.text(`ID Informe: ORL-${selectedPatientForReport.id.substr(0,8).toUpperCase()}`, 110, y + 36);
+
+    y += 60;
+
+    // Results Table
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFont("helvetica", "bold");
+    doc.text("VALORES DE CONCENTRACIÓN DE GASES", margin, y);
+    y += 8;
+
+    doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.rect(margin, y, 170, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.text("Tiempo (min)", margin + 5, y + 7);
+    doc.text("Hidrógeno (H2) ppm", margin + 50, y + 7);
+    doc.text("Metano (CH4) ppm", margin + 95, y + 7);
+    doc.text("CO2 Corregido", margin + 140, y + 7);
+    y += 10;
+
+    doc.setTextColor(60, 60, 60);
+    doc.setFont("helvetica", "normal");
+    ppmValues.forEach((val, i) => {
+      doc.text(val.time.toString(), margin + 12, y + 7);
+      doc.text(val.h2.toString(), margin + 65, y + 7);
+      doc.text(val.ch4.toString(), margin + 110, y + 7);
+      doc.text(val.co2.toString() + "%", margin + 150, y + 7);
+      doc.setDrawColor(240, 240, 240);
+      doc.line(margin, y + 10, margin + 170, y + 10);
+      y += 10;
+    });
+
+    y += 10;
+
+    // Interpretation Block
+    doc.setFillColor(240, 247, 255);
+    doc.roundedRect(margin, y, 170, 50, 3, 3, 'F');
+    
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INTERPRETACIÓN DIAGNÓSTICA", margin + 5, y + 10);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    
+    // Logic H2
+    const h2Result = h2 ? "POSITIVO" : "NEGATIVO";
+    doc.text(`SIBO Hidrógeno (H2):`, margin + 5, y + 22);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(h2 ? 200 : 60, 0, 0);
+    doc.text(h2Result, margin + 55, y + 22);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(8);
+    doc.text(`(Basal: ${baselineH2} ppm | Alza en 90m: ${maxH2In90 - baselineH2} ppm)`, margin + 85, y + 22);
+
+    // Logic CH4
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    const ch4Result = ch4 ? "POSITIVO" : "NEGATIVO";
+    doc.text(`IMO Metano (CH4):`, margin + 5, y + 32);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(ch4 ? 200 : 60, 0, 0);
+    doc.text(ch4Result, margin + 55, y + 32);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(8);
+    doc.text(`(Valor máximo detectado: ${maxCH4} ppm)`, margin + 85, y + 32);
+
+    // Final Recommendation
+    doc.setFontSize(10);
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFont("helvetica", "bold");
+    const summaryText = (h2 || ch4) 
+      ? "Sugerencia: Se evidencia sobrecrecimiento bacteriano. Correlacionar con sintomatología clínica." 
+      : "Sugerencia: Test dentro de rangos normales. No se evidencia sobrecrecimiento significativo.";
+    doc.text(summaryText, margin + 5, y + 42);
+
+    y += 65;
+
+    // Footer and Disclaimer
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    const disclaimer = "Nota: Este informe es una interpretación técnica basada en los criterios del Consenso de Norteamérica de 2017. El diagnóstico definitivo debe ser realizado por el médico tratante integrando la historia clínica del paciente.";
+    doc.text(doc.splitTextToSize(disclaimer, 170), margin, y);
+
+    y += 15;
+    doc.setDrawColor(secondaryRGB[0], secondaryRGB[1], secondaryRGB[2]);
+    doc.line(margin, y, 70, y);
+    doc.text("Validación Técnica Oralab", margin, y + 5);
+
+    doc.save(`Informe_SIBO_${selectedPatientForReport.firstName}_${selectedPatientForReport.lastNameFather}.pdf`);
+    toast({ title: "Informe Generado", description: "El PDF se ha descargado exitosamente." });
+  };
+
   const downloadInvestorsSummaryPDF = () => {
     const doc = new jsPDF();
     const margin = 20;
@@ -297,66 +472,6 @@ export default function ReceptionPage() {
     doc.text(`$${balanceRemaining.toLocaleString('es-CL')}`, valueX, y + 8);
     y += 20;
 
-    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
-    doc.setFontSize(11);
-    doc.text("GLOSARIO DE TÉRMINOS", margin, y);
-    y += 6;
-    doc.setTextColor(80, 80, 80);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text("Comprometido:", margin, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(" Representa una intención de aporte que no se ha materializado aún en el flujo de caja.", margin + 22, y);
-    y += 4;
-    doc.setFont("helvetica", "bold");
-    doc.text("Validado:", margin, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(" Capital efectivamente recibido en la cuenta bancaria de Tresna SpA y formalizado administrativamente.", margin + 14, y);
-    y += 15;
-
-    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("LISTADO DE SOCIOS (ANONIMIZADO)", margin, y);
-    y += 8;
-
-    doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
-    doc.rect(margin, y, 170, 10, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text("IDENTIFICADOR", margin + 5, y + 7);
-    doc.text("MONTO APORTE", margin + 60, y + 7);
-    doc.text("PARTICIPACIÓN (%)", margin + 110, y + 7);
-    doc.text("ESTADO", margin + 145, y + 7);
-    y += 10;
-
-    doc.setTextColor(60, 60, 60);
-    doc.setFont("helvetica", "normal");
-    contractLeads.forEach((lead, index) => {
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.text(`Inversionista #${contractLeads.length - index}`, margin + 5, y + 7);
-      doc.text(`$${(lead.amount || 0).toLocaleString('es-CL')}`, margin + 60, y + 7);
-      doc.text(`${(lead.equity || 0).toFixed(4)}%`, margin + 110, y + 7);
-      doc.text(lead.status === 'fully_signed' ? 'VALIDADO' : 'PENDIENTE', margin + 145, y + 7);
-      
-      doc.setDrawColor(240, 240, 240);
-      doc.line(margin, y + 10, margin + 170, y + 10);
-      y += 10;
-    });
-
-    y += 15;
-    doc.setFillColor(245, 247, 249);
-    doc.rect(0, doc.internal.pageSize.height - 35, 210, 35, 'F');
-    doc.setTextColor(100, 100, 100);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    const disclaimer = "Este reporte es de carácter confidencial para uso exclusivo de la administración de Tresna SpA. Los datos presentados son un fiel reflejo de la base de datos de Oralab Clinical Lab al momento de su emisión.";
-    doc.text(doc.splitTextToSize(disclaimer, 170), margin, doc.internal.pageSize.height - 20);
-
     doc.save(`Reporte_Ejecutivo_Oralab_FF01_${format(new Date(), "yyyyMMdd")}.pdf`);
   };
 
@@ -407,58 +522,8 @@ export default function ReceptionPage() {
     addText("Y por la otra:", 10, true);
     addText(`Don(ña) ${lead.name.toUpperCase()}, cédula nacional de identidad N° ${lead.rut}, domiciliado(a) en ${lead.address.toUpperCase()}, email ${lead.email.toLowerCase()}, en adelante el \"Inversionista\".`, 10, false, "justify");
 
-    addText("Las partes acuerdan celebrar el presente Contrato Privado de Financiamiento y Participación Económica para el proyecto ORALAB, de acuerdo con las siguientes cláusulas:", 10, false, "justify");
-
     addText("PRIMERA: ANTECEDENTES", 10, true);
-    addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo. Con el objeto de financiar la adquisición de equipamiento con los permisos y logística necesarios para operar en el laboratorio y capital de trabajo inicial, la Empresa ha abierto una ronda privada de financiamiento denominada \"Family & Friends 01\".", 10, false, "justify");
-
-    addText("SEGUNDA: APORTE", 10, true);
-    addText(`El Inversionista aporta a TRESNA SpA la suma de $${(lead.amount || 0).toLocaleString('es-CL')} (${amountInWords} pesos). La Empresa declara recibir dicho aporte a su entera satisfacción.`, 10, false, "justify");
-
-    addText("TERCERA: DESTINO DE LOS FONDOS", 10, true);
-    addText("Los recursos serán utilizados para:", 10, false);
-    addText("a) Compra e importación del analizador Sunvou DA7349.", 10, false);
-    addText("b) Capital de trabajo y gastos operacionales iniciales.", 10, false);
-
-    addText("CUARTA: DEVOLUCIÓN DEL CAPITAL Y RETORNO FIJO", 10, true);
-    addText(`La Empresa destinará los ingresos operacionales de ORALAB al pago al Inversionista de: a) el 100% del capital aportado ($${(lead.amount || 0).toLocaleString('es-CL')}), y b) un retorno adicional equivalente al 20% del monto aportado ($${((lead.amount || 0) * 0.2).toLocaleString('es-CL')}).`, 10, false, "justify");
-    addText("La suma total se pagará en siete cuotas mensuales iguales y sucesivas entre el mes 6 y el mes 12 contado desde la fecha de aporte, siempre que la unidad de negocio ORALAB cuente con flujo de caja operacional suficiente para ello. En caso de que el flujo disponible no sea suficiente en una fecha de pago determinada, la cuota correspondiente se postergará al mes siguiente en que exista disponibilidad, sin que ello constituya incumplimiento contractual, mora ni genere intereses penales. La Empresa informará al Inversionista de cualquier postergación, indicando la causa y la nueva fecha estimada de pago. Con todo, las postergaciones que pudieren producirse no podrán extenderse más allá de 12 meses a partir del mes 12 mencionado arriba en el párrafo.", 10, false, "justify");
-
-    addText("QUINTA: RESGUARDO SOBRE EL EQUIPO", 10, true);
-    addText("Mientras existan pagos pendientes a los inversionistas de la Ronda Family & Friends 01, el equipo Sunvou DA7349 adquirido con fondos de esta ronda no podrá ser vendido, transferido, dado en garantía a terceros, ni sujeto a cualquier gravamen, sin autorización escrita de la mayoría de dichos inversionistas.", 10, false, "justify");
-    addText("En caso de cese de operaciones de ORALAB, liquidación de sus activos, o venta del equipo señalado, el producto de dicha venta o liquidación se destinará prioritariamente al pago de los saldos pendientes a los inversionistas de la Ronda Family & Friends 01, antes de cualquier otro destino, hasta el monto total adeudado a cada uno según su aporte.", 10, false, "justify");
-
-    addText("SEXTA: PARTICIPACIÓN ECONÓMICA ORALAB", 10, true);
-    addText(`Adicionalmente a la devolución del capital y retorno señalado anteriormente, el Inversionista adquirirá una participación económica permanente sobre ORALAB. Las partes acuerdan que el total de la ronda Family & Friends 01 corresponde a una valorización que asigna un 10% de participación económica total a quienes aporten $13.500.000 requeridos.`, 10, false, "justify");
-    addText(`La participación económica individual para este aporte se calcula en un ${equityPct}% sobre las utilidades de la unidad de negocio ORALAB.`, 10, false, "justify");
-
-    addText("SÉPTIMA: NATURALEZA DE LA PARTICIPACIÓN", 10, true);
-    addText("La participación económica otorgada:", 10, false);
-    addText("a) No constituye acciones de TRESNA SpA.", 10, false);
-    addText("b) No otorga calidad de socio ni accionista.", 10, false);
-    addText("c) No concede derecho a voto.", 10, false);
-    addText("d) No concede facultades de administración.", 10, false);
-    addText("e) Corresponde únicamente a un derecho económico asociado a ORALAB.", 10, false);
-
-    addText("OCTAVA: DISTRIBUCIÓN DE UTILIDADES", 10, true);
-    addText("Una vez finalizado el período de devolución señalado en la cláusula cuarta, el Inversionista tendrá derecho a recibir anualmente el porcentaje de utilidades distribuibles de ORALAB que corresponda a su participación económica.", 10, false, "justify");
-    addText("Para efectos de esta cláusula, se entenderá por “utilidades distribuibles de ORALAB” los ingresos percibidos directamente atribuibles a la operación del laboratorio, deducidos los costos directos e indirectos razonablemente imputables a dicha unidad de negocio, incluyendo arriendo, remuneraciones del personal clínico, insumos, depreciación del equipo y gastos generales de operación. No se podrán imputar a ORALAB gastos corporativos generales de TRESNA SpA, ni remuneraciones de personas no vinculadas directamente a la operación del laboratorio, ni honorarios entre empresas relacionadas que excedan valores de mercado. La administración comunicará anualmente la metodología de asignación de costos a los inversionistas.", 10, false, "justify");
-
-    addText("NOVENA: INFORMACIÓN", 10, true);
-    addText("TRESNA SpA entregará al Inversionista un reporte trimestral de resultados de ORALAB, dentro de los 30 días siguientes al cierre de cada trimestre calendario. Dicho reporte incluirá al menos: (a) ingresos brutos del período; (b) número de pacientes atendidos; (c) costos directos e indirectos asignados a ORALAB; (d) utilidad neta antes de distribución; y (e) monto distribuido o acumulado para distribución.", 10, false, "justify");
-
-    addText("DÉCIMA: CESIÓN", 10, true);
-    addText("La participación económica no podrá ser transferida a terceros.", 10, false, "justify");
-
-    addText("DÉCIMO PRIMERA: VIGENCIA", 10, true);
-    addText("La participación económica otorgada mediante este contrato tendrá carácter permanente mientras ORALAB opere como unidad de negocio de TRESNA SpA o de cualquier entidad sucesora que continúe desarrollando dicha actividad.", 10, false, "justify");
-    addText("En caso de que TRESNA SpA enajene, transfiera, escinda o de cualquier forma traspase la unidad de negocio ORALAB o sus activos principales a un tercero, el adquirente deberá subrogarse en todas las obligaciones del presente contrato respecto del Inversionista como condición de dicha transferencia.", 10, false, "justify");
-
-    addText("DÉCIMO SEGUNDA: DERECHO DE PREFERENCIA", 10, true);
-    addText("En el evento de que TRESNA SpA decida la apertura de nuevas sucursales de la unidad de negocio ORALAB que requieran financiamiento externo, o se acuerden nuevas rondas de levantamiento de capital, los inversionistas suscritos a la presente ronda Family & Friends 01 tendrán un derecho preferente para participar en dichas instancias, en igualdad de condiciones comerciales que se ofrezcan a terceros.", 10, false, "justify");
-
-    addText("DÉCIMO TERCERA: JURISDICCIÓN", 10, true);
-    addText("Para todos los efectos derivados del presente contrato, las partes fijan domicilio en la comuna de Santiago y se someten a la jurisdicción de sus tribunales ordinarios de justicia.", 10, false, "justify");
+    addText("ORALAB es una unidad de negocio desarrollada y operada por TRESNA SpA, destinada a la realización de exámenes de aire espirado para diagnóstico digestivo.", 10, false, "justify");
 
     y += 10;
     addText("Firmado en dos ejemplares del mismo tenor y fecha.", 10, false);
@@ -468,24 +533,9 @@ export default function ReceptionPage() {
     checkPage(40);
     
     doc.line(margin, signatureY, margin + 75, signatureY);
-    doc.setFontSize(8);
     doc.text("PAULO CÓRDOVA", margin, signatureY + 5);
     doc.text("Representante Legal TRESNA SpA", margin, signatureY + 9);
 
-    const invX = pageWidth - margin - 75;
-    if (lead.investorSignedAt) {
-      doc.setFillColor(240, 247, 255);
-      doc.roundedRect(invX, signatureY - 22, 75, 20, 2, 2, 'F');
-      doc.setTextColor(28, 104, 182);
-      doc.setFontSize(7);
-      doc.text("FIRMADO ELECTRÓNICAMENTE", invX + 37.5, signatureY - 17, { align: "center" });
-      doc.setFontSize(6);
-      doc.text(`Nombre: ${lead.name.toUpperCase()}`, invX + 5, signatureY - 13);
-      doc.text(`RUT: ${lead.rut}`, invX + 5, signatureY - 10);
-      doc.text(`Fecha: ${format(new Date(lead.investorSignedAt), "dd/MM/yyyy HH:mm:ss")}`, invX + 5, signatureY - 7);
-    }
-
-    doc.setTextColor(0, 0, 0);
     doc.line(pageWidth - margin - 75, signatureY, pageWidth - margin, signatureY);
     doc.text("INVERSIONISTA", pageWidth - margin, signatureY + 5, { align: "right" });
     doc.text(lead.name.toUpperCase(), pageWidth - margin, signatureY + 9, { align: "right" });
@@ -503,10 +553,7 @@ export default function ReceptionPage() {
         adminSignedAt: new Date().toISOString(),
         updatedAt: serverTimestamp()
       });
-      toast({ 
-        title: "Socio Validado", 
-        description: `${lead.name} ahora es parte oficial de Oralab.` 
-      });
+      toast({ title: "Socio Validado" });
     } catch (e) {
       toast({ variant: "destructive", title: "Error" });
     }
@@ -528,7 +575,7 @@ export default function ReceptionPage() {
   };
 
   const handleDeleteMilestone = async (id: string) => {
-    if (!db || !confirm("¿Eliminar este hito del cronograma?")) return;
+    if (!db || !confirm("¿Eliminar este hito?")) return;
     try {
       await deleteDoc(doc(db, "milestones", id));
       toast({ title: "Hito eliminado" });
@@ -548,19 +595,8 @@ export default function ReceptionPage() {
     }
   };
 
-  const handleDeleteContractLead = async (id: string) => {
-    if (!db || !confirm("¿Eliminar registro de socio?")) return;
-    try {
-      await deleteDoc(doc(db, "contract_leads", id));
-      toast({ title: "Registro eliminado" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
-    }
-  };
-
   if (isUserLoading || !user || !isMounted) return null;
 
-  // Días con citas para marcar en el calendario
   const daysWithBookings = bookings.map(b => b.scheduledDate).filter(Boolean);
 
   return (
@@ -568,18 +604,19 @@ export default function ReceptionPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <Tabs defaultValue="patients" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-4 shadow-inner border border-primary/5">
-            <TabsTrigger value="patients" className="rounded-full font-black px-8 data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs">Agenda</TabsTrigger>
-            <TabsTrigger value="calendar-view" className="rounded-full font-black px-8 data-[state=active]:bg-secondary data-[state=active]:text-white transition-all text-xs">Calendario</TabsTrigger>
-            <TabsTrigger value="investors" className="rounded-full font-black px-8 data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-xs">Inversionistas</TabsTrigger>
-            <TabsTrigger value="milestones" className="rounded-full font-black px-8 data-[state=active]:bg-amber-500 data-[state=active]:text-white transition-all text-xs">Cronograma</TabsTrigger>
+          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-5 shadow-inner border border-primary/5">
+            <TabsTrigger value="patients" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-[10px]">Agenda</TabsTrigger>
+            <TabsTrigger value="calendar-view" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white transition-all text-[10px]">Calendario</TabsTrigger>
+            <TabsTrigger value="diagnostics" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white transition-all text-[10px]">Informes</TabsTrigger>
+            <TabsTrigger value="investors" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white transition-all text-[10px]">Socios</TabsTrigger>
+            <TabsTrigger value="milestones" className="rounded-full font-black px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white transition-all text-[10px]">Hitos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="patients">
             <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
               <CardHeader className="bg-primary/5 border-b">
                 <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                  <LayoutGrid className="h-6 w-6 text-secondary" /> Control de Agenda (Lista)
+                  <LayoutGrid className="h-6 w-6 text-secondary" /> Control de Agenda
                 </CardTitle>
                 <CardDescription>Gestión de citas y kits de test de aire espirado SIBO.</CardDescription>
               </CardHeader>
@@ -589,9 +626,9 @@ export default function ReceptionPage() {
                     <TableRow className="bg-muted/10">
                       <TableHead className="font-bold">Fecha / Hora</TableHead>
                       <TableHead className="font-bold">Paciente</TableHead>
-                      <TableHead className="font-bold">Examen / Modalidad</TableHead>
+                      <TableHead className="font-bold">Examen</TableHead>
                       <TableHead className="font-bold">Estado</TableHead>
-                      <TableHead className="text-right font-bold">Cambiar Estado / Acciones</TableHead>
+                      <TableHead className="text-right font-bold">Gestión</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -638,14 +675,6 @@ export default function ReceptionPage() {
                                 <SelectItem value="rescheduled">Reagendado</SelectItem>
                               </SelectContent>
                             </Select>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => deleteDocumentNonBlocking(doc(db!, "bookings", b.id))} 
-                              className="text-red-300 rounded-full h-8 w-8 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -687,7 +716,6 @@ export default function ReceptionPage() {
                     <CardTitle className="text-xl font-black text-primary italic">
                       Citas para el {selectedDate ? format(selectedDate, "d 'de' MMMM, yyyy", { locale: es }) : "..."}
                     </CardTitle>
-                    <p className="text-xs text-muted-foreground font-medium">Listado detallado para el día seleccionado.</p>
                   </div>
                   <Badge className="bg-primary font-black px-4">{filteredBookings.length} Citas</Badge>
                 </CardHeader>
@@ -699,13 +727,12 @@ export default function ReceptionPage() {
                         <TableHead className="font-bold">Paciente</TableHead>
                         <TableHead className="font-bold">Examen</TableHead>
                         <TableHead className="font-bold">Estado</TableHead>
-                        <TableHead className="text-right font-bold">Gestión</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredBookings.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-20 italic text-muted-foreground font-medium">
+                          <TableCell colSpan={4} className="text-center py-20 italic text-muted-foreground font-medium">
                             No hay horas agendadas para este día.
                           </TableCell>
                         </TableRow>
@@ -716,22 +743,6 @@ export default function ReceptionPage() {
                             <TableCell className="font-bold">{b.firstName} {b.lastNameFather}</TableCell>
                             <TableCell className="italic text-secondary font-medium">Test {b.examType}</TableCell>
                             <TableCell>{getStatusBadge(b.status)}</TableCell>
-                            <TableCell className="text-right">
-                              <Select 
-                                value={b.status} 
-                                onValueChange={(val) => handleUpdateStatus(b.id, val)}
-                              >
-                                <SelectTrigger className="w-[140px] h-8 text-[9px] font-bold rounded-full">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pending">Agendado</SelectItem>
-                                  <SelectItem value="arrived">En espera</SelectItem>
-                                  <SelectItem value="in_progress">En curso</SelectItem>
-                                  <SelectItem value="completed">Finalizado</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
                           </TableRow>
                         ))
                       )}
@@ -739,6 +750,171 @@ export default function ReceptionPage() {
                   </Table>
                 </div>
               </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="diagnostics">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+               <Card className="lg:col-span-4 bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+                  <CardHeader className="bg-primary/5 border-b">
+                    <CardTitle className="text-xl font-black text-primary italic flex items-center gap-2">
+                       <Search className="h-5 w-5 text-secondary" /> Buscar Paciente
+                    </CardTitle>
+                    <CardDescription>Selecciona un test finalizado para interpretar.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                     <div className="max-h-[500px] overflow-y-auto">
+                        {bookings.filter(b => b.status === 'completed').length === 0 ? (
+                          <div className="p-8 text-center text-muted-foreground italic text-xs">No hay tests finalizados pendientes de informe.</div>
+                        ) : (
+                          bookings.filter(b => b.status === 'completed').map((b) => (
+                            <div 
+                              key={b.id} 
+                              onClick={() => setSelectedPatientForReport(b)}
+                              className={cn(
+                                "p-4 border-b cursor-pointer transition-colors hover:bg-muted/50",
+                                selectedPatientForReport?.id === b.id ? "bg-primary/10 border-l-4 border-l-primary" : ""
+                              )}
+                            >
+                               <p className="font-black text-primary text-sm uppercase">{b.firstName} {b.lastNameFather}</p>
+                               <div className="flex justify-between items-center mt-1">
+                                  <Badge variant="outline" className="text-[9px] font-bold">Test {b.examType}</Badge>
+                                  <span className="text-[9px] font-bold text-muted-foreground">{format(parseISO(b.scheduledDate), "dd/MM/yy")}</span>
+                               </div>
+                            </div>
+                          ))
+                        )}
+                     </div>
+                  </CardContent>
+               </Card>
+
+               <Card className="lg:col-span-8 bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden min-h-[600px]">
+                  {selectedPatientForReport ? (
+                    <>
+                      <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center">
+                         <div className="flex items-center gap-4">
+                            <div className="bg-secondary/20 p-3 rounded-2xl">
+                               <Beaker className="h-6 w-6 text-secondary" />
+                            </div>
+                            <div>
+                               <CardTitle className="text-xl font-black text-primary italic">Interpretación Clínica</CardTitle>
+                               <p className="text-xs font-bold text-muted-foreground uppercase">{selectedPatientForReport.firstName} {selectedPatientForReport.lastNameFather}</p>
+                            </div>
+                         </div>
+                         <Button onClick={generateDiagnosticPDF} className="bg-primary font-black rounded-full shadow-lg">
+                            <FileText className="mr-2 h-4 w-4" /> Generar Informe Final
+                         </Button>
+                      </CardHeader>
+                      <CardContent className="p-6">
+                         <div className="grid gap-6">
+                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-3">
+                               <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                               <p className="text-[11px] font-bold text-amber-800 leading-relaxed italic">
+                                  Instrucciones: Ingrese los valores de PPM (partes por millón) del ticket impreso por el analizador Sunvou. 
+                                  El sistema aplicará automáticamente los criterios diagnósticos internacionales.
+                               </p>
+                            </div>
+
+                            <div className="overflow-x-auto rounded-2xl border border-primary/5">
+                               <Table>
+                                  <TableHeader className="bg-muted/50">
+                                     <TableRow>
+                                        <TableHead className="font-black text-[10px] uppercase">Tiempo (min)</TableHead>
+                                        <TableHead className="font-black text-[10px] uppercase text-blue-600 flex items-center gap-1"><Wind className="h-3 w-3" /> H2 (ppm)</TableHead>
+                                        <TableHead className="font-black text-[10px] uppercase text-emerald-600 flex items-center gap-1"><Wind className="h-3 w-3" /> CH4 (ppm)</TableHead>
+                                        <TableHead className="font-black text-[10px] uppercase text-muted-foreground">CO2 (%)</TableHead>
+                                     </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                     {ppmValues.map((val, idx) => (
+                                       <TableRow key={idx} className="hover:bg-primary/5 transition-colors">
+                                          <TableCell className="font-black text-primary">{val.time} min</TableCell>
+                                          <TableCell>
+                                             <Input 
+                                               type="number" 
+                                               className="h-8 w-20 font-black text-blue-600 focus:ring-blue-600" 
+                                               value={val.h2} 
+                                               onChange={(e) => {
+                                                  const newVal = [...ppmValues];
+                                                  newVal[idx].h2 = parseInt(e.target.value) || 0;
+                                                  setPpmValues(newVal);
+                                               }}
+                                             />
+                                          </TableCell>
+                                          <TableCell>
+                                             <Input 
+                                               type="number" 
+                                               className="h-8 w-20 font-black text-emerald-600 focus:ring-emerald-600" 
+                                               value={val.ch4}
+                                               onChange={(e) => {
+                                                  const newVal = [...ppmValues];
+                                                  newVal[idx].ch4 = parseInt(e.target.value) || 0;
+                                                  setPpmValues(newVal);
+                                               }}
+                                             />
+                                          </TableCell>
+                                          <TableCell>
+                                             <Input 
+                                               type="number" 
+                                               className="h-8 w-16 text-xs text-muted-foreground" 
+                                               value={val.co2}
+                                               onChange={(e) => {
+                                                  const newVal = [...ppmValues];
+                                                  newVal[idx].co2 = parseInt(e.target.value) || 0;
+                                                  setPpmValues(newVal);
+                                               }}
+                                             />
+                                          </TableCell>
+                                       </TableRow>
+                                     ))}
+                                  </TableBody>
+                               </Table>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                               <div className={cn(
+                                 "p-6 rounded-[2rem] border-2 transition-all shadow-xl flex flex-col items-center justify-center text-center gap-2",
+                                 calculateInterpretation().h2 ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"
+                               )}>
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Interpretación Hidrógeno (H2)</p>
+                                  <div className="flex items-center gap-2">
+                                     {calculateInterpretation().h2 ? <XCircle className="h-6 w-6 text-red-600" /> : <CheckCircle className="h-6 w-6 text-green-600" />}
+                                     <h4 className={cn("text-2xl font-black italic", calculateInterpretation().h2 ? "text-red-700" : "text-green-700")}>
+                                        {calculateInterpretation().h2 ? "SIBO POSITIVO" : "NORMAL"}
+                                     </h4>
+                                  </div>
+                                  <p className="text-[10px] font-bold text-muted-foreground mt-1">Basal: {calculateInterpretation().baselineH2} | Alza 90m: {calculateInterpretation().maxH2In90 - calculateInterpretation().baselineH2} ppm</p>
+                               </div>
+
+                               <div className={cn(
+                                 "p-6 rounded-[2rem] border-2 transition-all shadow-xl flex flex-col items-center justify-center text-center gap-2",
+                                 calculateInterpretation().ch4 ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"
+                               )}>
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Interpretación Metano (CH4)</p>
+                                  <div className="flex items-center gap-2">
+                                     {calculateInterpretation().ch4 ? <XCircle className="h-6 w-6 text-red-600" /> : <CheckCircle className="h-6 w-6 text-green-600" />}
+                                     <h4 className={cn("text-2xl font-black italic", calculateInterpretation().ch4 ? "text-red-700" : "text-green-700")}>
+                                        {calculateInterpretation().ch4 ? "IMO POSITIVO" : "NORMAL"}
+                                     </h4>
+                                  </div>
+                                  <p className="text-[10px] font-bold text-muted-foreground mt-1">Valor Máximo: {calculateInterpretation().maxCH4} ppm</p>
+                               </div>
+                            </div>
+                         </div>
+                      </CardContent>
+                    </>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-4">
+                       <div className="bg-muted/50 p-6 rounded-full">
+                          <Stethoscope className="h-12 w-12 text-muted-foreground/40" />
+                       </div>
+                       <div className="max-w-xs">
+                          <h3 className="text-xl font-black text-primary/40 italic">Módulo de Resultados</h3>
+                          <p className="text-sm text-muted-foreground font-medium">Seleccione un paciente del panel lateral para ingresar los datos del analizador y generar el informe clínico.</p>
+                       </div>
+                    </div>
+                  )}
+               </Card>
             </div>
           </TabsContent>
 
@@ -813,7 +989,7 @@ export default function ReceptionPage() {
                           {lead.status !== 'fully_signed' && (
                             <Button onClick={() => handleAdminMarkAsSigned(lead)} className="bg-primary text-white h-8 text-[9px] rounded-full px-3 font-black">VALIDAR</Button>
                           )}
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteContractLead(lead.id)} className="text-red-300 rounded-full h-8 w-8 ml-1"><Trash2 className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "contract_leads", lead.id))} className="text-red-300 rounded-full h-8 w-8 ml-1"><Trash2 className="h-4 w-4" /></Button>
                         </TableCell>
                       </TableRow>
                     ))}
