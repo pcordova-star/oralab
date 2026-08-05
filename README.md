@@ -14,6 +14,12 @@ La configuración actual es CORRECTA:
 3. **WWW Subdomain**: Configurado como CNAME hacia el raíz.
 4. **Proxy Status**: Debe permanecer en **Gris (DNS Only)** hasta que el dominio aparezca como "Activo" en Firebase Console.
 
+## Configuración de Correos (Trigger Email Extension)
+Para que las confirmaciones de reserva lleguen a los pacientes, la extensión en Firebase Console debe configurarse así:
+- **Colección**: `mail`
+- **SMTP URI**: `smtps://usuario:clave@smtp.proveedor.com:465`
+- **From Address**: El correo oficial de Oralab.
+
 ## Gestión de Administrador
 - **Acceso**: `/login`
 - **Email Admin**: `admin@oralab.cl`
