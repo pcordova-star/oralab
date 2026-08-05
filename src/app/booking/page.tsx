@@ -353,6 +353,7 @@ export default function BookingPage() {
         to: values.email,
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
+          text: `¡Hola ${values.firstName}! Tu reserva para el Test de Aire Espirado (${values.examType}) ha sido procesada con éxito para el día ${formattedDate} a las ${values.scheduledTime} hrs. RECUERDA: Ayuno de 12 horas y dieta blanda el día anterior.`,
           html: `
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 20px; overflow: hidden;">
               <div style="background-color: #1c68b6; padding: 30px; text-align: center;">
