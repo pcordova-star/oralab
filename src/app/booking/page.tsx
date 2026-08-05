@@ -100,7 +100,6 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
-// CONFIGURACIÓN: Inicio de operaciones Agosto 2026
 const OPERATIONS_START_DATE = new Date(2026, 7, 1);
 
 export default function BookingPage() {
@@ -306,7 +305,6 @@ export default function BookingPage() {
     }
 
     setIsSubmitting(true);
-    const fullPhone = values.phone;
     const birthDate = `${values.birthYear}-${values.birthMonth}-${values.birthDay.padStart(2, '0')}`;
     
     const bookingData = {
@@ -318,7 +316,7 @@ export default function BookingPage() {
       lastNameFather: values.lastNameFather,
       lastNameMother: values.lastNameMother,
       email: values.email,
-      phone: `+56 9 ${fullPhone}`,
+      phone: `+56 9 ${values.phone}`,
       address: values.address,
       birthDate: birthDate,
       diagnosis: values.diagnosis,
@@ -333,7 +331,6 @@ export default function BookingPage() {
     };
 
     try {
-      // INSTRUCCIONES ESTÁNDAR (Omitimos generación de IA por ahora para mayor velocidad)
       let instructions = "Por favor, siga estas indicaciones fundamentales:\n\n1. Ayuno estricto de 12 horas.\n2. El día anterior, siga una dieta blanda (arroz, pollo/pescado a la plancha). Evite legumbres, fibra, frutas y verduras.\n3. No fume ni realice ejercicio intenso 2 horas antes del examen.\n4. No tome antibióticos ni probióticos 4 semanas antes de la prueba.";
 
       if (values.modality === 'home_kit') {
