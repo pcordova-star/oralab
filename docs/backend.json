@@ -39,6 +39,21 @@
       },
       "required": ["firstName", "lastNameFather", "email", "phone", "examType", "modality", "scheduledDate", "scheduledTime", "status"]
     },
+    "Mail": {
+      "title": "Mail",
+      "description": "Colección utilizada por la extensión Trigger Email para enviar notificaciones.",
+      "type": "object",
+      "properties": {
+        "to": { "type": "string" },
+        "message": {
+          "type": "object",
+          "properties": {
+            "subject": { "type": "string" },
+            "html": { "type": "string" }
+          }
+        }
+      }
+    },
     "Quotation": {
       "title": "Quotation",
       "description": "Representa una cotización comercial de equipos o servicios Sunvou.",
@@ -144,6 +159,10 @@
     "/bookings/{bookingId}": {
       "schema": "Booking",
       "description": "Colección de solicitudes de reserva."
+    },
+    "/mail/{mailId}": {
+      "schema": "Mail",
+      "description": "Trigger automático de correos electrónicos."
     },
     "/quotations/{quotationId}": {
       "schema": "Quotation",
