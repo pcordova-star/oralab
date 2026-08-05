@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -25,10 +26,10 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Stethoscope, MessageCircle, HelpCircle, User, MapPin, Scale } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Stethoscope, MessageCircle, HelpCircle, User, MapPin, Scale, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
-import { collection, serverTimestamp } from "firebase/firestore";
+import { collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -110,6 +111,10 @@ export default function BookingPage() {
   const [prepInstructions, setPrepInstructions] = useState<string>("");
   const [lastBookingValues, setLastBookingValues] = useState<BookingFormValues | null>(null);
   
+  // Disponibilidad de horarios
+  const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  
   const db = useFirestore();
 
   useEffect(() => {
@@ -142,9 +147,39 @@ export default function BookingPage() {
     },
   });
 
+  const selectedDate = form.watch("scheduledDate");
   const selectedRegion = form.watch("region");
   const selectedModality = form.watch("modality");
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
+
+  // Verificar disponibilidad cuando cambia la fecha
+  useEffect(() => {
+    async function checkAvailability() {
+      if (!selectedDate || !db) return;
+      
+      setIsLoadingSlots(true);
+      form.setValue("scheduledTime", ""); // Resetear hora al cambiar fecha
+      
+      try {
+        const formattedDate = format(selectedDate, "yyyy-MM-dd");
+        const q = query(
+          collection(db, "bookings"),
+          where("scheduledDate", "==", formattedDate),
+          where("status", "!=", "cancelled")
+        );
+        
+        const snapshot = await getDocs(q);
+        const slots = snapshot.docs.map(doc => doc.data().scheduledTime);
+        setOccupiedSlots(slots);
+      } catch (error) {
+        console.error("Error checking availability:", error);
+      } finally {
+        setIsLoadingSlots(false);
+      }
+    }
+    
+    checkAvailability();
+  }, [selectedDate, db, form]);
 
   useEffect(() => {
     if (selectedRegion) {
@@ -615,20 +650,33 @@ export default function BookingPage() {
                         name="scheduledTime"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-lg font-bold">Bloque Horario</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormLabel className="text-lg font-bold flex items-center gap-2">
+                              Bloque Horario
+                              {isLoadingSlots && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                            </FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDate || isLoadingSlots}>
                               <FormControl>
                                 <SelectTrigger className="bg-white h-12 text-lg border-2">
                                   <div className="flex items-center gap-2">
                                     <Clock className="h-5 w-5 opacity-50" />
-                                    <SelectValue placeholder="Selecciona hora" />
+                                    <SelectValue placeholder={selectedDate ? (isLoadingSlots ? "Consultando disponibilidad..." : "Selecciona hora") : "Primero selecciona fecha"} />
                                   </div>
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent className="max-h-60">
-                                {timeSlots.map(time => (
-                                  <SelectItem key={time} value={time} className="text-lg">{time} hrs</SelectItem>
-                                ))}
+                                {timeSlots.map(time => {
+                                  const isOccupied = occupiedSlots.includes(time);
+                                  return (
+                                    <SelectItem 
+                                      key={time} 
+                                      value={time} 
+                                      disabled={isOccupied}
+                                      className={cn("text-lg", isOccupied && "opacity-50 line-through")}
+                                    >
+                                      {time} hrs {isOccupied && "(Ocupado)"}
+                                    </SelectItem>
+                                  );
+                                })}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -641,7 +689,7 @@ export default function BookingPage() {
                       <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-14 text-lg rounded-xl">
                         Atrás
                       </Button>
-                      <Button type="button" onClick={nextStep} className="flex-2 w-full h-14 text-lg font-bold rounded-xl shadow-md transition-all active:scale-95">
+                      <Button type="button" onClick={nextStep} className="flex-2 w-full h-14 text-lg font-bold rounded-xl shadow-md transition-all active:scale-95" disabled={!selectedDate || !form.watch("scheduledTime")}>
                         Continuar a mis datos <ChevronRight className="ml-2 h-5 w-5" />
                       </Button>
                     </div>
