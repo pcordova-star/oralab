@@ -26,6 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Stethoscope, MessageCircle, HelpCircle, User, MapPin, Scale, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
@@ -149,7 +150,6 @@ export default function BookingPage() {
 
   const selectedDate = form.watch("scheduledDate");
   const selectedRegion = form.watch("region");
-  const selectedModality = form.watch("modality");
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
 
   useEffect(() => {
