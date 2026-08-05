@@ -25,7 +25,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Stethoscope, MessageCircle, HelpCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Stethoscope, MessageCircle, HelpCircle, User, MapPin, Scale } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
@@ -36,7 +36,6 @@ import { format, isBefore, isWeekend } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { generatePrepInstructions } from "@/ai/flows/generate-prep-instructions";
 import { jsPDF } from "jspdf";
 
 const regions = [
@@ -307,7 +306,7 @@ export default function BookingPage() {
     }
 
     setIsSubmitting(true);
-    const fullPhone = `+56 9 ${values.phone}`;
+    const fullPhone = values.phone;
     const birthDate = `${values.birthYear}-${values.birthMonth}-${values.birthDay.padStart(2, '0')}`;
     
     const bookingData = {
@@ -319,7 +318,7 @@ export default function BookingPage() {
       lastNameFather: values.lastNameFather,
       lastNameMother: values.lastNameMother,
       email: values.email,
-      phone: fullPhone,
+      phone: `+56 9 ${fullPhone}`,
       address: values.address,
       birthDate: birthDate,
       diagnosis: values.diagnosis,
@@ -334,13 +333,8 @@ export default function BookingPage() {
     };
 
     try {
-      let instructions = "";
-      try {
-        const aiResponse = await generatePrepInstructions({ examType: values.examType });
-        instructions = aiResponse.instructions;
-      } catch (aiError) {
-        instructions = "Por favor, siga estas indicaciones fundamentales:\n\n1. Ayuno estricto de 12 horas.\n2. El día anterior, siga una dieta blanda (arroz, pollo/pescado a la plancha). Evite legumbres, fibra, frutas y verduras.\n3. No fume ni realice ejercicio intenso 2 horas antes del examen.\n4. No tome antibióticos ni probióticos 4 semanas antes de la prueba.";
-      }
+      // INSTRUCCIONES ESTÁNDAR (Omitimos generación de IA por ahora para mayor velocidad)
+      let instructions = "Por favor, siga estas indicaciones fundamentales:\n\n1. Ayuno estricto de 12 horas.\n2. El día anterior, siga una dieta blanda (arroz, pollo/pescado a la plancha). Evite legumbres, fibra, frutas y verduras.\n3. No fume ni realice ejercicio intenso 2 horas antes del examen.\n4. No tome antibióticos ni probióticos 4 semanas antes de la prueba.";
 
       if (values.modality === 'home_kit') {
         instructions = "INSTRUCCIONES DE RETIRO DE KIT:\nUsted ha agendado el retiro de los insumos en nuestra oficina en Las Condes. Una vez retirado, podrá realizar el test en su hogar siguiendo estas indicaciones:\n\n" + instructions;
@@ -576,7 +570,7 @@ export default function BookingPage() {
                         name="scheduledDate"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
-                            <FormLabel className="text-lg">{selectedModality === 'home_kit' ? "Día de retiro de insumos" : "Día del examen"}</FormLabel>
+                            <FormLabel className="text-lg font-bold">{selectedModality === 'home_kit' ? "Día de retiro de insumos" : "Día del examen"}</FormLabel>
                             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                               <PopoverTrigger asChild>
                                 <FormControl>
@@ -624,7 +618,7 @@ export default function BookingPage() {
                         name="scheduledTime"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-lg">Bloque Horario</FormLabel>
+                            <FormLabel className="text-lg font-bold">Bloque Horario</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger className="bg-white h-12 text-lg border-2">
@@ -658,14 +652,235 @@ export default function BookingPage() {
                 )}
 
                 {step === 3 && (
-                  <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                    {/* ... rest of the form steps (omitted for brevity but logically intact) ... */}
+                  <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+                    
+                    {/* Identificación */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-black text-primary flex items-center gap-2 uppercase tracking-widest border-b pb-2">
+                        <User className="h-5 w-5 text-secondary" /> Identificación del Paciente
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nombres</FormLabel>
+                              <FormControl><Input placeholder="Ej: Juan Andrés" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="lastNameFather"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Apellido Paterno</FormLabel>
+                              <FormControl><Input placeholder="Ej: Pérez" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="lastNameMother"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Apellido Materno</FormLabel>
+                              <FormControl><Input placeholder="Ej: González" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="sex"
+                          render={({ field }) => (
+                            <FormItem className="space-y-3">
+                              <FormLabel>Sexo Registrado</FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="flex flex-row space-x-4"
+                                >
+                                  <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl><RadioGroupItem value="male" /></FormControl>
+                                    <FormLabel className="font-normal">Masculino</FormLabel>
+                                  </FormItem>
+                                  <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl><RadioGroupItem value="female" /></FormControl>
+                                    <FormLabel className="font-normal">Femenino</FormLabel>
+                                  </FormItem>
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="grid grid-cols-3 gap-2">
+                           <FormField control={form.control} name="birthDay" render={({field}) => (
+                             <FormItem>
+                               <FormLabel>Día Nac.</FormLabel>
+                               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                 <FormControl><SelectTrigger><SelectValue placeholder="DD"/></SelectTrigger></FormControl>
+                                 <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                               </Select>
+                             </FormItem>
+                           )}/>
+                           <FormField control={form.control} name="birthMonth" render={({field}) => (
+                             <FormItem>
+                               <FormLabel>Mes Nac.</FormLabel>
+                               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                 <FormControl><SelectTrigger><SelectValue placeholder="MM"/></SelectTrigger></FormControl>
+                                 <SelectContent>{months.map(m => <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>)}</SelectContent>
+                               </Select>
+                             </FormItem>
+                           )}/>
+                           <FormField control={form.control} name="birthYear" render={({field}) => (
+                             <FormItem>
+                               <FormLabel>Año Nac.</FormLabel>
+                               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                 <FormControl><SelectTrigger><SelectValue placeholder="AAAA"/></SelectTrigger></FormControl>
+                                 <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                               </Select>
+                             </FormItem>
+                           )}/>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contacto y Ubicación */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-black text-primary flex items-center gap-2 uppercase tracking-widest border-b pb-2">
+                        <MapPin className="h-5 w-5 text-secondary" /> Contacto y Ubicación
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Correo Electrónico</FormLabel>
+                              <FormControl><Input type="email" placeholder="paciente@correo.cl" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Teléfono Celular</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-2.5 text-muted-foreground font-bold text-sm">+56 9</span>
+                                  <Input className="pl-16" placeholder="12345678" {...field} />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Dirección Particular (Calle, Número, Depto)</FormLabel>
+                            <FormControl><Input placeholder="Ej: Apoquindo 3990, Of 605" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="region"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Región</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Seleccione región" /></SelectTrigger></FormControl>
+                                <SelectContent>{regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="commune"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Comuna</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value} disabled={!selectedRegion}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Seleccione comuna" /></SelectTrigger></FormControl>
+                                <SelectContent>{availableCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Antecedentes Clínicos */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-black text-primary flex items-center gap-2 uppercase tracking-widest border-b pb-2">
+                        <Stethoscope className="h-5 w-5 text-secondary" /> Antecedentes Clínicos
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="diagnosis"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Diagnóstico de Derivación</FormLabel>
+                              <FormControl><Input placeholder="Ej: Sospecha de SIBO" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="doctor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Médico Solicitante</FormLabel>
+                              <FormControl><Input placeholder="Nombre del gastroenterólogo" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="weight"
+                        render={({ field }) => (
+                          <FormItem className="max-w-[200px]">
+                            <FormLabel className="flex items-center gap-1"><Scale className="h-4 w-4" /> Peso (kg)</FormLabel>
+                            <FormControl><Input type="number" placeholder="Ej: 70" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
                     <div className="flex gap-4">
                       <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-14 text-lg rounded-xl" disabled={isSubmitting}>
                         Atrás
                       </Button>
-                      <Button type="submit" className="flex-2 w-full h-14 text-lg font-bold rounded-xl shadow-lg transition-all active:scale-95" disabled={isSubmitting}>
-                        {isSubmitting ? "Procesando..." : "Confirmar Reserva"}
+                      <Button type="submit" className="flex-2 w-full h-14 text-lg font-bold rounded-xl shadow-lg transition-all active:scale-95 bg-primary" disabled={isSubmitting}>
+                        {isSubmitting ? "Procesando..." : "Confirmar Reserva y Finalizar"}
                       </Button>
                     </div>
                   </div>
