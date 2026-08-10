@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -38,9 +39,7 @@ import {
   ReceiptText,
   FileUp,
   Sparkles,
-  Search,
-  ScanSearch,
-  FileText
+  ScanSearch
 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
@@ -152,7 +151,6 @@ export default function BookingPage() {
   const selectedCommune = form.watch("commune");
   const selectedModality = form.watch("modality");
   const selectedPrevision = form.watch("prevision");
-  const selectedExamType = form.watch("examType");
 
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
 
@@ -401,7 +399,7 @@ export default function BookingPage() {
                 {step === 1 && (
                   <div className="space-y-8 animate-in fade-in duration-500">
                     
-                    {/* Medical Order Scan Section */}
+                    {/* Medical Order Scan Section (Optional) */}
                     <Card className="bg-secondary/5 border-dashed border-2 border-secondary/30 rounded-[2rem] p-6 relative overflow-hidden group">
                       <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
                         <div className="bg-secondary text-white p-4 rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
@@ -409,9 +407,9 @@ export default function BookingPage() {
                         </div>
                         <div className="flex-1 text-center md:text-left">
                           <h4 className="font-black text-primary italic text-lg flex items-center justify-center md:justify-start gap-2">
-                            ¿Tienes Orden Médica? <Sparkles className="h-4 w-4 text-secondary" />
+                            ¿Tienes Orden Médica? <span className="text-[10px] bg-secondary/20 px-2 py-0.5 rounded text-secondary not-italic uppercase font-black">Opcional</span>
                           </h4>
-                          <p className="text-sm text-muted-foreground font-medium">Sube una foto para detectar tu examen automáticamente.</p>
+                          <p className="text-sm text-muted-foreground font-medium">Sube una foto para que nuestra IA detecte tu examen automáticamente.</p>
                         </div>
                         <div className="relative">
                           <Input 
@@ -426,7 +424,7 @@ export default function BookingPage() {
                             <Button asChild variant="outline" className="rounded-full font-bold border-secondary text-secondary hover:bg-secondary hover:text-white cursor-pointer h-12 px-6">
                               <span>
                                 <FileUp className="mr-2 h-4 w-4" /> 
-                                {isAnalyzing ? "Analizando..." : "Subir Foto"}
+                                {isAnalyzing ? "Analizando..." : "Escanear Orden"}
                               </span>
                             </Button>
                           </label>
@@ -434,7 +432,7 @@ export default function BookingPage() {
                       </div>
                       {aiDetectionResult && (
                         <div className="mt-4 flex items-center justify-center gap-2 bg-green-50 text-green-700 py-2 rounded-xl text-xs font-bold border border-green-100">
-                          <CheckCircle2 className="h-4 w-4" /> IA Detectó: {aiDetectionResult}
+                          <CheckCircle2 className="h-4 w-4" /> IA Identificó: {aiDetectionResult}
                         </div>
                       )}
                     </Card>
