@@ -195,12 +195,11 @@ export default function BookingPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Solo permitir imágenes para asegurar el procesamiento por la IA
     if (!file.type.startsWith('image/')) {
       toast({ 
         variant: "destructive", 
-        title: "Archivo no válido", 
-        description: "Por favor sube una fotografía (JPG o PNG) de tu orden." 
+        title: "Imagen requerida", 
+        description: "Por favor sube una fotografía (JPG o PNG) de tu orden para que la IA pueda leerla." 
       });
       return;
     }
@@ -211,20 +210,22 @@ export default function BookingPage() {
       const base64String = reader.result as string;
       try {
         const result = await analyzeMedicalOrder({ photoDataUri: base64String });
-        if (result.detectedExam !== 'Desconocido' && result.confidence > 0.5) {
+        if (result.detectedExam !== 'Desconocido' && result.confidence > 0.4) {
           form.setValue("examType", result.detectedExam as any);
-          toast({ title: "Orden Analizada", description: `Hemos detectado: ${result.detectedExam}.` });
+          toast({ title: "Orden Analizada", description: `Detectamos: ${result.detectedExam}. Selección actualizada.` });
         } else {
           toast({ 
             variant: "destructive", 
             title: "Detección fallida", 
-            description: "No pudimos leer el examen. Por favor selecciónalo manualmente." 
+            description: "No logramos leer el examen claramente. Por favor selecciónalo manualmente." 
           });
         }
       } catch (err) {
         toast({ variant: "destructive", title: "Error al procesar", description: "Ocurrió un error técnico al analizar la foto." });
       } finally {
         setIsAnalyzing(false);
+        // Reset file input
+        e.target.value = '';
       }
     };
     reader.readAsDataURL(file);
@@ -324,9 +325,9 @@ export default function BookingPage() {
     try {
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       const homeKitText = values.modality === 'home_kit' 
-        ? `<p style="color: #1c68b6; font-weight: bold;">PROCEDIMIENTO TEST EN CASA:</p>
+        ? `<p style="color: #1c68b6; font-weight: bold;">PROCEDIMIENTO TEST EN CASA (PASOS CRÍTICOS):</p>
            <ul>
-             <li>Retira el kit a la hora elegida en nuestro laboratorio (Apoquindo 3990).</li>
+             <li>Retira el kit presencialmente en Apoquindo 3990 a la hora de tu cita.</li>
              <li>Recibirás la instrucción técnica del profesional a cargo.</li>
              <li>Una vez terminado el test, coordina el retiro con el motoboy que aparece en tu flyer.</li>
              <li><strong>TIEMPO LÍMITE:</strong> El test debe estar en el laboratorio en máximo 6 horas tras ser realizado.</li>
@@ -339,18 +340,20 @@ export default function BookingPage() {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
           text: `Hola ${values.firstName}, tu reserva está confirmada para el día ${formattedDate}.`,
           html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px;">
-              <h2 style="color: #1c68b6;">Confirmación de Reserva</h2>
-              <p>Hola <strong>${values.firstName}</strong>, tu cita para el test de <strong>${values.examType}</strong> ha sido agendada.</p>
-              <div style="padding: 15px; background: #f0f7ff; margin-bottom: 20px;">
+            <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 20px;">
+              <h2 style="color: #1c68b6;">Reserva Confirmada</h2>
+              <p>Hola <strong>${values.firstName}</strong>, tu cita para el test de <strong>${values.examType}</strong> ha sido agendada con éxito.</p>
+              <div style="padding: 15px; background: #f0f7ff; margin-bottom: 20px; border-radius: 10px;">
                 <p><strong>Día:</strong> ${formattedDate}</p>
                 <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
                 <p><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Retiro Kit en Apoquindo 3990)' : 'Apoquindo 3990, Las Condes'}</p>
               </div>
               ${homeKitText}
-              <p><strong>Total Final a Pagar: $${finalTotal.toLocaleString()}</strong></p>
-              <p style="color: #d97706;">RECUERDA: Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
-              <p style="font-size: 12px; color: #64748b;">© 2024 Oralab Clinical Lab. Tecnología Sunvou®.</p>
+              <div style="border-top: 2px dashed #cbd5e1; padding-top: 15px; margin-top: 15px;">
+                <p><strong>Total Final a Pagar: $${finalTotal.toLocaleString()}</strong></p>
+              </div>
+              <p style="color: #d97706; font-weight: bold;">⚠️ RECUERDA: Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
+              <p style="font-size: 11px; color: #64748b; text-align: center; margin-top: 30px;">© 2024 Oralab Clinical Lab. Tecnología Sunvou®.</p>
             </div>
           `
         }
@@ -411,7 +414,7 @@ export default function BookingPage() {
                         </div>
                         <div className="flex-1 text-center md:text-left">
                           <h4 className="font-black text-primary italic text-lg flex items-center justify-center md:justify-start gap-2">
-                            ¿Tienes Foto de tu Orden? <span className="text-[10px] bg-secondary/20 px-2 py-0.5 rounded text-secondary not-italic uppercase font-black">Opcional</span>
+                            Escanea tu Orden <span className="text-[10px] bg-secondary/20 px-2 py-0.5 rounded text-secondary not-italic uppercase font-black">Opcional</span>
                           </h4>
                           <p className="text-sm text-muted-foreground font-medium">Sube una foto clara para detectar el examen automáticamente.</p>
                         </div>
@@ -472,7 +475,7 @@ export default function BookingPage() {
                           <div className="bg-secondary/10 p-6 rounded-[2rem] border border-secondary/20 space-y-3">
                             <h5 className="font-black text-secondary flex items-center gap-2 text-sm italic"><Info className="h-4 w-4" /> Procedimiento Test en Casa</h5>
                             <ul className="text-xs font-medium text-muted-foreground space-y-2 list-disc pl-5">
-                              <li>Deberás <strong>retirar el kit</strong> en el laboratorio a la hora elegida (Apoquindo 3990).</li>
+                              <li>Deberás <strong>retirar el kit</strong> presencialmente en el laboratorio (Apoquindo 3990).</li>
                               <li>Recibirás la instrucción de uso por parte de un profesional.</li>
                               <li>Tras realizar el test, coordina el retiro con el motoboy indicado en el flyer.</li>
                               <li className="text-secondary font-black">IMPORTANTE: Plazo máximo de 6 horas para retorno al lab.</li>
@@ -487,7 +490,7 @@ export default function BookingPage() {
                               <p className="text-2xl font-black text-primary italic">$ {BASE_FEE.toLocaleString()} CLP</p>
                             </div>
                           </div>
-                          {selectedModality === 'home_kit' && <Badge variant="outline" className="text-secondary border-secondary/20"><Truck className="h-3 w-3 mr-1" /> + Logística</Badge>}
+                          {selectedModality === 'home_kit' && <Badge variant="outline" className="text-secondary border-secondary/20"><Truck className="h-3 w-3 mr-1" /> + Logística Motoboy</Badge>}
                         </div>
                       </div>
                     )}

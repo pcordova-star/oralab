@@ -32,18 +32,18 @@ export async function analyzeMedicalOrder(
       output: { schema: AnalyzeMedicalOrderOutputSchema },
       prompt: [
         { text: `Eres un asistente experto de laboratorio clínico en Oralab, Chile. 
-        Tu tarea es leer una fotografía de una orden médica y detectar qué examen de aire espirado se solicita.
+        Tu única tarea es leer una fotografía de una orden médica y detectar qué examen de aire espirado se solicita.
         
-        CRITERIOS DE BÚSQUEDA:
-        1. Lactulosa: Si dice "Lactulosa", "SIBO", "Sobrecrecimiento Bacteriano" o "H2/CH4".
-        2. Fructosa: Si dice "Fructosa" o "Intolerancia a la Fructosa".
-        3. Lactosa: Si dice "Lactosa" o "Intolerancia a la Lactosa".
+        CRITERIOS DE BÚSQUEDA (PUEDEN ESTAR ESCRITOS A MANO O ABREVIADOS):
+        1. Lactulosa: Busca "Lactulosa", "Lactulon", "SIBO", "Sobrecrecimiento", "H2/CH4", "Test de aire SIBO".
+        2. Fructosa: Busca "Fructosa", "Intolerancia Fructosa", "Malabsorción Fructosa".
+        3. Lactosa: Busca "Lactosa", "Intolerancia Lactosa", "Test de aliento Lactosa".
 
         INSTRUCCIONES ADICIONALES:
-        - La orden puede estar escrita a mano. 
-        - Sé flexible con las abreviaturas.
-        - Si no hay claridad total pero hay indicios fuertes, marca una confianza alta (0.8+).
-        - Si no se menciona nada de lo anterior, responde 'Desconocido'.` },
+        - Prioriza palabras clave aunque el resto del texto sea ilegible.
+        - Si ves "H2" o "Metano" asociado a una azúcar, identifícalo.
+        - Sé muy flexible con la letra manuscrita.
+        - Si no hay ninguna mención clara a estos tres, responde 'Desconocido'.` },
         { media: { url: input.photoDataUri } }
       ],
     });
