@@ -272,13 +272,24 @@ export default function BookingPage() {
       // Guardar reserva
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
-      // Guardar en colección de mail para el trigger (Estructura plana para compatibilidad)
+      // Guardar en colección de mail para el trigger (ESTRUCTURA PLANA - CRÍTICO PARA EXTENSIÓN)
       await addDocumentNonBlocking(collection(db, "mail"), {
-        to: values.email,
+        to: values.email, // El campo 'to' DEBE estar en la raíz del documento
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
           text: `Hola ${values.firstName}, tu reserva para ${values.examType} está confirmada para el día ${formattedDate} a las ${values.scheduledTime} hrs.`,
-          html: `<p>Hola ${values.firstName}, tu reserva para <strong>${values.examType}</strong> está confirmada.</p><p>Día: ${formattedDate}<br>Hora: ${values.scheduledTime} hrs</p>`
+          html: `
+            <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+              <h2 style="color: #1c68b6;">Confirmación de Reserva</h2>
+              <p>Hola <strong>${values.firstName}</strong>, tu cita para el test de <strong>${values.examType}</strong> ha sido agendada con éxito.</p>
+              <hr />
+              <p><strong>Día:</strong> ${formattedDate}</p>
+              <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
+              <p><strong>Lugar:</strong> Apoquindo 3990, Of. 605, Las Condes (o retiro de Kit según modalidad).</p>
+              <hr />
+              <p style="color: #d97706;"><strong>RECUERDA:</strong> Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
+            </div>
+          `
         }
       });
 

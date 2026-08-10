@@ -15,15 +15,13 @@ Para que las confirmaciones de reserva lleguen a los pacientes, la extensión en
 - **SMTP URI**: `smtps://control%40pcgoperacion.com:jsvfmrifbtqmlzye@smtp.gmail.com:465`
 - **From Address**: `contacto@oralab.cl`
 
-### ¿Cómo encontrar los Logs de Error?
-Si los correos no se envían y el campo `delivery` no aparece en Firestore, debes revisar los logs técnicos:
+### Diagnóstico de Fallas (Si el correo no llega)
 
-1.  **Ve al Menú Lateral Izquierdo**: Busca la sección **Build** (Compilación) y haz clic en **Functions**.
-2.  **Busca la Función de la Extensión**: En la lista de funciones, busca una llamada `ext-firestore-send-email-processQueue`.
-3.  **Abre los Logs**: Haz clic en el nombre de esa función y luego selecciona la pestaña **Logs** en el menú superior.
-4.  **Busca errores**: Ahí verás mensajes como "Auth credentials invalid", "Connection timeout" o "SUCCESS".
-
-**Nota importante**: El campo `to` en Firestore debe estar en la raíz del documento (fuera de `message`). El código actual ya maneja esto correctamente.
+1.  **Plan Blaze (REQUERIDO)**: Si en tu menú lateral de Firebase NO aparece la pestaña **Functions** o está vacía, es muy probable que el proyecto esté en el plan gratuito (Spark). Las extensiones requieren el plan **Blaze** (pago por uso) para poder desplegar las funciones que envían correos.
+2.  **Estado de la Extensión**: Ve a **Extensions** y verifica que no diga "Installing..." o "Failed". Si falló, suele ser por falta del plan Blaze.
+3.  **Campo `delivery` en Firestore**:
+    *   Si ves el documento en la colección `mail` pero **NO existe** el campo `delivery`, la extensión no está escuchando la base de datos. Verifica que el nombre de la colección configurado sea exactamente `mail`.
+    *   Si el campo `delivery` aparece como `ERROR`, haz clic en él para ver el motivo (usualmente contraseña de aplicación de Gmail incorrecta).
 
 ---
 © 2024 Oralab Clinical Lab. Tecnología Sunvou®.
