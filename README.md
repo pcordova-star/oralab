@@ -22,15 +22,13 @@ Para que la extensión funcione, los documentos en la colección `mail` deben te
 
 **Si el campo `to` se guarda dentro de `message`, el correo NUNCA saldrá.**
 
-### Solución de Errores de Instalación (SMTP URI)
-Si la extensión te da "Error de instalación", es casi seguro que el **SMTP connection URI** tiene un error de formato. 
+### Solución de Errores: "No aparece el campo delivery"
+Si ves los documentos en Firestore pero no tienen el campo `delivery` (ni success ni error), el disparador de la extensión no está funcionando.
 
-**REGLAS DE ORO**: 
-1. La contraseña de aplicación **NO** debe tener espacios.
-2. El correo del usuario debe cambiar el `@` por `%40`.
-
-**Copia y pega este URI exacto (reemplazando los datos si cambian):**
-`smtps://control%40pcgoperacion.com:jsvfmrifbtqmlzye@smtp.gmail.com:465`
+1.  **Revisa los Logs**: Ve a Firebase Console -> Extensions -> Trigger Email -> **Logs**. 
+2.  Busca errores de **"Function failed to deploy"** o **"Permission Denied"**.
+3.  **Re-instala**: Si no hay logs, desinstala la extensión y vuelve a instalarla asegurándote de usar este URI exacto:
+    `smtps://control%40pcgoperacion.com:jsvfmrifbtqmlzye@smtp.gmail.com:465`
 
 ### Cómo obtener la Clave de Aplicación (Gmail)
 1. Ve a: [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)

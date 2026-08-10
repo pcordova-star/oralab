@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -345,12 +346,11 @@ export default function BookingPage() {
       const bookingsRef = collection(db, "bookings");
       await addDocumentNonBlocking(bookingsRef, bookingData);
       
-      // TRIGGER EMAIL: ESTRUCTURA CRÍTICA PARA LA EXTENSIÓN
-      // El campo 'to' DEBE estar en la raíz del documento para que la extensión lo detecte.
+      // TRIGGER EMAIL: ESTRUCTURA PARA LA EXTENSIÓN
       const mailRef = collection(db, "mail");
       await addDocumentNonBlocking(mailRef, {
-        to: [values.email], // RAÍZ: CORRECTO
-        message: { // RAÍZ: CORRECTO
+        to: values.email, // Formato string directo para máxima compatibilidad
+        message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
           text: `¡Hola ${values.firstName}! Tu reserva para el Test de Aire Espirado (${values.examType}) ha sido procesada con éxito para el día ${formattedDate} a las ${values.scheduledTime} hrs. RECUERDA: Ayuno de 12 horas y dieta blanda el día anterior.`,
           html: `
