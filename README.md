@@ -15,17 +15,15 @@ Para que las confirmaciones de reserva lleguen a los pacientes, la extensión en
 - **SMTP URI**: `smtps://control%40pcgoperacion.com:jsvfmrifbtqmlzye@smtp.gmail.com:465`
 - **From Address**: `contacto@oralab.cl`
 
-### ¿Dónde ver los Logs de Error?
-Si los correos no salen y no aparece el campo `delivery` en Firestore:
+### ¿Cómo encontrar los Logs de Error?
+Si los correos no se envían y el campo `delivery` no aparece en Firestore, debes revisar los logs técnicos:
 
-1.  **En la Consola de Firebase**:
-    - Ve al menú lateral izquierdo -> **Build** -> **Functions**.
-    - Busca la función: `ext-firestore-send-email-processQueue`.
-    - Haz clic en la pestaña **Logs**.
-    - Busca errores como "Auth credentials invalid" o "Connection timeout".
+1.  **Ve al Menú Lateral Izquierdo**: Busca la sección **Build** (Compilación) y haz clic en **Functions**.
+2.  **Busca la Función de la Extensión**: En la lista de funciones, busca una llamada `ext-firestore-send-email-processQueue`.
+3.  **Abre los Logs**: Haz clic en el nombre de esa función y luego selecciona la pestaña **Logs** en el menú superior.
+4.  **Busca errores**: Ahí verás mensajes como "Auth credentials invalid", "Connection timeout" o "SUCCESS".
 
-2.  **Verificación de Seguridad**:
-    Asegúrate de que en la configuración de la extensión, el campo **"SMTP connection URI"** sea el único configurado para la conexión. No dupliques la contraseña en el campo "SMTP password".
+**Nota importante**: El campo `to` en Firestore debe estar en la raíz del documento (fuera de `message`). El código actual ya maneja esto correctamente.
 
 ---
 © 2024 Oralab Clinical Lab. Tecnología Sunvou®.

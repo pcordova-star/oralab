@@ -60,7 +60,7 @@ const communesByRegion: Record<string, string[]> = {
   "Biobío": ["Concepción", "Coronel", "Chiguayante", "Florida", "Hualpén", "Hualqui", "Lota", "Penco", "San Pedro de la Paz", "Santa Juana", "Talcahuano", "Tomé", "Lebu", "Arauco", "Cañete", "Contulmo", "Curanilahue", "Los Álamos", "Tirúa", "Los Ángeles", "Antuco", "Cabrero", "Laja", "Mulchén", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa Bárbara", "Tucapel", "Yumbel", "Alto Biobío"],
   "La Araucanía": ["Temuco", "Carahue", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre las Casas", "Perquenco", "Pitrequén", "Pucón", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica", "Cholchol", "Angol", "Collipulli", "Curacaví", "Ercilla", "Lonquimay", "Los Sauces", "Lumaco", "Purén", "Renaico", "Traiguén", "Victoria"],
   "Los Ríos": ["Valdivia", "Corral", "Lanco", "Los Lagos", "Máfil", "Mariquina", "Paillaco", "Panguipulli", "La Unión", "Futrono", "Lago Ranco", "Río Bueno"],
-  "Los Lagos": ["Puerto Montt", "Calbuco", "Cochamó", "Fresia", "Frutillar", "Los Muermos", "Llanquihue", "Maullín", "Puerto Varas", "Castro", "Ancud", "Chonchi", "Curaco de Vélez", "Dalcahue", "Puqueldón", "Queilén", "Quellón", "Quemchi", "Quinchao", "Osorno", "Puerto Octay", "Purranque", "Puyehue", "Río Negro", "San Juan de la Costa", "San Pablo", "Chaitén", "Futaleufú", "Hualaihué", "Palena"],
+  "Los Lagos": ["Puerto Montt", "Calbuco", "Cochamó", "Fresia", "Frutillar", "Los Muermos", "Llanquihue", "Maullín", "Puerto Varas", "Puerto Varas", "Castro", "Ancud", "Chonchi", "Curaco de Vélez", "Dalcahue", "Puqueldón", "Queilén", "Quellón", "Quemchi", "Quinchao", "Osorno", "Puerto Octay", "Purranque", "Puyehue", "Río Negro", "San Juan de la Costa", "San Pablo", "Chaitén", "Futaleufú", "Hualaihué", "Palena"],
   "Aysén": ["Coyhaique", "Lago Verde", "Aysén", "Cisnes", "Guaitecas", "Cochrane", "O'Higgins", "Tortel", "Chile Chico", "Río Ibáñez"],
   "Magallanes": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio", "Puerto Natales", "Torres del Paine", "Porvenir", "Primavera", "Timaukel", "Cabo de Hornos", "Antártica"]
 };
@@ -185,15 +185,6 @@ export default function BookingPage() {
     }
   }, [selectedRegion, form]);
 
-  const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
-  const months = [
-    { v: "01", l: "Enero" }, { v: "02", l: "Febrero" }, { v: "03", l: "Marzo" },
-    { v: "04", l: "Abril" }, { v: "05", l: "Mayo" }, { v: "06", l: "Junio" },
-    { v: "07", l: "Julio" }, { v: "08", l: "Agosto" }, { v: "09", l: "Septiembre" },
-    { v: "10", l: "Octubre" }, { v: "11", l: "Noviembre" }, { v: "12", l: "Diciembre" }
-  ];
-  const years = Array.from({ length: 100 }, (_, i) => (new Date().getFullYear() - i).toString());
-
   async function nextStep() {
     let fieldsToValidate: any[] = [];
     if (step === 1) fieldsToValidate = ["examType", "modality"];
@@ -213,7 +204,6 @@ export default function BookingPage() {
     const margin = 20;
     let y = 15;
     const primaryRGB = [28, 104, 182];
-    const secondaryRGB = [25, 204, 204];
 
     doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.rect(0, 0, 210, 40, 'F');
@@ -276,19 +266,19 @@ export default function BookingPage() {
     };
 
     try {
-      const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior (arroz, pollo/pescado a la plancha).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
+      const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos en las últimas 4 semanas.";
       setPrepInstructions(instructions);
       
-      // Registrar la reserva clínica
+      // Guardar reserva
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
-      // TRIGGER EMAIL: Mantenemos estructura plana con 'to' en la raíz.
+      // Guardar en colección de mail para el trigger (Estructura plana para compatibilidad)
       await addDocumentNonBlocking(collection(db, "mail"), {
         to: values.email,
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
-          text: `Hola ${values.firstName}, tu reserva para ${values.examType} el día ${formattedDate} a las ${values.scheduledTime} hrs está confirmada. Recuerda el ayuno de 12 horas y dieta blanda el día anterior.`,
-          html: `<p>Hola ${values.firstName}, tu reserva para <strong>${values.examType}</strong> está confirmada.</p><p>Día: ${formattedDate}<br>Hora: ${values.scheduledTime} hrs</p><p><strong>IMPORTANTE:</strong> Recuerda el ayuno estricto de 12 horas.</p>`
+          text: `Hola ${values.firstName}, tu reserva para ${values.examType} está confirmada para el día ${formattedDate} a las ${values.scheduledTime} hrs.`,
+          html: `<p>Hola ${values.firstName}, tu reserva para <strong>${values.examType}</strong> está confirmada.</p><p>Día: ${formattedDate}<br>Hora: ${values.scheduledTime} hrs</p>`
         }
       });
 
@@ -310,9 +300,9 @@ export default function BookingPage() {
           <Card className="py-12 shadow-lg rounded-[2rem] border-primary/10">
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4" />
             <CardTitle className="text-3xl mb-4 font-black italic">¡Reserva Confirmada!</CardTitle>
-            <p className="mb-8 font-medium">Se envió un correo a <strong>{lastBookingValues?.email}</strong> con las instrucciones de preparación.</p>
+            <p className="mb-8 font-medium">Se envió un correo a <strong>{lastBookingValues?.email}</strong>.</p>
             <div className="flex flex-col gap-4 max-w-sm mx-auto">
-              <Button onClick={downloadPDF} variant="outline" className="rounded-full h-12 font-bold"><Download className="mr-2 h-4 w-4" /> Descargar PDF de Instrucciones</Button>
+              <Button onClick={downloadPDF} variant="outline" className="rounded-full h-12 font-bold"><Download className="mr-2 h-4 w-4" /> Descargar PDF</Button>
               <Link href="/"><Button className="rounded-full w-full h-12 font-black">Volver al inicio</Button></Link>
             </div>
           </Card>
@@ -394,7 +384,7 @@ export default function BookingPage() {
                         <FormMessage />
                       </FormItem>
                     )} />
-                    <Button type="button" onClick={nextStep} className="w-full h-16 rounded-[1.5rem] text-xl font-black shadow-lg">Continuar al Calendario</Button>
+                    <Button type="button" onClick={nextStep} className="w-full h-16 rounded-[1.5rem] text-xl font-black shadow-lg">Continuar</Button>
                   </div>
                 )}
 
@@ -443,7 +433,7 @@ export default function BookingPage() {
                     
                     <div className="flex gap-4">
                       <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-16 rounded-[1.5rem] font-bold">Atrás</Button>
-                      <Button type="button" onClick={nextStep} className="flex-1 h-16 rounded-[1.5rem] font-black shadow-lg">Siguiente Paso</Button>
+                      <Button type="button" onClick={nextStep} className="flex-1 h-16 rounded-[1.5rem] font-black shadow-lg">Siguiente</Button>
                     </div>
                   </div>
                 )}
@@ -494,11 +484,11 @@ export default function BookingPage() {
 
                     <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-4">
                        <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest mb-2">
-                          <Stethoscope className="h-4 w-4" /> Información Médica
+                          <Stethoscope className="h-4 w-4" /> Info Médica
                        </div>
                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           <FormField control={form.control} name="diagnosis" render={({ field }) => (<FormItem><FormLabel className="font-bold">Diagnóstico</FormLabel><Input placeholder="Ej: SIBO" {...field} className="h-10 rounded-lg" /></FormItem>)} />
-                          <FormField control={form.control} name="doctor" render={({ field }) => (<FormItem><FormLabel className="font-bold">Médico Derivante</FormLabel><Input placeholder="Nombre Dr." {...field} className="h-10 rounded-lg" /></FormItem>)} />
+                          <FormField control={form.control} name="doctor" render={({ field }) => (<FormItem><FormLabel className="font-bold">Médico</FormLabel><Input placeholder="Nombre Dr." {...field} className="h-10 rounded-lg" /></FormItem>)} />
                           <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel className="font-bold">Peso (kg)</FormLabel><Input type="number" placeholder="70" {...field} className="h-10 rounded-lg" /></FormItem>)} />
                        </div>
                     </div>
@@ -506,7 +496,7 @@ export default function BookingPage() {
                     <div className="flex gap-4">
                       <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-16 rounded-[1.5rem] font-bold">Atrás</Button>
                       <Button type="submit" className="flex-1 h-16 rounded-[1.5rem] font-black bg-secondary shadow-lg hover:bg-secondary/90 transition-all" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Confirmar Mi Reserva"}
+                        {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Confirmar Reserva"}
                       </Button>
                     </div>
                   </div>
