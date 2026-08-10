@@ -346,11 +346,12 @@ export default function BookingPage() {
       const bookingsRef = collection(db, "bookings");
       await addDocumentNonBlocking(bookingsRef, bookingData);
       
-      // Trigger Correo Electrónico con formato robusto para la extensión
+      // Trigger Correo Electrónico: ESTRUCTURA CRÍTICA PARA LA EXTENSIÓN
+      // El campo 'to' DEBE estar en la raíz del documento para ser detectado.
       const mailRef = collection(db, "mail");
       await addDocumentNonBlocking(mailRef, {
-        to: [values.email],
-        message: {
+        to: [values.email], // RAÍZ DEL DOCUMENTO
+        message: { // RAÍZ DEL DOCUMENTO
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
           text: `¡Hola ${values.firstName}! Tu reserva para el Test de Aire Espirado (${values.examType}) ha sido procesada con éxito para el día ${formattedDate} a las ${values.scheduledTime} hrs. RECUERDA: Ayuno de 12 horas y dieta blanda el día anterior.`,
           html: `

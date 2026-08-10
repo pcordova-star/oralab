@@ -13,12 +13,19 @@ Para que las confirmaciones de reserva lleguen a los pacientes, la extensión en
 - **Colección**: `mail`
 - **Authentication Type**: `Username & Password`
 - **SMTP URI**: Ver sección de "Solución de Errores" abajo.
-- **From Address**: `pcordova@oralab.cl`
+- **From Address**: `contacto@oralab.cl`
+
+### IMPORTANTE: Estructura de Documento
+Para que la extensión funcione, los documentos en la colección `mail` deben tener:
+1.  Un campo `to` **en la raíz** (puede ser un string o un array de strings).
+2.  Un objeto `message` **en la raíz** con los campos `subject`, `text` y `html`.
+
+**Si el campo `to` se guarda dentro de `message`, el correo NUNCA saldrá.**
 
 ### Solución de Errores de Instalación (SMTP URI)
 Si la extensión te da "Error de instalación", es casi seguro que el **SMTP connection URI** tiene un error de formato. 
 
-**IMPORTANTE**: 
+**REGLAS DE ORO**: 
 1. La contraseña de aplicación **NO** debe tener espacios.
 2. El correo del usuario debe cambiar el `@` por `%40`.
 
