@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -26,7 +27,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, CheckCircle2, Download, Home, Building2, Stethoscope, Loader2, Truck } from "lucide-react";
+import { CalendarIcon, CheckCircle2, Download, Home, Building2, Stethoscope, Loader2, Truck, Wallet, ReceiptText } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
@@ -40,8 +41,8 @@ import { Progress } from "@/components/ui/progress";
 import { jsPDF } from "jspdf";
 
 const regions = [
-  "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
-  "Valparaíso", "Metropolitana de Santiago", "O'Higgins", "Maule", "Ñuble", 
+  "Metropolitana de Santiago", "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
+  "Valparaíso", "O'Higgins", "Maule", "Ñuble", 
   "Biobío", "La Araucanía", "Los Ríos", "Los Lagos", "Aysén", "Magallanes"
 ];
 
@@ -74,6 +75,9 @@ const DELIVERY_PRICES: Record<string, number> = {
   "Isla de Maipo": 30000, "El Monte": 30000, "Melipilla": 30000, "Curacaví": 30000, "María Pinto": 30000, "Pirque": 30000, "San José de Maipo": 30000, "Alhué": 30000, "Paine": 30000, "San Pedro": 30000, "Tiltil": 30000
 };
 
+const BASE_FEE = 80000;
+const DISCOUNT_RATE = 0.20;
+
 const timeSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00"];
 
 const bookingSchema = z.object({
@@ -87,11 +91,8 @@ const bookingSchema = z.object({
   email: z.string().email("Email inválido").min(1, "Requerido"),
   phone: z.string().length(8, "Deben ser 8 dígitos"),
   address: z.string().min(5, "Dirección requerida"),
-  birthDay: z.string().min(1, "Día"),
-  birthMonth: z.string().min(1, "Mes"),
-  birthYear: z.string().min(4, "Año"),
   weight: z.string().min(1, "Indique peso"),
-  doctor: z.string().min(2, "Indique el médico"),
+  prevision: z.enum(["fonasa", "isapre", "particular"], { required_error: "Indique su previsión" }),
   country: z.string().min(1, "Seleccione país"),
   region: z.string().min(1, "Seleccione región"),
   commune: z.string().min(1, "Seleccione comuna"),
@@ -109,7 +110,6 @@ export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [prepInstructions, setPrepInstructions] = useState<string>("");
   const [lastBookingValues, setLastBookingValues] = useState<BookingFormValues | null>(null);
   
   const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
@@ -134,13 +134,10 @@ export default function BookingPage() {
       email: "",
       phone: "",
       address: "",
-      birthDay: "",
-      birthMonth: "",
-      birthYear: "",
       weight: "",
-      doctor: "",
+      prevision: "particular",
       country: "Chile",
-      region: "",
+      region: "Metropolitana de Santiago",
       commune: "",
       sex: "not_specified",
     },
@@ -150,11 +147,17 @@ export default function BookingPage() {
   const selectedRegion = form.watch("region");
   const selectedCommune = form.watch("commune");
   const selectedModality = form.watch("modality");
+  const selectedPrevision = form.watch("prevision");
+
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
 
   const deliveryFee = (selectedModality === 'home_kit' && selectedCommune) 
     ? (DELIVERY_PRICES[selectedCommune] || 30000) 
     : 0;
+
+  const discountAmount = (selectedPrevision === "fonasa" || selectedPrevision === "isapre") ? BASE_FEE * DISCOUNT_RATE : 0;
+  const examSubtotal = BASE_FEE - discountAmount;
+  const finalTotal = examSubtotal + deliveryFee;
 
   useEffect(() => {
     async function checkAvailability() {
@@ -224,33 +227,41 @@ export default function BookingPage() {
     doc.text("CONFIRMACIÓN DE RESERVA CLÍNICA", margin, y);
     y += 15;
     doc.setFillColor(245, 247, 249);
-    doc.roundedRect(margin, y, 170, 55, 3, 3, 'FD');
+    doc.roundedRect(margin, y, 170, 85, 3, 3, 'FD');
     doc.setTextColor(60, 60, 60);
     doc.setFontSize(10);
-    doc.text(`Nombre Completo: ${lastBookingValues.firstName} ${lastBookingValues.lastNameFather}`, margin + 5, y + 15);
+    doc.text(`Paciente: ${lastBookingValues.firstName} ${lastBookingValues.lastNameFather}`, margin + 5, y + 15);
     doc.text(`Examen: ${lastBookingValues.examType}`, margin + 5, y + 23);
-    doc.text(`Modalidad: ${lastBookingValues.modality === 'home_kit' ? 'Test en Casa' : 'Presencial'}`, margin + 5, y + 31);
-    doc.text(`Fecha: ${format(lastBookingValues.scheduledDate, "d 'de' MMMM", { locale: es })}`, margin + 5, y + 39);
-    doc.text(`Hora: ${lastBookingValues.scheduledTime} hrs`, 130, y + 39);
-    if (deliveryFee > 0) {
-      doc.setFont("helvetica", "bold");
-      doc.text(`Tarifa Retiro Motoboy: $${deliveryFee.toLocaleString()}`, margin + 5, y + 47);
-      doc.setFont("helvetica", "normal");
-    }
-    y += 65;
+    doc.text(`Fecha: ${format(lastBookingValues.scheduledDate, "d 'de' MMMM, yyyy", { locale: es })}`, margin + 5, y + 31);
+    doc.text(`Hora: ${lastBookingValues.scheduledTime} hrs`, 130, y + 31);
+    doc.text(`Previsión: ${lastBookingValues.prevision.toUpperCase()}`, margin + 5, y + 39);
+    
+    y += 45;
     doc.setFont("helvetica", "bold");
+    doc.text("RESUMEN DE PAGO", margin + 5, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Valor Examen: $${BASE_FEE.toLocaleString()}`, margin + 5, y + 8);
+    if (discountAmount > 0) doc.text(`Descuento Previsión: -$${discountAmount.toLocaleString()}`, margin + 5, y + 16);
+    if (deliveryFee > 0) doc.text(`Tarifa Logística Motoboy: $${deliveryFee.toLocaleString()}`, margin + 5, y + 24);
+    
+    doc.setFont("helvetica", "bold");
+    doc.text(`TOTAL A PAGAR: $${finalTotal.toLocaleString()}`, margin + 5, y + 32);
+    
+    y += 50;
+    doc.setFontSize(11);
     doc.text("INDICACIONES FUNDAMENTALES", margin, y);
     y += 8;
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    const instructions = prepInstructions || "1. Ayuno de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso.\n4. No antibióticos en 4 semanas.";
+    const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior (arroz, pollo/pescado plancha, sin frutas ni verduras).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
     doc.text(doc.splitTextToSize(instructions, 170), margin, y);
+    
     doc.save(`Reserva_Oralab_${lastBookingValues.firstName}.pdf`);
   }
 
   async function onSubmit(values: BookingFormValues) {
     if (!db) return;
     setIsSubmitting(true);
-    const birthDate = `${values.birthYear}-${values.birthMonth}-${values.birthDay.padStart(2, '0')}`;
     const formattedDate = format(values.scheduledDate, "d 'de' MMMM, yyyy", { locale: es });
     
     const bookingData = {
@@ -264,45 +275,48 @@ export default function BookingPage() {
       email: values.email,
       phone: `+56 9 ${values.phone}`,
       address: values.address,
-      birthDate: birthDate,
       weight: values.weight,
-      doctor: values.doctor,
-      country: values.country,
-      region: values.region,
-      commune: values.commune,
-      sex: values.sex,
+      prevision: values.prevision,
       deliveryFee: deliveryFee,
+      baseFee: BASE_FEE,
+      discount: discountAmount,
+      total: finalTotal,
       status: "pending",
       createdAt: serverTimestamp(),
     };
 
     try {
-      const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos en las últimas 4 semanas.";
-      setPrepInstructions(instructions);
-      
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
-      const deliveryInfo = deliveryFee > 0 
-        ? `<p style="color: #1c68b6;"><strong>Tarifa Retiro Motoboy:</strong> $${deliveryFee.toLocaleString()}</p>
-           <p style="font-size: 11px;">(El kit se retira en laboratorio y el motoboy retirará las muestras en tu domicilio al terminar el test)</p>`
-        : '';
+      const priceSummaryHtml = `
+        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #e2e8f0;">
+          <p style="margin: 0; font-size: 14px;"><strong>Valor Examen:</strong> $${BASE_FEE.toLocaleString()}</p>
+          ${discountAmount > 0 ? `<p style="margin: 5px 0 0 0; font-size: 14px; color: #10b981;"><strong>Descuento (${values.prevision.toUpperCase()}):</strong> -$${discountAmount.toLocaleString()}</p>` : ''}
+          ${deliveryFee > 0 ? `<p style="margin: 5px 0 0 0; font-size: 14px;"><strong>Logística Motoboy:</strong> $${deliveryFee.toLocaleString()}</p>` : ''}
+          <hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 10px 0;" />
+          <p style="margin: 0; font-size: 18px; color: #1c68b6;"><strong>TOTAL: $${finalTotal.toLocaleString()}</strong></p>
+        </div>
+      `;
 
       await addDocumentNonBlocking(collection(db, "mail"), {
         to: values.email, 
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
-          text: `Hola ${values.firstName}, tu reserva para ${values.examType} (${values.modality === 'home_kit' ? 'Casa' : 'Presencial'}) está confirmada para el día ${formattedDate} a las ${values.scheduledTime} hrs.`,
+          text: `Hola ${values.firstName}, tu reserva está confirmada para el día ${formattedDate} a las ${values.scheduledTime} hrs. El total a pagar es $${finalTotal.toLocaleString()}.`,
           html: `
-            <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-              <h2 style="color: #1c68b6;">Confirmación de Reserva</h2>
-              <p>Hola <strong>${values.firstName}</strong>, tu cita para el test de <strong>${values.examType}</strong> ha sido agendada con éxito.</p>
-              <hr />
-              <p><strong>Modalidad:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Kit)' : 'En Consulta'}</p>
-              <p><strong>Día:</strong> ${formattedDate}</p>
-              <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
-              ${deliveryInfo}
-              <hr />
-              <p style="color: #d97706;"><strong>RECUERDA:</strong> Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
+            <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+              <h2 style="color: #1c68b6; text-align: center;">Confirmación de Reserva</h2>
+              <p>Hola <strong>${values.firstName}</strong>, tu cita para el test de <strong>${values.examType}</strong> ha sido agendada.</p>
+              <div style="padding: 15px; border-left: 4px solid #1c68b6; background: #f0f7ff; margin-bottom: 20px;">
+                <p style="margin: 0;"><strong>Día:</strong> ${formattedDate}</p>
+                <p style="margin: 5px 0 0 0;"><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
+                <p style="margin: 5px 0 0 0;"><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa' : 'Apoquindo 3990, Las Condes'}</p>
+              </div>
+              
+              ${priceSummaryHtml}
+              
+              <p style="color: #d97706; font-weight: bold; background: #fffbeb; padding: 10px; border-radius: 5px;">RECUERDA: Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
+              <p style="font-size: 12px; color: #64748b; margin-top: 20px; text-align: center;">© 2024 Oralab Clinical Lab. Tecnología Sunvou®.</p>
             </div>
           `
         }
@@ -326,9 +340,9 @@ export default function BookingPage() {
           <Card className="py-12 shadow-lg rounded-[2rem] border-primary/10">
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4" />
             <CardTitle className="text-3xl mb-4 font-black italic">¡Reserva Confirmada!</CardTitle>
-            <p className="mb-8 font-medium">Se envió un correo a <strong>{lastBookingValues?.email}</strong>.</p>
+            <p className="mb-8 font-medium">Se envió un comprobante con el desglose de pago a <strong>{lastBookingValues?.email}</strong>.</p>
             <div className="flex flex-col gap-4 max-w-sm mx-auto">
-              <Button onClick={downloadPDF} variant="outline" className="rounded-full h-12 font-bold"><Download className="mr-2 h-4 w-4" /> Descargar PDF</Button>
+              <Button onClick={downloadPDF} variant="outline" className="rounded-full h-12 font-bold"><Download className="mr-2 h-4 w-4" /> Descargar Ficha PDF</Button>
               <Link href="/"><Button className="rounded-full w-full h-12 font-black">Volver al inicio</Button></Link>
             </div>
           </Card>
@@ -389,7 +403,7 @@ export default function BookingPage() {
                               )}>
                                 <Building2 className={cn("h-8 w-8 mx-auto mb-2", field.value === "presential" ? "text-primary" : "text-muted-foreground")} />
                                 <span className="block font-black text-lg">En Consulta</span>
-                                <span className="text-xs font-medium text-muted-foreground">Las Condes, Santiago</span>
+                                <span className="text-xs font-medium text-muted-foreground">Apoquindo 3990, Las Condes</span>
                               </FormLabel>
                             </FormItem>
                             <FormItem className="flex items-center space-x-0 space-y-0">
@@ -508,30 +522,61 @@ export default function BookingPage() {
                       )} />
                     </div>
 
-                    {deliveryFee > 0 && (
-                      <div className="bg-secondary/10 border border-secondary/20 p-6 rounded-[2rem] flex items-center gap-4 animate-in zoom-in duration-300">
-                         <div className="bg-secondary p-3 rounded-2xl">
-                           <Truck className="h-6 w-6 text-white" />
-                         </div>
-                         <div>
-                            <p className="text-[10px] font-black text-secondary uppercase tracking-widest">Tarifa Logística Retiro Motoboy</p>
-                            <p className="text-2xl font-black text-primary italic">$ {deliveryFee.toLocaleString()} CLP</p>
-                            <p className="text-[9px] font-bold text-muted-foreground">Retiro de muestras en domicilio y retorno a laboratorio (Las Condes).</p>
-                         </div>
-                      </div>
-                    )}
-
-                    <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-4">
-                       <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest mb-2">
-                          <Stethoscope className="h-4 w-4" /> Info Médica
-                       </div>
-                       <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-                          <FormField control={form.control} name="doctor" render={({ field }) => (<FormItem><FormLabel className="font-bold">Médico</FormLabel><Input placeholder="Nombre Dr." {...field} className="h-10 rounded-lg" /></FormItem>)} />
-                          <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel className="font-bold">Peso (kg)</FormLabel><Input type="number" placeholder="70" {...field} className="h-10 rounded-lg" /></FormItem>)} />
-                       </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField control={form.control} name="prevision" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold">Previsión de Salud</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Seleccionar" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                              <SelectItem value="fonasa">Fonasa (20% Desc)</SelectItem>
+                              <SelectItem value="isapre">Isapre (20% Desc)</SelectItem>
+                              <SelectItem value="particular">Particular</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="weight" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold">Peso (kg)</FormLabel>
+                          <Input type="number" placeholder="70" {...field} className="h-12 rounded-xl" />
+                          <FormMessage />
+                        </FormItem>
+                      )} />
                     </div>
 
-                    <div className="flex gap-4">
+                    <Card className="bg-primary/5 border-primary/10 rounded-[2rem] overflow-hidden shadow-inner">
+                      <div className="p-6 space-y-4">
+                         <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest border-b border-primary/10 pb-2">
+                           <ReceiptText className="h-4 w-4" /> Desglose de Pago
+                         </div>
+                         <div className="space-y-2">
+                           <div className="flex justify-between items-center text-sm">
+                             <span className="font-medium text-muted-foreground">Valor Examen {selectedModality === 'home_kit' ? '(Kit)' : '(Presencial)'}:</span>
+                             <span className="font-bold">$ {BASE_FEE.toLocaleString()}</span>
+                           </div>
+                           {discountAmount > 0 && (
+                             <div className="flex justify-between items-center text-sm text-green-600">
+                               <span className="font-medium flex items-center gap-1"><Wallet className="h-3 w-3" /> Descuento Previsión (20%):</span>
+                               <span className="font-black">- $ {discountAmount.toLocaleString()}</span>
+                             </div>
+                           )}
+                           {deliveryFee > 0 && (
+                             <div className="flex justify-between items-center text-sm text-secondary">
+                               <span className="font-medium flex items-center gap-1"><Truck className="h-3 w-3" /> Logística Retiro Motoboy:</span>
+                               <span className="font-black">+ $ {deliveryFee.toLocaleString()}</span>
+                             </div>
+                           )}
+                         </div>
+                         <div className="bg-primary/10 -mx-6 -mb-6 p-6 flex justify-between items-center">
+                            <span className="font-black text-primary uppercase text-sm italic">Total Final:</span>
+                            <span className="text-3xl font-black text-primary italic leading-none">$ {finalTotal.toLocaleString()} <span className="text-[10px] uppercase font-bold not-italic">CLP</span></span>
+                         </div>
+                      </div>
+                    </Card>
+
+                    <div className="flex gap-4 pt-4">
                       <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-16 rounded-[1.5rem] font-bold">Atrás</Button>
                       <Button type="submit" className="flex-1 h-16 rounded-[1.5rem] font-black bg-secondary shadow-lg hover:bg-secondary/90 transition-all" disabled={isSubmitting}>
                         {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Confirmar Reserva"}
