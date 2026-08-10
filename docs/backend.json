@@ -13,15 +13,18 @@
         "phone": { "type": "string" },
         "address": { "type": "string" },
         "birthDate": { "type": "string", "format": "date" },
-        "diagnosis": { "type": "string" },
         "weight": { "type": "string" },
-        "doctor": { "type": "string" },
         "country": { "type": "string" },
         "region": { "type": "string" },
         "commune": { "type": "string" },
         "sex": { "type": "string", "enum": ["not_specified", "male", "female"] },
         "examType": { "type": "string", "enum": ["Lactulosa", "Fructosa", "Lactosa"] },
         "modality": { "type": "string", "enum": ["presential", "home_kit"] },
+        "prevision": { "type": "string", "enum": ["fonasa", "isapre", "particular"] },
+        "baseFee": { "type": "number" },
+        "deliveryFee": { "type": "number" },
+        "discount": { "type": "number" },
+        "total": { "type": "number" },
         "scheduledDate": { "type": "string", "format": "date" },
         "scheduledTime": { "type": "string" },
         "status": { "type": "string", "enum": ["pending", "arrived", "in_progress", "completed", "cancelled", "rescheduled"] },
@@ -37,14 +40,14 @@
         },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["firstName", "lastNameFather", "email", "phone", "examType", "modality", "scheduledDate", "scheduledTime", "status"]
+      "required": ["firstName", "lastNameFather", "email", "phone", "examType", "modality", "scheduledDate", "scheduledTime", "status", "total"]
     },
     "Mail": {
       "title": "Mail",
       "description": "Colección utilizada por la extensión Trigger Email para enviar notificaciones.",
       "type": "object",
       "properties": {
-        "to": { "type": "array", "items": { "type": "string" } },
+        "to": { "type": "string" },
         "message": {
           "type": "object",
           "properties": {

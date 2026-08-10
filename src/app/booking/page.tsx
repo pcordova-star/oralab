@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -66,6 +67,7 @@ const communesByRegion: Record<string, string[]> = {
   "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
 };
 
+// Tabla de tarifas de logística (TarFario) según lo solicitado
 const DELIVERY_PRICES: Record<string, number> = {
   "Las Condes": 8000, "Vitacura": 8000, "Providencia": 8000, "Lo Barnechea": 8000,
   "La Reina": 10000, "Ñuñoa": 10000, "Santiago": 10000, "Recoleta": 10000, "Independencia": 10000, "Huechuraba": 10000,
@@ -338,7 +340,7 @@ export default function BookingPage() {
       const homeKitText = values.modality === 'home_kit' 
         ? `<p style="color: #1c68b6; font-weight: bold;">PROCEDIMIENTO TEST EN CASA:</p>
            <ul>
-             <li>Retira el kit a la hora elegida en nuestro laboratorio.</li>
+             <li>Retira el kit a la hora elegida en nuestro laboratorio (Apoquindo 3990).</li>
              <li>Recibirás la instrucción técnica del profesional a cargo.</li>
              <li>Una vez terminado el test, coordina el retiro con el motoboy que aparece en tu flyer.</li>
              <li><strong>TIEMPO LÍMITE:</strong> El test debe estar en el laboratorio en máximo 6 horas tras ser realizado.</li>
@@ -357,7 +359,7 @@ export default function BookingPage() {
               <div style="padding: 15px; background: #f0f7ff; margin-bottom: 20px;">
                 <p><strong>Día:</strong> ${formattedDate}</p>
                 <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
-                <p><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Retira tu Kit en Laboratorio)' : 'Apoquindo 3990, Las Condes'}</p>
+                <p><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Retira tu Kit en Laboratorio: Apoquindo 3990)' : 'Apoquindo 3990, Las Condes'}</p>
               </div>
               
               ${homeKitText}
@@ -519,10 +521,10 @@ export default function BookingPage() {
                               <Info className="h-4 w-4" /> Procedimiento Test en Casa
                             </h5>
                             <ul className="text-xs font-medium text-muted-foreground space-y-2 list-disc pl-5">
-                              <li>Deberás <strong>retirar el kit</strong> en el laboratorio a la hora elegida.</li>
+                              <li>Deberás <strong>retirar el kit</strong> en el laboratorio a la hora elegida (Apoquindo 3990).</li>
                               <li>Recibirás la instrucción de uso por parte de un profesional.</li>
                               <li>Tras realizar el test, coordina el retiro con el motoboy indicado en el flyer.</li>
-                              <li className="text-secondary font-black">IMPORTANTE: El test debe estar en el laboratorio en máximo 6 horas tras su realización.</li>
+                              <li className="text-secondary font-black">IMPORTANTE: El test tiene un plazo máximo de 6 horas para estar en el laboratorio tras su realización.</li>
                             </ul>
                           </div>
                         )}
