@@ -52,7 +52,7 @@ const communesByRegion: Record<string, string[]> = {
   "Antofagasta": ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal", "Calama", "Ollagüe", "San Pedro de Atacama", "Tocopilla", "María Elena"],
   "Atacama": ["Copiapó", "Caldera", "Tierra Amarilla", "Chañaral", "Diego de Almagro", "Vallenar", "Alto del Carmen", "Freirina", "Huasco"],
   "Coquimbo": ["La Serena", "Coquimbo", "Andacollo", "La Higuera", "Paiguano", "Vicuña", "Illapel", "Canela", "Los Vilos", "Salamanca", "Ovalle", "Combarbalá", "Monte Patria", "Punitaqui", "Río Hurtado"],
-  "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández", "San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo", "Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales", "Los Andes", "Calle Larga", "Rinconada", "San Esteban", "San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María", "Quilpué", "Limache", "Olmué", "Villa Alemana", "La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
+  "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández", "San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo", "Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales", "Los Andes", "Calle Larga", "Rinconada", "San Esteban", "San Esteban", "San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María", "Quilpué", "Limache", "Olmué", "Villa Alemana", "La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
   "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
   "O'Higgins": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente", "Pichilemu", "La Estrella", "Litueche", "Marchihue", "Navidad", "Paredones", "San Fernando", "Chépica", "Chimbarongo", "Lolol", "Nancagua", "Palmilla", "Peralillo", "Placilla", "Pumanque", "Santa Cruz"],
   "Maule": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael", "Cauquenes", "Chanco", "Pelluhue", "Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén", "Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"],
@@ -269,12 +269,11 @@ export default function BookingPage() {
       const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos en las últimas 4 semanas.";
       setPrepInstructions(instructions);
       
-      // Guardar reserva
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
-      // Guardar en colección de mail para el trigger (ESTRUCTURA PLANA - CRÍTICO PARA EXTENSIÓN)
+      // ESTRUCTURA PLANA: to debe ser un string en la raíz para máxima compatibilidad con la extensión
       await addDocumentNonBlocking(collection(db, "mail"), {
-        to: values.email, // El campo 'to' DEBE estar en la raíz del documento
+        to: values.email, 
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
           text: `Hola ${values.firstName}, tu reserva para ${values.examType} está confirmada para el día ${formattedDate} a las ${values.scheduledTime} hrs.`,
@@ -285,7 +284,7 @@ export default function BookingPage() {
               <hr />
               <p><strong>Día:</strong> ${formattedDate}</p>
               <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
-              <p><strong>Lugar:</strong> Apoquindo 3990, Of. 605, Las Condes (o retiro de Kit según modalidad).</p>
+              <p><strong>Lugar:</strong> Apoquindo 3990, Of. 605, Las Condes.</p>
               <hr />
               <p style="color: #d97706;"><strong>RECUERDA:</strong> Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
             </div>
@@ -461,7 +460,7 @@ export default function BookingPage() {
                        <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel className="font-bold">Email</FormLabel><Input type="email" placeholder="correo@ejemplo.com" {...field} className="rounded-xl h-12" /></FormItem>)} />
                        <FormField control={form.control} name="phone" render={({ field }) => (
                          <FormItem>
-                           <FormLabel className="font-bold">Teléfono (9 dígitos)</FormLabel>
+                           <FormLabel className="font-bold">Teléfono (8 dígitos)</FormLabel>
                            <div className="flex items-center gap-2">
                              <span className="bg-muted px-3 h-12 rounded-xl flex items-center font-bold">+56 9</span>
                              <Input placeholder="12345678" {...field} maxLength={8} className="rounded-xl h-12" />

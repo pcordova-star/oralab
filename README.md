@@ -17,11 +17,13 @@ Para que las confirmaciones de reserva lleguen a los pacientes, la extensión en
 
 ### Diagnóstico de Fallas (Si el correo no llega)
 
-1.  **Plan Blaze (REQUERIDO)**: Si en tu menú lateral de Firebase NO aparece la pestaña **Functions** o está vacía, es muy probable que el proyecto esté en el plan gratuito (Spark). Las extensiones requieren el plan **Blaze** (pago por uso) para poder desplegar las funciones que envían correos.
-2.  **Estado de la Extensión**: Ve a **Extensions** y verifica que no diga "Installing..." o "Failed". Si falló, suele ser por falta del plan Blaze.
-3.  **Campo `delivery` en Firestore**:
-    *   Si ves el documento en la colección `mail` pero **NO existe** el campo `delivery`, la extensión no está escuchando la base de datos. Verifica que el nombre de la colección configurado sea exactamente `mail`.
-    *   Si el campo `delivery` aparece como `ERROR`, haz clic en él para ver el motivo (usualmente contraseña de aplicación de Gmail incorrecta).
+1.  **Functions Vacías (CRÍTICO)**: Si en tu menú lateral de Firebase vas a la pestaña **Functions** y está vacía, la extensión **NO está funcionando**. 
+    *   **Solución**: Ve a **Extensions**, entra en **Trigger Email** y verifica si hay errores de instalación. Si no ves funciones en la pestaña correspondiente, desinstala la extensión y vuelve a instalarla. Sin funciones listadas, el "disparador" no existe.
+2.  **Campo `delivery` en Firestore**:
+    *   Si el documento en la colección `mail` **NO tiene** el campo `delivery`, la extensión no está escuchando la base de datos. Verifica que el nombre de la colección configurado en la extensión sea exactamente `mail` (en minúsculas).
+    *   Si el campo `delivery` aparece como `ERROR`, haz clic en él para ver el motivo (usualmente es porque Gmail bloqueó el acceso o la "Contraseña de Aplicación" es incorrecta).
+3.  **Logs de Cloud Functions**:
+    *   Ve a **Functions** > Busca `ext-firestore-send-email-processQueue` > Pestaña **Logs**. Allí aparecerá el error exacto de conexión SMTP.
 
 ---
 © 2024 Oralab Clinical Lab. Tecnología Sunvou®.
