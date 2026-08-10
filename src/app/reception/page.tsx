@@ -59,7 +59,8 @@ import {
   TrendingUp,
   Target,
   FileBarChart,
-  History
+  History,
+  Newspaper
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
