@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
 import { 
   Table, 
   TableBody, 
@@ -40,48 +39,29 @@ import {
 import { 
   Trash2, 
   Download,
-  Calendar as CalendarIcon,
   Clock,
-  User,
-  MapPin,
   CheckCircle2,
   Users,
-  Briefcase,
   Pencil,
-  Save,
-  CreditCard,
-  Mail,
-  TrendingUp,
-  Target,
   Plus,
-  FileBarChart,
-  ShieldCheck,
   Info,
   CalendarDays,
-  History,
   LayoutGrid,
   Activity,
   UserCheck,
   AlertCircle,
-  Beaker,
   FileText,
   Search,
-  CheckCircle,
-  XCircle,
   Wind,
-  Stethoscope,
   ShoppingCart,
-  Calculator,
-  Package,
-  DollarSign,
-  Send,
-  Building2,
-  Phone,
-  Newspaper,
   ImageIcon,
-  ExternalLink
+  ExternalLink,
+  TrendingUp,
+  Target,
+  FileBarChart,
+  History
 } from "lucide-react";
-import { format, isSameDay, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { getAuth, signOut } from "firebase/auth";
@@ -105,7 +85,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 15 a 20 días hábiles tras recepción de orden de compra y pago de anticipo. El plazo de entrega inicia a partir de la confirmación del primer depósito.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años.\n- Incluye capacitación técnica.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 15 a 20 días hábiles tras recepción de orden de compra y pago de anticipo.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años.\n- Incluye capacitación técnica.";
 
 interface QuotationItem {
   description: string;
@@ -122,16 +102,11 @@ export default function ReceptionPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
-  // NEWS Mural State
+  // NEWS State
   const [isNewsDialogOpen, setIsNewsDialogOpen] = useState(false);
-  const [newsForm, setNewsForm] = useState({
-    title: "",
-    content: "",
-    imageUrl: "",
-    date: format(new Date(), "yyyy-MM-dd")
-  });
+  const [newsForm, setNewsForm] = useState({ title: "", content: "", imageUrl: "", date: format(new Date(), "yyyy-MM-dd") });
 
-  // CRM Quotations State
+  // CRM State
   const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [exchangeRate, setExchangeRate] = useState(DEFAULT_USD_RATE);
@@ -142,6 +117,10 @@ export default function ReceptionPage() {
   const [clientPhone, setClientPhone] = useState("");
   const [items, setItems] = useState<QuotationItem[]>([]);
   const [quoteNotes, setQuoteNotes] = useState(DEFAULT_NOTES);
+
+  // MILESTONES State
+  const [isMilestoneDialogOpen, setIsMilestoneDialogOpen] = useState(false);
+  const [milestoneForm, setMilestoneForm] = useState({ title: "", description: "", date: format(new Date(), "yyyy-MM-dd"), status: "pending" });
 
   useEffect(() => {
     setIsMounted(true);
@@ -158,50 +137,37 @@ export default function ReceptionPage() {
   }, [user, isUserLoading, router]);
 
   const bookingsRef = useMemoFirebase(() => {
-    if (!db || !user || user.email !== ADMIN_EMAIL) return null;
+    if (!db) return null;
     return collection(db, "bookings");
-  }, [db, user]);
+  }, [db]);
 
   const newsRef = useMemoFirebase(() => {
-    if (!db || !user || user.email !== ADMIN_EMAIL) return null;
+    if (!db) return null;
     return query(collection(db, "investor_updates"), orderBy("date", "desc"));
-  }, [db, user]);
+  }, [db]);
 
   const quotationsRef = useMemoFirebase(() => {
-    if (!db || !user || user.email !== ADMIN_EMAIL) return null;
+    if (!db) return null;
     return query(collection(db, "quotations"), orderBy("createdAt", "desc"));
-  }, [db, user]);
+  }, [db]);
+
+  const milestonesRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "milestones"), orderBy("date", "asc"));
+  }, [db]);
+
+  const contractLeadsRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, "contract_leads");
+  }, [db]);
 
   const { data: rawBookings, isLoading: loadingBookings } = useCollection(bookingsRef);
   const { data: newsItems, isLoading: loadingNews } = useCollection(newsRef);
   const { data: quotations, isLoading: loadingQuotes } = useCollection(quotationsRef);
+  const { data: milestones, isLoading: loadingMilestones } = useCollection(milestonesRef);
+  const { data: partners, isLoading: loadingPartners } = useCollection(contractLeadsRef);
 
   const bookings = (rawBookings || []).sort((a, b) => (b.scheduledDate || "").localeCompare(a.scheduledDate || ""));
-
-  // NEWS Logic
-  const handleSaveNews = async () => {
-    if (!db || !newsForm.title || !newsForm.content || !newsForm.imageUrl) {
-      toast({ variant: "destructive", title: "Error", description: "Llene todos los campos." });
-      return;
-    }
-    try {
-      await addDocumentNonBlocking(collection(db, "investor_updates"), {
-        ...newsForm,
-        createdAt: serverTimestamp()
-      });
-      toast({ title: "Noticia publicada", description: "Ya está visible para los socios." });
-      setIsNewsDialogOpen(false);
-      setNewsForm({ title: "", content: "", imageUrl: "", date: format(new Date(), "yyyy-MM-dd") });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
-    }
-  };
-
-  const handleDeleteNews = async (id: string) => {
-    if (!db || !confirm("¿Eliminar esta noticia?")) return;
-    deleteDocumentNonBlocking(doc(db, "investor_updates", id));
-    toast({ title: "Eliminado" });
-  };
 
   // CRM Logic
   const resetQuoteForm = () => {
@@ -221,123 +187,43 @@ export default function ReceptionPage() {
     setQuoteNotes(DEFAULT_NOTES);
   };
 
-  const handleRateChange = (newRate: number) => {
-    setExchangeRate(newRate);
-    const updatedItems = items.map(item => {
-      if (item.unitPriceUSD !== undefined) {
-        return { ...item, unitPrice: item.unitPriceUSD * newRate * COMMERCIAL_MARKUP };
-      }
-      return item;
-    });
-    setItems(updatedItems);
-  };
-
-  const addItem = () => setItems([...items, { description: "", quantity: 1, unitPrice: 0 }]);
-  const updateItem = (index: number, field: keyof QuotationItem, value: any) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setItems(newItems);
-  };
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
-
   const handleSaveQuotation = async () => {
-    if (!db || !clientName || !clientEmail || items.length === 0) {
-      toast({ variant: "destructive", title: "Campos incompletos", description: "Completa cliente e ítems." });
-      return;
-    }
+    if (!db || !clientName || !clientEmail || items.length === 0) return;
     const netTotal = items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
-    const data = { 
-      clientName, 
-      clientCompany, 
-      clientEmail, 
-      clientPhone, 
-      items, 
-      total: netTotal, 
-      notes: quoteNotes, 
-      exchangeRate, 
-      status: quoteStatus 
-    };
-    
-    try {
-      if (editingQuoteId) {
-        updateDocumentNonBlocking(doc(db, "quotations", editingQuoteId), { ...data, updatedAt: serverTimestamp() });
-        toast({ title: "Cotización actualizada" });
-      } else {
-        addDocumentNonBlocking(collection(db, "quotations"), { ...data, createdAt: serverTimestamp() });
-        toast({ title: "Cotización creada" });
-      }
-      setIsQuoteDialogOpen(false);
-      resetQuoteForm();
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error al guardar" });
+    const data = { clientName, clientCompany, clientEmail, clientPhone, items, total: netTotal, notes: quoteNotes, exchangeRate, status: quoteStatus };
+    if (editingQuoteId) {
+      updateDocumentNonBlocking(doc(db, "quotations", editingQuoteId), { ...data, updatedAt: serverTimestamp() });
+    } else {
+      addDocumentNonBlocking(collection(db, "quotations"), { ...data, createdAt: serverTimestamp() });
     }
+    setIsQuoteDialogOpen(false);
   };
 
-  const downloadQuotationPDF = (quote: any) => {
-    const doc = new jsPDF();
-    const margin = 20;
-    let y = 15;
-    const primaryRGB = [28, 104, 182];
-    
-    doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
-    doc.rect(0, 0, 210, 40, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(26);
-    doc.setFont("helvetica", "bold");
-    doc.text("TRESNA - ORALAB", margin, 25);
-    doc.setFontSize(10);
-    doc.text("Representación Oficial Sunvou Chile", margin, 32);
-    
-    y = 55;
-    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
-    doc.setFontSize(18);
-    doc.text("PROPUESTA TÉCNICO-COMERCIAL", margin, y);
-    y += 15;
+  // NEWS Logic
+  const handleSaveNews = async () => {
+    if (!db || !newsForm.title || !newsForm.imageUrl) return;
+    addDocumentNonBlocking(collection(db, "investor_updates"), { ...newsForm, createdAt: serverTimestamp() });
+    setIsNewsDialogOpen(false);
+    setNewsForm({ title: "", content: "", imageUrl: "", date: format(new Date(), "yyyy-MM-dd") });
+  };
 
-    doc.setTextColor(60, 60, 60);
-    doc.setFontSize(10);
-    doc.text(`Nombre: ${quote.clientName}`, margin, y);
-    doc.text(`Institución: ${quote.clientCompany || 'Particular'}`, 110, y);
-    y += 20;
-
-    doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
-    doc.rect(margin, y, 170, 10, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.text("Descripción", margin + 5, y + 7);
-    doc.text("Cant.", 140, y + 7);
-    doc.text("Unitario", 160, y + 7);
-    y += 15;
-
-    doc.setTextColor(60, 60, 60);
-    quote.items.forEach((item: any) => {
-      doc.text(item.description, margin + 5, y);
-      doc.text(item.quantity.toString(), 140, y);
-      doc.text(`$${Math.round(item.unitPrice).toLocaleString()}`, 160, y);
-      y += 10;
-    });
-
-    y += 10;
-    doc.setFont("helvetica", "bold");
-    doc.text(`TOTAL IVA INC: $${Math.round(quote.total * (1 + IVA_RATE)).toLocaleString()}`, 130, y);
-
-    doc.save(`Propuesta_Sunvou_${quote.clientName}.pdf`);
+  // MILESTONES Logic
+  const handleSaveMilestone = async () => {
+    if (!db || !milestoneForm.title) return;
+    addDocumentNonBlocking(collection(db, "milestones"), { ...milestoneForm, createdAt: serverTimestamp() });
+    setIsMilestoneDialogOpen(false);
+    setMilestoneForm({ title: "", description: "", date: format(new Date(), "yyyy-MM-dd"), status: "pending" });
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 uppercase font-black text-[9px]"><Clock className="h-3 w-3 mr-1" /> Agendado</Badge>;
-      case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 uppercase font-black text-[9px]"><UserCheck className="h-3 w-3 mr-1" /> En Espera</Badge>;
+      case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 uppercase font-black text-[9px]"><UserCheck className="h-3 w-3 mr-1" /> En Sala</Badge>;
       case "in_progress": return <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 uppercase font-black text-[9px]"><Activity className="h-3 w-3 mr-1" /> En Curso</Badge>;
       case "completed": return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 uppercase font-black text-[9px]"><CheckCircle2 className="h-3 w-3 mr-1" /> Finalizado</Badge>;
       case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 uppercase font-black text-[9px]"><AlertCircle className="h-3 w-3 mr-1" /> Cancelado</Badge>;
       default: return <Badge variant="outline" className="text-[9px] uppercase font-black">{status}</Badge>;
     }
-  };
-
-  const handleUpdateStatus = (bookingId: string, newStatus: string) => {
-    if (!db) return;
-    updateDocumentNonBlocking(doc(db, "bookings", bookingId), { status: newStatus, updatedAt: serverTimestamp() });
-    toast({ title: "Estado actualizado" });
   };
 
   if (isUserLoading || !user || !isMounted) return null;
@@ -364,7 +250,6 @@ export default function ReceptionPage() {
                   <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
                     <LayoutGrid className="h-6 w-6 text-secondary" /> Control de Agenda
                   </CardTitle>
-                  <CardDescription>Resumen de pacientes para hoy y próximos días.</CardDescription>
                 </div>
               </CardHeader>
               <div className="overflow-x-auto">
@@ -380,299 +265,277 @@ export default function ReceptionPage() {
                   </TableHeader>
                   <TableBody>
                     {loadingBookings ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-10">Cargando agenda...</TableCell></TableRow>
-                    ) : bookings.length === 0 ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-10 italic">No hay reservas registradas.</TableCell></TableRow>
-                    ) : (
-                      bookings.map((b) => (
-                        <TableRow key={b.id} className="hover:bg-primary/5 transition-colors">
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-black text-primary">{b.scheduledDate ? format(parseISO(b.scheduledDate), "dd/MM/yyyy") : "Pendiente"}</span>
-                              <span className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1"><Clock className="h-3 w-3" /> {b.scheduledTime} hrs</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-bold text-primary">{b.firstName} {b.lastNameFather}</span>
-                              <span className="text-[10px] text-muted-foreground uppercase font-black">{b.email}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-black text-secondary italic">Test {b.examType}</span>
-                              <span className="text-[10px] font-bold text-muted-foreground">{b.modality === 'home_kit' ? 'Retiro de Kit' : 'Presencial'}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{getStatusBadge(b.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <Select value={b.status} onValueChange={(val) => handleUpdateStatus(b.id, val)}>
-                              <SelectTrigger className="w-[180px] h-8 text-[10px] font-bold rounded-full border-primary/20"><SelectValue placeholder="Estado..." /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pending">Agendado</SelectItem>
-                                <SelectItem value="arrived">En sala de espera</SelectItem>
-                                <SelectItem value="in_progress">Test iniciado</SelectItem>
-                                <SelectItem value="completed">Finalizado</SelectItem>
-                                <SelectItem value="cancelled">Cancelado</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                      <TableRow><TableCell colSpan={5} className="text-center py-10">Cargando...</TableCell></TableRow>
+                    ) : bookings.map((b) => (
+                      <TableRow key={b.id}>
+                        <TableCell className="font-black text-primary">
+                          {b.scheduledDate} <span className="text-[10px] text-muted-foreground ml-2">{b.scheduledTime} hrs</span>
+                        </TableCell>
+                        <TableCell className="font-bold">{b.firstName} {b.lastNameFather}</TableCell>
+                        <TableCell className="italic text-secondary font-black">{b.examType}</TableCell>
+                        <TableCell>{getStatusBadge(b.status)}</TableCell>
+                        <TableCell className="text-right">
+                          <Select value={b.status} onValueChange={(val) => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: val, updatedAt: serverTimestamp() })}>
+                            <SelectTrigger className="w-[150px] h-8 text-[10px] rounded-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Agendado</SelectItem>
+                              <SelectItem value="arrived">En sala</SelectItem>
+                              <SelectItem value="in_progress">Iniciado</SelectItem>
+                              <SelectItem value="completed">Finalizado</SelectItem>
+                              <SelectItem value="cancelled">Cancelado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
             </Card>
           </TabsContent>
 
-          {/* TAB: NOTICIAS MURAL */}
+          {/* TAB: INFORMES */}
+          <TabsContent value="diagnostics">
+            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+              <CardHeader className="bg-secondary/5 border-b">
+                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                  <FileBarChart className="h-6 w-6 text-secondary" /> Bitácoras Clínicas (En Casa)
+                </CardTitle>
+                <CardDescription>Auditoría de tiempos de soplido para pacientes que usaron el Asistente Digital.</CardDescription>
+              </CardHeader>
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {(bookings || []).filter(b => b.testLogs && b.testLogs.length > 0).map((b) => (
+                  <Card key={b.id} className="border-primary/5 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-primary/5 p-4 border-b">
+                       <p className="text-[10px] font-black text-secondary uppercase mb-1">Paciente</p>
+                       <h4 className="font-black text-primary">{b.firstName} {b.lastNameFather}</h4>
+                       <Badge className="bg-white text-secondary text-[9px] mt-1 border-secondary/20">{b.examType}</Badge>
+                    </div>
+                    <div className="p-4 space-y-2 max-h-[200px] overflow-y-auto bg-muted/10">
+                       {b.testLogs.map((log: any, idx: number) => (
+                         <div key={idx} className="flex justify-between items-center text-[10px] py-1 border-b border-white/50 border-dashed last:border-0">
+                           <span className="font-bold text-muted-foreground">{log.stepName}</span>
+                           <span className="font-black text-primary italic">{format(new Date(log.timestamp), "HH:mm")} hrs</span>
+                         </div>
+                       ))}
+                    </div>
+                  </Card>
+                ))}
+                {(bookings || []).filter(b => b.testLogs && b.testLogs.length > 0).length === 0 && (
+                   <p className="col-span-full text-center py-20 italic text-muted-foreground">No hay bitácoras digitales registradas recientemente.</p>
+                )}
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* TAB: CRM VENTAS */}
+          <TabsContent value="crm-ventas">
+            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+              <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center">
+                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                  <ShoppingCart className="h-6 w-6 text-secondary" /> CRM Sunvou Chile
+                </CardTitle>
+                <Button onClick={() => { resetQuoteForm(); setIsQuoteDialogOpen(true); }} className="bg-primary font-black rounded-full shadow-lg">
+                  <Plus className="mr-2 h-4 w-4" /> Nueva Propuesta
+                </Button>
+              </CardHeader>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/10">
+                      <TableHead className="font-bold text-[10px] uppercase">Estado</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase">Cliente / Institución</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase text-right">Total IVA Inc.</TableHead>
+                      <TableHead className="text-right font-bold text-[10px] uppercase">Gestión</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {quotations?.map((q) => (
+                      <TableRow key={q.id}>
+                        <TableCell>
+                          <Badge variant="outline" className={cn("font-black text-[9px] uppercase", q.status === 'accepted' ? "bg-green-50 text-green-600" : "bg-slate-50")}>{q.status}</Badge>
+                        </TableCell>
+                        <TableCell className="font-bold text-primary">{q.clientName} <span className="text-[10px] text-muted-foreground block">{q.clientCompany}</span></TableCell>
+                        <TableCell className="text-right font-black">${Math.round(q.total * 1.19).toLocaleString()}</TableCell>
+                        <TableCell className="text-right">
+                           <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "quotations", q.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* TAB: NOTICIAS */}
           <TabsContent value="news">
             <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
               <CardHeader className="bg-secondary/5 border-b flex flex-row justify-between items-center">
-                <div>
-                  <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                    <Newspaper className="h-6 w-6 text-secondary" /> Mural de Noticias
-                  </CardTitle>
-                  <CardDescription>Publica fotos y avances para los socios inversionistas.</CardDescription>
-                </div>
-                <Button onClick={() => setIsNewsDialogOpen(true)} className="bg-primary font-black rounded-full h-10 px-8">
+                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                  <Newspaper className="h-6 w-6 text-secondary" /> Mural de Noticias
+                </CardTitle>
+                <Button onClick={() => setIsNewsDialogOpen(true)} className="bg-primary font-black rounded-full">
                   <Plus className="mr-2 h-4 w-4" /> Nueva Noticia
                 </Button>
               </CardHeader>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {loadingNews ? (
-                    <p className="col-span-full text-center py-10 italic">Cargando noticias...</p>
-                  ) : newsItems?.length === 0 ? (
-                    <p className="col-span-full text-center py-10 italic">No hay noticias publicadas.</p>
-                  ) : (
-                    newsItems?.map((n) => (
-                      <Card key={n.id} className="overflow-hidden border-primary/5 rounded-2xl">
-                        <div className="relative aspect-video">
-                          <Image src={n.imageUrl} alt={n.title} fill className="object-cover" />
-                        </div>
-                        <CardContent className="p-4 space-y-2">
-                          <p className="text-[10px] font-black text-secondary uppercase tracking-widest">{format(new Date(n.date + 'T00:00:00'), "dd MMMM yyyy", { locale: es })}</p>
-                          <h4 className="font-black text-primary leading-tight">{n.title}</h4>
-                          <p className="text-xs text-muted-foreground line-clamp-2">{n.content}</p>
-                        </CardContent>
-                        <CardFooter className="p-4 border-t bg-muted/20 flex justify-end">
-                          <Button variant="ghost" size="sm" onClick={() => handleDeleteNews(n.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full h-8 w-8 p-0">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))
-                  )}
-                </div>
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {newsItems?.map((n) => (
+                  <Card key={n.id} className="overflow-hidden border-primary/5">
+                    <div className="relative aspect-video">
+                      <Image src={n.imageUrl} alt={n.title} fill className="object-cover" />
+                    </div>
+                    <CardContent className="p-4">
+                      <h4 className="font-black text-primary">{n.title}</h4>
+                      <Button variant="ghost" className="text-red-400 mt-2 h-8" onClick={() => deleteDocumentNonBlocking(doc(db!, "investor_updates", n.id))}><Trash2 className="h-3 w-3 mr-1" /> Eliminar</Button>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </Card>
-
-            <Dialog open={isNewsDialogOpen} onOpenChange={setIsNewsDialogOpen}>
-              <DialogContent className="max-w-2xl rounded-[2rem]">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-black text-primary italic">Publicar en Portal de Inversionistas</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-6 py-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold">Título de la noticia</Label>
-                    <Input value={newsForm.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} placeholder="Ej: Llegada del equipo Sunvou" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="font-bold">Fecha</Label>
-                      <Input type="date" value={newsForm.date} onChange={(e) => setNewsForm({ ...newsForm, date: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="font-bold flex items-center gap-2">URL de la Imagen <ImageIcon className="h-3 w-3" /></Label>
-                      <Input value={newsForm.imageUrl} onChange={(e) => setNewsForm({ ...newsForm, imageUrl: e.target.value })} placeholder="https://..." />
-                      <p className="text-[10px] text-muted-foreground italic flex items-center gap-1">
-                        <Info className="h-3 w-3" /> Usa enlaces directos de PostImages o Imgur.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Image Preview */}
-                  {newsForm.imageUrl && (
-                    <div className="space-y-2">
-                      <Label className="font-bold text-[10px] uppercase">Vista Previa</Label>
-                      <div className="relative aspect-video rounded-xl overflow-hidden border border-dashed border-primary/20">
-                        <img 
-                          src={newsForm.imageUrl} 
-                          alt="Preview" 
-                          className="w-full h-full object-cover"
-                          onError={(e) => (e.currentTarget.src = "https://placehold.co/600x400?text=URL+Inválida")}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label className="font-bold">Cuerpo de la noticia</Label>
-                    <Textarea value={newsForm.content} onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })} className="min-h-[120px]" />
-                  </div>
-                </div>
-                <DialogFooter className="flex flex-col sm:flex-row gap-4">
-                  <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-xs font-bold text-primary hover:underline">
-                    <ExternalLink className="h-3 w-3 mr-1" /> Subir foto a PostImages
-                  </a>
-                  <div className="flex-1" />
-                  <Button variant="outline" className="rounded-full" onClick={() => setIsNewsDialogOpen(false)}>Cancelar</Button>
-                  <Button onClick={handleSaveNews} className="bg-primary font-black rounded-full px-10">Publicar Ahora</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </TabsContent>
 
-          {/* TAB: CRM VENTAS (COTIZACIONES) */}
-          <TabsContent value="crm-ventas">
-             <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-                <CardHeader className="bg-secondary/5 border-b flex flex-row justify-between items-center">
-                   <div>
-                     <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                       <ShoppingCart className="h-6 w-6 text-secondary" /> CRM Sunvou Chile
-                     </CardTitle>
-                     <CardDescription>Gestión comercial de equipamiento Sunvou® Breath Diagnostics.</CardDescription>
-                   </div>
-                   <Button onClick={() => { resetQuoteForm(); setIsQuoteDialogOpen(true); }} className="bg-primary font-black rounded-full h-10 px-8 shadow-lg">
-                      <Plus className="mr-2 h-4 w-4" /> Nueva Propuesta
-                   </Button>
-                </CardHeader>
-                <div className="overflow-x-auto">
-                   <Table>
-                      <TableHeader>
-                         <TableRow className="bg-muted/10">
-                            <TableHead className="font-black text-[10px] uppercase">Estado</TableHead>
-                            <TableHead className="font-black text-[10px] uppercase">Cliente / Institución</TableHead>
-                            <TableHead className="font-black text-[10px] uppercase text-right">Total IVA Inc.</TableHead>
-                            <TableHead className="text-right font-black text-[10px] uppercase">Gestión</TableHead>
-                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {loadingQuotes ? (
-                          <TableRow><TableCell colSpan={4} className="text-center py-10">Buscando propuestas...</TableCell></TableRow>
-                        ) : quotations?.length === 0 ? (
-                          <TableRow><TableCell colSpan={4} className="text-center py-20 italic text-muted-foreground">No hay cotizaciones activas.</TableCell></TableRow>
-                        ) : quotations?.map((q) => (
-                          <TableRow key={q.id}>
-                             <TableCell>
-                                <Badge variant="outline" className={cn(
-                                  "font-black text-[9px] uppercase border-primary/20",
-                                  q.status === 'accepted' ? "bg-green-50 text-green-600" : "bg-slate-50 text-slate-500"
-                                )}>
-                                  {q.status === 'pending' ? 'Borrador' : q.status === 'sent' ? 'Enviada' : q.status === 'accepted' ? 'Aceptada' : 'Rechazada'}
-                                </Badge>
-                             </TableCell>
-                             <TableCell>
-                                <div className="flex flex-col">
-                                   <span className="font-bold text-primary">{q.clientName}</span>
-                                   <span className="text-[10px] font-black text-muted-foreground uppercase">{q.clientCompany || 'Particular'}</span>
-                                </div>
-                             </TableCell>
-                             <TableCell className="text-right font-black text-primary">
-                                ${Math.round((q.total || 0) * (1 + IVA_RATE)).toLocaleString()}
-                             </TableCell>
-                             <TableCell className="text-right flex justify-end gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => { setEditingQuoteId(q.id); setClientName(q.clientName); setClientEmail(q.clientEmail); setClientCompany(q.clientCompany || ""); setClientPhone(q.clientPhone || ""); setItems(q.items || []); setExchangeRate(q.exchangeRate || DEFAULT_USD_RATE); setQuoteStatus(q.status || 'pending'); setQuoteNotes(q.notes || DEFAULT_NOTES); setIsQuoteDialogOpen(true); }} className="rounded-full h-8 w-8 text-primary"><Pencil className="h-4 w-4" /></Button>
-                                <Button variant="outline" size="sm" onClick={() => downloadQuotationPDF(q)} className="rounded-full h-8 font-black text-[9px]"><Download className="h-3 w-3 mr-1" /> PDF</Button>
-                                <Button variant="ghost" size="icon" onClick={() => { if(confirm("¿Eliminar?")) deleteDocumentNonBlocking(doc(db!, "quotations", q.id)); }} className="rounded-full h-8 w-8 text-red-300 hover:text-red-500"><Trash2 className="h-4 w-4" /></Button>
-                             </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                   </Table>
-                </div>
-             </Card>
+          {/* TAB: SOCIOS */}
+          <TabsContent value="investors">
+            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+              <CardHeader className="bg-primary/5 border-b">
+                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                  <Users className="h-6 w-6 text-secondary" /> Gestión de Socios
+                </CardTitle>
+                <CardDescription>Visualización y control de aportes confirmados (Contract Leads).</CardDescription>
+              </CardHeader>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/10">
+                      <TableHead className="font-bold">Socio / Email</TableHead>
+                      <TableHead className="font-bold text-right">Monto Aportado</TableHead>
+                      <TableHead className="font-bold text-center">Estado Firma</TableHead>
+                      <TableHead className="text-right font-bold">Gestión</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {partners?.map((p) => (
+                      <TableRow key={p.id}>
+                        <TableCell>
+                           <div className="flex flex-col">
+                              <span className="font-bold text-primary">{p.investorName}</span>
+                              <span className="text-[10px] text-muted-foreground">{p.investorEmail}</span>
+                           </div>
+                        </TableCell>
+                        <TableCell className="text-right font-black text-secondary">${(p.amount || 0).toLocaleString()}</TableCell>
+                        <TableCell className="text-center">
+                           <Badge className={cn("text-[9px] uppercase", p.status === 'fully_signed' ? "bg-green-500" : "bg-amber-500")}>
+                             {p.status === 'fully_signed' ? 'Cerrado' : 'Pendiente'}
+                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                           <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "contract_leads", p.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {partners?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-10 italic">Sin socios registrados.</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* TAB: HITOS */}
+          <TabsContent value="milestones">
+            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+              <CardHeader className="bg-amber-50 border-b flex flex-row justify-between items-center">
+                <CardTitle className="text-2xl font-black text-amber-700 italic flex items-center gap-2">
+                  <Target className="h-6 w-6 text-amber-500" /> Cronograma de Hitos
+                </CardTitle>
+                <Button onClick={() => setIsMilestoneDialogOpen(true)} className="bg-amber-600 hover:bg-amber-700 font-black rounded-full">
+                  <Plus className="mr-2 h-4 w-4" /> Nuevo Hito
+                </Button>
+              </CardHeader>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/10">
+                      <TableHead className="font-bold">Fecha Proyectada</TableHead>
+                      <TableHead className="font-bold">Hito Técnico</TableHead>
+                      <TableHead className="font-bold">Estado</TableHead>
+                      <TableHead className="text-right font-bold">Gestión</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {milestones?.map((m) => (
+                      <TableRow key={m.id}>
+                        <TableCell className="font-black text-amber-700">{format(parseISO(m.date), "MMMM yyyy", { locale: es }).toUpperCase()}</TableCell>
+                        <TableCell>
+                           <div className="flex flex-col">
+                              <span className="font-bold text-primary">{m.title}</span>
+                              <span className="text-[10px] text-muted-foreground line-clamp-1">{m.description}</span>
+                           </div>
+                        </TableCell>
+                        <TableCell>
+                           <Badge variant={m.status === 'completed' ? 'default' : 'outline'} className={cn("text-[9px] uppercase", m.status === 'completed' && "bg-green-500")}>
+                             {m.status === 'completed' ? 'Logrado' : 'En Proceso'}
+                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                           <Button variant="ghost" size="icon" onClick={() => updateDocumentNonBlocking(doc(db!, "milestones", m.id), { status: m.status === 'completed' ? 'pending' : 'completed' })}>
+                             <CheckCircle2 className={cn("h-4 w-4", m.status === 'completed' ? "text-green-500" : "text-muted-foreground")} />
+                           </Button>
+                           <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "milestones", m.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
           </TabsContent>
         </Tabs>
-
-        {/* DIALOG: CRM QUOTATIONS */}
-        <Dialog open={isQuoteDialogOpen} onOpenChange={setIsQuoteDialogOpen}>
-           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem]">
-              <DialogHeader>
-                 <DialogTitle className="text-2xl font-black text-primary italic">Propuesta Sunvou Chile</DialogTitle>
-                 <DialogDescription>Ajusta los ítems y condiciones para la clínica o laboratorio.</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-6 py-4">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b pb-4">
-                    <div className="space-y-4">
-                       <div className="space-y-2">
-                          <Label className="font-bold">Cliente Destinatario</Label>
-                          <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ej: Dr. Roberto Gómez" />
-                       </div>
-                       <div className="space-y-2">
-                          <Label className="font-bold">Institución / Clínica</Label>
-                          <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="Ej: Clínica Las Condes" />
-                       </div>
-                    </div>
-                    <div className="space-y-4">
-                       <div className="space-y-2">
-                          <Label className="font-bold">Email de contacto</Label>
-                          <Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="cliente@correo.com" />
-                       </div>
-                       <div className="space-y-2">
-                          <Label className="font-bold">Teléfono</Label>
-                          <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+56 9 ..." />
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="grid grid-cols-3 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10">
-                    <div className="space-y-1">
-                       <Label className="text-[10px] font-black uppercase text-primary">Tasa Cambio (CLP/USD)</Label>
-                       <Input type="number" value={exchangeRate} onChange={(e) => handleRateChange(parseInt(e.target.value) || 0)} className="font-black" />
-                    </div>
-                    <div className="space-y-1">
-                       <Label className="text-[10px] font-black uppercase text-primary">Estado Comercial</Label>
-                       <Select value={quoteStatus} onValueChange={(v) => setQuoteStatus(v as QuotationStatus)}>
-                          <SelectTrigger className="font-bold"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                             <SelectItem value="pending">Borrador</SelectItem>
-                             <SelectItem value="sent">Enviada</SelectItem>
-                             <SelectItem value="accepted">Aceptada</SelectItem>
-                             <SelectItem value="rejected">Rechazada</SelectItem>
-                          </SelectContent>
-                       </Select>
-                    </div>
-                 </div>
-
-                 <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                       <Label className="font-black text-lg text-primary italic">Detalle de Equipamiento e Insumos</Label>
-                       <Button variant="outline" size="sm" onClick={addItem} className="rounded-full font-bold border-primary/20"><Plus className="h-4 w-4 mr-1" /> Ítem Especial</Button>
-                    </div>
-                    <div className="space-y-2">
-                       {items.map((item, idx) => (
-                          <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-muted/30 p-2 rounded-xl border border-primary/5">
-                             <div className="col-span-7"><Input value={item.description} onChange={(e) => updateItem(idx, 'description', e.target.value)} placeholder="Descripción..." className="bg-white h-8 text-xs" /></div>
-                             <div className="col-span-2"><Input type="number" value={item.quantity} onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 0)} className="bg-white h-8 text-xs text-center" /></div>
-                             <div className="col-span-2"><Input type="number" value={item.unitPrice} onChange={(e) => updateItem(idx, 'unitPrice', parseInt(e.target.value) || 0)} className="bg-white h-8 text-xs font-black text-primary" /></div>
-                             <div className="col-span-1 text-center"><Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="h-6 w-6 text-red-400"><Trash2 className="h-3 w-3" /></Button></div>
-                          </div>
-                       ))}
-                    </div>
-                 </div>
-
-                 <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="w-full md:flex-1">
-                       <Label className="font-bold text-xs uppercase mb-2 block">Notas y Condiciones</Label>
-                       <Textarea value={quoteNotes} onChange={(e) => setQuoteNotes(e.target.value)} className="bg-white min-h-[100px] text-xs" />
-                    </div>
-                    <div className="text-right">
-                       <p className="text-xs font-bold text-muted-foreground uppercase">Subtotal Neto: ${Math.round(items.reduce((acc, i) => acc + (i.quantity * i.unitPrice), 0)).toLocaleString()}</p>
-                       <p className="text-3xl font-black text-primary italic mt-1">TOTAL IVA INC: ${Math.round(items.reduce((acc, i) => acc + (i.quantity * i.unitPrice), 0) * (1 + IVA_RATE)).toLocaleString()}</p>
-                    </div>
-                 </div>
-              </div>
-              <DialogFooter>
-                 <Button variant="outline" className="rounded-full" onClick={() => setIsQuoteDialogOpen(false)}>Cancelar</Button>
-                 <Button onClick={handleSaveQuotation} className="bg-primary font-black rounded-full px-10 shadow-lg">Emitir Cotización</Button>
-              </DialogFooter>
-           </DialogContent>
-        </Dialog>
-
       </main>
+
+      {/* DIALOGS */}
+      <Dialog open={isNewsDialogOpen} onOpenChange={setIsNewsDialogOpen}>
+        <DialogContent className="max-w-2xl rounded-[2rem]">
+          <DialogHeader><DialogTitle className="text-2xl font-black text-primary italic">Publicar Noticia</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label className="font-bold">Título</Label>
+              <Input value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label className="font-bold">URL Imagen</Label>
+              <Input value={newsForm.imageUrl} onChange={(e) => setNewsForm({...newsForm, imageUrl: e.target.value})} />
+              {newsForm.imageUrl && <div className="mt-2 relative aspect-video rounded-xl overflow-hidden border"><Image src={newsForm.imageUrl} alt="preview" fill className="object-cover" /></div>}
+            </div>
+            <div className="space-y-2">
+              <Label className="font-bold">Contenido</Label>
+              <Textarea value={newsForm.content} onChange={(e) => setNewsForm({...newsForm, content: e.target.value})} />
+            </div>
+          </div>
+          <DialogFooter><Button onClick={handleSaveNews} className="bg-primary rounded-full px-8">Publicar</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isMilestoneDialogOpen} onOpenChange={setIsMilestoneDialogOpen}>
+        <DialogContent className="rounded-[2rem]">
+          <DialogHeader><DialogTitle className="text-2xl font-black text-amber-700 italic">Nuevo Hito de Proyecto</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label className="font-bold">Título del Hito</Label>
+              <Input value={milestoneForm.title} onChange={(e) => setMilestoneForm({...milestoneForm, title: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label className="font-bold">Fecha</Label>
+              <Input type="date" value={milestoneForm.date} onChange={(e) => setMilestoneForm({...milestoneForm, date: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label className="font-bold">Descripción Corta</Label>
+              <Textarea value={milestoneForm.description} onChange={(e) => setMilestoneForm({...milestoneForm, description: e.target.value})} />
+            </div>
+          </div>
+          <DialogFooter><Button onClick={handleSaveMilestone} className="bg-amber-600 rounded-full px-8">Guardar Hito</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
