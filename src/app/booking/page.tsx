@@ -27,7 +27,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, CalendarIcon, CheckCircle2, Download, AlertCircle, Home, Building2, Stethoscope, User, MapPin, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, CheckCircle2, Download, AlertCircle, Home, Building2, Stethoscope, User, MapPin, Loader2, Truck } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
@@ -47,13 +47,13 @@ const regions = [
 ];
 
 const communesByRegion: Record<string, string[]> = {
+  "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
   "Arica y Parinacota": ["Arica", "Camarones", "Putre", "General Lagos"],
   "Tarapacá": ["Iquique", "Alto Hospicio", "Pozo Almonte", "Camiña", "Colchane", "Huara", "Pica"],
   "Antofagasta": ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal", "Calama", "Ollagüe", "San Pedro de Atacama", "Tocopilla", "María Elena"],
   "Atacama": ["Copiapó", "Caldera", "Tierra Amarilla", "Chañaral", "Diego de Almagro", "Vallenar", "Alto del Carmen", "Freirina", "Huasco"],
   "Coquimbo": ["La Serena", "Coquimbo", "Andacollo", "La Higuera", "Paiguano", "Vicuña", "Illapel", "Canela", "Los Vilos", "Salamanca", "Ovalle", "Combarbalá", "Monte Patria", "Punitaqui", "Río Hurtado"],
   "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández", "San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo", "Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales", "Los Andes", "Calle Larga", "Rinconada", "San Esteban", "San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María", "Quilpué", "Limache", "Olmué", "Villa Alemana", "La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
-  "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
   "O'Higgins": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente", "Pichilemu", "La Estrella", "Litueche", "Marchihue", "Navidad", "Paredones", "San Fernando", "Chépica", "Chimbarongo", "Lolol", "Nancagua", "Palmilla", "Peralillo", "Placilla", "Pumanque", "Santa Cruz"],
   "Maule": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael", "Cauquenes", "Chanco", "Pelluhue", "Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén", "Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"],
   "Ñuble": ["Chillán", "Bulnes", "Cobquecura", "Coelemu", "Coihueco", "Chillán Viejo", "El Carmen", "Ninhue", "Ñiquén", "Pemuco", "Pinto", "Portezuelo", "Quillón", "Quirihue", "Ránquil", "San Carlos", "San Fabián", "San Ignacio", "San Nicolás", "Treguaco", "Yungay"],
@@ -65,15 +65,23 @@ const communesByRegion: Record<string, string[]> = {
   "Magallanes": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio", "Puerto Natales", "Torres del Paine", "Porvenir", "Primavera", "Timaukel", "Cabo de Hornos", "Antártica"]
 };
 
-const timeSlots = [];
-for (let hour = 8; hour <= 12; hour++) {
-  for (let min = 0; min < 60; min += 15) {
-    if (hour === 12 && min > 0) break;
-    const h = hour.toString().padStart(2, '0');
-    const m = min.toString().padStart(2, '0');
-    timeSlots.push(`${h}:${m}`);
-  }
-}
+// Mapa de precios TarFario
+const DELIVERY_PRICES: Record<string, number> = {
+  // Zona 1
+  "Las Condes": 8000, "Vitacura": 8000, "Providencia": 8000, "Lo Barnechea": 8000,
+  // Zona 2
+  "La Reina": 10000, "Ñuñoa": 10000, "Santiago": 10000, "Recoleta": 10000, "Independencia": 10000, "Huechuraba": 10000,
+  // Zona 3
+  "Peñalolén": 13000, "Macul": 13000, "San Joaquín": 13000, "Estación Central": 13000, "Quinta Normal": 13000, "Conchalí": 13000, "Cerrillos": 13000,
+  // Zona 4
+  "La Florida": 16000, "San Miguel": 16000, "Lo Prado": 16000, "Pedro Aguirre Cerda": 16000, "Cerro Navia": 16000, "Renca": 16000, "Quilicura": 16000, "Pudahuel": 16000,
+  // Zona 5
+  "Maipú": 20000, "El Bosque": 20000, "La Cisterna": 20000, "Lo Espejo": 20000, "La Granja": 20000, "San Ramón": 20000, "La Pintana": 20000, "Puente Alto": 20000, "San Bernardo": 20000,
+  // Zona 6
+  "Colina": 25000, "Lampa": 25000, "Padre Hurtado": 25000, "Peñaflor": 25000, "Calera de Tango": 25000, "Buin": 25000, "Talagante": 25000,
+  // Zona 7 + Periféricas
+  "Isla de Maipo": 30000, "El Monte": 30000, "Melipilla": 30000, "Curacaví": 30000, "María Pinto": 30000, "Pirque": 30000, "San José de Maipo": 30000, "Alhué": 30000, "Paine": 30000, "San Pedro": 30000, "Tiltil": 30000
+};
 
 const bookingSchema = z.object({
   examType: z.enum(["Lactulosa", "Fructosa", "Lactosa"], { required_error: "Seleccione tipo de examen" }),
@@ -101,7 +109,7 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
-const OPERATIONS_START_DATE = new Date(2026, 7, 1);
+const OPERATIONS_START_DATE = new Date(2025, 2, 1); // Marzo 2025
 
 export default function BookingPage() {
   const [step, setStep] = useState(1);
@@ -147,7 +155,14 @@ export default function BookingPage() {
 
   const selectedDate = form.watch("scheduledDate");
   const selectedRegion = form.watch("region");
+  const selectedCommune = form.watch("commune");
+  const selectedModality = form.watch("modality");
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
+
+  // Calcular tarifa TarFario
+  const deliveryFee = (selectedModality === 'home_kit' && selectedCommune) 
+    ? (DELIVERY_PRICES[selectedCommune] || 30000) 
+    : 0;
 
   useEffect(() => {
     async function checkAvailability() {
@@ -217,14 +232,20 @@ export default function BookingPage() {
     doc.text("CONFIRMACIÓN DE RESERVA CLÍNICA", margin, y);
     y += 15;
     doc.setFillColor(245, 247, 249);
-    doc.roundedRect(margin, y, 170, 45, 3, 3, 'FD');
+    doc.roundedRect(margin, y, 170, 55, 3, 3, 'FD');
     doc.setTextColor(60, 60, 60);
     doc.setFontSize(10);
-    doc.text(`Nombre Completo: ${lastBookingValues.firstName} ${lastBookingValues.lastNameFather}`, margin + 5, y + 20);
-    doc.text(`Examen: ${lastBookingValues.examType}`, margin + 5, y + 28);
-    doc.text(`Fecha: ${format(lastBookingValues.scheduledDate, "d 'de' MMMM", { locale: es })}`, margin + 5, y + 36);
-    doc.text(`Hora: ${lastBookingValues.scheduledTime} hrs`, 130, y + 36);
-    y += 55;
+    doc.text(`Nombre Completo: ${lastBookingValues.firstName} ${lastBookingValues.lastNameFather}`, margin + 5, y + 15);
+    doc.text(`Examen: ${lastBookingValues.examType}`, margin + 5, y + 23);
+    doc.text(`Modalidad: ${lastBookingValues.modality === 'home_kit' ? 'Test en Casa' : 'Presencial'}`, margin + 5, y + 31);
+    doc.text(`Fecha: ${format(lastBookingValues.scheduledDate, "d 'de' MMMM", { locale: es })}`, margin + 5, y + 39);
+    doc.text(`Hora: ${lastBookingValues.scheduledTime} hrs`, 130, y + 39);
+    if (deliveryFee > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text(`Tarifa Retiro Motoboy: $${deliveryFee.toLocaleString()}`, margin + 5, y + 47);
+      doc.setFont("helvetica", "normal");
+    }
+    y += 65;
     doc.setFont("helvetica", "bold");
     doc.text("INDICACIONES FUNDAMENTALES", margin, y);
     y += 8;
@@ -258,6 +279,7 @@ export default function BookingPage() {
       region: values.region,
       commune: values.commune,
       sex: values.sex,
+      deliveryFee: deliveryFee,
       status: "pending",
       createdAt: serverTimestamp(),
     };
@@ -268,19 +290,25 @@ export default function BookingPage() {
       
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
+      const deliveryInfo = deliveryFee > 0 
+        ? `<p style="color: #1c68b6;"><strong>Tarifa Retiro Motoboy:</strong> $${deliveryFee.toLocaleString()}</p>
+           <p style="font-size: 11px;">(El kit se retira en laboratorio y el motoboy retirará las muestras en tu domicilio al terminar el test)</p>`
+        : '';
+
       await addDocumentNonBlocking(collection(db, "mail"), {
         to: values.email, 
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
-          text: `Hola ${values.firstName}, tu reserva para ${values.examType} está confirmada para el día ${formattedDate} a las ${values.scheduledTime} hrs.`,
+          text: `Hola ${values.firstName}, tu reserva para ${values.examType} (${values.modality === 'home_kit' ? 'Casa' : 'Presencial'}) está confirmada para el día ${formattedDate} a las ${values.scheduledTime} hrs.`,
           html: `
             <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
               <h2 style="color: #1c68b6;">Confirmación de Reserva</h2>
               <p>Hola <strong>${values.firstName}</strong>, tu cita para el test de <strong>${values.examType}</strong> ha sido agendada con éxito.</p>
               <hr />
+              <p><strong>Modalidad:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Kit)' : 'En Consulta'}</p>
               <p><strong>Día:</strong> ${formattedDate}</p>
               <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
-              <p><strong>Lugar:</strong> Apoquindo 3990, Of. 605, Las Condes.</p>
+              ${deliveryInfo}
               <hr />
               <p style="color: #d97706;"><strong>RECUERDA:</strong> Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
             </div>
@@ -487,6 +515,19 @@ export default function BookingPage() {
                         </FormItem>
                       )} />
                     </div>
+
+                    {deliveryFee > 0 && (
+                      <div className="bg-secondary/10 border border-secondary/20 p-6 rounded-[2rem] flex items-center gap-4 animate-in zoom-in duration-300">
+                         <div className="bg-secondary p-3 rounded-2xl">
+                           <Truck className="h-6 w-6 text-white" />
+                         </div>
+                         <div>
+                            <p className="text-[10px] font-black text-secondary uppercase tracking-widest">Tarifa Logística Retiro Motoboy</p>
+                            <p className="text-2xl font-black text-primary italic">$ {deliveryFee.toLocaleString()} CLP</p>
+                            <p className="text-[9px] font-bold text-muted-foreground">Retiro de muestras en domicilio y retorno a laboratorio (Las Condes).</p>
+                         </div>
+                      </div>
+                    )}
 
                     <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-4">
                        <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest mb-2">
