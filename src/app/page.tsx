@@ -668,7 +668,7 @@ export default function HomePage() {
               href="/investors" 
               className="text-xs text-primary font-black opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center gap-2 hover:text-secondary"
             >
-              <Users className="h-3 w-3" /> Dashboard Inversionistas
+              <Users className="h-3 w-3" /> Portal de Inversionistas
             </Link>
             <Link 
               href="/terms" 

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -134,20 +133,20 @@ export default function InvestorsDashboardPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-12 max-w-6xl">
         <div className="text-center mb-12 space-y-4">
-          <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold uppercase tracking-widest">DASHBOARD DE SOCIOS FF01</Badge>
-          <h1 className="text-3xl md:text-6xl font-black text-primary italic leading-tight text-gradient">Portal de Transparencia Oralab</h1>
-          <p className="text-lg text-muted-foreground font-medium max-w-2xl mx-auto">Información en tiempo real sobre la ejecución del capital y avances del laboratorio.</p>
+          <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold uppercase tracking-widest">TRANSPARENCIA FF01</Badge>
+          <h1 className="text-3xl md:text-6xl font-black text-primary italic leading-tight text-gradient">Portal de Inversionistas</h1>
+          <p className="text-lg text-muted-foreground font-medium max-w-2xl mx-auto">Información en tiempo real sobre la ejecución del capital y avances fotográficos del laboratorio.</p>
         </div>
 
-        {/* Mural de Noticias (NUEVO) */}
+        {/* Mural de Noticias */}
         <section className="mb-20">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-secondary/10 p-3 rounded-2xl">
               <Newspaper className="h-6 w-6 text-secondary" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-primary italic">Mural de Noticias</h2>
-              <p className="text-sm text-muted-foreground font-bold">Avances fotográficos y comunicados oficiales.</p>
+              <h2 className="text-3xl font-black text-primary italic">Mural de Actualizaciones</h2>
+              <p className="text-sm text-muted-foreground font-bold">Avances del proyecto y comunicados oficiales.</p>
             </div>
           </div>
 
@@ -287,7 +286,7 @@ export default function InvestorsDashboardPage() {
         <section className="mb-24">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-black text-primary italic">Cronograma del Proyecto</h2>
-            <p className="text-muted-foreground font-medium mt-2">Hitos y avances en tiempo real para nuestros socios.</p>
+            <p className="text-muted-foreground font-medium mt-2">Hitos y avances técnicos para nuestros inversionistas.</p>
             <div className="h-1 w-20 bg-secondary mx-auto mt-4 rounded-full" />
           </div>
           
@@ -342,7 +341,7 @@ export default function InvestorsDashboardPage() {
 
         {/* Footer Administrativo para socios */}
         <section className="text-center py-12 border-t border-primary/10">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-4">Contacto Exclusivo Socios</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-4">Contacto Exclusivo Inversionistas</p>
           <p className="text-primary font-black italic text-xl">pcordova@oralab.cl</p>
           <div className="flex justify-center gap-6 mt-8">
              <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground">
