@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -21,7 +20,7 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/table"; // Fixed: Standard relative import might be needed if alias fails
+} from "@/components/ui/table";
 import { 
   Dialog, 
   DialogContent, 
@@ -79,7 +78,7 @@ import {
   Building2,
   Phone,
   Newspaper,
-  Image as ImageIcon
+  ImageIcon
 } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -91,12 +90,9 @@ import { jsPDF } from "jspdf";
 import Image from "next/image";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
-const FUNDING_GOAL = 13500000;
 const IVA_RATE = 0.19;
 const DEFAULT_USD_RATE = 950;
 const COMMERCIAL_MARKUP = 2;
-
-const PROTOCOL_TIMES = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180];
 
 const SUNVOU_CATALOG = [
   { description: "Analizador Breath Diagnostics Sunvou-DA7349 (H2/CH4/H2S/CO2)", unitPriceUSD: 5000 },
@@ -146,15 +142,6 @@ export default function ReceptionPage() {
   const [items, setItems] = useState<QuotationItem[]>([]);
   const [quoteNotes, setQuoteNotes] = useState(DEFAULT_NOTES);
 
-  // General Dashboard State
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  
-  // Interpretación de Resultados State
-  const [selectedPatientForReport, setSelectedPatientForReport] = useState<any>(null);
-  const [ppmValues, setPpmValues] = useState<{time: number, h2: number, ch4: number, co2: number}[]>(
-    PROTOCOL_TIMES.map(t => ({ time: t, h2: 0, ch4: 0, co2: 15 }))
-  );
-
   useEffect(() => {
     setIsMounted(true);
     resetQuoteForm();
@@ -189,11 +176,6 @@ export default function ReceptionPage() {
   const { data: quotations, isLoading: loadingQuotes } = useCollection(quotationsRef);
 
   const bookings = (rawBookings || []).sort((a, b) => (b.scheduledDate || "").localeCompare(a.scheduledDate || ""));
-
-  const filteredBookings = bookings.filter((b) => {
-    if (!selectedDate || !b.scheduledDate) return false;
-    return b.scheduledDate === format(selectedDate, "yyyy-MM-dd");
-  });
 
   // NEWS Logic
   const handleSaveNews = async () => {
@@ -364,9 +346,8 @@ export default function ReceptionPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <Tabs defaultValue="patients" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-7 shadow-inner border border-primary/5 mb-8">
+          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-6 shadow-inner border border-primary/5 mb-8">
             <TabsTrigger value="patients" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white text-[10px]">Agenda</TabsTrigger>
-            <TabsTrigger value="calendar-view" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white text-[10px]">Calendario</TabsTrigger>
             <TabsTrigger value="diagnostics" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white text-[10px]">Informes</TabsTrigger>
             <TabsTrigger value="crm-ventas" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white text-[10px]">CRM Ventas</TabsTrigger>
             <TabsTrigger value="news" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white text-[10px]">Noticias</TabsTrigger>
@@ -397,7 +378,9 @@ export default function ReceptionPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {bookings.length === 0 ? (
+                    {loadingBookings ? (
+                      <TableRow><TableCell colSpan={5} className="text-center py-10">Cargando agenda...</TableCell></TableRow>
+                    ) : bookings.length === 0 ? (
                       <TableRow><TableCell colSpan={5} className="text-center py-10 italic">No hay reservas registradas.</TableCell></TableRow>
                     ) : (
                       bookings.map((b) => (
