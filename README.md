@@ -12,33 +12,24 @@ Para que las confirmaciones de reserva lleguen a los pacientes, la extensión en
 
 - **Colección**: `mail`
 - **Authentication Type**: `Username & Password`
-- **SMTP URI**: Ver sección de "Solución de Errores" abajo.
+- **SMTP URI**: `smtps://control%40pcgoperacion.com:jsvfmrifbtqmlzye@smtp.gmail.com:465`
 - **From Address**: `contacto@oralab.cl`
 
-### IMPORTANTE: Estructura de Documento
-Para que la extensión funcione, los documentos en la colección `mail` deben tener:
-1.  Un campo `to` **en la raíz** (puede ser un string o un array de strings).
-2.  Un objeto `message` **en la raíz** con los campos `subject`, `text` y `html`.
-
-**Si el campo `to` se guarda dentro de `message`, el correo NUNCA saldrá.**
-
 ### Solución de Errores: "No aparece el campo delivery"
-Si ves los documentos en Firestore pero no tienen el campo `delivery` (ni success ni error), el disparador de la extensión no está funcionando.
+Si los documentos se crean en Firestore pero no tienen el campo `delivery`, la extensión no se está ejecutando.
 
-1.  **Revisa los Logs**: Ve a Firebase Console -> Extensions -> Trigger Email -> **Logs**. 
-2.  Busca errores de **"Function failed to deploy"** o **"Permission Denied"**.
-3.  **Re-instala**: Si no hay logs, desinstala la extensión y vuelve a instalarla asegurándote de usar este URI exacto:
-    `smtps://control%40pcgoperacion.com:jsvfmrifbtqmlzye@smtp.gmail.com:465`
+1.  **Ver logs en la Terminal**:
+    ```bash
+    firebase functions:log --only ext-firestore-send-email-processQueue
+    ```
+    *(Nota: El nombre de la función puede variar, verifícalo con `firebase functions:list`)*.
 
-### Cómo obtener la Clave de Aplicación (Gmail)
-1. Ve a: [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
-2. Asegúrate de tener activa la **Verificación en 2 pasos**.
-3. Selecciona "App" -> "Otros" y ponle un nombre (ej: "Firebase Oralab").
-4. Genera y copia el código de 16 caracteres. **Úsalo sin espacios en el URI.**
+2.  **Ver logs en la Consola**:
+    Ve a Firebase Console -> Extensions -> Trigger Email -> Pestaña **Logs**.
+    Busca errores de **"Auth credentials invalid"** (indica que la clave de aplicación de Gmail falló) o **"Permission Denied"**.
 
-## Gestión de Administrador
-- **Acceso**: `/login`
-- **Email Admin**: `admin@oralab.cl`
+3.  **Verificación de Seguridad**:
+    Asegúrate de que en la configuración de la extensión, el campo **"SMTP connection URI"** sea el único configurado para la conexión. No dupliques la contraseña en el campo "SMTP password".
 
 ---
 © 2024 Oralab Clinical Lab. Tecnología Sunvou®.

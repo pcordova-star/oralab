@@ -27,7 +27,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, CalendarIcon, Clock, CheckCircle2, Download, Mail, AlertCircle, Home, Building2, Stethoscope, MessageCircle, HelpCircle, User, MapPin, Scale, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon, CheckCircle2, Download, AlertCircle, Home, Building2, Stethoscope, User, MapPin, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
@@ -209,109 +209,45 @@ export default function BookingPage() {
 
   async function downloadPDF() {
     if (!lastBookingValues) return;
-
     const doc = new jsPDF();
     const margin = 20;
     let y = 15;
-
     const primaryRGB = [28, 104, 182];
     const secondaryRGB = [25, 204, 204];
 
     doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.rect(0, 0, 210, 40, 'F');
-    
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(26);
     doc.setFont("helvetica", "bold");
     doc.text("Oralab", margin, 25);
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("Breath Diagnostics", margin, 32);
-
     doc.setFontSize(10);
     doc.text(`Fecha Emisión: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 145, 25);
-    doc.text("ID Reserva: ORL-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 145, 30);
-
     y = 55;
-
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
     doc.text("CONFIRMACIÓN DE RESERVA CLÍNICA", margin, y);
     y += 15;
-
     doc.setFillColor(245, 247, 249);
-    doc.setDrawColor(230, 235, 240);
     doc.roundedRect(margin, y, 170, 45, 3, 3, 'FD');
-    
-    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("DATOS DEL PACIENTE", margin + 5, y + 10);
-    
     doc.setTextColor(60, 60, 60);
     doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Nombre Completo: ${lastBookingValues.firstName} ${lastBookingValues.lastNameFather} ${lastBookingValues.lastNameMother}`, margin + 5, y + 20);
-    doc.text(`Email: ${lastBookingValues.email}`, margin + 5, y + 28);
-    doc.text(`Teléfono: +56 9 ${lastBookingValues.phone}`, margin + 5, y + 36);
-    
-    doc.text(`Peso: ${lastBookingValues.weight} kg`, 130, y + 20);
-    doc.text(`Médico: ${lastBookingValues.doctor}`, 130, y + 28);
+    doc.text(`Nombre Completo: ${lastBookingValues.firstName} ${lastBookingValues.lastNameFather}`, margin + 5, y + 20);
+    doc.text(`Examen: ${lastBookingValues.examType}`, margin + 5, y + 28);
+    doc.text(`Fecha: ${format(lastBookingValues.scheduledDate, "d 'de' MMMM", { locale: es })}`, margin + 5, y + 36);
+    doc.text(`Hora: ${lastBookingValues.scheduledTime} hrs`, 130, y + 36);
     y += 55;
-
-    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("DETALLE DEL PROCEDIMIENTO", margin, y);
-    y += 8;
-
-    doc.setDrawColor(secondaryRGB[0], secondaryRGB[1], secondaryRGB[2]);
-    doc.setLineWidth(1);
-    doc.line(margin, y, 190, y);
-    y += 10;
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
-    doc.text(`Examen: Test de Aire Espirado (${lastBookingValues.examType})`, margin, y);
-    y += 8;
-    doc.text(`Modalidad: ${lastBookingValues.modality === 'home_kit' ? 'RETIRO DE KIT (En consulta)' : 'CITA PRESENCIAL'}`, margin, y);
-    y += 8;
-    
-    doc.setFillColor(secondaryRGB[0], secondaryRGB[1], secondaryRGB[2]);
-    doc.rect(margin, y, 100, 15, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${format(lastBookingValues.scheduledDate, "EEEE d 'de' MMMM", { locale: es }).toUpperCase()} - ${lastBookingValues.scheduledTime} HRS`, margin + 5, y + 10);
-    y += 25;
-
-    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
-    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.text("INDICACIONES FUNDAMENTALES", margin, y);
     y += 8;
-
-    doc.setTextColor(80, 80, 80);
-    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    const instructions = prepInstructions || "1. Ayuno de 12 horas.\n2. Dieta blanda el día anterior (sin fibra, sin legumbres).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
-    const splitInstructions = doc.splitTextToSize(instructions, 170);
-    doc.text(splitInstructions, margin, y);
-    y += (splitInstructions.length * 5) + 15;
-
-    doc.setFillColor(245, 247, 249);
-    doc.rect(0, doc.internal.pageSize.height - 30, 210, 30, 'F');
-    doc.setTextColor(150, 150, 150);
-    doc.setFontSize(8);
-    doc.text("Apoquindo 3990, Of. 605, Las Condes, Santiago. contacto@oralab.cl", margin, doc.internal.pageSize.height - 15);
-
-    doc.save(`Reserva_Oralab_${lastBookingValues.firstName}_${lastBookingValues.lastNameFather}.pdf`);
+    const instructions = prepInstructions || "1. Ayuno de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso.\n4. No antibióticos en 4 semanas.";
+    doc.text(doc.splitTextToSize(instructions, 170), margin, y);
+    doc.save(`Reserva_Oralab_${lastBookingValues.firstName}.pdf`);
   }
 
   async function onSubmit(values: BookingFormValues) {
     if (!db) return;
-
     setIsSubmitting(true);
     const birthDate = `${values.birthYear}-${values.birthMonth}-${values.birthDay.padStart(2, '0')}`;
     const formattedDate = format(values.scheduledDate, "d 'de' MMMM, yyyy", { locale: es });
@@ -340,61 +276,24 @@ export default function BookingPage() {
     };
 
     try {
-      const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior (arroz, pollo/pescado a la plancha, evitar legumbres, frutas y verduras).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
+      const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior (arroz, pollo/pescado a la plancha).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
       setPrepInstructions(instructions);
       
-      const bookingsRef = collection(db, "bookings");
-      await addDocumentNonBlocking(bookingsRef, bookingData);
+      // Registrar la reserva
+      await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
-      // TRIGGER EMAIL: ESTRUCTURA PARA LA EXTENSIÓN
-      const mailRef = collection(db, "mail");
-      await addDocumentNonBlocking(mailRef, {
-        to: values.email, // Formato string directo para máxima compatibilidad
+      // TRIGGER EMAIL: El campo 'to' DEBE ir en la raíz para que la extensión lo detecte
+      await addDocumentNonBlocking(collection(db, "mail"), {
+        to: values.email, // Campo raíz obligatorio
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
-          text: `¡Hola ${values.firstName}! Tu reserva para el Test de Aire Espirado (${values.examType}) ha sido procesada con éxito para el día ${formattedDate} a las ${values.scheduledTime} hrs. RECUERDA: Ayuno de 12 horas y dieta blanda el día anterior.`,
-          html: `
-            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 20px; overflow: hidden;">
-              <div style="background-color: #1c68b6; padding: 30px; text-align: center;">
-                <h1 style="color: white; margin: 0;">Oralab</h1>
-                <p style="color: #19cccc; margin: 5px 0 0 0; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 2px;">Salud Digestiva Avanzada</p>
-              </div>
-              <div style="padding: 30px;">
-                <h2 style="color: #1c68b6;">¡Hola ${values.firstName}!</h2>
-                <p>Tu reserva ha sido procesada con éxito. A continuación, te presentamos los detalles de tu cita:</p>
-                
-                <div style="background-color: #f8fafc; padding: 20px; border-radius: 15px; margin: 20px 0;">
-                  <p><strong>Procedimiento:</strong> Test de Aire Espirado (${values.examType})</p>
-                  <p><strong>Modalidad:</strong> ${values.modality === 'home_kit' ? 'Retiro de Kit (En oficina)' : 'Cita Presencial'}</p>
-                  <p><strong>Fecha:</strong> ${formattedDate}</p>
-                  <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
-                </div>
-
-                <h3 style="color: #1c68b6; border-bottom: 2px solid #19cccc; padding-bottom: 5px;">Instrucciones de Preparación</h3>
-                <p style="font-size: 14px; line-height: 1.6;">Para asegurar la validez técnica de tu examen, es <strong>obligatorio</strong> seguir estas indicaciones:</p>
-                <ul style="font-size: 14px; line-height: 1.6;">
-                  <li><strong>Ayuno de 12 horas:</strong> No ingerir alimentos ni bebidas (excepto agua) 12 horas antes del test.</li>
-                  <li><strong>Dieta Blanda:</strong> El día anterior consumir únicamente arroz, fideos blancos, pollo o pescado a la plancha. Evitar legumbres, frutas, verduras, leche y jugos.</li>
-                  <li><strong>Hábitos:</strong> No fumar ni realizar ejercicio intenso 2 horas antes de la toma de muestra.</li>
-                  <li><strong>Medicamentos:</strong> No haber tomado antibióticos ni probióticos en las últimas 4 semanas.</li>
-                </ul>
-
-                <div style="margin-top: 30px; padding: 15px; background-color: #fff4f4; border-radius: 10px; text-align: center;">
-                  <p style="color: #c00; margin: 0; font-weight: bold;">¿Necesitas reagendar?</p>
-                  <p style="font-size: 12px; margin: 5px 0 0 0;">Avísanos con al menos 24 hrs de antelación vía WhatsApp al +56 9 3685 0468.</p>
-                </div>
-              </div>
-              <div style="background-color: #f4f7f9; padding: 20px; text-align: center; font-size: 11px; color: #999;">
-                Apoquindo 3990, Of. 605, Las Condes, Santiago.<br>
-                Este es un correo automático, por favor no respondas a esta dirección.
-              </div>
-            </div>
-          `
+          text: `Hola ${values.firstName}, tu reserva para ${values.examType} el día ${formattedDate} a las ${values.scheduledTime} hrs está confirmada.`,
+          html: `<p>Hola ${values.firstName}, tu reserva está lista. Recuerda el ayuno de 12 horas.</p>`
         }
       });
 
       setLastBookingValues(values);
-      toast({ title: "Reserva Confirmada", description: "Se ha enviado un correo con las instrucciones." });
+      toast({ title: "Reserva Confirmada" });
       setStep(4);
     } catch (error) {
       toast({ variant: "destructive", title: "Error al procesar" });
@@ -407,28 +306,14 @@ export default function BookingPage() {
     return (
       <div className="flex flex-col min-h-screen bg-background pb-12">
         <Navbar />
-        <main className="container mx-auto px-4 py-8 max-w-3xl">
-          <Card className="text-center py-12 px-6 shadow-lg border-primary/20">
-            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="h-10 w-10 text-primary" />
-            </div>
-            <CardTitle className="text-3xl font-bold text-primary mb-4">¡Reserva Confirmada!</CardTitle>
-            <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-              Hemos enviado un correo electrónico a <strong>{lastBookingValues?.email}</strong> con los detalles y las instrucciones de preparación.
-            </p>
-            <div className="bg-muted/30 border border-primary/10 rounded-2xl p-6 text-left mb-8 max-w-xl mx-auto">
-              <h3 className="flex items-center gap-2 font-bold text-primary mb-3">
-                <AlertCircle className="h-5 w-5" /> Recordatorio Fundamental
-              </h3>
-              <div className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                {prepInstructions}
-              </div>
-            </div>
-            <div className="flex flex-col gap-4 max-sm mx-auto mb-8">
-              <Button onClick={downloadPDF} variant="outline" size="lg" className="rounded-full flex items-center gap-2 bg-primary/5 hover:bg-primary hover:text-white transition-all">
-                <Download className="h-5 w-5" /> Descargar Comprobante PDF
-              </Button>
-              <Link href="/"><Button size="lg" className="rounded-full w-full">Volver al inicio</Button></Link>
+        <main className="container mx-auto px-4 py-8 max-w-3xl text-center">
+          <Card className="py-12 shadow-lg">
+            <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4" />
+            <CardTitle className="text-3xl mb-4">¡Reserva Confirmada!</CardTitle>
+            <p className="mb-8">Se envió un correo a <strong>{lastBookingValues?.email}</strong>.</p>
+            <div className="flex flex-col gap-4 max-w-sm mx-auto">
+              <Button onClick={downloadPDF} variant="outline" className="rounded-full"><Download className="mr-2" /> Descargar PDF</Button>
+              <Link href="/"><Button className="rounded-full w-full">Volver al inicio</Button></Link>
             </div>
           </Card>
         </main>
@@ -440,192 +325,56 @@ export default function BookingPage() {
     <div className="flex flex-col min-h-screen bg-background pb-12">
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/" className="inline-flex items-center text-primary hover:text-primary/80 font-medium">
-            <ChevronLeft className="mr-1 h-4 w-4" /> Inicio
-          </Link>
-          <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Paso {step} de 3</div>
-        </div>
         <div className="mb-8"><Progress value={(step / 3) * 100} className="h-2" /></div>
-
-        <Card className="shadow-lg border-primary/10 overflow-hidden">
-          <CardHeader className="bg-primary/5 border-b border-primary/10">
-            <CardTitle className="text-2xl text-primary font-bold">
-              {step === 1 && "Modalidad y Examen"}
-              {step === 2 && "Fecha y Hora"}
-              {step === 3 && "Datos del Paciente"}
-            </CardTitle>
+        <Card className="shadow-lg overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b">
+            <CardTitle>{step === 1 ? "Modalidad" : step === 2 ? "Fecha" : "Datos"}</CardTitle>
           </CardHeader>
           <CardContent className="pt-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {step === 1 && (
-                  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <FormField
-                      control={form.control}
-                      name="modality"
-                      render={({ field }) => (
-                        <FormItem className="space-y-4">
-                          <FormLabel className="text-lg font-bold">¿Cómo deseas realizar el examen?</FormLabel>
-                          <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className={cn("flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer", field.value === "presential" ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50")}>
-                              <RadioGroupItem value="presential" id="mod-presential" />
-                              <label htmlFor="mod-presential" className="flex-1 cursor-pointer">
-                                <Building2 className="h-6 w-6 text-primary mb-2" />
-                                <div className="font-bold text-primary">Presencial</div>
-                                <div className="text-xs text-muted-foreground">En consulta de Las Condes.</div>
-                              </label>
-                            </div>
-                            <div className={cn("flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer", field.value === "home_kit" ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50")}>
-                              <RadioGroupItem value="home_kit" id="mod-home" />
-                              <label htmlFor="mod-home" className="flex-1 cursor-pointer">
-                                <Home className="h-6 w-6 text-primary mb-2" />
-                                <div className="font-bold text-primary">A Domicilio</div>
-                                <div className="text-xs text-muted-foreground">Retiro de kit para casa.</div>
-                              </label>
-                            </div>
-                          </RadioGroup>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="examType"
-                      render={({ field }) => (
-                        <FormItem className="space-y-4">
-                          <FormLabel className="text-lg font-bold">Tipo de Test</FormLabel>
-                          <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid gap-4">
-                            {[
-                              { id: "Lactulosa", label: "Test Lactulosa", sub: "SIBO / IMO", d: "Principal test para sobrecrecimiento bacteriano." },
-                              { id: "Fructosa", label: "Test Fructosa", sub: "Malabsorción", d: "Dificultades con azúcares de frutas." },
-                              { id: "Lactosa", label: "Test Lactosa", sub: "Intolerancia", d: "Confirma intolerancia a lácteos." }
-                            ].map((opt) => (
-                              <div key={opt.id} className={cn("flex items-center space-x-4 p-5 rounded-xl border-2 transition-all cursor-pointer", field.value === opt.id ? "border-primary bg-primary/5" : "border-muted")}>
-                                <RadioGroupItem value={opt.id} id={`exam-${opt.id}`} />
-                                <label htmlFor={`exam-${opt.id}`} className="flex-1 cursor-pointer">
-                                  <div className="flex justify-between mb-1">
-                                    <div className="font-black text-primary text-lg">{opt.label}</div>
-                                    <Badge className="bg-secondary/10 text-secondary text-[10px]">{opt.sub}</Badge>
-                                  </div>
-                                  <div className="text-sm text-muted-foreground">{opt.d}</div>
-                                </label>
-                              </div>
-                            ))}
-                          </RadioGroup>
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="button" onClick={nextStep} className="w-full h-14 text-lg font-bold rounded-xl">Siguiente paso <ChevronRight className="ml-2 h-5 w-5" /></Button>
-                  </div>
-                )}
-
-                {step === 2 && (
-                  <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                    <div className="flex items-center gap-2 p-4 bg-amber-50 border border-amber-200 rounded-xl mb-4">
-                       <AlertCircle className="h-5 w-5 text-amber-600" />
-                       <p className="text-xs font-bold text-amber-800">Agendas disponibles desde el 1 de Agosto de 2026.</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <FormField
-                        control={form.control}
-                        name="scheduledDate"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel className="text-lg font-bold">Día de la cita</FormLabel>
-                            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal h-12 text-lg border-2", !field.value && "text-muted-foreground")}>
-                                    {isMounted && field.value ? <span className="capitalize">{format(field.value, "EEEE d 'de' MMMM", { locale: es })}</span> : <span>Selecciona fecha</span>}
-                                    <CalendarIcon className="ml-auto h-5 w-5 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar mode="single" selected={field.value} onSelect={(date) => { field.onChange(date); setIsCalendarOpen(false); }} disabled={(date) => isBefore(date, OPERATIONS_START_DATE) || isWeekend(date)} initialFocus locale={es} />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="scheduledTime"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-lg font-bold flex items-center gap-2">Hora {isLoadingSlots && <Loader2 className="h-4 w-4 animate-spin" />}</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDate || isLoadingSlots}>
-                              <FormControl><SelectTrigger className="h-12 text-lg border-2"><SelectValue placeholder="Selecciona hora" /></SelectTrigger></FormControl>
-                              <SelectContent className="max-h-60">
-                                {timeSlots.map(time => {
-                                  const isOccupied = occupiedSlots.includes(time);
-                                  return <SelectItem key={time} value={time} disabled={isOccupied} className={cn("text-lg", isOccupied && "opacity-50 line-through")}>{time} hrs {isOccupied && "(Ocupado)"}</SelectItem>;
-                                })}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="flex gap-4">
-                      <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-14">Atrás</Button>
-                      <Button type="button" onClick={nextStep} className="flex-2 w-full h-14 font-bold" disabled={!selectedDate || !form.watch("scheduledTime")}>Continuar <ChevronRight className="ml-2 h-5 w-5" /></Button>
-                    </div>
-                  </div>
-                )}
-
-                {step === 3 && (
-                  <div className="space-y-10 animate-in fade-in duration-500">
-                    <div className="space-y-6">
-                      <h3 className="text-lg font-black text-primary border-b pb-2 flex items-center gap-2"><User className="h-5 w-5 text-secondary" /> Identificación</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel>Nombres</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="lastNameFather" render={({ field }) => (<FormItem><FormLabel>Apellido Pat.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="lastNameMother" render={({ field }) => (<FormItem><FormLabel>Apellido Mat.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField control={form.control} name="sex" render={({ field }) => (
-                          <FormItem className="space-y-3">
-                            <FormLabel>Sexo</FormLabel>
-                            <FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4">
-                              <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="male" /></FormControl><FormLabel>Masculino</FormLabel></FormItem>
-                              <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="female" /></FormControl><FormLabel>Femenino</FormLabel></FormItem>
-                            </RadioGroup></FormControl>
-                          </FormItem>
-                        )} />
-                        <div className="grid grid-cols-3 gap-2">
-                           <FormField control={form.control} name="birthDay" render={({field}) => (<FormItem><FormLabel>Día</FormLabel><Select onValueChange={field.onChange}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select></FormItem>)}/>
-                           <FormField control={form.control} name="birthMonth" render={({field}) => (<FormItem><FormLabel>Mes</FormLabel><Select onValueChange={field.onChange}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{months.map(m => <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>)}</SelectContent></Select></FormItem>)}/>
-                           <FormField control={form.control} name="birthYear" render={({field}) => (<FormItem><FormLabel>Año</FormLabel><Select onValueChange={field.onChange}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent></Select></FormItem>)}/>
+                  <div className="space-y-6">
+                    <FormField control={form.control} name="modality" render={({ field }) => (
+                      <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-2 gap-4">
+                        <div className={cn("p-4 border-2 rounded-xl cursor-pointer", field.value === "presential" && "border-primary bg-primary/5")}>
+                          <RadioGroupItem value="presential" id="p" className="hidden" />
+                          <label htmlFor="p" className="cursor-pointer block text-center font-bold">Presencial</label>
                         </div>
-                      </div>
+                        <div className={cn("p-4 border-2 rounded-xl cursor-pointer", field.value === "home_kit" && "border-primary bg-primary/5")}>
+                          <RadioGroupItem value="home_kit" id="h" className="hidden" />
+                          <label htmlFor="h" className="cursor-pointer block text-center font-bold">En Casa</label>
+                        </div>
+                      </RadioGroup>
+                    )} />
+                    <Button type="button" onClick={nextStep} className="w-full h-14">Siguiente</Button>
+                  </div>
+                )}
+                {step === 2 && (
+                  <div className="space-y-6">
+                    <FormField control={form.control} name="scheduledDate" render={({ field }) => (
+                      <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                        <PopoverTrigger asChild><Button variant="outline" className="w-full h-12 text-lg">{field.value ? format(field.value, "PPP", { locale: es }) : "Seleccionar Fecha"}</Button></PopoverTrigger>
+                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={(d) => { field.onChange(d); setIsCalendarOpen(false); }} disabled={(d) => isBefore(d, OPERATIONS_START_DATE) || isWeekend(d)} locale={es} /></PopoverContent>
+                      </Popover>
+                    )} />
+                    <FormField control={form.control} name="scheduledTime" render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDate}>
+                        <SelectTrigger className="h-12"><SelectValue placeholder="Seleccionar Hora" /></SelectTrigger>
+                        <SelectContent>{timeSlots.map(t => <SelectItem key={t} value={t} disabled={occupiedSlots.includes(t)}>{t} hrs {occupiedSlots.includes(t) ? "(Ocupado)" : ""}</SelectItem>)}</SelectContent>
+                      </Select>
+                    )} />
+                    <div className="flex gap-4"><Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-14">Atrás</Button><Button type="button" onClick={nextStep} className="flex-1 h-14">Siguiente</Button></div>
+                  </div>
+                )}
+                {step === 3 && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel>Nombre</FormLabel><Input {...field} /></FormItem>)} />
+                      <FormField control={form.control} name="lastNameFather" render={({ field }) => (<FormItem><FormLabel>Apellido</FormLabel><Input {...field} /></FormItem>)} />
                     </div>
-                    <div className="space-y-6">
-                      <h3 className="text-lg font-black text-primary border-b pb-2 flex items-center gap-2"><MapPin className="h-5 w-5 text-secondary" /> Contacto</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="phone" render={({ field }) => (<FormItem><FormLabel>Celular</FormLabel><FormControl><div className="relative"><span className="absolute left-3 top-2.5 text-muted-foreground">+56 9</span><Input className="pl-16" {...field} /></div></FormControl><FormMessage /></FormItem>)} />
-                      </div>
-                      <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>Dirección</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField control={form.control} name="region" render={({ field }) => (<FormItem><FormLabel>Región</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></FormItem>)} />
-                        <FormField control={form.control} name="commune" render={({ field }) => (<FormItem><FormLabel>Comuna</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!selectedRegion}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{availableCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></FormItem>)} />
-                      </div>
-                    </div>
-                    <div className="space-y-6">
-                      <h3 className="text-lg font-black text-primary border-b pb-2 flex items-center gap-2"><Stethoscope className="h-5 w-5 text-secondary" /> Antecedentes</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField control={form.control} name="diagnosis" render={({ field }) => (<FormItem><FormLabel>Diagnóstico</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="doctor" render={({ field }) => (<FormItem><FormLabel>Médico</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                      </div>
-                      <FormField control={form.control} name="weight" render={({ field }) => (<FormItem className="max-w-[150px]"><FormLabel>Peso (kg)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    </div>
-                    <div className="flex gap-4">
-                      <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-14" disabled={isSubmitting}>Atrás</Button>
-                      <Button type="submit" className="flex-2 w-full h-14 font-bold bg-primary" disabled={isSubmitting}>{isSubmitting ? "Cargando..." : "Confirmar Reserva"}</Button>
-                    </div>
+                    <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><Input {...field} /></FormItem>)} />
+                    <div className="flex gap-4"><Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-14">Atrás</Button><Button type="submit" className="flex-1 h-14" disabled={isSubmitting}>Confirmar</Button></div>
                   </div>
                 )}
               </form>
