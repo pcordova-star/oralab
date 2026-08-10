@@ -52,7 +52,7 @@ const communesByRegion: Record<string, string[]> = {
   "Antofagasta": ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal", "Calama", "Ollagüe", "San Pedro de Atacama", "Tocopilla", "María Elena"],
   "Atacama": ["Copiapó", "Caldera", "Tierra Amarilla", "Chañaral", "Diego de Almagro", "Vallenar", "Alto del Carmen", "Freirina", "Huasco"],
   "Coquimbo": ["La Serena", "Coquimbo", "Andacollo", "La Higuera", "Paiguano", "Vicuña", "Illapel", "Canela", "Los Vilos", "Salamanca", "Ovalle", "Combarbalá", "Monte Patria", "Punitaqui", "Río Hurtado"],
-  "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández", "San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo", "Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales", "Los Andes", "Calle Larga", "Rinconada", "San Esteban", "San Esteban", "San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María", "Quilpué", "Limache", "Olmué", "Villa Alemana", "La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
+  "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández", "San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo", "Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales", "Los Andes", "Calle Larga", "Rinconada", "San Esteban", "San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María", "Quilpué", "Limache", "Olmué", "Villa Alemana", "La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
   "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
   "O'Higgins": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente", "Pichilemu", "La Estrella", "Litueche", "Marchihue", "Navidad", "Paredones", "San Fernando", "Chépica", "Chimbarongo", "Lolol", "Nancagua", "Palmilla", "Peralillo", "Placilla", "Pumanque", "Santa Cruz"],
   "Maule": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael", "Cauquenes", "Chanco", "Pelluhue", "Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén", "Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"],
@@ -89,7 +89,6 @@ const bookingSchema = z.object({
   birthDay: z.string().min(1, "Día"),
   birthMonth: z.string().min(1, "Mes"),
   birthYear: z.string().min(4, "Año"),
-  diagnosis: z.string().min(2, "Indique el diagnóstico"),
   weight: z.string().min(1, "Indique peso"),
   doctor: z.string().min(2, "Indique el médico"),
   country: z.string().min(1, "Seleccione país"),
@@ -137,7 +136,6 @@ export default function BookingPage() {
       birthDay: "",
       birthMonth: "",
       birthYear: "",
-      diagnosis: "",
       weight: "",
       doctor: "",
       country: "Chile",
@@ -254,7 +252,6 @@ export default function BookingPage() {
       phone: `+56 9 ${values.phone}`,
       address: values.address,
       birthDate: birthDate,
-      diagnosis: values.diagnosis,
       weight: values.weight,
       doctor: values.doctor,
       country: values.country,
@@ -271,7 +268,6 @@ export default function BookingPage() {
       
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
-      // ESTRUCTURA PLANA: to debe ser un string en la raíz para máxima compatibilidad con la extensión
       await addDocumentNonBlocking(collection(db, "mail"), {
         to: values.email, 
         message: {
@@ -496,8 +492,7 @@ export default function BookingPage() {
                        <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest mb-2">
                           <Stethoscope className="h-4 w-4" /> Info Médica
                        </div>
-                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          <FormField control={form.control} name="diagnosis" render={({ field }) => (<FormItem><FormLabel className="font-bold">Diagnóstico</FormLabel><Input placeholder="Ej: SIBO" {...field} className="h-10 rounded-lg" /></FormItem>)} />
+                       <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
                           <FormField control={form.control} name="doctor" render={({ field }) => (<FormItem><FormLabel className="font-bold">Médico</FormLabel><Input placeholder="Nombre Dr." {...field} className="h-10 rounded-lg" /></FormItem>)} />
                           <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel className="font-bold">Peso (kg)</FormLabel><Input type="number" placeholder="70" {...field} className="h-10 rounded-lg" /></FormItem>)} />
                        </div>
