@@ -32,14 +32,18 @@ export async function analyzeMedicalOrder(
       output: { schema: AnalyzeMedicalOrderOutputSchema },
       prompt: [
         { text: `Eres un asistente experto de laboratorio clínico en Oralab, Chile. 
-        Analiza la imagen de esta orden médica adjunta.
-        Tu objetivo es identificar si el médico solicita un test de aire espirado para:
-        - Lactulosa (también mencionado como SIBO o Sobrecrecimiento Bacteriano).
-        - Fructosa.
-        - Lactosa.
+        Tu tarea es leer una fotografía de una orden médica y detectar qué examen de aire espirado se solicita.
+        
+        CRITERIOS DE BÚSQUEDA:
+        1. Lactulosa: Si dice "Lactulosa", "SIBO", "Sobrecrecimiento Bacteriano" o "H2/CH4".
+        2. Fructosa: Si dice "Fructosa" o "Intolerancia a la Fructosa".
+        3. Lactosa: Si dice "Lactosa" o "Intolerancia a la Lactosa".
 
-        Si no encuentras ninguno de estos términos específicos, responde con 'Desconocido'.
-        Responde con el JSON estructurado según el esquema.` },
+        INSTRUCCIONES ADICIONALES:
+        - La orden puede estar escrita a mano. 
+        - Sé flexible con las abreviaturas.
+        - Si no hay claridad total pero hay indicios fuertes, marca una confianza alta (0.8+).
+        - Si no se menciona nada de lo anterior, responde 'Desconocido'.` },
         { media: { url: input.photoDataUri } }
       ],
     });

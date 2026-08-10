@@ -65,7 +65,6 @@ const communesByRegion: Record<string, string[]> = {
   "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
 };
 
-// Tabla de tarifas de logística (TarFario) actualizada según imagen de zonas
 const DELIVERY_PRICES: Record<string, number> = {
   "Las Condes": 8000, "Vitacura": 8000, "Providencia": 8000, "Lo Barnechea": 8000,
   "La Reina": 10000, "Ñuñoa": 10000, "Santiago": 10000, "Recoleta": 10000, "Independencia": 10000, "Huechuraba": 10000,
@@ -117,7 +116,6 @@ export default function BookingPage() {
   
   // AI State
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [aiDetectionResult, setAiDetectionResult] = useState<string | null>(null);
 
   const db = useFirestore();
 
@@ -196,22 +194,35 @@ export default function BookingPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // Solo permitir imágenes para asegurar el procesamiento por la IA
+    if (!file.type.startsWith('image/')) {
+      toast({ 
+        variant: "destructive", 
+        title: "Archivo no válido", 
+        description: "Por favor sube una fotografía (JPG o PNG) de tu orden." 
+      });
+      return;
+    }
+
     setIsAnalyzing(true);
-    setAiDetectionResult(null);
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64String = reader.result as string;
       try {
         const result = await analyzeMedicalOrder({ photoDataUri: base64String });
-        if (result.detectedExam !== 'Desconocido' && result.confidence > 0.6) {
+        if (result.detectedExam !== 'Desconocido' && result.confidence > 0.5) {
           form.setValue("examType", result.detectedExam as any);
-          setAiDetectionResult(result.detectedExam);
           toast({ title: "Orden Analizada", description: `Hemos detectado: ${result.detectedExam}.` });
         } else {
-          toast({ variant: "destructive", title: "Detección fallida", description: "Por favor selecciónalo manualmente." });
+          toast({ 
+            variant: "destructive", 
+            title: "Detección fallida", 
+            description: "No pudimos leer el examen. Por favor selecciónalo manualmente." 
+          });
         }
       } catch (err) {
-        toast({ variant: "destructive", title: "Error al procesar imagen" });
+        toast({ variant: "destructive", title: "Error al procesar", description: "Ocurrió un error técnico al analizar la foto." });
       } finally {
         setIsAnalyzing(false);
       }
@@ -400,15 +411,15 @@ export default function BookingPage() {
                         </div>
                         <div className="flex-1 text-center md:text-left">
                           <h4 className="font-black text-primary italic text-lg flex items-center justify-center md:justify-start gap-2">
-                            ¿Tienes Orden Médica? <span className="text-[10px] bg-secondary/20 px-2 py-0.5 rounded text-secondary not-italic uppercase font-black">Opcional</span>
+                            ¿Tienes Foto de tu Orden? <span className="text-[10px] bg-secondary/20 px-2 py-0.5 rounded text-secondary not-italic uppercase font-black">Opcional</span>
                           </h4>
-                          <p className="text-sm text-muted-foreground font-medium">Sube una foto para que nuestra IA detecte tu examen automáticamente.</p>
+                          <p className="text-sm text-muted-foreground font-medium">Sube una foto clara para detectar el examen automáticamente.</p>
                         </div>
                         <div className="relative">
                           <Input type="file" accept="image/*" className="hidden" id="order-upload" onChange={handleFileUpload} disabled={isAnalyzing} />
                           <label htmlFor="order-upload">
                             <Button asChild variant="outline" className="rounded-full font-bold border-secondary text-secondary hover:bg-secondary hover:text-white cursor-pointer h-12 px-6">
-                              <span><FileUp className="mr-2 h-4 w-4" /> {isAnalyzing ? "Analizando..." : "Escanear Orden"}</span>
+                              <span><FileUp className="mr-2 h-4 w-4" /> {isAnalyzing ? "Analizando..." : "Sugerir con Foto"}</span>
                             </Button>
                           </label>
                         </div>
