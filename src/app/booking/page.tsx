@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -346,12 +345,12 @@ export default function BookingPage() {
       const bookingsRef = collection(db, "bookings");
       await addDocumentNonBlocking(bookingsRef, bookingData);
       
-      // Trigger Correo Electrónico: ESTRUCTURA CRÍTICA PARA LA EXTENSIÓN
-      // El campo 'to' DEBE estar en la raíz del documento para ser detectado.
+      // TRIGGER EMAIL: ESTRUCTURA CRÍTICA PARA LA EXTENSIÓN
+      // El campo 'to' DEBE estar en la raíz del documento para que la extensión lo detecte.
       const mailRef = collection(db, "mail");
       await addDocumentNonBlocking(mailRef, {
-        to: [values.email], // RAÍZ DEL DOCUMENTO
-        message: { // RAÍZ DEL DOCUMENTO
+        to: [values.email], // RAÍZ: CORRECTO
+        message: { // RAÍZ: CORRECTO
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
           text: `¡Hola ${values.firstName}! Tu reserva para el Test de Aire Espirado (${values.examType}) ha sido procesada con éxito para el día ${formattedDate} a las ${values.scheduledTime} hrs. RECUERDA: Ayuno de 12 horas y dieta blanda el día anterior.`,
           html: `
@@ -425,7 +424,7 @@ export default function BookingPage() {
                 {prepInstructions}
               </div>
             </div>
-            <div className="flex flex-col gap-4 max-w-sm mx-auto mb-8">
+            <div className="flex flex-col gap-4 max-sm mx-auto mb-8">
               <Button onClick={downloadPDF} variant="outline" size="lg" className="rounded-full flex items-center gap-2 bg-primary/5 hover:bg-primary hover:text-white transition-all">
                 <Download className="h-5 w-5" /> Descargar Comprobante PDF
               </Button>
