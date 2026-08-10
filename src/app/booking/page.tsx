@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -39,7 +38,8 @@ import {
   ReceiptText,
   FileUp,
   Sparkles,
-  ScanSearch
+  ScanSearch,
+  CircleDollarSign
 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
@@ -490,6 +490,31 @@ export default function BookingPage() {
                         <FormMessage />
                       </FormItem>
                     )} />
+
+                    {selectedModality && (
+                      <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 animate-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-white p-2 rounded-xl shadow-sm">
+                              <CircleDollarSign className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Valor del Examen</p>
+                              <p className="text-2xl font-black text-primary italic">$ {BASE_FEE.toLocaleString()} CLP</p>
+                            </div>
+                          </div>
+                          {selectedModality === 'home_kit' && (
+                            <Badge variant="outline" className="border-secondary/20 text-secondary bg-secondary/5 font-bold text-[10px] uppercase p-2 rounded-xl">
+                              <Truck className="h-3 w-3 mr-1" /> + Logística Motoboy
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-4 italic font-medium">
+                          * Valor no incluye descuentos por previsión (Fonasa/Isapre), los cuales se aplicarán en el paso final.
+                        </p>
+                      </div>
+                    )}
+
                     <Button type="button" onClick={nextStep} className="w-full h-16 rounded-[1.5rem] text-xl font-black shadow-lg">Continuar</Button>
                   </div>
                 )}
