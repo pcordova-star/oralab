@@ -39,7 +39,9 @@ import {
   FileUp,
   Sparkles,
   ScanSearch,
-  CircleDollarSign
+  CircleDollarSign,
+  Info,
+  Clock
 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
@@ -292,7 +294,13 @@ export default function BookingPage() {
     y += 8;
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
+    
+    let instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
+    
+    if (lastBookingValues.modality === 'home_kit') {
+      instructions += "\n\nPROCEDIMIENTO TEST EN CASA:\n- Retira el kit a la hora elegida en Apoquindo 3990.\n- Recibe la instrucción del profesional a cargo.\n- Una vez realizado, coordina el retiro con el motoboy indicado en el flyer.\n- IMPORTANTE: El test tiene un plazo máximo de 6 horas para ser entregado en el laboratorio.";
+    }
+
     doc.text(doc.splitTextToSize(instructions, 170), margin, y);
     
     doc.save(`Reserva_Oralab_${lastBookingValues.firstName}.pdf`);
@@ -327,6 +335,16 @@ export default function BookingPage() {
     try {
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
+      const homeKitText = values.modality === 'home_kit' 
+        ? `<p style="color: #1c68b6; font-weight: bold;">PROCEDIMIENTO TEST EN CASA:</p>
+           <ul>
+             <li>Retira el kit a la hora elegida en nuestro laboratorio.</li>
+             <li>Recibirás la instrucción técnica del profesional a cargo.</li>
+             <li>Una vez terminado el test, coordina el retiro con el motoboy que aparece en tu flyer.</li>
+             <li><strong>TIEMPO LÍMITE:</strong> El test debe estar en el laboratorio en máximo 6 horas tras ser realizado.</li>
+           </ul>`
+        : "";
+
       await addDocumentNonBlocking(collection(db, "mail"), {
         to: values.email, 
         message: {
@@ -339,9 +357,12 @@ export default function BookingPage() {
               <div style="padding: 15px; background: #f0f7ff; margin-bottom: 20px;">
                 <p><strong>Día:</strong> ${formattedDate}</p>
                 <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
-                <p><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Retira tu Kit)' : 'Apoquindo 3990, Las Condes'}</p>
+                <p><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Retira tu Kit en Laboratorio)' : 'Apoquindo 3990, Las Condes'}</p>
               </div>
-              <p><strong>Total Final: $${finalTotal.toLocaleString()}</strong></p>
+              
+              ${homeKitText}
+
+              <p><strong>Total Final a Pagar: $${finalTotal.toLocaleString()}</strong></p>
               <p style="color: #d97706;">RECUERDA: Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
               <p style="font-size: 12px; color: #64748b;">© 2024 Oralab Clinical Lab. Tecnología Sunvou®.</p>
             </div>
@@ -367,7 +388,7 @@ export default function BookingPage() {
           <Card className="py-12 shadow-lg rounded-[2rem] border-primary/10">
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4" />
             <CardTitle className="text-3xl mb-4 font-black italic">¡Reserva Confirmada!</CardTitle>
-            <p className="mb-8 font-medium">Se envió un comprobante con el desglose de pago a <strong>{lastBookingValues?.email}</strong>.</p>
+            <p className="mb-8 font-medium">Se envió un comprobante con las instrucciones y desglose de pago a <strong>{lastBookingValues?.email}</strong>.</p>
             <div className="flex flex-col gap-4 max-w-sm mx-auto">
               <Button onClick={downloadPDF} variant="outline" className="rounded-full h-12 font-bold"><Download className="mr-2 h-4 w-4" /> Descargar Ficha PDF</Button>
               <Link href="/"><Button className="rounded-full w-full h-12 font-black">Volver al inicio</Button></Link>
@@ -399,7 +420,6 @@ export default function BookingPage() {
                 {step === 1 && (
                   <div className="space-y-8 animate-in fade-in duration-500">
                     
-                    {/* Medical Order Scan Section (Optional) */}
                     <Card className="bg-secondary/5 border-dashed border-2 border-secondary/30 rounded-[2rem] p-6 relative overflow-hidden group">
                       <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
                         <div className="bg-secondary text-white p-4 rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
@@ -492,26 +512,39 @@ export default function BookingPage() {
                     )} />
 
                     {selectedModality && (
-                      <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 animate-in slide-in-from-bottom-4 duration-500">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-white p-2 rounded-xl shadow-sm">
-                              <CircleDollarSign className="h-6 w-6 text-primary" />
-                            </div>
-                            <div>
-                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Valor del Examen</p>
-                              <p className="text-2xl font-black text-primary italic">$ {BASE_FEE.toLocaleString()} CLP</p>
-                            </div>
+                      <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
+                        {selectedModality === 'home_kit' && (
+                          <div className="bg-secondary/10 p-6 rounded-[2rem] border border-secondary/20 space-y-3">
+                            <h5 className="font-black text-secondary flex items-center gap-2 text-sm italic">
+                              <Info className="h-4 w-4" /> Procedimiento Test en Casa
+                            </h5>
+                            <ul className="text-xs font-medium text-muted-foreground space-y-2 list-disc pl-5">
+                              <li>Deberás <strong>retirar el kit</strong> en el laboratorio a la hora elegida.</li>
+                              <li>Recibirás la instrucción de uso por parte de un profesional.</li>
+                              <li>Tras realizar el test, coordina el retiro con el motoboy indicado en el flyer.</li>
+                              <li className="text-secondary font-black">IMPORTANTE: El test debe estar en el laboratorio en máximo 6 horas tras su realización.</li>
+                            </ul>
                           </div>
-                          {selectedModality === 'home_kit' && (
-                            <Badge variant="outline" className="border-secondary/20 text-secondary bg-secondary/5 font-bold text-[10px] uppercase p-2 rounded-xl">
-                              <Truck className="h-3 w-3 mr-1" /> + Logística Motoboy
-                            </Badge>
-                          )}
+                        )}
+
+                        <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-white p-2 rounded-xl shadow-sm">
+                                <CircleDollarSign className="h-6 w-6 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Valor del Examen</p>
+                                <p className="text-2xl font-black text-primary italic">$ {BASE_FEE.toLocaleString()} CLP</p>
+                              </div>
+                            </div>
+                            {selectedModality === 'home_kit' && (
+                              <Badge variant="outline" className="border-secondary/20 text-secondary bg-secondary/5 font-bold text-[10px] uppercase p-2 rounded-xl">
+                                <Truck className="h-3 w-3 mr-1" /> + Logística Motoboy
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-4 italic font-medium">
-                          * Valor no incluye descuentos por previsión (Fonasa/Isapre), los cuales se aplicarán en el paso final.
-                        </p>
                       </div>
                     )}
 
@@ -543,7 +576,7 @@ export default function BookingPage() {
 
                     <FormField control={form.control} name="scheduledTime" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground">Horario Disponible</FormLabel>
+                        <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground">Horario {selectedModality === 'home_kit' ? 'de Retiro Kit' : 'de Cita'}</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDate || isLoadingSlots}>
                           <FormControl>
                             <SelectTrigger className="h-14 text-lg rounded-xl font-bold">
