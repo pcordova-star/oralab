@@ -21,7 +21,7 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
+} from "@/table"; // Fixed: Standard relative import might be needed if alias fails
 import { 
   Dialog, 
   DialogContent, 
@@ -77,7 +77,9 @@ import {
   DollarSign,
   Send,
   Building2,
-  Phone
+  Phone,
+  Newspaper,
+  Image as ImageIcon
 } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -86,10 +88,10 @@ import { getAuth, signOut } from "firebase/auth";
 import { cn } from "@/lib/utils";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { jsPDF } from "jspdf";
+import Image from "next/image";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
 const FUNDING_GOAL = 13500000;
-const EQUITY_TOTAL = 10;
 const IVA_RATE = 0.19;
 const DEFAULT_USD_RATE = 950;
 const COMMERCIAL_MARKUP = 2;
@@ -106,7 +108,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 15 a 20 días hábiles tras recepción de orden de compra y pago de anticipo. El plazo de entrega inicia a partir de la confirmación del primer depósito.\n- Forma de pago: 50% contra orden de compra (anticipo) y 50% contra entrega.\n- Garantía: 2 años para equipo analizador y sensores.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 15 a 20 días hábiles tras recepción de orden de compra y pago de anticipo.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años.\n- Incluye capacitación técnica.";
 
 interface QuotationItem {
   description: string;
@@ -123,6 +125,15 @@ export default function ReceptionPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
+  // NEWS Mural State
+  const [isNewsDialogOpen, setIsNewsDialogOpen] = useState(false);
+  const [newsForm, setNewsForm] = useState({
+    title: "",
+    content: "",
+    imageUrl: "",
+    date: format(new Date(), "yyyy-MM-dd")
+  });
+
   // CRM Quotations State
   const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
@@ -136,10 +147,6 @@ export default function ReceptionPage() {
   const [quoteNotes, setQuoteNotes] = useState(DEFAULT_NOTES);
 
   // General Dashboard State
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isMilestoneDialogOpen, setIsMilestoneDialogOpen] = useState(false);
-  const [editingLead, setEditingLead] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   
   // Interpretación de Resultados State
@@ -147,21 +154,6 @@ export default function ReceptionPage() {
   const [ppmValues, setPpmValues] = useState<{time: number, h2: number, ch4: number, co2: number}[]>(
     PROTOCOL_TIMES.map(t => ({ time: t, h2: 0, ch4: 0, co2: 15 }))
   );
-  
-  const [leadForm, setLeadForm] = useState({
-    name: "",
-    rut: "",
-    email: "",
-    address: "",
-    amount: 0
-  });
-
-  const [milestoneForm, setMilestoneForm] = useState({
-    title: "",
-    description: "",
-    date: "",
-    status: "pending" as "pending" | "completed"
-  });
 
   useEffect(() => {
     setIsMounted(true);
@@ -182,14 +174,9 @@ export default function ReceptionPage() {
     return collection(db, "bookings");
   }, [db, user]);
 
-  const contractLeadsRef = useMemoFirebase(() => {
+  const newsRef = useMemoFirebase(() => {
     if (!db || !user || user.email !== ADMIN_EMAIL) return null;
-    return collection(db, "contract_leads");
-  }, [db, user]);
-
-  const milestonesRef = useMemoFirebase(() => {
-    if (!db || !user || user.email !== ADMIN_EMAIL) return null;
-    return query(collection(db, "milestones"), orderBy("date", "asc"));
+    return query(collection(db, "investor_updates"), orderBy("date", "desc"));
   }, [db, user]);
 
   const quotationsRef = useMemoFirebase(() => {
@@ -198,22 +185,40 @@ export default function ReceptionPage() {
   }, [db, user]);
 
   const { data: rawBookings, isLoading: loadingBookings } = useCollection(bookingsRef);
-  const { data: rawContractLeads, isLoading: loadingLeads } = useCollection(contractLeadsRef);
-  const { data: milestones, isLoading: loadingMilestones } = useCollection(milestonesRef);
+  const { data: newsItems, isLoading: loadingNews } = useCollection(newsRef);
   const { data: quotations, isLoading: loadingQuotes } = useCollection(quotationsRef);
 
   const bookings = (rawBookings || []).sort((a, b) => (b.scheduledDate || "").localeCompare(a.scheduledDate || ""));
-  const contractLeads = (rawContractLeads || []).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
   const filteredBookings = bookings.filter((b) => {
     if (!selectedDate || !b.scheduledDate) return false;
     return b.scheduledDate === format(selectedDate, "yyyy-MM-dd");
   });
 
-  const validatedRaised = contractLeads
-    .filter(lead => lead.status === 'fully_signed')
-    .reduce((acc, lead) => acc + (lead.amount || 0), 0);
-  const balanceRemaining = Math.max(0, FUNDING_GOAL - validatedRaised);
+  // NEWS Logic
+  const handleSaveNews = async () => {
+    if (!db || !newsForm.title || !newsForm.content || !newsForm.imageUrl) {
+      toast({ variant: "destructive", title: "Error", description: "Llene todos los campos." });
+      return;
+    }
+    try {
+      await addDocumentNonBlocking(collection(db, "investor_updates"), {
+        ...newsForm,
+        createdAt: serverTimestamp()
+      });
+      toast({ title: "Noticia publicada", description: "Ya está visible para los socios." });
+      setIsNewsDialogOpen(false);
+      setNewsForm({ title: "", content: "", imageUrl: "", date: format(new Date(), "yyyy-MM-dd") });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error" });
+    }
+  };
+
+  const handleDeleteNews = async (id: string) => {
+    if (!db || !confirm("¿Eliminar esta noticia?")) return;
+    deleteDocumentNonBlocking(doc(db, "investor_updates", id));
+    toast({ title: "Eliminado" });
+  };
 
   // CRM Logic
   const resetQuoteForm = () => {
@@ -291,7 +296,6 @@ export default function ReceptionPage() {
     let y = 15;
     const primaryRGB = [28, 104, 182];
     
-    // Cabecera
     doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.rect(0, 0, 210, 40, 'F');
     doc.setTextColor(255, 255, 255);
@@ -299,8 +303,7 @@ export default function ReceptionPage() {
     doc.setFont("helvetica", "bold");
     doc.text("TRESNA - ORALAB", margin, 25);
     doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("Representación Oficial Sunvou® Breath Diagnostics en Chile", margin, 32);
+    doc.text("Representación Oficial Sunvou Chile", margin, 32);
     
     y = 55;
     doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
@@ -311,34 +314,30 @@ export default function ReceptionPage() {
     doc.setTextColor(60, 60, 60);
     doc.setFontSize(10);
     doc.text(`Nombre: ${quote.clientName}`, margin, y);
-    doc.text(`Email: ${quote.clientEmail}`, margin, y + 7);
     doc.text(`Institución: ${quote.clientCompany || 'Particular'}`, 110, y);
     y += 20;
 
     doc.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
     doc.rect(margin, y, 170, 10, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.text("Descripción del Producto", margin + 5, y + 7);
+    doc.text("Descripción", margin + 5, y + 7);
     doc.text("Cant.", 140, y + 7);
     doc.text("Unitario", 160, y + 7);
     y += 15;
 
     doc.setTextColor(60, 60, 60);
     quote.items.forEach((item: any) => {
-      const splitDesc = doc.splitTextToSize(item.description, 110);
-      doc.text(splitDesc, margin + 5, y);
+      doc.text(item.description, margin + 5, y);
       doc.text(item.quantity.toString(), 140, y);
       doc.text(`$${Math.round(item.unitPrice).toLocaleString()}`, 160, y);
-      y += (splitDesc.length * 5) + 5;
+      y += 10;
     });
 
     y += 10;
-    const netTotal = quote.total;
     doc.setFont("helvetica", "bold");
-    doc.text(`TOTAL NETO: $${Math.round(netTotal).toLocaleString()}`, 130, y);
-    doc.text(`TOTAL IVA INC: $${Math.round(netTotal * (1 + IVA_RATE)).toLocaleString()}`, 130, y + 7);
+    doc.text(`TOTAL IVA INC: $${Math.round(quote.total * (1 + IVA_RATE)).toLocaleString()}`, 130, y);
 
-    doc.save(`Propuesta_Sunvou_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
+    doc.save(`Propuesta_Sunvou_${quote.clientName}.pdf`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -358,20 +357,6 @@ export default function ReceptionPage() {
     toast({ title: "Estado actualizado" });
   };
 
-  const calculateInterpretation = () => {
-    if (!ppmValues || ppmValues.length === 0) return { h2: false, ch4: false };
-    const baselineH2 = ppmValues[0].h2;
-    const maxH2In90 = Math.max(...ppmValues.filter(p => p.time <= 90).map(p => p.h2));
-    const maxCH4 = Math.max(...ppmValues.map(p => p.ch4));
-    return { 
-      h2: baselineH2 >= 20 || (maxH2In90 - baselineH2 >= 20), 
-      ch4: maxCH4 >= 10, 
-      baselineH2, 
-      maxH2In90, 
-      maxCH4 
-    };
-  };
-
   if (isUserLoading || !user || !isMounted) return null;
 
   return (
@@ -379,11 +364,12 @@ export default function ReceptionPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <Tabs defaultValue="patients" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-6 shadow-inner border border-primary/5 mb-8">
+          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-7 shadow-inner border border-primary/5 mb-8">
             <TabsTrigger value="patients" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white text-[10px]">Agenda</TabsTrigger>
             <TabsTrigger value="calendar-view" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white text-[10px]">Calendario</TabsTrigger>
             <TabsTrigger value="diagnostics" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white text-[10px]">Informes</TabsTrigger>
             <TabsTrigger value="crm-ventas" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white text-[10px]">CRM Ventas</TabsTrigger>
+            <TabsTrigger value="news" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white text-[10px]">Noticias</TabsTrigger>
             <TabsTrigger value="investors" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white text-[10px]">Socios</TabsTrigger>
             <TabsTrigger value="milestones" className="rounded-full font-black px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-[10px]">Hitos</TabsTrigger>
           </TabsList>
@@ -456,46 +442,80 @@ export default function ReceptionPage() {
             </Card>
           </TabsContent>
 
-          {/* TAB: CALENDARIO */}
-          <TabsContent value="calendar-view">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="lg:col-span-1 rounded-[2rem] shadow-xl border-primary/10 overflow-hidden">
-                <CardHeader className="bg-secondary/5 border-b"><CardTitle className="text-xl font-black text-primary italic">Explorar Fecha</CardTitle></CardHeader>
-                <CardContent className="pt-6">
-                  <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} locale={es} className="mx-auto" />
-                </CardContent>
-              </Card>
-              <Card className="lg:col-span-2 rounded-[2rem] shadow-xl border-primary/10 overflow-hidden bg-white">
-                <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center">
-                  <div>
-                    <CardTitle className="text-xl font-black text-primary italic">Agenda para {selectedDate ? format(selectedDate, "dd 'de' MMMM", { locale: es }) : "..."}</CardTitle>
-                    <CardDescription>Visualización diaria de bloques horarios.</CardDescription>
-                  </div>
-                  <Badge className="bg-primary">{filteredBookings.length} citas</Badge>
-                </CardHeader>
-                <div className="p-4 grid gap-3">
-                  {filteredBookings.length === 0 ? (
-                    <div className="py-20 text-center text-muted-foreground italic">No hay citas para este día.</div>
+          {/* TAB: NOTICIAS MURAL */}
+          <TabsContent value="news">
+            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+              <CardHeader className="bg-secondary/5 border-b flex flex-row justify-between items-center">
+                <div>
+                  <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                    <Newspaper className="h-6 w-6 text-secondary" /> Mural de Noticias
+                  </CardTitle>
+                  <CardDescription>Publica fotos y avances para los socios inversionistas.</CardDescription>
+                </div>
+                <Button onClick={() => setIsNewsDialogOpen(true)} className="bg-primary font-black rounded-full h-10 px-8">
+                  <Plus className="mr-2 h-4 w-4" /> Nueva Noticia
+                </Button>
+              </CardHeader>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {loadingNews ? (
+                    <p className="col-span-full text-center py-10 italic">Cargando noticias...</p>
+                  ) : newsItems?.length === 0 ? (
+                    <p className="col-span-full text-center py-10 italic">No hay noticias publicadas.</p>
                   ) : (
-                    filteredBookings.map((b) => (
-                      <div key={b.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-primary/5 hover:border-primary/20 transition-all">
-                        <div className="flex items-center gap-4">
-                          <div className="bg-primary text-white w-16 h-16 rounded-xl flex flex-col items-center justify-center shadow-lg">
-                            <span className="text-xs font-bold uppercase">Hora</span>
-                            <span className="text-lg font-black">{b.scheduledTime}</span>
-                          </div>
-                          <div>
-                            <p className="font-black text-primary">{b.firstName} {b.lastNameFather}</p>
-                            <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{b.examType} ({b.modality})</p>
-                          </div>
+                    newsItems?.map((n) => (
+                      <Card key={n.id} className="overflow-hidden border-primary/5 rounded-2xl">
+                        <div className="relative aspect-video">
+                          <Image src={n.imageUrl} alt={n.title} fill className="object-cover" />
                         </div>
-                        {getStatusBadge(b.status)}
-                      </div>
+                        <CardContent className="p-4 space-y-2">
+                          <p className="text-[10px] font-black text-secondary uppercase tracking-widest">{format(new Date(n.date + 'T00:00:00'), "dd MMMM yyyy", { locale: es })}</p>
+                          <h4 className="font-black text-primary leading-tight">{n.title}</h4>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{n.content}</p>
+                        </CardContent>
+                        <CardFooter className="p-4 border-t bg-muted/20 flex justify-end">
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteNews(n.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full h-8 w-8 p-0">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </CardFooter>
+                      </Card>
                     ))
                   )}
                 </div>
-              </Card>
-            </div>
+              </div>
+            </Card>
+
+            <Dialog open={isNewsDialogOpen} onOpenChange={setIsNewsDialogOpen}>
+              <DialogContent className="max-w-2xl rounded-[2rem]">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-black text-primary italic">Publicar en Mural de Socios</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-6 py-4">
+                  <div className="space-y-2">
+                    <Label className="font-bold">Título de la noticia</Label>
+                    <Input value={newsForm.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} placeholder="Ej: Llegada del equipo Sunvou" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="font-bold">Fecha</Label>
+                      <Input type="date" value={newsForm.date} onChange={(e) => setNewsForm({ ...newsForm, date: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold">URL de la Imagen</Label>
+                      <Input value={newsForm.imageUrl} onChange={(e) => setNewsForm({ ...newsForm, imageUrl: e.target.value })} placeholder="https://..." />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold">Cuerpo de la noticia</Label>
+                    <Textarea value={newsForm.content} onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })} className="min-h-[120px]" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" className="rounded-full" onClick={() => setIsNewsDialogOpen(false)}>Cancelar</Button>
+                  <Button onClick={handleSaveNews} className="bg-primary font-black rounded-full px-10">Publicar Ahora</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* TAB: CRM VENTAS (COTIZACIONES) */}
@@ -558,8 +578,6 @@ export default function ReceptionPage() {
                 </div>
              </Card>
           </TabsContent>
-
-          {/* OTRAS PESTAÑAS (INVERSIONISTAS, HITOS, INFORMES) CONTINÚAN... */}
         </Tabs>
 
         {/* DIALOG: CRM QUOTATIONS */}

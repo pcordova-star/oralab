@@ -44,11 +44,12 @@
       "description": "Colección utilizada por la extensión Trigger Email para enviar notificaciones.",
       "type": "object",
       "properties": {
-        "to": { "type": "string" },
+        "to": { "type": "array", "items": { "type": "string" } },
         "message": {
           "type": "object",
           "properties": {
             "subject": { "type": "string" },
+            "text": { "type": "string" },
             "html": { "type": "string" }
           }
         }
@@ -96,43 +97,18 @@
       },
       "required": ["name", "email", "message"]
     },
-    "Investor": {
-      "title": "Investor",
-      "description": "Registro de inversión y aportes de capital.",
+    "InvestorUpdate": {
+      "title": "InvestorUpdate",
+      "description": "Noticia o actualización para el muro de socios.",
       "type": "object",
       "properties": {
-        "realName": { "type": "string" },
-        "investorNumber": { "type": "number" },
-        "amount": { "type": "number" },
-        "status": { "type": "string", "enum": ["confirmed", "pending"] },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["realName", "investorNumber", "amount", "status", "createdAt"]
-    },
-    "ContractLead": {
-      "title": "ContractLead",
-      "description": "Registro de inversionistas con firma electrónica simple.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "rut": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "address": { "type": "string" },
-        "amount": { "type": "number" },
-        "equity": { "type": "number" },
-        "status": { "type": "string", "enum": ["draft", "signed_by_investor", "fully_signed"] },
-        "investorSignedAt": { "type": "string", "format": "date-time" },
-        "adminSignedAt": { "type": "string", "format": "date-time" },
-        "metadata": {
-          "type": "object",
-          "properties": {
-            "ip": { "type": "string" },
-            "userAgent": { "type": "string" }
-          }
-        },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "rut", "email", "amount", "status", "createdAt"]
+      "required": ["title", "content", "imageUrl", "date"]
     },
     "Milestone": {
       "title": "Milestone",
@@ -172,13 +148,9 @@
       "schema": "Lead",
       "description": "Consultas comerciales."
     },
-    "/investors/{investorId}": {
-      "schema": "Investor",
-      "description": "Colección de inversionistas."
-    },
-    "/contract_leads/{leadId}": {
-      "schema": "ContractLead",
-      "description": "Colección de contratos con firma digital simple."
+    "/investor_updates/{updateId}": {
+      "schema": "InvestorUpdate",
+      "description": "Mural de noticias para socios."
     },
     "/milestones/{milestoneId}": {
       "schema": "Milestone",
