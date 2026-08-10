@@ -78,7 +78,8 @@ import {
   Building2,
   Phone,
   Newspaper,
-  ImageIcon
+  ImageIcon,
+  ExternalLink
 } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -104,7 +105,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 15 a 20 días hábiles tras recepción de orden de compra y pago de anticipo.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años.\n- Incluye capacitación técnica.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 15 a 20 días hábiles tras recepción de orden de compra y pago de anticipo. El plazo de entrega inicia a partir de la confirmación del primer depósito.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años.\n- Incluye capacitación técnica.";
 
 interface QuotationItem {
   description: string;
@@ -326,7 +327,7 @@ export default function ReceptionPage() {
     switch (status) {
       case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 uppercase font-black text-[9px]"><Clock className="h-3 w-3 mr-1" /> Agendado</Badge>;
       case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 uppercase font-black text-[9px]"><UserCheck className="h-3 w-3 mr-1" /> En Espera</Badge>;
-      case "in_progress": return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 uppercase font-black text-[9px]"><Activity className="h-3 w-3 mr-1" /> En Curso</Badge>;
+      case "in_progress": return <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 uppercase font-black text-[9px]"><Activity className="h-3 w-3 mr-1" /> En Curso</Badge>;
       case "completed": return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 uppercase font-black text-[9px]"><CheckCircle2 className="h-3 w-3 mr-1" /> Finalizado</Badge>;
       case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 uppercase font-black text-[9px]"><AlertCircle className="h-3 w-3 mr-1" /> Cancelado</Badge>;
       default: return <Badge variant="outline" className="text-[9px] uppercase font-black">{status}</Badge>;
@@ -471,7 +472,7 @@ export default function ReceptionPage() {
             <Dialog open={isNewsDialogOpen} onOpenChange={setIsNewsDialogOpen}>
               <DialogContent className="max-w-2xl rounded-[2rem]">
                 <DialogHeader>
-                  <DialogTitle className="text-2xl font-black text-primary italic">Publicar en Mural de Socios</DialogTitle>
+                  <DialogTitle className="text-2xl font-black text-primary italic">Publicar en Portal de Inversionistas</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-6 py-4">
                   <div className="space-y-2">
@@ -484,16 +485,39 @@ export default function ReceptionPage() {
                       <Input type="date" value={newsForm.date} onChange={(e) => setNewsForm({ ...newsForm, date: e.target.value })} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-bold">URL de la Imagen</Label>
+                      <Label className="font-bold flex items-center gap-2">URL de la Imagen <ImageIcon className="h-3 w-3" /></Label>
                       <Input value={newsForm.imageUrl} onChange={(e) => setNewsForm({ ...newsForm, imageUrl: e.target.value })} placeholder="https://..." />
+                      <p className="text-[10px] text-muted-foreground italic flex items-center gap-1">
+                        <Info className="h-3 w-3" /> Usa enlaces directos de PostImages o Imgur.
+                      </p>
                     </div>
                   </div>
+                  
+                  {/* Image Preview */}
+                  {newsForm.imageUrl && (
+                    <div className="space-y-2">
+                      <Label className="font-bold text-[10px] uppercase">Vista Previa</Label>
+                      <div className="relative aspect-video rounded-xl overflow-hidden border border-dashed border-primary/20">
+                        <img 
+                          src={newsForm.imageUrl} 
+                          alt="Preview" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => (e.currentTarget.src = "https://placehold.co/600x400?text=URL+Inválida")}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label className="font-bold">Cuerpo de la noticia</Label>
                     <Textarea value={newsForm.content} onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })} className="min-h-[120px]" />
                   </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="flex flex-col sm:flex-row gap-4">
+                  <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-xs font-bold text-primary hover:underline">
+                    <ExternalLink className="h-3 w-3 mr-1" /> Subir foto a PostImages
+                  </a>
+                  <div className="flex-1" />
                   <Button variant="outline" className="rounded-full" onClick={() => setIsNewsDialogOpen(false)}>Cancelar</Button>
                   <Button onClick={handleSaveNews} className="bg-primary font-black rounded-full px-10">Publicar Ahora</Button>
                 </DialogFooter>
