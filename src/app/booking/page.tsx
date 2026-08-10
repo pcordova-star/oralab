@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -27,7 +26,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, CalendarIcon, CheckCircle2, Download, AlertCircle, Home, Building2, Stethoscope, User, MapPin, Loader2, Truck } from "lucide-react";
+import { CalendarIcon, CheckCircle2, Download, Home, Building2, Stethoscope, Loader2, Truck } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
@@ -36,7 +35,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, isBefore, isWeekend } from "date-fns";
 import { es } from "date-fns/locale";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { jsPDF } from "jspdf";
 
@@ -65,23 +64,17 @@ const communesByRegion: Record<string, string[]> = {
   "Magallanes": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio", "Puerto Natales", "Torres del Paine", "Porvenir", "Primavera", "Timaukel", "Cabo de Hornos", "Antártica"]
 };
 
-// Mapa de precios TarFario
 const DELIVERY_PRICES: Record<string, number> = {
-  // Zona 1
   "Las Condes": 8000, "Vitacura": 8000, "Providencia": 8000, "Lo Barnechea": 8000,
-  // Zona 2
   "La Reina": 10000, "Ñuñoa": 10000, "Santiago": 10000, "Recoleta": 10000, "Independencia": 10000, "Huechuraba": 10000,
-  // Zona 3
   "Peñalolén": 13000, "Macul": 13000, "San Joaquín": 13000, "Estación Central": 13000, "Quinta Normal": 13000, "Conchalí": 13000, "Cerrillos": 13000,
-  // Zona 4
   "La Florida": 16000, "San Miguel": 16000, "Lo Prado": 16000, "Pedro Aguirre Cerda": 16000, "Cerro Navia": 16000, "Renca": 16000, "Quilicura": 16000, "Pudahuel": 16000,
-  // Zona 5
   "Maipú": 20000, "El Bosque": 20000, "La Cisterna": 20000, "Lo Espejo": 20000, "La Granja": 20000, "San Ramón": 20000, "La Pintana": 20000, "Puente Alto": 20000, "San Bernardo": 20000,
-  // Zona 6
   "Colina": 25000, "Lampa": 25000, "Padre Hurtado": 25000, "Peñaflor": 25000, "Calera de Tango": 25000, "Buin": 25000, "Talagante": 25000,
-  // Zona 7 + Periféricas
   "Isla de Maipo": 30000, "El Monte": 30000, "Melipilla": 30000, "Curacaví": 30000, "María Pinto": 30000, "Pirque": 30000, "San José de Maipo": 30000, "Alhué": 30000, "Paine": 30000, "San Pedro": 30000, "Tiltil": 30000
 };
+
+const timeSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00"];
 
 const bookingSchema = z.object({
   examType: z.enum(["Lactulosa", "Fructosa", "Lactosa"], { required_error: "Seleccione tipo de examen" }),
@@ -109,7 +102,7 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
-const OPERATIONS_START_DATE = new Date(2025, 2, 1); // Marzo 2025
+const OPERATIONS_START_DATE = new Date(2025, 2, 1);
 
 export default function BookingPage() {
   const [step, setStep] = useState(1);
@@ -159,7 +152,6 @@ export default function BookingPage() {
   const selectedModality = form.watch("modality");
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
 
-  // Calcular tarifa TarFario
   const deliveryFee = (selectedModality === 'home_kit' && selectedCommune) 
     ? (DELIVERY_PRICES[selectedCommune] || 30000) 
     : 0;
