@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -27,7 +26,22 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, CheckCircle2, Download, Home, Building2, Stethoscope, Loader2, Truck, Wallet, ReceiptText } from "lucide-react";
+import { 
+  CalendarIcon, 
+  CheckCircle2, 
+  Download, 
+  Home, 
+  Building2, 
+  Loader2, 
+  Truck, 
+  Wallet, 
+  ReceiptText,
+  FileUp,
+  Sparkles,
+  Search,
+  ScanSearch,
+  FileText
+} from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
@@ -39,6 +53,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { jsPDF } from "jspdf";
+import { analyzeMedicalOrder } from "@/ai/flows/analyze-medical-order";
 
 const regions = [
   "Metropolitana de Santiago", "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
@@ -48,21 +63,6 @@ const regions = [
 
 const communesByRegion: Record<string, string[]> = {
   "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
-  "Arica y Parinacota": ["Arica", "Camarones", "Putre", "General Lagos"],
-  "Tarapacá": ["Iquique", "Alto Hospicio", "Pozo Almonte", "Camiña", "Colchane", "Huara", "Pica"],
-  "Antofagasta": ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal", "Calama", "Ollagüe", "San Pedro de Atacama", "Tocopilla", "María Elena"],
-  "Atacama": ["Copiapó", "Caldera", "Tierra Amarilla", "Chañaral", "Diego de Almagro", "Vallenar", "Alto del Carmen", "Freirina", "Huasco"],
-  "Coquimbo": ["La Serena", "Coquimbo", "Andacollo", "La Higuera", "Paiguano", "Vicuña", "Illapel", "Canela", "Los Vilos", "Salamanca", "Ovalle", "Combarbalá", "Monte Patria", "Punitaqui", "Río Hurtado"],
-  "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández", "San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo", "Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales", "Los Andes", "Calle Larga", "Rinconada", "San Esteban", "San Felipe", "Catemu", "Llaillay", "Panquehue", "Putaendo", "Santa María", "Quilpué", "Limache", "Olmué", "Villa Alemana", "La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
-  "O'Higgins": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente", "Pichilemu", "La Estrella", "Litueche", "Marchihue", "Navidad", "Paredones", "San Fernando", "Chépica", "Chimbarongo", "Lolol", "Nancagua", "Palmilla", "Peralillo", "Placilla", "Pumanque", "Santa Cruz"],
-  "Maule": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael", "Cauquenes", "Chanco", "Pelluhue", "Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén", "Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"],
-  "Ñuble": ["Chillán", "Bulnes", "Cobquecura", "Coelemu", "Coihueco", "Chillán Viejo", "El Carmen", "Ninhue", "Ñiquén", "Pemuco", "Pinto", "Portezuelo", "Quillón", "Quirihue", "Ránquil", "San Carlos", "San Fabián", "San Ignacio", "San Nicolás", "Treguaco", "Yungay"],
-  "Biobío": ["Concepción", "Coronel", "Chiguayante", "Florida", "Hualpén", "Hualqui", "Lota", "Penco", "San Pedro de la Paz", "Santa Juana", "Talcahuano", "Tomé", "Lebu", "Arauco", "Cañete", "Contulmo", "Curanilahue", "Los Álamos", "Tirúa", "Los Ángeles", "Antuco", "Cabrero", "Laja", "Mulchén", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa Bárbara", "Tucapel", "Yumbel", "Alto Biobío"],
-  "La Araucanía": ["Temuco", "Carahue", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre las Casas", "Perquenco", "Pitrequén", "Pucón", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica", "Cholchol", "Angol", "Collipulli", "Curacaví", "Ercilla", "Lonquimay", "Los Sauces", "Lumaco", "Purén", "Renaico", "Traiguén", "Victoria"],
-  "Los Ríos": ["Valdivia", "Corral", "Lanco", "Los Lagos", "Máfil", "Mariquina", "Paillaco", "Panguipulli", "La Unión", "Futrono", "Lago Ranco", "Río Bueno"],
-  "Los Lagos": ["Puerto Montt", "Calbuco", "Cochamó", "Fresia", "Frutillar", "Los Muermos", "Llanquihue", "Maullín", "Puerto Varas", "Puerto Varas", "Castro", "Ancud", "Chonchi", "Curaco de Vélez", "Dalcahue", "Puqueldón", "Queilén", "Quellón", "Quemchi", "Quinchao", "Osorno", "Puerto Octay", "Purranque", "Puyehue", "Río Negro", "San Juan de la Costa", "San Pablo", "Chaitén", "Futaleufú", "Hualaihué", "Palena"],
-  "Aysén": ["Coyhaique", "Lago Verde", "Aysén", "Cisnes", "Guaitecas", "Cochrane", "O'Higgins", "Tortel", "Chile Chico", "Río Ibáñez"],
-  "Magallanes": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio", "Puerto Natales", "Torres del Paine", "Porvenir", "Primavera", "Timaukel", "Cabo de Hornos", "Antártica"]
 };
 
 const DELIVERY_PRICES: Record<string, number> = {
@@ -115,6 +115,10 @@ export default function BookingPage() {
   const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   
+  // AI State
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiDetectionResult, setAiDetectionResult] = useState<string | null>(null);
+
   const db = useFirestore();
 
   useEffect(() => {
@@ -148,6 +152,7 @@ export default function BookingPage() {
   const selectedCommune = form.watch("commune");
   const selectedModality = form.watch("modality");
   const selectedPrevision = form.watch("prevision");
+  const selectedExamType = form.watch("examType");
 
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
 
@@ -192,6 +197,42 @@ export default function BookingPage() {
       form.setValue("commune", "");
     }
   }, [selectedRegion, form]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAnalyzing(true);
+    setAiDetectionResult(null);
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      try {
+        const result = await analyzeMedicalOrder({ photoDataUri: base64String });
+        
+        if (result.detectedExam !== 'Desconocido' && result.confidence > 0.6) {
+          form.setValue("examType", result.detectedExam as any);
+          setAiDetectionResult(result.detectedExam);
+          toast({
+            title: "Orden Analizada",
+            description: `Hemos detectado: ${result.detectedExam}. Se ha seleccionado automáticamente.`,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Detección fallida",
+            description: "No pudimos identificar el examen automáticamente. Por favor selecciónalo manualmente.",
+          });
+        }
+      } catch (err) {
+        toast({ variant: "destructive", title: "Error al procesar imagen" });
+      } finally {
+        setIsAnalyzing(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   async function nextStep() {
     let fieldsToValidate: any[] = [];
@@ -253,7 +294,7 @@ export default function BookingPage() {
     y += 8;
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior (arroz, pollo/pescado plancha, sin frutas ni verduras).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
+    const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
     doc.text(doc.splitTextToSize(instructions, 170), margin, y);
     
     doc.save(`Reserva_Oralab_${lastBookingValues.firstName}.pdf`);
@@ -288,35 +329,23 @@ export default function BookingPage() {
     try {
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
-      const priceSummaryHtml = `
-        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #e2e8f0;">
-          <p style="margin: 0; font-size: 14px;"><strong>Valor Examen:</strong> $${BASE_FEE.toLocaleString()}</p>
-          ${discountAmount > 0 ? `<p style="margin: 5px 0 0 0; font-size: 14px; color: #10b981;"><strong>Descuento (${values.prevision.toUpperCase()}):</strong> -$${discountAmount.toLocaleString()}</p>` : ''}
-          ${deliveryFee > 0 ? `<p style="margin: 5px 0 0 0; font-size: 14px;"><strong>Logística Motoboy:</strong> $${deliveryFee.toLocaleString()}</p>` : ''}
-          <hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 10px 0;" />
-          <p style="margin: 0; font-size: 18px; color: #1c68b6;"><strong>TOTAL: $${finalTotal.toLocaleString()}</strong></p>
-        </div>
-      `;
-
       await addDocumentNonBlocking(collection(db, "mail"), {
         to: values.email, 
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
           text: `Hola ${values.firstName}, tu reserva está confirmada para el día ${formattedDate} a las ${values.scheduledTime} hrs. El total a pagar es $${finalTotal.toLocaleString()}.`,
           html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-              <h2 style="color: #1c68b6; text-align: center;">Confirmación de Reserva</h2>
+            <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px;">
+              <h2 style="color: #1c68b6;">Confirmación de Reserva</h2>
               <p>Hola <strong>${values.firstName}</strong>, tu cita para el test de <strong>${values.examType}</strong> ha sido agendada.</p>
-              <div style="padding: 15px; border-left: 4px solid #1c68b6; background: #f0f7ff; margin-bottom: 20px;">
-                <p style="margin: 0;"><strong>Día:</strong> ${formattedDate}</p>
-                <p style="margin: 5px 0 0 0;"><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
-                <p style="margin: 5px 0 0 0;"><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa' : 'Apoquindo 3990, Las Condes'}</p>
+              <div style="padding: 15px; background: #f0f7ff; margin-bottom: 20px;">
+                <p><strong>Día:</strong> ${formattedDate}</p>
+                <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
+                <p><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Retira tu Kit)' : 'Apoquindo 3990, Las Condes'}</p>
               </div>
-              
-              ${priceSummaryHtml}
-              
-              <p style="color: #d97706; font-weight: bold; background: #fffbeb; padding: 10px; border-radius: 5px;">RECUERDA: Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
-              <p style="font-size: 12px; color: #64748b; margin-top: 20px; text-align: center;">© 2024 Oralab Clinical Lab. Tecnología Sunvou®.</p>
+              <p><strong>Total Final: $${finalTotal.toLocaleString()}</strong></p>
+              <p style="color: #d97706;">RECUERDA: Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
+              <p style="font-size: 12px; color: #64748b;">© 2024 Oralab Clinical Lab. Tecnología Sunvou®.</p>
             </div>
           `
         }
@@ -371,10 +400,49 @@ export default function BookingPage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {step === 1 && (
                   <div className="space-y-8 animate-in fade-in duration-500">
+                    
+                    {/* Medical Order Scan Section */}
+                    <Card className="bg-secondary/5 border-dashed border-2 border-secondary/30 rounded-[2rem] p-6 relative overflow-hidden group">
+                      <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
+                        <div className="bg-secondary text-white p-4 rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
+                          {isAnalyzing ? <Loader2 className="h-8 w-8 animate-spin" /> : <ScanSearch className="h-8 w-8" />}
+                        </div>
+                        <div className="flex-1 text-center md:text-left">
+                          <h4 className="font-black text-primary italic text-lg flex items-center justify-center md:justify-start gap-2">
+                            ¿Tienes Orden Médica? <Sparkles className="h-4 w-4 text-secondary" />
+                          </h4>
+                          <p className="text-sm text-muted-foreground font-medium">Sube una foto para detectar tu examen automáticamente.</p>
+                        </div>
+                        <div className="relative">
+                          <Input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            id="order-upload" 
+                            onChange={handleFileUpload} 
+                            disabled={isAnalyzing}
+                          />
+                          <label htmlFor="order-upload">
+                            <Button asChild variant="outline" className="rounded-full font-bold border-secondary text-secondary hover:bg-secondary hover:text-white cursor-pointer h-12 px-6">
+                              <span>
+                                <FileUp className="mr-2 h-4 w-4" /> 
+                                {isAnalyzing ? "Analizando..." : "Subir Foto"}
+                              </span>
+                            </Button>
+                          </label>
+                        </div>
+                      </div>
+                      {aiDetectionResult && (
+                        <div className="mt-4 flex items-center justify-center gap-2 bg-green-50 text-green-700 py-2 rounded-xl text-xs font-bold border border-green-100">
+                          <CheckCircle2 className="h-4 w-4" /> IA Detectó: {aiDetectionResult}
+                        </div>
+                      )}
+                    </Card>
+
                     <FormField control={form.control} name="examType" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground">Tipo de Examen</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-14 text-lg rounded-xl font-bold"><SelectValue placeholder="Seleccionar examen" /></SelectTrigger>
                           </FormControl>
