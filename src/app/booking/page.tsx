@@ -36,7 +36,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, isBefore, isWeekend } from "date-fns";
 import { es } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { Progress } from "@/components/ui/progress";
 import { jsPDF } from "jspdf";
 
@@ -279,16 +279,16 @@ export default function BookingPage() {
       const instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior (arroz, pollo/pescado a la plancha).\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
       setPrepInstructions(instructions);
       
-      // Registrar la reserva
+      // Registrar la reserva clínica
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
-      // TRIGGER EMAIL: El campo 'to' DEBE ir en la raíz para que la extensión lo detecte
+      // TRIGGER EMAIL: Mantenemos estructura plana con 'to' en la raíz.
       await addDocumentNonBlocking(collection(db, "mail"), {
-        to: values.email, // Campo raíz obligatorio
+        to: values.email,
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
-          text: `Hola ${values.firstName}, tu reserva para ${values.examType} el día ${formattedDate} a las ${values.scheduledTime} hrs está confirmada.`,
-          html: `<p>Hola ${values.firstName}, tu reserva está lista. Recuerda el ayuno de 12 horas.</p>`
+          text: `Hola ${values.firstName}, tu reserva para ${values.examType} el día ${formattedDate} a las ${values.scheduledTime} hrs está confirmada. Recuerda el ayuno de 12 horas y dieta blanda el día anterior.`,
+          html: `<p>Hola ${values.firstName}, tu reserva para <strong>${values.examType}</strong> está confirmada.</p><p>Día: ${formattedDate}<br>Hora: ${values.scheduledTime} hrs</p><p><strong>IMPORTANTE:</strong> Recuerda el ayuno estricto de 12 horas.</p>`
         }
       });
 
@@ -307,13 +307,13 @@ export default function BookingPage() {
       <div className="flex flex-col min-h-screen bg-background pb-12">
         <Navbar />
         <main className="container mx-auto px-4 py-8 max-w-3xl text-center">
-          <Card className="py-12 shadow-lg">
+          <Card className="py-12 shadow-lg rounded-[2rem] border-primary/10">
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4" />
-            <CardTitle className="text-3xl mb-4">¡Reserva Confirmada!</CardTitle>
-            <p className="mb-8">Se envió un correo a <strong>{lastBookingValues?.email}</strong>.</p>
+            <CardTitle className="text-3xl mb-4 font-black italic">¡Reserva Confirmada!</CardTitle>
+            <p className="mb-8 font-medium">Se envió un correo a <strong>{lastBookingValues?.email}</strong> con las instrucciones de preparación.</p>
             <div className="flex flex-col gap-4 max-w-sm mx-auto">
-              <Button onClick={downloadPDF} variant="outline" className="rounded-full"><Download className="mr-2" /> Descargar PDF</Button>
-              <Link href="/"><Button className="rounded-full w-full">Volver al inicio</Button></Link>
+              <Button onClick={downloadPDF} variant="outline" className="rounded-full h-12 font-bold"><Download className="mr-2 h-4 w-4" /> Descargar PDF de Instrucciones</Button>
+              <Link href="/"><Button className="rounded-full w-full h-12 font-black">Volver al inicio</Button></Link>
             </div>
           </Card>
         </main>
@@ -326,55 +326,189 @@ export default function BookingPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="mb-8"><Progress value={(step / 3) * 100} className="h-2" /></div>
-        <Card className="shadow-lg overflow-hidden">
-          <CardHeader className="bg-primary/5 border-b">
-            <CardTitle>{step === 1 ? "Modalidad" : step === 2 ? "Fecha" : "Datos"}</CardTitle>
+        <Card className="shadow-2xl overflow-hidden rounded-[2.5rem] border-primary/5">
+          <CardHeader className="bg-primary/5 border-b py-8">
+            <div className="flex items-center gap-3 mb-2">
+               <CalendarIcon className="h-6 w-6 text-secondary" />
+               <CardTitle className="text-2xl font-black italic text-primary">
+                 {step === 1 ? "Elige Modalidad" : step === 2 ? "Selecciona Fecha" : "Tus Datos Clínicos"}
+               </CardTitle>
+            </div>
+            <CardDescription className="font-medium">Estamos a pocos pasos de programar tu evaluación digestiva.</CardDescription>
           </CardHeader>
-          <CardContent className="pt-8">
+          <CardContent className="pt-8 px-6 md:px-12 pb-12">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {step === 1 && (
-                  <div className="space-y-6">
+                  <div className="space-y-8 animate-in fade-in duration-500">
+                    <FormField control={form.control} name="examType" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground">Tipo de Examen</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-14 text-lg rounded-xl font-bold"><SelectValue placeholder="Seleccionar examen" /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Lactulosa">Test Lactulosa (SIBO)</SelectItem>
+                            <SelectItem value="Fructosa">Test Fructosa</SelectItem>
+                            <SelectItem value="Lactosa">Test Lactosa</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
                     <FormField control={form.control} name="modality" render={({ field }) => (
-                      <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-2 gap-4">
-                        <div className={cn("p-4 border-2 rounded-xl cursor-pointer", field.value === "presential" && "border-primary bg-primary/5")}>
-                          <RadioGroupItem value="presential" id="p" className="hidden" />
-                          <label htmlFor="p" className="cursor-pointer block text-center font-bold">Presencial</label>
-                        </div>
-                        <div className={cn("p-4 border-2 rounded-xl cursor-pointer", field.value === "home_kit" && "border-primary bg-primary/5")}>
-                          <RadioGroupItem value="home_kit" id="h" className="hidden" />
-                          <label htmlFor="h" className="cursor-pointer block text-center font-bold">En Casa</label>
-                        </div>
-                      </RadioGroup>
+                      <FormItem className="space-y-4">
+                        <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground">¿Dónde realizarás el test?</FormLabel>
+                        <FormControl>
+                          <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormItem className="flex items-center space-x-0 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="presential" id="p" className="hidden" />
+                              </FormControl>
+                              <FormLabel htmlFor="p" className={cn(
+                                "flex-1 p-6 border-2 rounded-[2rem] cursor-pointer text-center transition-all duration-300",
+                                field.value === "presential" ? "border-primary bg-primary/5 shadow-md" : "border-muted hover:border-primary/30"
+                              )}>
+                                <Building2 className={cn("h-8 w-8 mx-auto mb-2", field.value === "presential" ? "text-primary" : "text-muted-foreground")} />
+                                <span className="block font-black text-lg">En Consulta</span>
+                                <span className="text-xs font-medium text-muted-foreground">Las Condes, Santiago</span>
+                              </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-0 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="home_kit" id="h" className="hidden" />
+                              </FormControl>
+                              <FormLabel htmlFor="h" className={cn(
+                                "flex-1 p-6 border-2 rounded-[2rem] cursor-pointer text-center transition-all duration-300",
+                                field.value === "home_kit" ? "border-secondary bg-secondary/5 shadow-md" : "border-muted hover:border-secondary/30"
+                              )}>
+                                <Home className={cn("h-8 w-8 mx-auto mb-2", field.value === "home_kit" ? "text-secondary" : "text-muted-foreground")} />
+                                <span className="block font-black text-lg">Test en Casa</span>
+                                <span className="text-xs font-medium text-muted-foreground">Retira tu Kit Oralab</span>
+                              </FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )} />
-                    <Button type="button" onClick={nextStep} className="w-full h-14">Siguiente</Button>
+                    <Button type="button" onClick={nextStep} className="w-full h-16 rounded-[1.5rem] text-xl font-black shadow-lg">Continuar al Calendario</Button>
                   </div>
                 )}
+
                 {step === 2 && (
-                  <div className="space-y-6">
+                  <div className="space-y-8 animate-in slide-in-from-right duration-500">
                     <FormField control={form.control} name="scheduledDate" render={({ field }) => (
-                      <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                        <PopoverTrigger asChild><Button variant="outline" className="w-full h-12 text-lg">{field.value ? format(field.value, "PPP", { locale: es }) : "Seleccionar Fecha"}</Button></PopoverTrigger>
-                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={(d) => { field.onChange(d); setIsCalendarOpen(false); }} disabled={(d) => isBefore(d, OPERATIONS_START_DATE) || isWeekend(d)} locale={es} /></PopoverContent>
-                      </Popover>
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground mb-2">Fecha de tu Cita</FormLabel>
+                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button variant="outline" className={cn("w-full h-14 text-xl font-bold rounded-xl pl-3 text-left", !field.value && "text-muted-foreground")}>
+                                {field.value ? format(field.value, "PPP", { locale: es }) : "Elegir día"}
+                                <CalendarIcon className="ml-auto h-5 w-5 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar mode="single" selected={field.value} onSelect={(d) => { field.onChange(d); setIsCalendarOpen(false); }} disabled={(d) => isBefore(d, OPERATIONS_START_DATE) || isWeekend(d)} locale={es} />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
                     )} />
+
                     <FormField control={form.control} name="scheduledTime" render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDate}>
-                        <SelectTrigger className="h-12"><SelectValue placeholder="Seleccionar Hora" /></SelectTrigger>
-                        <SelectContent>{timeSlots.map(t => <SelectItem key={t} value={t} disabled={occupiedSlots.includes(t)}>{t} hrs {occupiedSlots.includes(t) ? "(Ocupado)" : ""}</SelectItem>)}</SelectContent>
-                      </Select>
+                      <FormItem>
+                        <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground">Horario Disponible</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDate || isLoadingSlots}>
+                          <FormControl>
+                            <SelectTrigger className="h-14 text-lg rounded-xl font-bold">
+                              {isLoadingSlots ? <Loader2 className="h-4 w-4 animate-spin" /> : <SelectValue placeholder="Seleccionar bloque horario" />}
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {timeSlots.map(t => (
+                              <SelectItem key={t} value={t} disabled={occupiedSlots.includes(t)}>
+                                {t} hrs {occupiedSlots.includes(t) ? "(Reservado)" : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
                     )} />
-                    <div className="flex gap-4"><Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-14">Atrás</Button><Button type="button" onClick={nextStep} className="flex-1 h-14">Siguiente</Button></div>
+                    
+                    <div className="flex gap-4">
+                      <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-16 rounded-[1.5rem] font-bold">Atrás</Button>
+                      <Button type="button" onClick={nextStep} className="flex-1 h-16 rounded-[1.5rem] font-black shadow-lg">Siguiente Paso</Button>
+                    </div>
                   </div>
                 )}
+
                 {step === 3 && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel>Nombre</FormLabel><Input {...field} /></FormItem>)} />
-                      <FormField control={form.control} name="lastNameFather" render={({ field }) => (<FormItem><FormLabel>Apellido</FormLabel><Input {...field} /></FormItem>)} />
+                  <div className="space-y-6 animate-in slide-in-from-right duration-500">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel className="font-bold">Nombre</FormLabel><Input placeholder="Tu nombre" {...field} className="rounded-xl h-12" /></FormItem>)} />
+                      <FormField control={form.control} name="lastNameFather" render={({ field }) => (<FormItem><FormLabel className="font-bold">Apellido Paterno</FormLabel><Input placeholder="Apellido" {...field} className="rounded-xl h-12" /></FormItem>)} />
+                      <FormField control={form.control} name="lastNameMother" render={({ field }) => (<FormItem><FormLabel className="font-bold">Apellido Materno</FormLabel><Input placeholder="Apellido" {...field} className="rounded-xl h-12" /></FormItem>)} />
                     </div>
-                    <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><Input {...field} /></FormItem>)} />
-                    <div className="flex gap-4"><Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-14">Atrás</Button><Button type="submit" className="flex-1 h-14" disabled={isSubmitting}>Confirmar</Button></div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel className="font-bold">Email</FormLabel><Input type="email" placeholder="correo@ejemplo.com" {...field} className="rounded-xl h-12" /></FormItem>)} />
+                       <FormField control={form.control} name="phone" render={({ field }) => (
+                         <FormItem>
+                           <FormLabel className="font-bold">Teléfono (9 dígitos)</FormLabel>
+                           <div className="flex items-center gap-2">
+                             <span className="bg-muted px-3 h-12 rounded-xl flex items-center font-bold">+56 9</span>
+                             <Input placeholder="12345678" {...field} maxLength={8} className="rounded-xl h-12" />
+                           </div>
+                         </FormItem>
+                       )} />
+                    </div>
+
+                    <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel className="font-bold">Dirección Completa</FormLabel><Input placeholder="Calle, número, departamento" {...field} className="rounded-xl h-12" /></FormItem>)} />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField control={form.control} name="region" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold">Región</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Seleccionar" /></SelectTrigger></FormControl>
+                            <SelectContent>{regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="commune" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold">Comuna</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} disabled={!selectedRegion}>
+                            <FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Seleccionar" /></SelectTrigger></FormControl>
+                            <SelectContent>{availableCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </FormItem>
+                      )} />
+                    </div>
+
+                    <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-4">
+                       <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest mb-2">
+                          <Stethoscope className="h-4 w-4" /> Información Médica
+                       </div>
+                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          <FormField control={form.control} name="diagnosis" render={({ field }) => (<FormItem><FormLabel className="font-bold">Diagnóstico</FormLabel><Input placeholder="Ej: SIBO" {...field} className="h-10 rounded-lg" /></FormItem>)} />
+                          <FormField control={form.control} name="doctor" render={({ field }) => (<FormItem><FormLabel className="font-bold">Médico Derivante</FormLabel><Input placeholder="Nombre Dr." {...field} className="h-10 rounded-lg" /></FormItem>)} />
+                          <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel className="font-bold">Peso (kg)</FormLabel><Input type="number" placeholder="70" {...field} className="h-10 rounded-lg" /></FormItem>)} />
+                       </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-16 rounded-[1.5rem] font-bold">Atrás</Button>
+                      <Button type="submit" className="flex-1 h-16 rounded-[1.5rem] font-black bg-secondary shadow-lg hover:bg-secondary/90 transition-all" disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Confirmar Mi Reserva"}
+                      </Button>
+                    </div>
                   </div>
                 )}
               </form>

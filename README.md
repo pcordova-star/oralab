@@ -15,20 +15,16 @@ Para que las confirmaciones de reserva lleguen a los pacientes, la extensión en
 - **SMTP URI**: `smtps://control%40pcgoperacion.com:jsvfmrifbtqmlzye@smtp.gmail.com:465`
 - **From Address**: `contacto@oralab.cl`
 
-### Solución de Errores: "No aparece el campo delivery"
-Si los documentos se crean en Firestore pero no tienen el campo `delivery`, la extensión no se está ejecutando.
+### ¿Dónde ver los Logs de Error?
+Si los correos no salen y no aparece el campo `delivery` en Firestore:
 
-1.  **Ver logs en la Terminal**:
-    ```bash
-    firebase functions:log --only ext-firestore-send-email-processQueue
-    ```
-    *(Nota: El nombre de la función puede variar, verifícalo con `firebase functions:list`)*.
+1.  **En la Consola de Firebase**:
+    - Ve al menú lateral izquierdo -> **Build** -> **Functions**.
+    - Busca la función: `ext-firestore-send-email-processQueue`.
+    - Haz clic en la pestaña **Logs**.
+    - Busca errores como "Auth credentials invalid" o "Connection timeout".
 
-2.  **Ver logs en la Consola**:
-    Ve a Firebase Console -> Extensions -> Trigger Email -> Pestaña **Logs**.
-    Busca errores de **"Auth credentials invalid"** (indica que la clave de aplicación de Gmail falló) o **"Permission Denied"**.
-
-3.  **Verificación de Seguridad**:
+2.  **Verificación de Seguridad**:
     Asegúrate de que en la configuración de la extensión, el campo **"SMTP connection URI"** sea el único configurado para la conexión. No dupliques la contraseña en el campo "SMTP password".
 
 ---
