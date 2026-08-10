@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -38,7 +37,6 @@ import {
   Wallet, 
   ReceiptText,
   FileUp,
-  Sparkles,
   ScanSearch,
   CircleDollarSign,
   Info,
@@ -67,7 +65,7 @@ const communesByRegion: Record<string, string[]> = {
   "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
 };
 
-// Tabla de tarifas de logística (TarFario) según lo solicitado
+// Tabla de tarifas de logística (TarFario) actualizada según imagen de zonas
 const DELIVERY_PRICES: Record<string, number> = {
   "Las Condes": 8000, "Vitacura": 8000, "Providencia": 8000, "Lo Barnechea": 8000,
   "La Reina": 10000, "Ñuñoa": 10000, "Santiago": 10000, "Recoleta": 10000, "Independencia": 10000, "Huechuraba": 10000,
@@ -114,7 +112,6 @@ export default function BookingPage() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [lastBookingValues, setLastBookingValues] = useState<BookingFormValues | null>(null);
-  
   const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   
@@ -169,10 +166,8 @@ export default function BookingPage() {
   useEffect(() => {
     async function checkAvailability() {
       if (!selectedDate || !db) return;
-      
       setIsLoadingSlots(true);
       form.setValue("scheduledTime", ""); 
-      
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
         const q = query(
@@ -180,7 +175,6 @@ export default function BookingPage() {
           where("scheduledDate", "==", formattedDate),
           where("status", "!=", "cancelled")
         );
-        
         const snapshot = await getDocs(q);
         const slots = snapshot.docs.map(doc => doc.data().scheduledTime);
         setOccupiedSlots(slots);
@@ -190,7 +184,6 @@ export default function BookingPage() {
         setIsLoadingSlots(false);
       }
     }
-    
     checkAvailability();
   }, [selectedDate, db, form]);
 
@@ -203,29 +196,19 @@ export default function BookingPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setIsAnalyzing(true);
     setAiDetectionResult(null);
-
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64String = reader.result as string;
       try {
         const result = await analyzeMedicalOrder({ photoDataUri: base64String });
-        
         if (result.detectedExam !== 'Desconocido' && result.confidence > 0.6) {
           form.setValue("examType", result.detectedExam as any);
           setAiDetectionResult(result.detectedExam);
-          toast({
-            title: "Orden Analizada",
-            description: `Hemos detectado: ${result.detectedExam}. Se ha seleccionado automáticamente.`,
-          });
+          toast({ title: "Orden Analizada", description: `Hemos detectado: ${result.detectedExam}.` });
         } else {
-          toast({
-            variant: "destructive",
-            title: "Detección fallida",
-            description: "No pudimos identificar el examen automáticamente. Por favor selecciónalo manualmente.",
-          });
+          toast({ variant: "destructive", title: "Detección fallida", description: "Por favor selecciónalo manualmente." });
         }
       } catch (err) {
         toast({ variant: "destructive", title: "Error al procesar imagen" });
@@ -240,7 +223,6 @@ export default function BookingPage() {
     let fieldsToValidate: any[] = [];
     if (step === 1) fieldsToValidate = ["examType", "modality"];
     if (step === 2) fieldsToValidate = ["scheduledDate", "scheduledTime"];
-    
     const isValid = await form.trigger(fieldsToValidate as any);
     if (isValid) setStep(step + 1);
   }
@@ -286,7 +268,6 @@ export default function BookingPage() {
     doc.text(`Valor Examen: $${BASE_FEE.toLocaleString()}`, margin + 5, y + 8);
     if (discountAmount > 0) doc.text(`Descuento Previsión: -$${discountAmount.toLocaleString()}`, margin + 5, y + 16);
     if (deliveryFee > 0) doc.text(`Tarifa Logística Motoboy: $${deliveryFee.toLocaleString()}`, margin + 5, y + 24);
-    
     doc.setFont("helvetica", "bold");
     doc.text(`TOTAL A PAGAR: $${finalTotal.toLocaleString()}`, margin + 5, y + 32);
     
@@ -296,15 +277,11 @@ export default function BookingPage() {
     y += 8;
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    
     let instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
-    
     if (lastBookingValues.modality === 'home_kit') {
       instructions += "\n\nPROCEDIMIENTO TEST EN CASA:\n- Retira el kit a la hora elegida en Apoquindo 3990.\n- Recibe la instrucción del profesional a cargo.\n- Una vez realizado, coordina el retiro con el motoboy indicado en el flyer.\n- IMPORTANTE: El test tiene un plazo máximo de 6 horas para ser entregado en el laboratorio.";
     }
-
     doc.text(doc.splitTextToSize(instructions, 170), margin, y);
-    
     doc.save(`Reserva_Oralab_${lastBookingValues.firstName}.pdf`);
   }
 
@@ -312,7 +289,6 @@ export default function BookingPage() {
     if (!db) return;
     setIsSubmitting(true);
     const formattedDate = format(values.scheduledDate, "d 'de' MMMM, yyyy", { locale: es });
-    
     const bookingData = {
       examType: values.examType,
       modality: values.modality,
@@ -336,7 +312,6 @@ export default function BookingPage() {
 
     try {
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
-      
       const homeKitText = values.modality === 'home_kit' 
         ? `<p style="color: #1c68b6; font-weight: bold;">PROCEDIMIENTO TEST EN CASA:</p>
            <ul>
@@ -351,7 +326,7 @@ export default function BookingPage() {
         to: values.email, 
         message: {
           subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
-          text: `Hola ${values.firstName}, tu reserva está confirmada para el día ${formattedDate} a las ${values.scheduledTime} hrs. El total a pagar es $${finalTotal.toLocaleString()}.`,
+          text: `Hola ${values.firstName}, tu reserva está confirmada para el día ${formattedDate}.`,
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px;">
               <h2 style="color: #1c68b6;">Confirmación de Reserva</h2>
@@ -359,11 +334,9 @@ export default function BookingPage() {
               <div style="padding: 15px; background: #f0f7ff; margin-bottom: 20px;">
                 <p><strong>Día:</strong> ${formattedDate}</p>
                 <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
-                <p><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Retira tu Kit en Laboratorio: Apoquindo 3990)' : 'Apoquindo 3990, Las Condes'}</p>
+                <p><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Retiro Kit en Apoquindo 3990)' : 'Apoquindo 3990, Las Condes'}</p>
               </div>
-              
               ${homeKitText}
-
               <p><strong>Total Final a Pagar: $${finalTotal.toLocaleString()}</strong></p>
               <p style="color: #d97706;">RECUERDA: Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
               <p style="font-size: 12px; color: #64748b;">© 2024 Oralab Clinical Lab. Tecnología Sunvou®.</p>
@@ -371,7 +344,6 @@ export default function BookingPage() {
           `
         }
       });
-
       setLastBookingValues(values);
       toast({ title: "Reserva Confirmada" });
       setStep(4);
@@ -421,7 +393,6 @@ export default function BookingPage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {step === 1 && (
                   <div className="space-y-8 animate-in fade-in duration-500">
-                    
                     <Card className="bg-secondary/5 border-dashed border-2 border-secondary/30 rounded-[2rem] p-6 relative overflow-hidden group">
                       <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
                         <div className="bg-secondary text-white p-4 rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
@@ -434,45 +405,27 @@ export default function BookingPage() {
                           <p className="text-sm text-muted-foreground font-medium">Sube una foto para que nuestra IA detecte tu examen automáticamente.</p>
                         </div>
                         <div className="relative">
-                          <Input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
-                            id="order-upload" 
-                            onChange={handleFileUpload} 
-                            disabled={isAnalyzing}
-                          />
+                          <Input type="file" accept="image/*" className="hidden" id="order-upload" onChange={handleFileUpload} disabled={isAnalyzing} />
                           <label htmlFor="order-upload">
                             <Button asChild variant="outline" className="rounded-full font-bold border-secondary text-secondary hover:bg-secondary hover:text-white cursor-pointer h-12 px-6">
-                              <span>
-                                <FileUp className="mr-2 h-4 w-4" /> 
-                                {isAnalyzing ? "Analizando..." : "Escanear Orden"}
-                              </span>
+                              <span><FileUp className="mr-2 h-4 w-4" /> {isAnalyzing ? "Analizando..." : "Escanear Orden"}</span>
                             </Button>
                           </label>
                         </div>
                       </div>
-                      {aiDetectionResult && (
-                        <div className="mt-4 flex items-center justify-center gap-2 bg-green-50 text-green-700 py-2 rounded-xl text-xs font-bold border border-green-100">
-                          <CheckCircle2 className="h-4 w-4" /> IA Identificó: {aiDetectionResult}
-                        </div>
-                      )}
                     </Card>
 
                     <FormField control={form.control} name="examType" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground">Tipo de Examen</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-14 text-lg rounded-xl font-bold"><SelectValue placeholder="Seleccionar examen" /></SelectTrigger>
-                          </FormControl>
+                          <FormControl><SelectTrigger className="h-14 text-lg rounded-xl font-bold"><SelectValue placeholder="Seleccionar examen" /></SelectTrigger></FormControl>
                           <SelectContent>
                             <SelectItem value="Lactulosa">Test Lactulosa (SIBO)</SelectItem>
                             <SelectItem value="Fructosa">Test Fructosa</SelectItem>
                             <SelectItem value="Lactosa">Test Lactosa</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormMessage />
                       </FormItem>
                     )} />
 
@@ -482,26 +435,16 @@ export default function BookingPage() {
                         <FormControl>
                           <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormItem className="flex items-center space-x-0 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="presential" id="p" className="hidden" />
-                              </FormControl>
-                              <FormLabel htmlFor="p" className={cn(
-                                "flex-1 p-6 border-2 rounded-[2rem] cursor-pointer text-center transition-all duration-300",
-                                field.value === "presential" ? "border-primary bg-primary/5 shadow-md" : "border-muted hover:border-primary/30"
-                              )}>
+                              <FormControl><RadioGroupItem value="presential" id="p" className="hidden" /></FormControl>
+                              <FormLabel htmlFor="p" className={cn("flex-1 p-6 border-2 rounded-[2rem] cursor-pointer text-center transition-all", field.value === "presential" ? "border-primary bg-primary/5" : "border-muted")}>
                                 <Building2 className={cn("h-8 w-8 mx-auto mb-2", field.value === "presential" ? "text-primary" : "text-muted-foreground")} />
                                 <span className="block font-black text-lg">En Consulta</span>
                                 <span className="text-xs font-medium text-muted-foreground">Apoquindo 3990, Las Condes</span>
                               </FormLabel>
                             </FormItem>
                             <FormItem className="flex items-center space-x-0 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="home_kit" id="h" className="hidden" />
-                              </FormControl>
-                              <FormLabel htmlFor="h" className={cn(
-                                "flex-1 p-6 border-2 rounded-[2rem] cursor-pointer text-center transition-all duration-300",
-                                field.value === "home_kit" ? "border-secondary bg-secondary/5 shadow-md" : "border-muted hover:border-secondary/30"
-                              )}>
+                              <FormControl><RadioGroupItem value="home_kit" id="h" className="hidden" /></FormControl>
+                              <FormLabel htmlFor="h" className={cn("flex-1 p-6 border-2 rounded-[2rem] cursor-pointer text-center transition-all", field.value === "home_kit" ? "border-secondary bg-secondary/5" : "border-muted")}>
                                 <Home className={cn("h-8 w-8 mx-auto mb-2", field.value === "home_kit" ? "text-secondary" : "text-muted-foreground")} />
                                 <span className="block font-black text-lg">Test en Casa</span>
                                 <span className="text-xs font-medium text-muted-foreground">Retira tu Kit Oralab</span>
@@ -509,56 +452,43 @@ export default function BookingPage() {
                             </FormItem>
                           </RadioGroup>
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )} />
 
                     {selectedModality && (
-                      <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
+                      <div className="space-y-4 animate-in slide-in-from-bottom-4">
                         {selectedModality === 'home_kit' && (
                           <div className="bg-secondary/10 p-6 rounded-[2rem] border border-secondary/20 space-y-3">
-                            <h5 className="font-black text-secondary flex items-center gap-2 text-sm italic">
-                              <Info className="h-4 w-4" /> Procedimiento Test en Casa
-                            </h5>
+                            <h5 className="font-black text-secondary flex items-center gap-2 text-sm italic"><Info className="h-4 w-4" /> Procedimiento Test en Casa</h5>
                             <ul className="text-xs font-medium text-muted-foreground space-y-2 list-disc pl-5">
                               <li>Deberás <strong>retirar el kit</strong> en el laboratorio a la hora elegida (Apoquindo 3990).</li>
                               <li>Recibirás la instrucción de uso por parte de un profesional.</li>
                               <li>Tras realizar el test, coordina el retiro con el motoboy indicado en el flyer.</li>
-                              <li className="text-secondary font-black">IMPORTANTE: El test tiene un plazo máximo de 6 horas para estar en el laboratorio tras su realización.</li>
+                              <li className="text-secondary font-black">IMPORTANTE: Plazo máximo de 6 horas para retorno al lab.</li>
                             </ul>
                           </div>
                         )}
-
-                        <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="bg-white p-2 rounded-xl shadow-sm">
-                                <CircleDollarSign className="h-6 w-6 text-primary" />
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Valor del Examen</p>
-                                <p className="text-2xl font-black text-primary italic">$ {BASE_FEE.toLocaleString()} CLP</p>
-                              </div>
+                        <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-white p-2 rounded-xl"><CircleDollarSign className="h-6 w-6 text-primary" /></div>
+                            <div>
+                              <p className="text-[10px] font-black text-muted-foreground uppercase">Valor del Examen</p>
+                              <p className="text-2xl font-black text-primary italic">$ {BASE_FEE.toLocaleString()} CLP</p>
                             </div>
-                            {selectedModality === 'home_kit' && (
-                              <Badge variant="outline" className="border-secondary/20 text-secondary bg-secondary/5 font-bold text-[10px] uppercase p-2 rounded-xl">
-                                <Truck className="h-3 w-3 mr-1" /> + Logística Motoboy
-                              </Badge>
-                            )}
                           </div>
+                          {selectedModality === 'home_kit' && <Badge variant="outline" className="text-secondary border-secondary/20"><Truck className="h-3 w-3 mr-1" /> + Logística</Badge>}
                         </div>
                       </div>
                     )}
-
-                    <Button type="button" onClick={nextStep} className="w-full h-16 rounded-[1.5rem] text-xl font-black shadow-lg">Continuar</Button>
+                    <Button type="button" onClick={nextStep} className="w-full h-16 rounded-[1.5rem] text-xl font-black">Continuar</Button>
                   </div>
                 )}
 
                 {step === 2 && (
-                  <div className="space-y-8 animate-in slide-in-from-right duration-500">
+                  <div className="space-y-8 animate-in slide-in-from-right">
                     <FormField control={form.control} name="scheduledDate" render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground mb-2">Fecha de tu Cita</FormLabel>
+                        <FormLabel className="font-black text-xs uppercase text-muted-foreground">Fecha de tu Cita / Retiro Kit</FormLabel>
                         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -572,141 +502,74 @@ export default function BookingPage() {
                             <Calendar mode="single" selected={field.value} onSelect={(d) => { field.onChange(d); setIsCalendarOpen(false); }} disabled={(d) => isBefore(d, OPERATIONS_START_DATE) || isWeekend(d)} locale={es} />
                           </PopoverContent>
                         </Popover>
-                        <FormMessage />
                       </FormItem>
                     )} />
 
                     <FormField control={form.control} name="scheduledTime" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground">Horario {selectedModality === 'home_kit' ? 'de Retiro Kit' : 'de Cita'}</FormLabel>
+                        <FormLabel className="font-black text-xs uppercase text-muted-foreground">Bloque Horario</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDate || isLoadingSlots}>
-                          <FormControl>
-                            <SelectTrigger className="h-14 text-lg rounded-xl font-bold">
-                              {isLoadingSlots ? <Loader2 className="h-4 w-4 animate-spin" /> : <SelectValue placeholder="Seleccionar bloque horario" />}
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {timeSlots.map(t => (
-                              <SelectItem key={t} value={t} disabled={occupiedSlots.includes(t)}>
-                                {t} hrs {occupiedSlots.includes(t) ? "(Reservado)" : ""}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
+                          <FormControl><SelectTrigger className="h-14 text-lg rounded-xl font-bold">{isLoadingSlots ? <Loader2 className="animate-spin h-4 w-4" /> : <SelectValue placeholder="Seleccionar bloque" />}</SelectTrigger></FormControl>
+                          <SelectContent>{timeSlots.map(t => <SelectItem key={t} value={t} disabled={occupiedSlots.includes(t)}>{t} hrs {occupiedSlots.includes(t) ? "(Reservado)" : ""}</SelectItem>)}</SelectContent>
                         </Select>
-                        <FormMessage />
                       </FormItem>
                     )} />
-                    
                     <div className="flex gap-4">
                       <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-16 rounded-[1.5rem] font-bold">Atrás</Button>
-                      <Button type="button" onClick={nextStep} className="flex-1 h-16 rounded-[1.5rem] font-black shadow-lg">Siguiente</Button>
+                      <Button type="button" onClick={nextStep} className="flex-1 h-16 rounded-[1.5rem] font-black">Siguiente</Button>
                     </div>
                   </div>
                 )}
 
                 {step === 3 && (
-                  <div className="space-y-6 animate-in slide-in-from-right duration-500">
+                  <div className="space-y-6 animate-in slide-in-from-right">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel className="font-bold">Nombre</FormLabel><Input placeholder="Tu nombre" {...field} className="rounded-xl h-12" /></FormItem>)} />
-                      <FormField control={form.control} name="lastNameFather" render={({ field }) => (<FormItem><FormLabel className="font-bold">Apellido Paterno</FormLabel><Input placeholder="Apellido" {...field} className="rounded-xl h-12" /></FormItem>)} />
-                      <FormField control={form.control} name="lastNameMother" render={({ field }) => (<FormItem><FormLabel className="font-bold">Apellido Materno</FormLabel><Input placeholder="Apellido" {...field} className="rounded-xl h-12" /></FormItem>)} />
+                      <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel className="font-bold">Nombre</FormLabel><Input {...field} className="rounded-xl h-12" /></FormItem>)} />
+                      <FormField control={form.control} name="lastNameFather" render={({ field }) => (<FormItem><FormLabel className="font-bold">Apellido P.</FormLabel><Input {...field} className="rounded-xl h-12" /></FormItem>)} />
+                      <FormField control={form.control} name="lastNameMother" render={({ field }) => (<FormItem><FormLabel className="font-bold">Apellido M.</FormLabel><Input {...field} className="rounded-xl h-12" /></FormItem>)} />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel className="font-bold">Email</FormLabel><Input type="email" placeholder="correo@ejemplo.com" {...field} className="rounded-xl h-12" /></FormItem>)} />
-                       <FormField control={form.control} name="phone" render={({ field }) => (
-                         <FormItem>
-                           <FormLabel className="font-bold">Teléfono (8 dígitos)</FormLabel>
-                           <div className="flex items-center gap-2">
-                             <span className="bg-muted px-3 h-12 rounded-xl flex items-center font-bold">+56 9</span>
-                             <Input placeholder="12345678" {...field} maxLength={8} className="rounded-xl h-12" />
-                           </div>
-                         </FormItem>
-                       )} />
+                       <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel className="font-bold">Email</FormLabel><Input type="email" {...field} className="rounded-xl h-12" /></FormItem>)} />
+                       <FormField control={form.control} name="phone" render={({ field }) => (<FormItem><FormLabel className="font-bold">Teléfono</FormLabel><div className="flex items-center gap-2"><span className="bg-muted px-3 h-12 rounded-xl flex items-center font-bold">+56 9</span><Input {...field} maxLength={8} className="rounded-xl h-12" /></div></FormItem>)} />
                     </div>
 
-                    <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel className="font-bold">Dirección Completa</FormLabel><Input placeholder="Calle, número, departamento" {...field} className="rounded-xl h-12" /></FormItem>)} />
+                    <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel className="font-bold">Dirección</FormLabel><Input {...field} className="rounded-xl h-12" /></FormItem>)} />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField control={form.control} name="region" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-bold">Región</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Seleccionar" /></SelectTrigger></FormControl>
-                            <SelectContent>{regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </FormItem>
+                        <FormItem><FormLabel className="font-bold">Región</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent>{regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></FormItem>
                       )} />
                       <FormField control={form.control} name="commune" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-bold">Comuna</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value} disabled={!selectedRegion}>
-                            <FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Seleccionar" /></SelectTrigger></FormControl>
-                            <SelectContent>{availableCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </FormItem>
+                        <FormItem><FormLabel className="font-bold">Comuna</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!selectedRegion}><FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent>{availableCommunes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></FormItem>
                       )} />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField control={form.control} name="prevision" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-bold">Previsión de Salud</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Seleccionar" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                              <SelectItem value="fonasa">Fonasa (20% Desc)</SelectItem>
-                              <SelectItem value="isapre">Isapre (20% Desc)</SelectItem>
-                              <SelectItem value="particular">Particular</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
+                        <FormItem><FormLabel className="font-bold">Previsión (20% Desc)</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="fonasa">Fonasa (20% Desc)</SelectItem><SelectItem value="isapre">Isapre (20% Desc)</SelectItem><SelectItem value="particular">Particular</SelectItem></SelectContent></Select></FormItem>
                       )} />
-                      <FormField control={form.control} name="weight" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-bold">Peso (kg)</FormLabel>
-                          <Input type="number" placeholder="70" {...field} className="h-12 rounded-xl" />
-                          <FormMessage />
-                        </FormItem>
-                      )} />
+                      <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel className="font-bold">Peso (kg)</FormLabel><Input type="number" {...field} className="h-12 rounded-xl" /></FormItem>)} />
                     </div>
 
-                    <Card className="bg-primary/5 border-primary/10 rounded-[2rem] overflow-hidden shadow-inner">
+                    <Card className="bg-primary/5 border-primary/10 rounded-[2rem] overflow-hidden">
                       <div className="p-6 space-y-4">
-                         <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest border-b border-primary/10 pb-2">
-                           <ReceiptText className="h-4 w-4" /> Desglose de Pago
+                         <div className="flex items-center gap-2 text-primary font-black uppercase text-xs border-b border-primary/10 pb-2"><ReceiptText className="h-4 w-4" /> Desglose de Pago</div>
+                         <div className="space-y-2 text-sm">
+                           <div className="flex justify-between"><span>Valor Examen:</span><span className="font-bold">$ {BASE_FEE.toLocaleString()}</span></div>
+                           {discountAmount > 0 && <div className="flex justify-between text-green-600"><span><Wallet className="inline h-3 w-3 mr-1" /> Descuento Previsión:</span><span className="font-black">- $ {discountAmount.toLocaleString()}</span></div>}
+                           {deliveryFee > 0 && <div className="flex justify-between text-secondary"><span><Truck className="inline h-3 w-3 mr-1" /> Logística Motoboy:</span><span className="font-black">+ $ {deliveryFee.toLocaleString()}</span></div>}
                          </div>
-                         <div className="space-y-2">
-                           <div className="flex justify-between items-center text-sm">
-                             <span className="font-medium text-muted-foreground">Valor Examen {selectedModality === 'home_kit' ? '(Kit)' : '(Presencial)'}:</span>
-                             <span className="font-bold">$ {BASE_FEE.toLocaleString()}</span>
-                           </div>
-                           {discountAmount > 0 && (
-                             <div className="flex justify-between items-center text-sm text-green-600">
-                               <span className="font-medium flex items-center gap-1"><Wallet className="h-3 w-3" /> Descuento Previsión (20%):</span>
-                               <span className="font-black">- $ {discountAmount.toLocaleString()}</span>
-                             </div>
-                           )}
-                           {deliveryFee > 0 && (
-                             <div className="flex justify-between items-center text-sm text-secondary">
-                               <span className="font-medium flex items-center gap-1"><Truck className="h-3 w-3" /> Logística Retiro Motoboy:</span>
-                               <span className="font-black">+ $ {deliveryFee.toLocaleString()}</span>
-                             </div>
-                           )}
-                         </div>
-                         <div className="bg-primary/10 -mx-6 -mb-6 p-6 flex justify-between items-center">
-                            <span className="font-black text-primary uppercase text-sm italic">Total Final:</span>
-                            <span className="text-3xl font-black text-primary italic leading-none">$ {finalTotal.toLocaleString()} <span className="text-[10px] uppercase font-bold not-italic">CLP</span></span>
+                         <div className="bg-primary/10 -mx-6 -mb-6 p-6 flex justify-between items-center text-primary italic">
+                            <span className="font-black text-sm uppercase">Total Final:</span>
+                            <span className="text-3xl font-black">$ {finalTotal.toLocaleString()} CLP</span>
                          </div>
                       </div>
                     </Card>
 
                     <div className="flex gap-4 pt-4">
                       <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-16 rounded-[1.5rem] font-bold">Atrás</Button>
-                      <Button type="submit" className="flex-1 h-16 rounded-[1.5rem] font-black bg-secondary shadow-lg hover:bg-secondary/90 transition-all" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : "Confirmar Reserva"}
-                      </Button>
+                      <Button type="submit" className="flex-1 h-16 rounded-[1.5rem] font-black bg-secondary shadow-lg" disabled={isSubmitting}>{isSubmitting ? <Loader2 className="animate-spin" /> : "Confirmar Reserva"}</Button>
                     </div>
                   </div>
                 )}

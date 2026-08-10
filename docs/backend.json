@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "Booking": {
@@ -86,45 +85,6 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["clientName", "clientEmail", "items", "total", "status", "exchangeRate", "createdAt"]
-    },
-    "Lead": {
-      "title": "Lead",
-      "description": "Contacto comercial desde la landing de Sunvou.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "institution": { "type": "string" },
-        "message": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "email", "message"]
-    },
-    "InvestorUpdate": {
-      "title": "InvestorUpdate",
-      "description": "Noticia o actualización para el muro de socios.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "content": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "date": { "type": "string", "format": "date" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["title", "content", "imageUrl", "date"]
-    },
-    "Milestone": {
-      "title": "Milestone",
-      "description": "Hito en el cronograma del proyecto para inversionistas.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "date": { "type": "string", "format": "date" },
-        "status": { "type": "string", "enum": ["pending", "completed"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["title", "description", "date", "status"]
     }
   },
   "auth": {
@@ -146,18 +106,6 @@
     "/quotations/{quotationId}": {
       "schema": "Quotation",
       "description": "Colección de cotizaciones comerciales."
-    },
-    "/leads/{leadId}": {
-      "schema": "Lead",
-      "description": "Consultas comerciales."
-    },
-    "/investor_updates/{updateId}": {
-      "schema": "InvestorUpdate",
-      "description": "Mural de noticias para socios."
-    },
-    "/milestones/{milestoneId}": {
-      "schema": "Milestone",
-      "description": "Colección de hitos del proyecto."
     }
   }
 }
