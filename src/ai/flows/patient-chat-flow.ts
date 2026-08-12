@@ -2,7 +2,8 @@
 /**
  * @fileOverview Chatbot Experto de Oralab.
  * 
- * Este flujo maneja consultas generales de usuarios curiosos y validación de pacientes.
+ * Este flujo maneja consultas generales de usuarios y validación de pacientes.
+ * Utiliza Genkit 1.x para una integración robusta con Gemini.
  */
 
 import { ai } from '@/ai/genkit';
@@ -74,6 +75,7 @@ const lookupPatient = ai.defineTool(
       }
       return { found: false };
     } catch (e) {
+      console.error("Error in lookupPatient tool:", e);
       return { found: false };
     }
   }
@@ -93,21 +95,21 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       2. TECNOLOGÍA: Usamos tecnología Sunvou®, la más avanzada del mundo, que mide Hidrógeno (H2), Metano (CH4) y Sulfuro (H2S).
       3. PRECIO: El valor base es $80.000 CLP.
       4. DESCUENTO: Ofrecemos 20% de descuento ($16.000 menos) para pacientes de Fonasa e Isapre.
-      5. TEST EN CASA: El kit se retira en Apoquindo 3990. Tras soplar, el paciente tiene máximo 6 HORAS para que la muestra llegue al laboratorio.
+      5. TEST EN CASA: El kit se retira en Apoquindo 3990. Tras soplar, el paciente tiene máximo 6 HORAS para que la muestra llegue al laboratorio. Es crítico.
       6. UBICACIÓN: Apoquindo 3990, Of. 605, Las Condes, Santiago.
       
       INSTRUCCIONES DE COMPORTAMIENTO:
       - Sé profesional, clínico pero muy empático.
       - Si alguien pregunta qué es SIBO, explícalo de forma sencilla.
       - Si preguntan por su reserva, usa la herramienta 'lookupPatient'.
-      - Si 'lookupPatient' falla, ofrece ayuda por WhatsApp (+56 9 3685 0468).
-      - Menciona siempre el límite de 6 horas para los tests a domicilio, es una alerta de seguridad crítica.
+      - Si 'lookupPatient' falla o no encuentra nada, ofrece ayuda por WhatsApp (+56 9 3685 0468).
+      - Menciona siempre el límite de 6 horas para los tests a domicilio si surge el tema.
       
       Responde siempre en ESPAÑOL de Chile.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
-          role: m.role as 'user' | 'model' | 'system', 
+          role: m.role, 
           content: [{ text: m.text }] 
         })),
         { role: 'user', content: [{ text: input.message }] }
@@ -115,13 +117,13 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
     });
 
     return {
-      text: response.text,
+      text: response.text || "No pude generar una respuesta clara. ¿En qué más puedo ayudarte?",
       isVerified: true, 
     };
   } catch (error: any) {
     console.error("Genkit Error:", error);
     return {
-      text: "Lo siento, mi sistema de IA está experimentando una breve interrupción. Por favor, contáctanos directamente por WhatsApp al +56 9 3685 0468 para ayudarte de inmediato.",
+      text: "Lo siento, mi sistema de IA está experimentando una breve interrupción. Por favor, asegúrate de que la API Key esté configurada correctamente o contáctanos por WhatsApp al +56 9 3685 0468.",
       isVerified: false
     };
   }
