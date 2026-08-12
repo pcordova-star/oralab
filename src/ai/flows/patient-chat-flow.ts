@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview Chatbot de Preparación de Pacientes de Oralab.
+ * @fileOverview Chatbot Experto de Oralab.
  * 
- * Este flujo valida al paciente en Firestore antes de entregar instrucciones de preparación.
+ * Este flujo maneja consultas generales de usuarios curiosos y validación de pacientes.
  */
 
 import { ai } from '@/ai/genkit';
@@ -42,6 +42,7 @@ const lookupPatient = ai.defineTool(
       found: z.boolean(),
       examType: z.string().optional(),
       patientName: z.string().optional(),
+      scheduledDate: z.string().optional(),
     }),
   },
   async (input) => {
@@ -68,6 +69,7 @@ const lookupPatient = ai.defineTool(
           found: true,
           examType: data.examType || "Examen de Aire Espirado",
           patientName: `${data.firstName} ${data.lastNameFather}`,
+          scheduledDate: data.scheduledDate,
         };
       }
       return { found: false };
@@ -78,22 +80,30 @@ const lookupPatient = ai.defineTool(
 );
 
 /**
- * Flujo de chat principal con referencia de modelo directa por ID.
+ * Flujo de chat principal con conocimiento experto de Oralab.
  */
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   try {
     const response = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
-      system: `Eres el Asistente Virtual de Oralab (Chile).
+      system: `Eres el Asistente Virtual Experto de Oralab (Chile). Tu misión es ayudar a pacientes y personas interesadas.
       
-      INSTRUCCIONES:
-      1. Saluda cordialmente.
-      2. Si no sabes quién es el usuario, pregunta su nombre y usa 'lookupPatient'.
-      3. Si 'lookupPatient' devuelve 'found: true', confirma su examen y entrega instrucciones de preparación.
-      4. Instrucciones Generales: 12h ayuno, dieta blanda el día anterior (arroz, pollo/pescado plancha, sin frutas ni verduras), no fumar ni ejercicio 2h antes, no antibióticos/probióticos 4 semanas antes.
-      5. Si 'lookupPatient' devuelve 'found: false', indica amablemente que no hay cita bajo ese nombre y ofrece ayuda vía WhatsApp (+56 9 3685 0468).
+      CONOCIMIENTOS CLAVE:
+      1. TRATAMIENTO: Realizamos tests de aire espirado (Lactulosa, Fructosa, Lactosa) para detectar SIBO e intolerancias.
+      2. TECNOLOGÍA: Usamos tecnología Sunvou®, la más avanzada del mundo, que mide Hidrógeno (H2), Metano (CH4) y Sulfuro (H2S).
+      3. PRECIO: El valor base es $80.000 CLP.
+      4. DESCUENTO: Ofrecemos 20% de descuento ($16.000 menos) para pacientes de Fonasa e Isapre.
+      5. TEST EN CASA: El kit se retira en Apoquindo 3990. Tras soplar, el paciente tiene máximo 6 HORAS para que la muestra llegue al laboratorio.
+      6. UBICACIÓN: Apoquindo 3990, Of. 605, Las Condes, Santiago.
       
-      Responde siempre en ESPAÑOL profesional y empático.`,
+      INSTRUCCIONES DE COMPORTAMIENTO:
+      - Sé profesional, clínico pero muy empático.
+      - Si alguien pregunta qué es SIBO, explícalo de forma sencilla.
+      - Si preguntan por su reserva, usa la herramienta 'lookupPatient'.
+      - Si 'lookupPatient' falla, ofrece ayuda por WhatsApp (+56 9 3685 0468).
+      - Menciona siempre el límite de 6 horas para los tests a domicilio, es una alerta de seguridad crítica.
+      
+      Responde siempre en ESPAÑOL de Chile.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -109,13 +119,9 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       isVerified: true, 
     };
   } catch (error: any) {
-    const errorMessage = error?.message || "Error desconocido";
     console.error("Genkit Error:", error);
-    
     return {
-      text: `[DIAGNÓSTICO TÉCNICO]: Error de comunicación con Google AI. 
-      Detalle: ${errorMessage}. 
-      Recomendación: Verifica que la API Key en el panel de Firebase App Hosting sea la correcta y que el modelo 'gemini-1.5-flash' esté habilitado.`,
+      text: "Lo siento, mi sistema de IA está experimentando una breve interrupción. Por favor, contáctanos directamente por WhatsApp al +56 9 3685 0468 para ayudarte de inmediato.",
       isVerified: false
     };
   }

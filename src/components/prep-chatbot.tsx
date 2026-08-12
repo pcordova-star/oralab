@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -18,7 +17,7 @@ type Message = {
 
 const INITIAL_MESSAGE: Message = { 
   role: 'model', 
-  text: '¡Hola! Soy el asistente virtual de Oralab. Para ayudarte con tu preparación, ¿podrías indicarme tu nombre completo para revisar tu reserva?' 
+  text: '¡Hola! Soy tu asistente virtual de Oralab. Puedo ayudarte a entender nuestros tests de aire espirado, informarte sobre precios o revisar tu reserva actual. ¿En qué puedo apoyarte hoy?' 
 };
 
 export function PrepChatbot() {
@@ -49,8 +48,6 @@ export function PrepChatbot() {
 
   const toggleChat = () => {
     if (isOpen) {
-      // AL CERRAR: Reseteamos la conversación por completo por privacidad
-      resetChat();
       setIsOpen(false);
     } else {
       setIsOpen(true);
@@ -85,7 +82,7 @@ export function PrepChatbot() {
   };
 
   return (
-    <div className="fixed bottom-24 right-6 z-50">
+    <div className="fixed bottom-24 right-6 z-50 flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -102,8 +99,8 @@ export function PrepChatbot() {
                       <Sparkles className="h-4 w-4 text-secondary" />
                     </div>
                     <div>
-                      <CardTitle className="text-sm font-black italic">Asistente Oralab</CardTitle>
-                      <p className="text-[10px] opacity-70 font-bold uppercase tracking-widest">Soporte al Paciente</p>
+                      <CardTitle className="text-sm font-black italic">Asistente Virtual</CardTitle>
+                      <p className="text-[10px] opacity-70 font-bold uppercase tracking-widest">Oralab Expert AI</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -151,7 +148,7 @@ export function PrepChatbot() {
                   className="flex w-full gap-2"
                 >
                   <Input 
-                    placeholder="Escribe tu consulta..." 
+                    placeholder="Haz una pregunta clínica..." 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     className="rounded-full border-primary/10 h-10 focus:ring-primary"
@@ -167,15 +164,23 @@ export function PrepChatbot() {
         )}
       </AnimatePresence>
 
-      <Button
-        onClick={toggleChat}
-        className={cn(
-          "rounded-full h-14 w-14 shadow-2xl transition-all duration-300 hover:scale-110",
-          isOpen ? "bg-red-500 hover:bg-red-600" : "bg-primary hover:bg-secondary shadow-primary/20"
+      <div className="relative">
+        <Button
+          onClick={toggleChat}
+          className={cn(
+            "rounded-full h-14 w-14 shadow-2xl transition-all duration-300 hover:scale-110",
+            isOpen ? "bg-red-500 hover:bg-red-600" : "bg-primary hover:bg-secondary shadow-primary/20"
+          )}
+        >
+          {isOpen ? <X className="h-6 w-6" /> : <Bot className="h-6 w-6" />}
+        </Button>
+        {!isOpen && (
+          <div className="absolute -top-12 right-0 bg-white px-4 py-2 rounded-2xl shadow-xl border border-primary/10 whitespace-nowrap animate-bounce pointer-events-none">
+            <p className="text-[10px] font-black text-primary">¿Dudas? Pregúntame 👋</p>
+            <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white rotate-45 border-r border-b border-primary/10" />
+          </div>
         )}
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <Bot className="h-6 w-6" />}
-      </Button>
+      </div>
     </div>
   );
 }
