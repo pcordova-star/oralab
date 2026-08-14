@@ -44,7 +44,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { PrepChatbot } from "@/components/prep-chatbot";
 
 const reportData = [
   { time: 0, h2: 5, ch4: 2, h2s: 0.8, co2: 'OK', symptoms: 'Ninguno' },
@@ -681,8 +680,6 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-      
-      <PrepChatbot />
     </div>
   );
 }
