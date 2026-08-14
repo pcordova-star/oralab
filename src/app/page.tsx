@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -26,7 +27,8 @@ import {
   Coffee,
   Briefcase,
   Users,
-  FileText
+  FileText,
+  Handshake
 } from "lucide-react";
 import { 
   LineChart, 
@@ -654,6 +656,13 @@ export default function HomePage() {
           <div className="col-span-1 lg:col-span-2 space-y-6">
             <Logo />
             <p className="text-muted-foreground text-sm leading-relaxed">Laboratorio especializado en Salud Digestiva. Partner tecnológico Sunvou® en Chile.</p>
+            <div className="flex gap-4">
+              <Link href="/agreements">
+                <Button variant="outline" size="sm" className="rounded-full font-bold border-primary/20 text-primary">
+                  <Handshake className="h-4 w-4 mr-2" /> Convenios Médicos
+                </Button>
+              </Link>
+            </div>
           </div>
           <div>
             <h5 className="font-black text-primary mb-6 uppercase tracking-widest">Sede Las Condes</h5>
@@ -665,8 +674,14 @@ export default function HomePage() {
           <div className="flex flex-col gap-4 group">
             <h5 className="font-black text-primary mb-2 uppercase tracking-widest">Accesos</h5>
             <Link 
+              href="/agreements" 
+              className="text-xs text-primary font-black flex items-center gap-2 hover:text-secondary"
+            >
+              <Handshake className="h-3 w-3" /> Convenios Institucionales
+            </Link>
+            <Link 
               href="/investors" 
-              className="text-xs text-primary font-black opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center gap-2 hover:text-secondary"
+              className="text-xs text-muted-foreground/60 hover:text-primary transition-all flex items-center gap-2"
             >
               <Users className="h-3 w-3" /> Portal de Inversionistas
             </Link>

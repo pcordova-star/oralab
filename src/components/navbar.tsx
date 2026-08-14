@@ -57,8 +57,13 @@ export function Navbar() {
                   Mi Test (En Casa)
                 </Button>
               </Link>
-              <Link href="/sunvou">
+              <Link href="/agreements">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-black text-primary hover:text-secondary uppercase tracking-widest">
+                  Convenios
+                </Button>
+              </Link>
+              <Link href="/sunvou">
+                <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-bold text-muted-foreground hover:text-primary">
                   Tecnología Sunvou
                 </Button>
               </Link>

@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Booking": {
@@ -85,6 +86,20 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["clientName", "clientEmail", "items", "total", "status", "exchangeRate", "createdAt"]
+    },
+    "AgreementRequest": {
+      "title": "AgreementRequest",
+      "description": "Solicitud de convenio institucional o para médicos.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "institution": { "type": "string" },
+        "phone": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "institution", "createdAt"]
     }
   },
   "auth": {
@@ -106,6 +121,10 @@
     "/quotations/{quotationId}": {
       "schema": "Quotation",
       "description": "Colección de cotizaciones comerciales."
+    },
+    "/agreement_requests/{requestId}": {
+      "schema": "AgreementRequest",
+      "description": "Solicitudes de convenio de instituciones o médicos."
     }
   }
 }
