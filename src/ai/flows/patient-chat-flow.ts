@@ -2,6 +2,7 @@
 'use server';
 /**
  * @fileOverview Chatbot Experto de Oralab mejorado para Genkit 1.x.
+ * Incluye depuración detallada para diagnosticar problemas de API Key.
  */
 
 import { ai } from '@/ai/genkit';
@@ -75,9 +76,9 @@ const lookupPatient = ai.defineTool(
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   const apiKey = process.env.GOOGLE_GENAI_API_KEY;
   
-  if (!apiKey || apiKey === 'TU_API_KEY_AQUI') {
+  if (!apiKey || apiKey.includes('PEGAR_AQUI')) {
     return {
-      text: "Falta la configuración de la API Key en el archivo .env. Por favor, asegúrate de poner tu clave para activar mi inteligencia.",
+      text: "Hola, para activar mi inteligencia necesito que configures la API Key correcta en el archivo .env. Asegúrate de usar una que empiece con 'AIzaSy'.",
       isVerified: false
     };
   }
@@ -106,22 +107,26 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
     });
 
     return {
-      text: response.text || "No pude generar una respuesta. ¿Cómo puedo ayudarte?",
+      text: response.text || "No pude generar una respuesta. ¿En qué más puedo ayudarte?",
       isVerified: true, 
     };
   } catch (error: any) {
-    // Log detallado para depuración en la terminal
-    console.error("DEBUG - Detalle del error de Genkit:", error);
+    // Registro detallado en la terminal del desarrollador
+    console.error("--- ERROR DE GENKIT/GEMINI ---");
+    console.error("Mensaje:", error.message);
+    if (error.stack) console.error("Stack:", error.stack);
+    console.error("------------------------------");
     
-    // Mensaje amigable pero informativo para el usuario
-    let errorMsg = "Lo siento, mi sistema de IA está experimentando una breve interrupción técnica.";
+    let userFriendlyMsg = "Lo siento, mi sistema de IA está experimentando una breve interrupción técnica.";
     
     if (error.message?.includes('API_KEY_INVALID')) {
-      errorMsg = "La API Key configurada parece no ser válida para este modelo. Por favor, verifica que sea una clave de Gemini (AIza...) en Google AI Studio.";
+      userFriendlyMsg = "La API Key configurada no es válida. Por favor, usa una clave que empiece con 'AIzaSy' desde Google AI Studio.";
+    } else if (error.message?.includes('quota')) {
+      userFriendlyMsg = "He agotado mi cuota de consultas gratuitas por ahora. Por favor, intenta de nuevo en unos minutos.";
     }
 
     return {
-      text: errorMsg,
+      text: userFriendlyMsg,
       isVerified: false
     };
   }
