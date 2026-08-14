@@ -73,9 +73,11 @@ const lookupPatient = ai.defineTool(
 );
 
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
-  if (!process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENAI_API_KEY === 'TU_API_KEY_AQUI') {
+  const apiKey = process.env.GOOGLE_GENAI_API_KEY;
+  
+  if (!apiKey || apiKey === 'TU_API_KEY_AQUI') {
     return {
-      text: "Falta la configuración de la API Key en el archivo .env. Por favor, asegúrate de poner tu clave 'AIza...' para activar mi inteligencia.",
+      text: "Falta la configuración de la API Key en el archivo .env. Por favor, asegúrate de poner tu clave para activar mi inteligencia.",
       isVerified: false
     };
   }
@@ -108,9 +110,18 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       isVerified: true, 
     };
   } catch (error: any) {
-    console.error("Genkit Error:", error);
+    // Log detallado para depuración en la terminal
+    console.error("DEBUG - Detalle del error de Genkit:", error);
+    
+    // Mensaje amigable pero informativo para el usuario
+    let errorMsg = "Lo siento, mi sistema de IA está experimentando una breve interrupción técnica.";
+    
+    if (error.message?.includes('API_KEY_INVALID')) {
+      errorMsg = "La API Key configurada parece no ser válida para este modelo. Por favor, verifica que sea una clave de Gemini (AIza...) en Google AI Studio.";
+    }
+
     return {
-      text: "Lo siento, mi sistema de IA está experimentando una breve interrupción técnica. Asegúrate de que tu API Key sea la correcta de Google AI Studio.",
+      text: errorMsg,
       isVerified: false
     };
   }
