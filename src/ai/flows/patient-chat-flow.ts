@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview Chatbot Experto de Oralab.
+ * @fileOverview Chatbot Experto de Oralab mejorado para Genkit 1.x.
  */
 
 import { ai } from '@/ai/genkit';
@@ -67,13 +67,19 @@ const lookupPatient = ai.defineTool(
       }
       return { found: false };
     } catch (e) {
-      console.error("Tool lookupPatient error:", e);
       return { found: false };
     }
   }
 );
 
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
+  if (!process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENAI_API_KEY === 'TU_API_KEY_AQUI') {
+    return {
+      text: "Falta la configuración de la API Key en el archivo .env. Por favor, asegúrate de poner tu clave 'AIza...' para activar mi inteligencia.",
+      isVerified: false
+    };
+  }
+
   try {
     const response = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
@@ -86,7 +92,7 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       4. DOMICILIO: Retiro en Apoquindo 3990. Muestra debe volver en MÁXIMO 6 HORAS.
       5. UBICACIÓN: Apoquindo 3990, Of. 605, Las Condes.
       
-      Responde siempre en ESPAÑOL de Chile de forma profesional y empática.`,
+      Instrucción: Responde siempre en ESPAÑOL de Chile de forma profesional y empática.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -102,9 +108,9 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       isVerified: true, 
     };
   } catch (error: any) {
-    console.error("Genkit Runtime Error:", error);
+    console.error("Genkit Error:", error);
     return {
-      text: "Lo siento, mi sistema de IA está experimentando una breve interrupción técnica. Por favor, asegúrate de haber pegado la API Key correcta en el archivo .env o contáctanos por WhatsApp al +56 9 3685 0468.",
+      text: "Lo siento, mi sistema de IA está experimentando una breve interrupción técnica. Asegúrate de que tu API Key sea la correcta de Google AI Studio.",
       isVerified: false
     };
   }
