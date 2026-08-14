@@ -76,7 +76,7 @@ const DELIVERY_PRICES: Record<string, number> = {
 };
 
 const BASE_FEE = 80000;
-const DISCOUNT_RATE = 0.20;
+const DISCOUNT_RATE = 0.15; // Actualizado de 0.20 a 0.15 por solicitud del usuario
 
 const timeSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00"];
 
@@ -561,7 +561,7 @@ export default function BookingPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField control={form.control} name="prevision" render={({ field }) => (
-                        <FormItem><FormLabel className="font-bold">Previsión (20% Desc)</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="fonasa">Fonasa (20% Desc)</SelectItem><SelectItem value="isapre">Isapre (20% Desc)</SelectItem><SelectItem value="particular">Particular</SelectItem></SelectContent></Select></FormItem>
+                        <FormItem><FormLabel className="font-bold">Previsión (15% Desc)</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="fonasa">Fonasa (15% Desc)</SelectItem><SelectItem value="isapre">Isapre (15% Desc)</SelectItem><SelectItem value="particular">Particular</SelectItem></SelectContent></Select></FormItem>
                       )} />
                       <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel className="font-bold">Peso (kg)</FormLabel><Input type="number" {...field} className="h-12 rounded-xl" /></FormItem>)} />
                     </div>

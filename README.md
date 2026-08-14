@@ -4,7 +4,7 @@
 Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializado en tests de aire espirado.
 
 ## Estado del Proyecto
-- **Agendamiento**: Implementado con cálculo automático de tarifas (TarFario) y descuentos del 20% para Fonasa/Isapre.
+- **Agendamiento**: Implementado con cálculo automático de tarifas (TarFario) y descuentos del 15% para Fonasa/Isapre.
 - **IA**: Escaneo opcional de órdenes médicas para pre-selección de exámenes (Lactulosa, Fructosa, Lactosa).
 - **Logística**: Integración de tiempos críticos (6 horas) y retiro presencial de kits en Apoquindo 3990.
 

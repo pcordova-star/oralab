@@ -44,6 +44,8 @@ const lookupPatient = ai.defineTool(
   async (input) => {
     try {
       const { firestore } = initializeFirebase();
+      if (!firestore) return { found: false };
+      
       const bookingsRef = collection(firestore, 'bookings');
       const snapshot = await getDocs(bookingsRef);
       
@@ -75,7 +77,7 @@ const lookupPatient = ai.defineTool(
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   const apiKey = process.env.GOOGLE_GENAI_API_KEY;
   
-  if (!apiKey || apiKey.length < 10) {
+  if (!apiKey || apiKey.length < 10 || apiKey.includes('TU_API_KEY')) {
     return {
       text: "Hola, detecto que la API Key en el archivo .env no es válida o está incompleta. Por favor revisa que sea la clave correcta de Google AI Studio.",
       isVerified: false
@@ -90,7 +92,7 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       CONOCIMIENTOS CLAVE:
       1. TRATAMIENTO: Tests de aire espirado (Lactulosa, Fructosa, Lactosa) para SIBO e intolerancias.
       2. TECNOLOGÍA: Sunvou®, mide H2, CH4 y H2S.
-      3. PRECIO: $80.000 CLP base. 20% descuento Fonasa/Isapre.
+      3. PRECIO: $80.000 CLP base. 15% descuento Fonasa/Isapre.
       4. DOMICILIO: Retiro en Apoquindo 3990. Muestra debe volver en MÁXIMO 6 HORAS.
       5. UBICACIÓN: Apoquindo 3990, Of. 605, Las Condes.
       
@@ -110,20 +112,15 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       isVerified: true, 
     };
   } catch (error: any) {
-    // Registro detallado en la terminal del desarrollador
     console.error("--- DIAGNÓSTICO DE ERROR DE IA ---");
     console.error("Mensaje:", error.message);
     
-    let userFriendlyMsg = "Lo siento, mi sistema de IA está experimentando una breve interrupción técnica.";
+    let userFriendlyMsg = "Lo siento, mi sistema de IA está experimentando una breve interrupción. Por favor, asegúrate de que la API Key esté configurada correctamente o contáctanos por WhatsApp al +56 9 3685 0468.";
     
     if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('403')) {
       userFriendlyMsg = "La API Key configurada no tiene permisos suficientes o es inválida. Por favor, verifica la facturación en Google Cloud Console.";
-      console.error("PROBLEMA: La clave API no es válida para este servicio.");
     } else if (error.message?.includes('quota') || error.message?.includes('429')) {
-      userFriendlyMsg = "He agotado mi cuota de consultas. Por favor, intenta de nuevo en unos minutos o verifica tu plan prepago.";
-      console.error("PROBLEMA: Límite de cuota excedido.");
-    } else {
-      console.error("DETALLE TÉCNICO:", error);
+      userFriendlyMsg = "He agotado mi cuota de consultas. Por favor, intenta de nuevo en unos minutos.";
     }
 
     return {
