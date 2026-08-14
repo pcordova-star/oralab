@@ -4,7 +4,9 @@
 Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializado en tests de aire espirado.
 
 ## Estado del Proyecto
-- **Agendamiento**: Implementado con cálculo automático de tarifas (TarFario) y descuentos del 15% para Fonasa/Isapre.
+- **Agendamiento**: Implementado con cálculo automático de tarifas y descuentos del 15% para Fonasa/Isapre sobre el valor base de $80.000.
+- **Administración**: Panel de recepción con vista de calendario mensual y filtrado diario de pacientes.
+- **Convenios**: Página dedicada para alianzas institucionales y captación de médicos especialistas con diseño profesional.
 - **IA**: Escaneo opcional de órdenes médicas para pre-selección de exámenes (Lactulosa, Fructosa, Lactosa).
 - **Logística**: Integración de tiempos críticos (6 horas) y retiro presencial de kits en Apoquindo 3990.
 
@@ -12,7 +14,7 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 Para guardar y subir tus avances, utiliza esta secuencia:
 ```bash
 git add .
-git commit -m "Oralab: Implementación de agendamiento con IA, TarFario y lógica de descuentos"
+git commit -m "Oralab: Implementación de convenios, vista mensual administrativa y ajuste de descuentos al 15%"
 git push
 ```
 
