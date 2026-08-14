@@ -659,7 +659,7 @@ export default function HomePage() {
             <div className="flex gap-4">
               <Link href="/agreements">
                 <Button variant="outline" size="sm" className="rounded-full font-bold border-primary/20 text-primary">
-                  <Handshake className="h-4 w-4 mr-2" /> Convenios Médicos
+                  <Handshake className="h-4 w-4 mr-2" /> Convenios Institucionales
                 </Button>
               </Link>
             </div>

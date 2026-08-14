@@ -137,8 +137,8 @@ export default function AgreementsPage() {
                   <span className="text-sm font-black uppercase tracking-widest text-secondary">Alianzas Estratégicas</span>
                 </div>
                 <h1 className="text-4xl md:text-7xl font-black italic leading-tight">
-                  Convenios para <br />
-                  <span className="text-secondary">Médicos e Instituciones</span>
+                  Convenios <br />
+                  <span className="text-secondary">Institucionales</span>
                 </h1>
                 <p className="text-xl opacity-80 max-w-2xl leading-relaxed font-medium">
                   En Oralab buscamos fortalecer la red de salud digestiva en Chile. Si eres especialista o representas a un centro médico, únete a nuestra red de prestadores preferentes.
@@ -182,7 +182,7 @@ export default function AgreementsPage() {
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-16 items-start">
               <div className="space-y-8">
-                <h2 className="text-4xl md:text-5xl font-black text-primary italic leading-tight">Solicita tu Convenio</h2>
+                <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">Solicita tu Convenio</h2>
                 <p className="text-xl text-muted-foreground leading-relaxed">
                   Completa el formulario y un ejecutivo de nuestra área comercial se pondrá en contacto para presentarte nuestra propuesta de colaboración.
                 </p>
