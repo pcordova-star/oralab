@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -60,9 +61,10 @@ import {
   Target,
   FileBarChart,
   History,
-  Newspaper
+  Newspaper,
+  Calendar as CalendarIcon
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { getAuth, signOut } from "firebase/auth";
@@ -70,6 +72,7 @@ import { cn } from "@/lib/utils";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { jsPDF } from "jspdf";
 import Image from "next/image";
+import { Calendar } from "@/components/ui/calendar";
 
 const ADMIN_EMAIL = "admin@oralab.cl";
 const IVA_RATE = 0.19;
@@ -102,6 +105,7 @@ export default function ReceptionPage() {
   const db = useFirestore();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   // NEWS State
   const [isNewsDialogOpen, setIsNewsDialogOpen] = useState(false);
@@ -170,6 +174,18 @@ export default function ReceptionPage() {
 
   const bookings = (rawBookings || []).sort((a, b) => (b.scheduledDate || "").localeCompare(a.scheduledDate || ""));
 
+  // Filtrado por fecha para la vista diaria
+  const filteredBookings = bookings.filter(b => {
+    if (!selectedDate) return true;
+    const bookingDate = b.scheduledDate; // formato yyyy-MM-dd
+    const targetDate = format(selectedDate, "yyyy-MM-dd");
+    return bookingDate === targetDate;
+  });
+
+  // Fechas con reservas para resaltar en el calendario
+  const datesWithBookings = Array.from(new Set(bookings.map(b => b.scheduledDate)))
+    .map(dateStr => parseISO(dateStr));
+
   // CRM Logic
   const resetQuoteForm = () => {
     setEditingQuoteId(null);
@@ -234,7 +250,7 @@ export default function ReceptionPage() {
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <Tabs defaultValue="patients" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-6 shadow-inner border border-primary/5 mb-8">
+          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-6 shadow-inner border border-primary/5 mb-8 overflow-x-auto">
             <TabsTrigger value="patients" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white text-[10px]">Agenda</TabsTrigger>
             <TabsTrigger value="diagnostics" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white text-[10px]">Informes</TabsTrigger>
             <TabsTrigger value="crm-ventas" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white text-[10px]">CRM Ventas</TabsTrigger>
@@ -243,56 +259,112 @@ export default function ReceptionPage() {
             <TabsTrigger value="milestones" className="rounded-full font-black px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-[10px]">Hitos</TabsTrigger>
           </TabsList>
 
-          {/* TAB: AGENDA */}
+          {/* TAB: AGENDA CON VISTA DE MES COMPLETO */}
           <TabsContent value="patients">
-            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-              <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center">
-                <div>
-                  <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                    <LayoutGrid className="h-6 w-6 text-secondary" /> Control de Agenda
-                  </CardTitle>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              
+              {/* PANEL IZQUIERDO: CALENDARIO DE MES COMPLETO */}
+              <Card className="lg:col-span-4 bg-white shadow-xl border-primary/10 rounded-[2rem] p-6 h-fit sticky top-20">
+                <div className="flex items-center gap-2 mb-4 text-primary font-black italic">
+                   <CalendarIcon className="h-5 w-5 text-secondary" /> Vista Mensual
                 </div>
-              </CardHeader>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/10">
-                      <TableHead className="font-bold">Fecha / Hora</TableHead>
-                      <TableHead className="font-bold">Paciente</TableHead>
-                      <TableHead className="font-bold">Examen</TableHead>
-                      <TableHead className="font-bold">Estado</TableHead>
-                      <TableHead className="text-right font-bold">Gestión</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loadingBookings ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-10">Cargando...</TableCell></TableRow>
-                    ) : bookings.map((b) => (
-                      <TableRow key={b.id}>
-                        <TableCell className="font-black text-primary">
-                          {b.scheduledDate} <span className="text-[10px] text-muted-foreground ml-2">{b.scheduledTime} hrs</span>
-                        </TableCell>
-                        <TableCell className="font-bold">{b.firstName} {b.lastNameFather}</TableCell>
-                        <TableCell className="italic text-secondary font-black">{b.examType}</TableCell>
-                        <TableCell>{getStatusBadge(b.status)}</TableCell>
-                        <TableCell className="text-right">
-                          <Select value={b.status} onValueChange={(val) => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: val, updatedAt: serverTimestamp() })}>
-                            <SelectTrigger className="w-[150px] h-8 text-[10px] rounded-full"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">Agendado</SelectItem>
-                              <SelectItem value="arrived">En sala</SelectItem>
-                              <SelectItem value="in_progress">Iniciado</SelectItem>
-                              <SelectItem value="completed">Finalizado</SelectItem>
-                              <SelectItem value="cancelled">Cancelado</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
+                <Calendar 
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  locale={es}
+                  className="rounded-md border border-primary/5 mx-auto"
+                  modifiers={{ 
+                    booked: datesWithBookings,
+                  }}
+                  modifiersStyles={{ 
+                    booked: { fontWeight: 'bold', border: '2px solid hsl(var(--secondary))', color: 'hsl(var(--primary))' } 
+                  }}
+                />
+                <div className="mt-6 p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
+                   <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                     <Info className="h-3 w-3 text-secondary" /> Leyenda
+                   </div>
+                   <div className="flex items-center gap-2 text-xs font-medium">
+                     <div className="w-3 h-3 rounded-full border-2 border-secondary" />
+                     <span>Días con pacientes citados</span>
+                   </div>
+                   <p className="text-[11px] text-muted-foreground italic mt-2">
+                     * Selecciona un día para ver el detalle de pacientes a la derecha.
+                   </p>
+                </div>
+              </Card>
+
+              {/* PANEL DERECHO: LISTA DIARIA FILTRADA */}
+              <Card className="lg:col-span-8 bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+                <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center py-6">
+                  <div>
+                    <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+                      <LayoutGrid className="h-6 w-6 text-secondary" /> Agenda del Día
+                    </CardTitle>
+                    <CardDescription className="font-bold text-secondary uppercase text-[10px] tracking-widest">
+                      {selectedDate ? format(selectedDate, "PPPP", { locale: es }) : "Seleccione una fecha"}
+                    </CardDescription>
+                  </div>
+                  <div className="text-right">
+                    <Badge className="bg-primary text-white font-black px-4 rounded-full">
+                      {filteredBookings.length} Pacientes
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <div className="overflow-x-auto min-h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/10">
+                        <TableHead className="font-bold">Hora</TableHead>
+                        <TableHead className="font-bold">Paciente</TableHead>
+                        <TableHead className="font-bold">Examen</TableHead>
+                        <TableHead className="font-bold">Estado</TableHead>
+                        <TableHead className="text-right font-bold">Gestión</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {loadingBookings ? (
+                        <TableRow><TableCell colSpan={5} className="text-center py-20">Cargando base de datos...</TableCell></TableRow>
+                      ) : filteredBookings.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-32 space-y-4">
+                            <CalendarIcon className="h-12 w-12 text-muted-foreground/20 mx-auto" />
+                            <p className="text-muted-foreground font-medium italic">No hay citas registradas para este día.</p>
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredBookings.map((b) => (
+                        <TableRow key={b.id} className="hover:bg-primary/5 transition-colors group">
+                          <TableCell className="font-black text-primary text-lg">
+                            {b.scheduledTime} <span className="text-[9px] uppercase font-bold text-muted-foreground">hrs</span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-black text-primary leading-none mb-1">{b.firstName} {b.lastNameFather}</span>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase">{b.modality === 'home_kit' ? '🏠 Casa' : '🏥 Consulta'}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="italic text-secondary font-black">{b.examType}</TableCell>
+                          <TableCell>{getStatusBadge(b.status)}</TableCell>
+                          <TableCell className="text-right">
+                            <Select value={b.status} onValueChange={(val) => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: val, updatedAt: serverTimestamp() })}>
+                              <SelectTrigger className="w-[140px] h-8 text-[10px] rounded-full border-primary/20"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Agendado</SelectItem>
+                                <SelectItem value="arrived">En sala</SelectItem>
+                                <SelectItem value="in_progress">Iniciado</SelectItem>
+                                <SelectItem value="completed">Finalizado</SelectItem>
+                                <SelectItem value="cancelled">Cancelado</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* TAB: INFORMES */}
@@ -540,3 +612,4 @@ export default function ReceptionPage() {
     </div>
   );
 }
+    
