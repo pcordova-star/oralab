@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Chatbot Experto de Oralab mejorado para Genkit 1.x.
- * Incluye depuración detallada para diagnosticar problemas de API Key.
+ * Incluye depuración detallada para diagnosticar problemas de API Key o Facturación.
  */
 
 import { ai } from '@/ai/genkit';
@@ -76,9 +75,9 @@ const lookupPatient = ai.defineTool(
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   const apiKey = process.env.GOOGLE_GENAI_API_KEY;
   
-  if (!apiKey || apiKey.includes('PEGAR_AQUI')) {
+  if (!apiKey || apiKey.length < 10) {
     return {
-      text: "Hola, para activar mi inteligencia necesito que configures la API Key correcta en el archivo .env. Asegúrate de usar una que empiece con 'AIzaSy'.",
+      text: "Hola, detecto que la API Key en el archivo .env no es válida o está incompleta. Por favor revisa que sea la clave correcta de Google AI Studio.",
       isVerified: false
     };
   }
@@ -112,17 +111,19 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
     };
   } catch (error: any) {
     // Registro detallado en la terminal del desarrollador
-    console.error("--- ERROR DE GENKIT/GEMINI ---");
+    console.error("--- DIAGNÓSTICO DE ERROR DE IA ---");
     console.error("Mensaje:", error.message);
-    if (error.stack) console.error("Stack:", error.stack);
-    console.error("------------------------------");
     
     let userFriendlyMsg = "Lo siento, mi sistema de IA está experimentando una breve interrupción técnica.";
     
-    if (error.message?.includes('API_KEY_INVALID')) {
-      userFriendlyMsg = "La API Key configurada no es válida. Por favor, usa una clave que empiece con 'AIzaSy' desde Google AI Studio.";
-    } else if (error.message?.includes('quota')) {
-      userFriendlyMsg = "He agotado mi cuota de consultas gratuitas por ahora. Por favor, intenta de nuevo en unos minutos.";
+    if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('403')) {
+      userFriendlyMsg = "La API Key configurada no tiene permisos suficientes o es inválida. Por favor, verifica la facturación en Google Cloud Console.";
+      console.error("PROBLEMA: La clave API no es válida para este servicio.");
+    } else if (error.message?.includes('quota') || error.message?.includes('429')) {
+      userFriendlyMsg = "He agotado mi cuota de consultas. Por favor, intenta de nuevo en unos minutos o verifica tu plan prepago.";
+      console.error("PROBLEMA: Límite de cuota excedido.");
+    } else {
+      console.error("DETALLE TÉCNICO:", error);
     }
 
     return {
