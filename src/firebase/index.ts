@@ -1,6 +1,4 @@
 
-'use client';
-
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
@@ -13,7 +11,7 @@ let firestoreInstance: Firestore | undefined;
 
 /**
  * Inicialización robusta de Firebase para Oralab.
- * Funciona tanto en el cliente como en el servidor (SSR/RSC).
+ * Removido 'use client' para permitir ejecución segura en Server Actions (IA).
  */
 export function initializeFirebase() {
   // Inicializar App
@@ -28,11 +26,10 @@ export function initializeFirebase() {
     authInstance = getAuth(firebaseApp);
   }
 
-  // Inicializar Firestore con configuraciones de estabilidad para el servidor
+  // Inicializar Firestore
   if (!firestoreInstance) {
     if (typeof window !== 'undefined') {
       try {
-        // En el cliente usamos configuraciones de larga duración
         firestoreInstance = initializeFirestore(firebaseApp, {
           experimentalAutoDetectLongPolling: true,
         });
@@ -40,7 +37,6 @@ export function initializeFirebase() {
         firestoreInstance = getFirestoreStandard(firebaseApp);
       }
     } else {
-      // En el servidor usamos la inicialización estándar
       firestoreInstance = getFirestoreStandard(firebaseApp);
     }
   }

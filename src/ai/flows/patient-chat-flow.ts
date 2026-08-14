@@ -1,9 +1,7 @@
+
 'use server';
 /**
  * @fileOverview Chatbot Experto de Oralab.
- * 
- * Este flujo maneja consultas generales de usuarios y validación de pacientes.
- * Utiliza Genkit 1.x para una integración robusta con Gemini.
  */
 
 import { ai } from '@/ai/genkit';
@@ -29,9 +27,6 @@ const PatientChatOutputSchema = z.object({
 export type PatientChatInput = z.infer<typeof PatientChatInputSchema>;
 export type PatientChatOutput = z.infer<typeof PatientChatOutputSchema>;
 
-/**
- * Herramienta para verificar la existencia de un paciente en Firestore.
- */
 const lookupPatient = ai.defineTool(
   {
     name: 'lookupPatient',
@@ -49,15 +44,12 @@ const lookupPatient = ai.defineTool(
   async (input) => {
     try {
       const { firestore } = initializeFirebase();
-      if (!firestore) return { found: false };
-
       const bookingsRef = collection(firestore, 'bookings');
       const snapshot = await getDocs(bookingsRef);
       
       if (snapshot.empty) return { found: false };
 
       const searchLower = input.name.toLowerCase().trim();
-      
       const match = snapshot.docs.find(doc => {
         const data = doc.data();
         const fullName = `${data.firstName || ''} ${data.lastNameFather || ''} ${data.lastNameMother || ''}`.toLowerCase();
@@ -75,37 +67,26 @@ const lookupPatient = ai.defineTool(
       }
       return { found: false };
     } catch (e) {
-      console.error("Error in lookupPatient tool:", e);
+      console.error("Tool lookupPatient error:", e);
       return { found: false };
     }
   }
 );
 
-/**
- * Flujo de chat principal con conocimiento experto de Oralab.
- */
 export async function patientChat(input: PatientChatInput): Promise<PatientChatOutput> {
   try {
     const response = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
-      system: `Eres el Asistente Virtual Experto de Oralab (Chile). Tu misión es ayudar a pacientes y personas interesadas.
+      system: `Eres el Asistente Virtual Experto de Oralab (Chile).
       
       CONOCIMIENTOS CLAVE:
-      1. TRATAMIENTO: Realizamos tests de aire espirado (Lactulosa, Fructosa, Lactosa) para detectar SIBO e intolerancias.
-      2. TECNOLOGÍA: Usamos tecnología Sunvou®, la más avanzada del mundo, que mide Hidrógeno (H2), Metano (CH4) y Sulfuro (H2S).
-      3. PRECIO: El valor base es $80.000 CLP.
-      4. DESCUENTO: Ofrecemos 20% de descuento ($16.000 menos) para pacientes de Fonasa e Isapre.
-      5. TEST EN CASA: El kit se retira en Apoquindo 3990. Tras soplar, el paciente tiene máximo 6 HORAS para que la muestra llegue al laboratorio. Es crítico.
-      6. UBICACIÓN: Apoquindo 3990, Of. 605, Las Condes, Santiago.
+      1. TRATAMIENTO: Tests de aire espirado (Lactulosa, Fructosa, Lactosa) para SIBO e intolerancias.
+      2. TECNOLOGÍA: Sunvou®, mide H2, CH4 y H2S.
+      3. PRECIO: $80.000 CLP base. 20% descuento Fonasa/Isapre.
+      4. DOMICILIO: Retiro en Apoquindo 3990. Muestra debe volver en MÁXIMO 6 HORAS.
+      5. UBICACIÓN: Apoquindo 3990, Of. 605, Las Condes.
       
-      INSTRUCCIONES DE COMPORTAMIENTO:
-      - Sé profesional, clínico pero muy empático.
-      - Si alguien pregunta qué es SIBO, explícalo de forma sencilla.
-      - Si preguntan por su reserva, usa la herramienta 'lookupPatient'.
-      - Si 'lookupPatient' falla o no encuentra nada, ofrece ayuda por WhatsApp (+56 9 3685 0468).
-      - Menciona siempre el límite de 6 horas para los tests a domicilio si surge el tema.
-      
-      Responde siempre en ESPAÑOL de Chile.`,
+      Responde siempre en ESPAÑOL de Chile de forma profesional y empática.`,
       tools: [lookupPatient],
       messages: [
         ...input.history.map(m => ({ 
@@ -117,13 +98,13 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
     });
 
     return {
-      text: response.text || "No pude generar una respuesta clara. ¿En qué más puedo ayudarte?",
+      text: response.text || "No pude generar una respuesta. ¿Cómo puedo ayudarte?",
       isVerified: true, 
     };
   } catch (error: any) {
-    console.error("Genkit Error:", error);
+    console.error("Genkit Runtime Error:", error);
     return {
-      text: "Lo siento, mi sistema de IA está experimentando una breve interrupción. Por favor, asegúrate de que la API Key esté configurada correctamente o contáctanos por WhatsApp al +56 9 3685 0468.",
+      text: "Lo siento, mi sistema de IA está experimentando una breve interrupción técnica. Por favor, asegúrate de haber pegado la API Key correcta en el archivo .env o contáctanos por WhatsApp al +56 9 3685 0468.",
       isVerified: false
     };
   }
