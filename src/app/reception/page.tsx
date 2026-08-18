@@ -61,6 +61,8 @@ import {
   Calculator,
   ShieldCheck,
   Send,
+  Newspaper,
+  Target,
   Calendar as CalendarIcon
 } from "lucide-react";
 import { format, parseISO, isSameDay } from "date-fns";
@@ -88,7 +90,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 15 a 20 días hábiles tras recepción de orden de compra y pago de anticipo.\n- Forma de pago: 50% contra orden de compra y 50% contra entrega.\n- Garantía: 2 años.\n- Incluye capacitación técnica.";
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 15 a 20 días hábiles tras recepción de orden de compra y pago de anticipo. El plazo de entrega inicia a partir de la confirmación del primer depósito.\n- Forma de pago: 50% contra orden de compra (anticipo) y 50% contra entrega.\n- Garantía: 2 años para equipo analizador y sensores.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
 
 interface QuotationItem {
   description: string;
