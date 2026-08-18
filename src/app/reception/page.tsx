@@ -79,6 +79,7 @@ const ADMIN_EMAIL = "admin@oralab.cl";
 const IVA_RATE = 0.19;
 const DEFAULT_USD_RATE = 950;
 const COMMERCIAL_MARKUP = 2;
+const SENSOR_DISCOUNT = 0.85; // 15% de descuento
 
 const SUNVOU_CATALOG = [
   { description: "Analizador Breath Diagnostics Sunvou-DA7349 (H2/CH4/H2S/CO2)", unitPriceUSD: 5000 },
@@ -194,12 +195,16 @@ export default function ReceptionPage() {
     setClientPhone("");
     setExchangeRate(DEFAULT_USD_RATE);
     setQuoteStatus('pending');
-    setItems(SUNVOU_CATALOG.map(c => ({
-      description: c.description,
-      quantity: 1,
-      unitPriceUSD: c.unitPriceUSD,
-      unitPrice: c.unitPriceUSD * DEFAULT_USD_RATE * COMMERCIAL_MARKUP
-    })));
+    setItems(SUNVOU_CATALOG.map(c => {
+      const isSensor = c.description.toLowerCase().includes("sensor");
+      const multiplier = isSensor ? SENSOR_DISCOUNT : 1.0;
+      return {
+        description: c.description,
+        quantity: 1,
+        unitPriceUSD: c.unitPriceUSD,
+        unitPrice: Math.round(c.unitPriceUSD * DEFAULT_USD_RATE * COMMERCIAL_MARKUP * multiplier)
+      };
+    }));
     setQuoteNotes(DEFAULT_NOTES);
   };
 

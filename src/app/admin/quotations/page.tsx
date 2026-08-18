@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -31,6 +32,7 @@ const ADMIN_EMAIL = "admin@oralab.cl";
 const IVA_RATE = 0.19;
 const DEFAULT_USD_RATE = 950;
 const COMMERCIAL_MARKUP = 2; // +100% markup
+const SENSOR_DISCOUNT = 0.85; // 15% de descuento
 
 // Catálogo Base Sunvou (Precios fábrica USD)
 const SUNVOU_CATALOG = [
@@ -97,7 +99,9 @@ export default function QuotationsPage() {
   const applyExchangeRate = (rate: number) => {
     const updatedItems = items.map(item => {
       if (item.unitPriceUSD !== undefined) {
-        return { ...item, unitPrice: item.unitPriceUSD * rate * COMMERCIAL_MARKUP };
+        const isSensor = item.description.toLowerCase().includes("sensor");
+        const multiplier = isSensor ? SENSOR_DISCOUNT : 1.0;
+        return { ...item, unitPrice: Math.round(item.unitPriceUSD * rate * COMMERCIAL_MARKUP * multiplier) };
       }
       return item;
     });
@@ -193,12 +197,16 @@ export default function QuotationsPage() {
     setClientPhone("");
     setExchangeRate(DEFAULT_USD_RATE);
     setStatus('pending');
-    setItems(SUNVOU_CATALOG.map(c => ({
-      description: c.description,
-      quantity: 1,
-      unitPriceUSD: c.unitPriceUSD,
-      unitPrice: c.unitPriceUSD * DEFAULT_USD_RATE * COMMERCIAL_MARKUP
-    })));
+    setItems(SUNVOU_CATALOG.map(c => {
+      const isSensor = c.description.toLowerCase().includes("sensor");
+      const multiplier = isSensor ? SENSOR_DISCOUNT : 1.0;
+      return {
+        description: c.description,
+        quantity: 1,
+        unitPriceUSD: c.unitPriceUSD,
+        unitPrice: Math.round(c.unitPriceUSD * DEFAULT_USD_RATE * COMMERCIAL_MARKUP * multiplier)
+      };
+    }));
     setNotes(DEFAULT_NOTES);
   };
 
