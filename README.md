@@ -14,7 +14,7 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 Para guardar y subir tus avances, utiliza esta secuencia:
 ```bash
 git add .
-git commit -m "Oralab: Implementación de convenios, vista mensual administrativa y ajuste de descuentos al 15%"
+git commit -m "Oralab: Implementación de convenios, vista mensual administrativa y ajuste de precios ($80k/$100k)"
 git push
 ```
 
