@@ -5,16 +5,17 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 
 ## Estado del Proyecto
 - **Agendamiento**: Implementado con cálculo automático de tarifas: $80.000 en laboratorio y $100.000 a domicilio. Descuentos del 15% para Fonasa/Isapre.
+- **Mensajería**: Se eliminó el aviso de envío de correo en el éxito de reserva hasta que el sistema de mail esté operativo.
 - **Administración**: Panel de recepción con vista de calendario mensual y filtrado diario de pacientes.
-- **Convenios**: Página dedicada para alianzas institucionales y captación de médicos especialistas con diseño profesional.
-- **IA**: Escaneo opcional de órdenes médicas para pre-selección de exámenes (Lactulosa, Fructosa, Lactosa).
+- **Convenios**: Página dedicada para alianzas institucionales y captación de médicos especialistas.
+- **IA**: Escaneo opcional de órdenes médicas para pre-selección de exámenes (Lactulosa, Fructosa, Lactosa). Robot de chat desactivado temporalmente.
 - **Logística**: Integración de tiempos críticos (6 horas) y retiro presencial de kits en Apoquindo 3990.
 
 ## Comandos Git para la Terminal
 Para guardar y subir tus avances, utiliza esta secuencia:
 ```bash
 git add .
-git commit -m "Oralab: Implementación de convenios, vista mensual administrativa y ajuste de precios ($80k/$100k)"
+git commit -m "Oralab: Actualización de precios ($80k/$100k), eliminación de aviso de correo y vista mensual admin"
 git push
 ```
 
