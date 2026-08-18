@@ -326,6 +326,8 @@ export default function BookingPage() {
 
     try {
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
+      
+      // La activación del Trigger Email queda lista, pero se manejará internamente cuando el sistema de correo esté 100% operativo.
       const homeKitText = values.modality === 'home_kit' 
         ? `<p style="color: #1c68b6; font-weight: bold;">PROCEDIMIENTO TEST EN CASA (PASOS CRÍTICOS):</p>
            <ul>
@@ -378,7 +380,7 @@ export default function BookingPage() {
           <Card className="py-12 shadow-lg rounded-[2rem] border-primary/10">
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4" />
             <CardTitle className="text-3xl mb-4 font-black italic">¡Reserva Confirmada!</CardTitle>
-            <p className="mb-8 font-medium">Se envió un comprobante con las instrucciones y desglose de pago a <strong>{lastBookingValues?.email}</strong>.</p>
+            <p className="mb-8 font-medium">Tu solicitud ha sido procesada exitosamente. Puedes descargar tu ficha de confirmación con los detalles y preparativos aquí mismo.</p>
             <div className="flex flex-col gap-4 max-w-sm mx-auto">
               <Button onClick={downloadPDF} variant="outline" className="rounded-full h-12 font-bold"><Download className="mr-2 h-4 w-4" /> Descargar Ficha PDF</Button>
               <Link href="/"><Button className="rounded-full w-full h-12 font-black">Volver al inicio</Button></Link>
