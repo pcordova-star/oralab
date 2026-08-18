@@ -92,7 +92,7 @@ export async function patientChat(input: PatientChatInput): Promise<PatientChatO
       CONOCIMIENTOS CLAVE:
       1. TRATAMIENTO: Tests de aire espirado (Lactulosa, Fructosa, Lactosa) para SIBO e intolerancias.
       2. TECNOLOGÍA: Sunvou®, mide H2, CH4 y H2S.
-      3. PRECIO: $80.000 CLP base. 15% descuento Fonasa/Isapre.
+      3. PRECIO: $80.000 en laboratorio, $100.000 a domicilio. 15% descuento Fonasa/Isapre.
       4. DOMICILIO: Retiro en Apoquindo 3990. Muestra debe volver en MÁXIMO 6 HORAS.
       5. UBICACIÓN: Apoquindo 3990, Of. 605, Las Condes.
       

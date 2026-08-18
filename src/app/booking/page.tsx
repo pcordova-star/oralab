@@ -75,8 +75,9 @@ const DELIVERY_PRICES: Record<string, number> = {
   "Isla de Maipo": 30000, "El Monte": 30000, "Melipilla": 30000, "Curacaví": 30000, "María Pinto": 30000, "Pirque": 30000, "San José de Maipo": 30000, "Alhué": 30000, "Paine": 30000, "San Pedro": 30000, "Tiltil": 30000
 };
 
-const BASE_FEE = 80000;
-const DISCOUNT_RATE = 0.15; // Actualizado de 0.20 a 0.15 por solicitud del usuario
+const BASE_FEE_LAB = 80000;
+const BASE_FEE_HOME = 100000;
+const DISCOUNT_RATE = 0.15;
 
 const timeSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00"];
 
@@ -153,12 +154,14 @@ export default function BookingPage() {
 
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
 
+  const currentBaseFee = selectedModality === "home_kit" ? BASE_FEE_HOME : BASE_FEE_LAB;
+
   const deliveryFee = (selectedModality === 'home_kit' && selectedCommune) 
     ? (DELIVERY_PRICES[selectedCommune] || 30000) 
     : 0;
 
-  const discountAmount = (selectedPrevision === "fonasa" || selectedPrevision === "isapre") ? BASE_FEE * DISCOUNT_RATE : 0;
-  const examSubtotal = BASE_FEE - discountAmount;
+  const discountAmount = (selectedPrevision === "fonasa" || selectedPrevision === "isapre") ? currentBaseFee * DISCOUNT_RATE : 0;
+  const examSubtotal = currentBaseFee - discountAmount;
   const finalTotal = examSubtotal + deliveryFee;
 
   useEffect(() => {
@@ -224,7 +227,6 @@ export default function BookingPage() {
         toast({ variant: "destructive", title: "Error al procesar", description: "Ocurrió un error técnico al analizar la foto." });
       } finally {
         setIsAnalyzing(false);
-        // Reset file input
         e.target.value = '';
       }
     };
@@ -277,7 +279,7 @@ export default function BookingPage() {
     doc.setFont("helvetica", "bold");
     doc.text("RESUMEN DE PAGO", margin + 5, y);
     doc.setFont("helvetica", "normal");
-    doc.text(`Valor Examen: $${BASE_FEE.toLocaleString()}`, margin + 5, y + 8);
+    doc.text(`Valor Examen: $${currentBaseFee.toLocaleString()}`, margin + 5, y + 8);
     if (discountAmount > 0) doc.text(`Descuento Previsión: -$${discountAmount.toLocaleString()}`, margin + 5, y + 16);
     if (deliveryFee > 0) doc.text(`Tarifa Logística Motoboy: $${deliveryFee.toLocaleString()}`, margin + 5, y + 24);
     doc.setFont("helvetica", "bold");
@@ -315,7 +317,7 @@ export default function BookingPage() {
       weight: values.weight,
       prevision: values.prevision,
       deliveryFee: deliveryFee,
-      baseFee: BASE_FEE,
+      baseFee: currentBaseFee,
       discount: discountAmount,
       total: finalTotal,
       status: "pending",
@@ -453,7 +455,7 @@ export default function BookingPage() {
                               <FormLabel htmlFor="p" className={cn("flex-1 p-6 border-2 rounded-[2rem] cursor-pointer text-center transition-all", field.value === "presential" ? "border-primary bg-primary/5" : "border-muted")}>
                                 <Building2 className={cn("h-8 w-8 mx-auto mb-2", field.value === "presential" ? "text-primary" : "text-muted-foreground")} />
                                 <span className="block font-black text-lg">En Consulta</span>
-                                <span className="text-xs font-medium text-muted-foreground">Apoquindo 3990, Las Condes</span>
+                                <span className="text-xs font-medium text-muted-foreground">Valor: $80.000</span>
                               </FormLabel>
                             </FormItem>
                             <FormItem className="flex items-center space-x-0 space-y-0">
@@ -461,7 +463,7 @@ export default function BookingPage() {
                               <FormLabel htmlFor="h" className={cn("flex-1 p-6 border-2 rounded-[2rem] cursor-pointer text-center transition-all", field.value === "home_kit" ? "border-secondary bg-secondary/5" : "border-muted")}>
                                 <Home className={cn("h-8 w-8 mx-auto mb-2", field.value === "home_kit" ? "text-secondary" : "text-muted-foreground")} />
                                 <span className="block font-black text-lg">Test en Casa</span>
-                                <span className="text-xs font-medium text-muted-foreground">Retira tu Kit Oralab</span>
+                                <span className="text-xs font-medium text-muted-foreground">Valor: $100.000</span>
                               </FormLabel>
                             </FormItem>
                           </RadioGroup>
@@ -487,7 +489,7 @@ export default function BookingPage() {
                             <div className="bg-white p-2 rounded-xl"><CircleDollarSign className="h-6 w-6 text-primary" /></div>
                             <div>
                               <p className="text-[10px] font-black text-muted-foreground uppercase">Valor del Examen</p>
-                              <p className="text-2xl font-black text-primary italic">$ {BASE_FEE.toLocaleString()} CLP</p>
+                              <p className="text-2xl font-black text-primary italic">$ {currentBaseFee.toLocaleString()} CLP</p>
                             </div>
                           </div>
                           {selectedModality === 'home_kit' && <Badge variant="outline" className="text-secondary border-secondary/20"><Truck className="h-3 w-3 mr-1" /> + Logística Motoboy</Badge>}
@@ -570,7 +572,7 @@ export default function BookingPage() {
                       <div className="p-6 space-y-4">
                          <div className="flex items-center gap-2 text-primary font-black uppercase text-xs border-b border-primary/10 pb-2"><ReceiptText className="h-4 w-4" /> Desglose de Pago</div>
                          <div className="space-y-2 text-sm">
-                           <div className="flex justify-between"><span>Valor Examen:</span><span className="font-bold">$ {BASE_FEE.toLocaleString()}</span></div>
+                           <div className="flex justify-between"><span>Valor Examen:</span><span className="font-bold">$ {currentBaseFee.toLocaleString()}</span></div>
                            {discountAmount > 0 && <div className="flex justify-between text-green-600"><span><Wallet className="inline h-3 w-3 mr-1" /> Descuento Previsión:</span><span className="font-black">- $ {discountAmount.toLocaleString()}</span></div>}
                            {deliveryFee > 0 && <div className="flex justify-between text-secondary"><span><Truck className="inline h-3 w-3 mr-1" /> Logística Motoboy:</span><span className="font-black">+ $ {deliveryFee.toLocaleString()}</span></div>}
                          </div>
