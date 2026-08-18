@@ -56,12 +56,11 @@ import {
   Wind,
   ShoppingCart,
   ImageIcon,
-  ExternalLink,
-  TrendingUp,
-  Target,
-  FileBarChart,
-  History,
-  Newspaper,
+  DollarSign,
+  Package,
+  Calculator,
+  ShieldCheck,
+  Send,
   Calendar as CalendarIcon
 } from "lucide-react";
 import { format, parseISO, isSameDay } from "date-fns";
@@ -167,22 +166,20 @@ export default function ReceptionPage() {
   }, [db]);
 
   const { data: rawBookings, isLoading: loadingBookings } = useCollection(bookingsRef);
-  const { data: newsItems, isLoading: loadingNews } = useCollection(newsRef);
-  const { data: quotations, isLoading: loadingQuotes } = useCollection(quotationsRef);
-  const { data: milestones, isLoading: loadingMilestones } = useCollection(milestonesRef);
-  const { data: partners, isLoading: loadingPartners } = useCollection(contractLeadsRef);
+  const { data: newsItems } = useCollection(newsRef);
+  const { data: quotations } = useCollection(quotationsRef);
+  const { data: milestones } = useCollection(milestonesRef);
+  const { data: partners } = useCollection(contractLeadsRef);
 
   const bookings = (rawBookings || []).sort((a, b) => (b.scheduledDate || "").localeCompare(a.scheduledDate || ""));
 
-  // Filtrado por fecha para la vista diaria
   const filteredBookings = bookings.filter(b => {
     if (!selectedDate) return true;
-    const bookingDate = b.scheduledDate; // formato yyyy-MM-dd
+    const bookingDate = b.scheduledDate;
     const targetDate = format(selectedDate, "yyyy-MM-dd");
     return bookingDate === targetDate;
   });
 
-  // Fechas con reservas para resaltar en el calendario
   const datesWithBookings = Array.from(new Set(bookings.map(b => b.scheduledDate)))
     .map(dateStr => parseISO(dateStr));
 
@@ -204,16 +201,144 @@ export default function ReceptionPage() {
     setQuoteNotes(DEFAULT_NOTES);
   };
 
+  const addItem = () => setItems([...items, { description: "", quantity: 1, unitPrice: 0 }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  const updateItem = (index: number, field: keyof QuotationItem, value: any) => {
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setItems(newItems);
+  };
+
+  const calculateNetTotal = () => items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+  const calculateIVA = () => calculateNetTotal() * IVA_RATE;
+  const calculateGrossTotal = () => calculateNetTotal() * (1 + IVA_RATE);
+
   const handleSaveQuotation = async () => {
-    if (!db || !clientName || !clientEmail || items.length === 0) return;
-    const netTotal = items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
-    const data = { clientName, clientCompany, clientEmail, clientPhone, items, total: netTotal, notes: quoteNotes, exchangeRate, status: quoteStatus };
+    if (!db || !clientName || !clientEmail || items.length === 0) {
+      toast({ variant: "destructive", title: "Error", description: "Completa los datos mínimos." });
+      return;
+    }
+    const netTotal = calculateNetTotal();
+    const data = { 
+      clientName, 
+      clientCompany, 
+      clientEmail, 
+      clientPhone, 
+      items, 
+      total: netTotal, 
+      notes: quoteNotes, 
+      exchangeRate, 
+      status: quoteStatus 
+    };
+
     if (editingQuoteId) {
       updateDocumentNonBlocking(doc(db, "quotations", editingQuoteId), { ...data, updatedAt: serverTimestamp() });
+      toast({ title: "Actualizado", description: "Cambios guardados." });
     } else {
       addDocumentNonBlocking(collection(db, "quotations"), { ...data, createdAt: serverTimestamp() });
+      toast({ title: "Creado", description: "Cotización registrada." });
     }
     setIsQuoteDialogOpen(false);
+  };
+
+  const handleEditOpen = (quote: any) => {
+    setEditingQuoteId(quote.id);
+    setClientName(quote.clientName || "");
+    setClientCompany(quote.clientCompany || "");
+    setClientEmail(quote.clientEmail || "");
+    setClientPhone(quote.clientPhone || "");
+    setItems(quote.items || []);
+    setQuoteNotes(quote.notes || DEFAULT_NOTES);
+    setExchangeRate(quote.exchangeRate || DEFAULT_USD_RATE);
+    setQuoteStatus(quote.status || 'pending');
+    setIsQuoteDialogOpen(true);
+  };
+
+  const downloadQuotationPDF = (quote: any) => {
+    const pdf = new jsPDF();
+    const margin = 20;
+    const pageHeight = pdf.internal.pageSize.height;
+    let y = 15;
+    const primaryRGB = [28, 104, 182];
+    
+    pdf.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    pdf.rect(0, 0, 210, 40, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(26);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("TRESNA - ORALAB", margin, 25);
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Representación Oficial Sunvou® Breath Diagnostics en Chile", margin, 32);
+    pdf.text(`Fecha: ${format(new Date(), "dd/MM/yyyy")}`, 145, 25);
+    y = 55;
+    pdf.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    pdf.setFontSize(18);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("PROPUESTA TÉCNICO-COMERCIAL", margin, y);
+    y += 15;
+    pdf.setFillColor(245, 247, 249);
+    pdf.setDrawColor(230, 235, 240);
+    pdf.roundedRect(margin, y, 170, 40, 3, 3, 'FD');
+    pdf.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    pdf.setFontSize(11);
+    pdf.text("DESTINATARIO", margin + 5, y + 10);
+    pdf.setTextColor(60, 60, 60);
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Nombre: ${quote.clientName}`, margin + 5, y + 20);
+    pdf.text(`Institución: ${quote.clientCompany || 'Particular'}`, margin + 5, y + 28);
+    pdf.text(`Email: ${quote.clientEmail}`, 110, y + 20);
+    pdf.text(`Teléfono: ${quote.clientPhone || 'No registrado'}`, 110, y + 28);
+    y += 50;
+    pdf.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    pdf.setFontSize(11);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("DETALLE DE EQUIPAMIENTO E INSUMOS", margin, y);
+    y += 8;
+    pdf.setFillColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    pdf.rect(margin, y, 170, 10, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(9);
+    pdf.text("Descripción del Producto", margin + 5, y + 7);
+    pdf.text("Cant.", 140, y + 7);
+    pdf.text("Unitario", 160, y + 7);
+    y += 10;
+    pdf.setTextColor(60, 60, 60);
+    pdf.setFont("helvetica", "normal");
+    quote.items.forEach((item: any) => {
+      const splitDesc = pdf.splitTextToSize(item.description, 110);
+      pdf.text(splitDesc, margin + 5, y + 7);
+      pdf.text(item.quantity.toString(), 140, y + 7);
+      pdf.text(`$${Math.round(item.unitPrice).toLocaleString()}`, 160, y + 7);
+      y += (splitDesc.length * 5) + 5;
+      pdf.line(margin, y, margin + 170, y);
+    });
+    y += 10;
+    const netTotal = quote.total;
+    const iva = netTotal * IVA_RATE;
+    const grossTotal = netTotal * (1 + IVA_RATE);
+    pdf.text(`SUBTOTAL NETO: $${Math.round(netTotal).toLocaleString()}`, 190, y, { align: 'right' });
+    y += 7;
+    pdf.text(`IVA (19%): $${Math.round(iva).toLocaleString()}`, 190, y, { align: 'right' });
+    y += 10;
+    pdf.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`TOTAL (IVA INC.): $${Math.round(grossTotal).toLocaleString()}`, 190, y, { align: 'right' });
+    y += 15;
+    if (quote.notes) {
+      pdf.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+      pdf.setFontSize(11);
+      pdf.text("CONDICIONES COMERCIALES", margin, y);
+      y += 8;
+      pdf.setTextColor(80, 80, 80);
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "normal");
+      const splitNotes = pdf.splitTextToSize(quote.notes, 170);
+      pdf.text(splitNotes, margin, y);
+    }
+    pdf.save(`Propuesta_Sunvou_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
 
   // NEWS Logic
@@ -259,205 +384,80 @@ export default function ReceptionPage() {
             <TabsTrigger value="milestones" className="rounded-full font-black px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-[10px]">Hitos</TabsTrigger>
           </TabsList>
 
-          {/* TAB: AGENDA CON VISTA DE MES COMPLETO */}
           <TabsContent value="patients">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              
-              {/* PANEL IZQUIERDO: CALENDARIO DE MES COMPLETO */}
               <Card className="lg:col-span-4 bg-white shadow-xl border-primary/10 rounded-[2rem] p-6 h-fit sticky top-20">
                 <div className="flex items-center gap-2 mb-4 text-primary font-black italic">
                    <CalendarIcon className="h-5 w-5 text-secondary" /> Vista Mensual
                 </div>
-                <Calendar 
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  locale={es}
-                  className="rounded-md border border-primary/5 mx-auto"
-                  modifiers={{ 
-                    booked: datesWithBookings,
-                  }}
-                  modifiersStyles={{ 
-                    booked: { fontWeight: 'bold', border: '2px solid hsl(var(--secondary))', color: 'hsl(var(--primary))' } 
-                  }}
-                />
-                <div className="mt-6 p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
-                   <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                     <Info className="h-3 w-3 text-secondary" /> Leyenda
-                   </div>
-                   <div className="flex items-center gap-2 text-xs font-medium">
-                     <div className="w-3 h-3 rounded-full border-2 border-secondary" />
-                     <span>Días con pacientes citados</span>
-                   </div>
-                   <p className="text-[11px] text-muted-foreground italic mt-2">
-                     * Selecciona un día para ver el detalle de pacientes a la derecha.
-                   </p>
-                </div>
+                <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} locale={es} className="rounded-md border border-primary/5 mx-auto" modifiers={{ booked: datesWithBookings }} modifiersStyles={{ booked: { fontWeight: 'bold', border: '2px solid hsl(var(--secondary))', color: 'hsl(var(--primary))' } }} />
               </Card>
-
-              {/* PANEL DERECHO: LISTA DIARIA FILTRADA */}
               <Card className="lg:col-span-8 bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
                 <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center py-6">
                   <div>
-                    <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                      <LayoutGrid className="h-6 w-6 text-secondary" /> Agenda del Día
-                    </CardTitle>
-                    <CardDescription className="font-bold text-secondary uppercase text-[10px] tracking-widest">
-                      {selectedDate ? format(selectedDate, "PPPP", { locale: es }) : "Seleccione una fecha"}
-                    </CardDescription>
+                    <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2"><LayoutGrid className="h-6 w-6 text-secondary" /> Agenda del Día</CardTitle>
+                    <CardDescription className="font-bold text-secondary uppercase text-[10px] tracking-widest">{selectedDate ? format(selectedDate, "PPPP", { locale: es }) : "Seleccione una fecha"}</CardDescription>
                   </div>
-                  <div className="text-right">
-                    <Badge className="bg-primary text-white font-black px-4 rounded-full">
-                      {filteredBookings.length} Pacientes
-                    </Badge>
-                  </div>
+                  <Badge className="bg-primary text-white font-black px-4 rounded-full">{filteredBookings.length} Pacientes</Badge>
                 </CardHeader>
-                <div className="overflow-x-auto min-h-[400px]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/10">
-                        <TableHead className="font-bold">Hora</TableHead>
-                        <TableHead className="font-bold">Paciente</TableHead>
-                        <TableHead className="font-bold">Examen</TableHead>
-                        <TableHead className="font-bold">Estado</TableHead>
-                        <TableHead className="text-right font-bold">Gestión</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loadingBookings ? (
-                        <TableRow><TableCell colSpan={5} className="text-center py-20">Cargando base de datos...</TableCell></TableRow>
-                      ) : filteredBookings.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-32 space-y-4">
-                            <CalendarIcon className="h-12 w-12 text-muted-foreground/20 mx-auto" />
-                            <p className="text-muted-foreground font-medium italic">No hay citas registradas para este día.</p>
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredBookings.map((b) => (
-                        <TableRow key={b.id} className="hover:bg-primary/5 transition-colors group">
-                          <TableCell className="font-black text-primary text-lg">
-                            {b.scheduledTime} <span className="text-[9px] uppercase font-bold text-muted-foreground">hrs</span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-black text-primary leading-none mb-1">{b.firstName} {b.lastNameFather}</span>
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase">{b.modality === 'home_kit' ? '🏠 Casa' : '🏥 Consulta'}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="italic text-secondary font-black">{b.examType}</TableCell>
-                          <TableCell>{getStatusBadge(b.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <Select value={b.status} onValueChange={(val) => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: val, updatedAt: serverTimestamp() })}>
-                              <SelectTrigger className="w-[140px] h-8 text-[10px] rounded-full border-primary/20"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pending">Agendado</SelectItem>
-                                <SelectItem value="arrived">En sala</SelectItem>
-                                <SelectItem value="in_progress">Iniciado</SelectItem>
-                                <SelectItem value="completed">Finalizado</SelectItem>
-                                <SelectItem value="cancelled">Cancelado</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* TAB: INFORMES */}
-          <TabsContent value="diagnostics">
-            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-              <CardHeader className="bg-secondary/5 border-b">
-                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                  <FileBarChart className="h-6 w-6 text-secondary" /> Bitácoras Clínicas (En Casa)
-                </CardTitle>
-                <CardDescription>Auditoría de tiempos de soplido para pacientes que usaron el Asistente Digital.</CardDescription>
-              </CardHeader>
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(bookings || []).filter(b => b.testLogs && b.testLogs.length > 0).map((b) => (
-                  <Card key={b.id} className="border-primary/5 rounded-2xl overflow-hidden shadow-sm">
-                    <div className="bg-primary/5 p-4 border-b">
-                       <p className="text-[10px] font-black text-secondary uppercase mb-1">Paciente</p>
-                       <h4 className="font-black text-primary">{b.firstName} {b.lastNameFather}</h4>
-                       <Badge className="bg-white text-secondary text-[9px] mt-1 border-secondary/20">{b.examType}</Badge>
-                    </div>
-                    <div className="p-4 space-y-2 max-h-[200px] overflow-y-auto bg-muted/10">
-                       {b.testLogs.map((log: any, idx: number) => (
-                         <div key={idx} className="flex justify-between items-center text-[10px] py-1 border-b border-white/50 border-dashed last:border-0">
-                           <span className="font-bold text-muted-foreground">{log.stepName}</span>
-                           <span className="font-black text-primary italic">{format(new Date(log.timestamp), "HH:mm")} hrs</span>
-                         </div>
-                       ))}
-                    </div>
-                  </Card>
-                ))}
-                {(bookings || []).filter(b => b.testLogs && b.testLogs.length > 0).length === 0 && (
-                   <p className="col-span-full text-center py-20 italic text-muted-foreground">No hay bitácoras digitales registradas recientemente.</p>
-                )}
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* TAB: CRM VENTAS */}
-          <TabsContent value="crm-ventas">
-            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-              <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center">
-                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                  <ShoppingCart className="h-6 w-6 text-secondary" /> CRM Sunvou Chile
-                </CardTitle>
-                <Button onClick={() => { resetQuoteForm(); setIsQuoteDialogOpen(true); }} className="bg-primary font-black rounded-full shadow-lg">
-                  <Plus className="mr-2 h-4 w-4" /> Nueva Propuesta
-                </Button>
-              </CardHeader>
-              <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/10">
-                      <TableHead className="font-bold text-[10px] uppercase">Estado</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase">Cliente / Institución</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase text-right">Total IVA Inc.</TableHead>
-                      <TableHead className="text-right font-bold text-[10px] uppercase">Gestión</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                  <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold">Hora</TableHead><TableHead className="font-bold">Paciente</TableHead><TableHead className="font-bold">Estado</TableHead><TableHead className="text-right font-bold">Gestión</TableHead></TableRow></TableHeader>
                   <TableBody>
-                    {quotations?.map((q) => (
-                      <TableRow key={q.id}>
-                        <TableCell>
-                          <Badge variant="outline" className={cn("font-black text-[9px] uppercase", q.status === 'accepted' ? "bg-green-50 text-green-600" : "bg-slate-50")}>{q.status}</Badge>
-                        </TableCell>
-                        <TableCell className="font-bold text-primary">{q.clientName} <span className="text-[10px] text-muted-foreground block">{q.clientCompany}</span></TableCell>
-                        <TableCell className="text-right font-black">${Math.round(q.total * 1.19).toLocaleString()}</TableCell>
+                    {filteredBookings.map((b) => (
+                      <TableRow key={b.id}>
+                        <TableCell className="font-black text-primary">{b.scheduledTime}</TableCell>
+                        <TableCell><span className="font-black text-primary">{b.firstName} {b.lastNameFather}</span></TableCell>
+                        <TableCell>{getStatusBadge(b.status)}</TableCell>
                         <TableCell className="text-right">
-                           <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "quotations", q.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button>
+                          <Select value={b.status} onValueChange={(val) => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: val })}>
+                            <SelectTrigger className="w-[140px] h-8 text-[10px] rounded-full"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="pending">Agendado</SelectItem><SelectItem value="arrived">En sala</SelectItem><SelectItem value="completed">Finalizado</SelectItem><SelectItem value="cancelled">Cancelado</SelectItem></SelectContent>
+                          </Select>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </TabsContent>
 
-          {/* TAB: NOTICIAS */}
+          <TabsContent value="crm-ventas">
+            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+              <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center">
+                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2"><ShoppingCart className="h-6 w-6 text-secondary" /> CRM Sunvou Chile</CardTitle>
+                <Button onClick={() => { resetQuoteForm(); setIsQuoteDialogOpen(true); }} className="bg-primary font-black rounded-full shadow-lg"><Plus className="mr-2 h-4 w-4" /> Nueva Propuesta</Button>
+              </CardHeader>
+              <Table>
+                <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold text-[10px] uppercase">Estado</TableHead><TableHead className="font-bold text-[10px] uppercase">Cliente</TableHead><TableHead className="font-bold text-[10px] uppercase text-right">Total IVA Inc.</TableHead><TableHead className="text-right font-bold text-[10px] uppercase">Acciones</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {quotations?.map((q) => (
+                    <TableRow key={q.id}>
+                      <TableCell><Badge variant="outline" className="text-[9px] font-black uppercase">{q.status}</Badge></TableCell>
+                      <TableCell className="font-bold text-primary">{q.clientName}<span className="text-[10px] text-muted-foreground block">{q.clientCompany}</span></TableCell>
+                      <TableCell className="text-right font-black">${Math.round((q.total || 0) * 1.19).toLocaleString()}</TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleEditOpen(q)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-secondary" onClick={() => downloadQuotationPDF(q)}><Download className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-300" onClick={() => deleteDocumentNonBlocking(doc(db!, "quotations", q.id))}><Trash2 className="h-4 w-4" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+          
           <TabsContent value="news">
             <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
               <CardHeader className="bg-secondary/5 border-b flex flex-row justify-between items-center">
-                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                  <Newspaper className="h-6 w-6 text-secondary" /> Mural de Noticias
-                </CardTitle>
-                <Button onClick={() => setIsNewsDialogOpen(true)} className="bg-primary font-black rounded-full">
-                  <Plus className="mr-2 h-4 w-4" /> Nueva Noticia
-                </Button>
+                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2"><Newspaper className="h-6 w-6 text-secondary" /> Mural de Noticias</CardTitle>
+                <Button onClick={() => setIsNewsDialogOpen(true)} className="bg-primary font-black rounded-full"><Plus className="mr-2 h-4 w-4" /> Nueva Noticia</Button>
               </CardHeader>
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {newsItems?.map((n) => (
                   <Card key={n.id} className="overflow-hidden border-primary/5">
-                    <div className="relative aspect-video">
-                      <Image src={n.imageUrl} alt={n.title} fill className="object-cover" />
-                    </div>
+                    <div className="relative aspect-video"><Image src={n.imageUrl} alt={n.title} fill className="object-cover" /></div>
                     <CardContent className="p-4">
                       <h4 className="font-black text-primary">{n.title}</h4>
                       <Button variant="ghost" className="text-red-400 mt-2 h-8" onClick={() => deleteDocumentNonBlocking(doc(db!, "investor_updates", n.id))}><Trash2 className="h-3 w-3 mr-1" /> Eliminar</Button>
@@ -468,143 +468,117 @@ export default function ReceptionPage() {
             </Card>
           </TabsContent>
 
-          {/* TAB: SOCIOS */}
-          <TabsContent value="investors">
-            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-              <CardHeader className="bg-primary/5 border-b">
-                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
-                  <Users className="h-6 w-6 text-secondary" /> Gestión de Socios
-                </CardTitle>
-                <CardDescription>Visualización y control de aportes confirmados (Contract Leads).</CardDescription>
-              </CardHeader>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/10">
-                      <TableHead className="font-bold">Socio / Email</TableHead>
-                      <TableHead className="font-bold text-right">Monto Aportado</TableHead>
-                      <TableHead className="font-bold text-center">Estado Firma</TableHead>
-                      <TableHead className="text-right font-bold">Gestión</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {partners?.map((p) => (
-                      <TableRow key={p.id}>
-                        <TableCell>
-                           <div className="flex flex-col">
-                              <span className="font-bold text-primary">{p.investorName}</span>
-                              <span className="text-[10px] text-muted-foreground">{p.investorEmail}</span>
-                           </div>
-                        </TableCell>
-                        <TableCell className="text-right font-black text-secondary">${(p.amount || 0).toLocaleString()}</TableCell>
-                        <TableCell className="text-center">
-                           <Badge className={cn("text-[9px] uppercase", p.status === 'fully_signed' ? "bg-green-500" : "bg-amber-500")}>
-                             {p.status === 'fully_signed' ? 'Cerrado' : 'Pendiente'}
-                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                           <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "contract_leads", p.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {partners?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-10 italic">Sin socios registrados.</TableCell></TableRow>}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* TAB: HITOS */}
           <TabsContent value="milestones">
             <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
               <CardHeader className="bg-amber-50 border-b flex flex-row justify-between items-center">
-                <CardTitle className="text-2xl font-black text-amber-700 italic flex items-center gap-2">
-                  <Target className="h-6 w-6 text-amber-500" /> Cronograma de Hitos
-                </CardTitle>
-                <Button onClick={() => setIsMilestoneDialogOpen(true)} className="bg-amber-600 hover:bg-amber-700 font-black rounded-full">
-                  <Plus className="mr-2 h-4 w-4" /> Nuevo Hito
-                </Button>
+                <CardTitle className="text-2xl font-black text-amber-700 italic flex items-center gap-2"><Target className="h-6 w-6 text-amber-500" /> Cronograma de Hitos</CardTitle>
+                <Button onClick={() => setIsMilestoneDialogOpen(true)} className="bg-amber-600 hover:bg-amber-700 font-black rounded-full"><Plus className="mr-2 h-4 w-4" /> Nuevo Hito</Button>
               </CardHeader>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/10">
-                      <TableHead className="font-bold">Fecha Proyectada</TableHead>
-                      <TableHead className="font-bold">Hito Técnico</TableHead>
-                      <TableHead className="font-bold">Estado</TableHead>
-                      <TableHead className="text-right font-bold">Gestión</TableHead>
+              <Table>
+                <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold">Fecha</TableHead><TableHead className="font-bold">Hito</TableHead><TableHead className="text-right font-bold">Gestión</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {milestones?.map((m) => (
+                    <TableRow key={m.id}>
+                      <TableCell className="font-black text-amber-700">{m.date}</TableCell>
+                      <TableCell className="font-bold text-primary">{m.title}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "milestones", m.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {milestones?.map((m) => (
-                      <TableRow key={m.id}>
-                        <TableCell className="font-black text-amber-700">{format(parseISO(m.date), "MMMM yyyy", { locale: es }).toUpperCase()}</TableCell>
-                        <TableCell>
-                           <div className="flex flex-col">
-                              <span className="font-bold text-primary">{m.title}</span>
-                              <span className="text-[10px] text-muted-foreground line-clamp-1">{m.description}</span>
-                           </div>
-                        </TableCell>
-                        <TableCell>
-                           <Badge variant={m.status === 'completed' ? 'default' : 'outline'} className={cn("text-[9px] uppercase", m.status === 'completed' && "bg-green-500")}>
-                             {m.status === 'completed' ? 'Logrado' : 'En Proceso'}
-                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-right space-x-2">
-                           <Button variant="ghost" size="icon" onClick={() => updateDocumentNonBlocking(doc(db!, "milestones", m.id), { status: m.status === 'completed' ? 'pending' : 'completed' })}>
-                             <CheckCircle2 className={cn("h-4 w-4", m.status === 'completed' ? "text-green-500" : "text-muted-foreground")} />
-                           </Button>
-                           <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "milestones", m.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="investors">
+            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+              <CardHeader className="bg-primary/5 border-b"><CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2"><Users className="h-6 w-6 text-secondary" /> Gestión de Socios</CardTitle></CardHeader>
+              <Table>
+                <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold">Socio</TableHead><TableHead className="font-bold text-right">Monto</TableHead><TableHead className="text-right font-bold">Gestión</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {partners?.map((p) => (
+                    <TableRow key={p.id}>
+                      <TableCell className="font-bold text-primary">{p.investorName}</TableCell>
+                      <TableCell className="text-right font-black text-secondary">${(p.amount || 0).toLocaleString()}</TableCell>
+                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "contract_leads", p.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </Card>
           </TabsContent>
         </Tabs>
       </main>
 
-      {/* DIALOGS */}
+      {/* CRM DIALOG */}
+      <Dialog open={isQuoteDialogOpen} onOpenChange={setIsQuoteDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-primary italic">{editingQuoteId ? "Editar Cotización" : "Nueva Cotización Sunvou"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-primary/5 p-4 rounded-2xl">
+              <div className="space-y-2">
+                <Label className="font-black text-[10px] uppercase text-primary">Tasa del día (USD/CLP)</Label>
+                <Input type="number" value={exchangeRate} onChange={(e) => setExchangeRate(parseInt(e.target.value) || 0)} className="bg-white font-black" />
+              </div>
+              <div className="space-y-2">
+                <Label className="font-black text-[10px] uppercase text-primary">Estado Comercial</Label>
+                <Select value={quoteStatus} onValueChange={(v) => setQuoteStatus(v as QuotationStatus)}>
+                  <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="pending">Borrador</SelectItem><SelectItem value="sent">Enviada</SelectItem><SelectItem value="accepted">Aceptada</SelectItem><SelectItem value="rejected">Rechazada</SelectItem></SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b pb-6">
+              <div className="space-y-2"><Label className="font-bold">Cliente / Doctor</Label><Input value={clientName} onChange={(e) => setClientName(e.target.value)} /></div>
+              <div className="space-y-2"><Label className="font-bold">Institución</Label><Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} /></div>
+              <div className="space-y-2"><Label className="font-bold">Email</Label><Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} /></div>
+              <div className="space-y-2"><Label className="font-bold">Teléfono</Label><Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} /></div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between"><Label className="font-black text-lg text-primary">Detalle de Equipos e Insumos</Label><Button variant="outline" size="sm" onClick={addItem} className="rounded-full"><Plus className="mr-1 h-4 w-4" /> Ítem Extra</Button></div>
+              {items.map((item, idx) => (
+                <div key={idx} className="grid grid-cols-12 gap-2 bg-muted/20 p-2 rounded-xl border border-primary/5">
+                  <div className="col-span-6"><Input value={item.description} onChange={(e) => updateItem(idx, 'description', e.target.value)} className="bg-white" /></div>
+                  <div className="col-span-2"><Input type="number" value={item.quantity} onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 0)} className="bg-white" /></div>
+                  <div className="col-span-3"><Input type="number" value={item.unitPrice} onChange={(e) => updateItem(idx, 'unitPrice', parseInt(e.target.value) || 0)} className="bg-white font-bold" /></div>
+                  <div className="col-span-1"><Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="text-red-400"><Trash2 className="h-4 w-4" /></Button></div>
+                </div>
+              ))}
+              <div className="bg-primary/5 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+                <Textarea value={quoteNotes} onChange={(e) => setQuoteNotes(e.target.value)} className="bg-white min-h-[100px] w-full md:w-[400px]" placeholder="Condiciones comerciales..." />
+                <div className="text-right space-y-1">
+                  <div className="text-2xl font-black text-primary italic">TOTAL IVA INC: ${Math.round(calculateGrossTotal()).toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter><Button onClick={handleSaveQuotation} className="bg-primary font-black rounded-full px-10">{editingQuoteId ? "Guardar Cambios" : "Emitir Cotización"}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* NEWS DIALOG */}
       <Dialog open={isNewsDialogOpen} onOpenChange={setIsNewsDialogOpen}>
         <DialogContent className="max-w-2xl rounded-[2rem]">
           <DialogHeader><DialogTitle className="text-2xl font-black text-primary italic">Publicar Noticia</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label className="font-bold">Título</Label>
-              <Input value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-bold">URL Imagen</Label>
-              <Input value={newsForm.imageUrl} onChange={(e) => setNewsForm({...newsForm, imageUrl: e.target.value})} />
-              {newsForm.imageUrl && <div className="mt-2 relative aspect-video rounded-xl overflow-hidden border"><Image src={newsForm.imageUrl} alt="preview" fill className="object-cover" /></div>}
-            </div>
-            <div className="space-y-2">
-              <Label className="font-bold">Contenido</Label>
-              <Textarea value={newsForm.content} onChange={(e) => setNewsForm({...newsForm, content: e.target.value})} />
-            </div>
+            <div className="space-y-2"><Label className="font-bold">Título</Label><Input value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} /></div>
+            <div className="space-y-2"><Label className="font-bold">URL Imagen</Label><Input value={newsForm.imageUrl} onChange={(e) => setNewsForm({...newsForm, imageUrl: e.target.value})} /></div>
+            <div className="space-y-2"><Label className="font-bold">Contenido</Label><Textarea value={newsForm.content} onChange={(e) => setNewsForm({...newsForm, content: e.target.value})} /></div>
           </div>
           <DialogFooter><Button onClick={handleSaveNews} className="bg-primary rounded-full px-8">Publicar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* MILESTONE DIALOG */}
       <Dialog open={isMilestoneDialogOpen} onOpenChange={setIsMilestoneDialogOpen}>
         <DialogContent className="rounded-[2rem]">
           <DialogHeader><DialogTitle className="text-2xl font-black text-amber-700 italic">Nuevo Hito de Proyecto</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label className="font-bold">Título del Hito</Label>
-              <Input value={milestoneForm.title} onChange={(e) => setMilestoneForm({...milestoneForm, title: e.target.value})} />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-bold">Fecha</Label>
-              <Input type="date" value={milestoneForm.date} onChange={(e) => setMilestoneForm({...milestoneForm, date: e.target.value})} />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-bold">Descripción Corta</Label>
-              <Textarea value={milestoneForm.description} onChange={(e) => setMilestoneForm({...milestoneForm, description: e.target.value})} />
-            </div>
+            <div className="space-y-2"><Label className="font-bold">Título</Label><Input value={milestoneForm.title} onChange={(e) => setMilestoneForm({...milestoneForm, title: e.target.value})} /></div>
+            <div className="space-y-2"><Label className="font-bold">Fecha</Label><Input type="date" value={milestoneForm.date} onChange={(e) => setMilestoneForm({...milestoneForm, date: e.target.value})} /></div>
           </div>
           <DialogFooter><Button onClick={handleSaveMilestone} className="bg-amber-600 rounded-full px-8">Guardar Hito</Button></DialogFooter>
         </DialogContent>
@@ -612,4 +586,3 @@ export default function ReceptionPage() {
     </div>
   );
 }
-    
