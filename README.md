@@ -5,7 +5,7 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 
 ## Estado del Proyecto
 - **Agendamiento**: Implementado con cálculo automático de tarifas: $80.000 en laboratorio y $100.000 a domicilio. Descuentos del 15% para Fonasa/Isapre.
-- **CRM de Ventas**: Sistema de cotizaciones Sunvou con catálogo integrado. Aplicado **descuento automático del 15%** en sensores. Nuevas condiciones comerciales: **Anticipo 70%** y entrega en **20-30 días**.
+- **CRM de Ventas**: Sistema de cotizaciones Sunvou con catálogo integrado. Aplicado **descuento automático del 15%** en sensores. Nuevas condiciones comerciales: **Anticipo 70%** y entrega en **20-30 días hábiles**.
 - **Mensajería**: Se eliminó el aviso de envío de correo en el éxito de reserva hasta que el sistema de mail esté operativo.
 - **Administración**: Panel de recepción con vista de calendario mensual y filtrado diario de pacientes. Corregidos errores de importación de íconos.
 - **Convenios**: Página dedicada para alianzas institucionales y captación de médicos especialistas.
