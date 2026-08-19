@@ -4,18 +4,18 @@
 Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializado en tests de aire espirado.
 
 ## Estado del Proyecto
-- **Agendamiento**: Implementado con cálculo automático de tarifas: $80.000 en laboratorio y $100.000 a domicilio. Descuentos del 15% para Fonasa/Isapre.
-- **CRM de Ventas**: Sistema de cotizaciones Sunvou con catálogo integrado. Aplicado **descuento automático del 15%** en sensores. Nuevas condiciones comerciales: **Anticipo 70%** y entrega en **20-30 días hábiles**.
-- **Mensajería**: Se eliminó el aviso de envío de correo en el éxito de reserva hasta que el sistema de mail esté operativo.
-- **Administración**: Panel de recepción con vista de calendario mensual y filtrado diario de pacientes. Corregidos errores de importación de íconos.
-- **Convenios**: Página dedicada para alianzas institucionales y captación de médicos especialistas.
-- **Logística**: Integración de tiempos críticos (6 horas) y retiro presencial de kits en Apoquindo 3990.
+- **Protocolo SIBO**: Implementado asistente interactivo para test en casa con protocolo optimizado de 90 minutos y 4 muestras.
+- **Logística Home Kit**: Los pacientes ahora declaran una "Dirección de Retiro" específica para el motoboy, independiente de su residencia.
+- **Administración**: Panel de recepción con **Ficha Clínica Completa**, permitiendo ver datos de contacto, direcciones de retiro y desglose financiero de cada reserva.
+- **Agendamiento**: Simplificado el formulario eliminando el campo de peso y mejorando el flujo de datos personales.
+- **CRM de Ventas**: Sistema Sunvou con catálogo automatizado, 15% de descuento en sensores y condiciones 70/30 de pago.
+- **Convenios**: Portal activo para captación de médicos e instituciones asociadas.
 
 ## Comandos Git para la Terminal
 Para guardar y subir tus avances, utiliza esta secuencia:
 ```bash
 git add .
-git commit -m "Oralab: Actualización condiciones comerciales CRM (70/30 pago, 20-30 días entrega)"
+git commit -m "Oralab: Protocolo SIBO, dirección de retiro y ficha clínica detallada"
 git push
 ```
 
@@ -25,7 +25,7 @@ Para que las confirmaciones de reserva lleguen a los pacientes, la extensión en
 - **Colección**: `mail`
 - **Authentication Type**: `Username & Password`
 - **SMTP URI**: `smtps://control%40pcgoperacion.com:jsvfmrifbtqmlzye@smtp.gmail.com:465`
-- **Use secure OAuth2 connection?**: **NO** (Debe estar en No para que funcione la autenticación por contraseña).
+- **Use secure OAuth2 connection?**: **NO**
 - **From Address**: `contacto@oralab.cl`
 
 ---
