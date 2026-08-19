@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -62,7 +63,14 @@ import {
   Send,
   Newspaper,
   Target,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  MapPin,
+  MapPinned,
+  Phone,
+  Mail,
+  Home,
+  Building2,
+  Wallet
 } from "lucide-react";
 import { format, parseISO, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
@@ -78,7 +86,7 @@ const ADMIN_EMAIL = "admin@oralab.cl";
 const IVA_RATE = 0.19;
 const DEFAULT_USD_RATE = 950;
 const COMMERCIAL_MARKUP = 2;
-const SENSOR_DISCOUNT = 0.85; // 15% de descuento
+const SENSOR_DISCOUNT = 0.85;
 
 const SUNVOU_CATALOG = [
   { description: "Analizador Breath Diagnostics Sunvou-DA7349 (H2/CH4/H2S/CO2)", unitPriceUSD: 5000 },
@@ -107,6 +115,7 @@ export default function ReceptionPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedBookingForDetail, setSelectedBookingForDetail] = useState<any>(null);
 
   // NEWS State
   const [isNewsDialogOpen, setIsNewsDialogOpen] = useState(false);
@@ -185,7 +194,6 @@ export default function ReceptionPage() {
   const datesWithBookings = Array.from(new Set(bookings.map(b => b.scheduledDate)))
     .map(dateStr => parseISO(dateStr));
 
-  // CRM Logic
   const resetQuoteForm = () => {
     setEditingQuoteId(null);
     setClientName("");
@@ -347,7 +355,6 @@ export default function ReceptionPage() {
     pdf.save(`Propuesta_Sunvou_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
 
-  // NEWS Logic
   const handleSaveNews = async () => {
     if (!db || !newsForm.title || !newsForm.imageUrl) return;
     addDocumentNonBlocking(collection(db, "investor_updates"), { ...newsForm, createdAt: serverTimestamp() });
@@ -355,7 +362,6 @@ export default function ReceptionPage() {
     setNewsForm({ title: "", content: "", imageUrl: "", date: format(new Date(), "yyyy-MM-dd") });
   };
 
-  // MILESTONES Logic
   const handleSaveMilestone = async () => {
     if (!db || !milestoneForm.title) return;
     addDocumentNonBlocking(collection(db, "milestones"), { ...milestoneForm, createdAt: serverTimestamp() });
@@ -407,18 +413,34 @@ export default function ReceptionPage() {
                   <Badge className="bg-primary text-white font-black px-4 rounded-full">{filteredBookings.length} Pacientes</Badge>
                 </CardHeader>
                 <Table>
-                  <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold">Hora</TableHead><TableHead className="font-bold">Paciente</TableHead><TableHead className="font-bold">Estado</TableHead><TableHead className="text-right font-bold">Gestión</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold">Hora</TableHead><TableHead className="font-bold">Paciente</TableHead><TableHead className="font-bold">Examen</TableHead><TableHead className="font-bold">Estado</TableHead><TableHead className="text-right font-bold">Gestión</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {filteredBookings.map((b) => (
-                      <TableRow key={b.id}>
+                      <TableRow key={b.id} className="group hover:bg-muted/50 cursor-pointer" onClick={() => setSelectedBookingForDetail(b)}>
                         <TableCell className="font-black text-primary">{b.scheduledTime}</TableCell>
-                        <TableCell><span className="font-black text-primary">{b.firstName} {b.lastNameFather}</span></TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-black text-primary group-hover:underline">{b.firstName} {b.lastNameFather}</span>
+                            <span className="text-[9px] text-muted-foreground font-bold uppercase">{b.modality === 'home_kit' ? 'Test en Casa' : 'Presencial'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell><Badge variant="outline" className="font-bold text-[10px] text-primary border-primary/20">{b.examType}</Badge></TableCell>
                         <TableCell>{getStatusBadge(b.status)}</TableCell>
-                        <TableCell className="text-right">
-                          <Select value={b.status} onValueChange={(val) => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: val })}>
-                            <SelectTrigger className="w-[140px] h-8 text-[10px] rounded-full"><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="pending">Agendado</SelectItem><SelectItem value="arrived">En sala</SelectItem><SelectItem value="completed">Finalizado</SelectItem><SelectItem value="cancelled">Cancelado</SelectItem></SelectContent>
-                          </Select>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex justify-end items-center gap-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary/40 hover:text-primary" onClick={() => setSelectedBookingForDetail(b)}>
+                              <Info className="h-4 w-4" />
+                            </Button>
+                            <Select value={b.status} onValueChange={(val) => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: val })}>
+                              <SelectTrigger className="w-[120px] h-8 text-[9px] rounded-full font-black uppercase"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Agendado</SelectItem>
+                                <SelectItem value="arrived">En sala</SelectItem>
+                                <SelectItem value="completed">Finalizado</SelectItem>
+                                <SelectItem value="cancelled">Cancelado</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -516,6 +538,88 @@ export default function ReceptionPage() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* DETAIL DIALOG */}
+      <Dialog open={!!selectedBookingForDetail} onOpenChange={(open) => !open && setSelectedBookingForDetail(null)}>
+        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
+          {selectedBookingForDetail && (
+            <div className="flex flex-col">
+              <div className="bg-primary p-8 text-white">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="space-y-1">
+                    <Badge className="bg-white/20 text-white border-none text-[10px] font-black uppercase tracking-widest mb-2">Ficha de Paciente</Badge>
+                    <h2 className="text-3xl font-black italic">{selectedBookingForDetail.firstName} {selectedBookingForDetail.lastNameFather} {selectedBookingForDetail.lastNameMother}</h2>
+                    <p className="text-sm opacity-80 font-bold flex items-center gap-2">
+                      {selectedBookingForDetail.modality === 'home_kit' ? <Home className="h-3 w-3" /> : <Building2 className="h-3 w-3" />}
+                      {selectedBookingForDetail.modality === 'home_kit' ? 'Modalidad Test en Casa' : 'Atención Presencial en Laboratorio'}
+                    </p>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <p className="text-[10px] font-black opacity-60 uppercase">Cita Programada</p>
+                    <p className="text-xl font-black">{format(parseISO(selectedBookingForDetail.scheduledDate), "dd/MM/yyyy")} @ {selectedBookingForDetail.scheduledTime}</p>
+                    <div className="mt-2">{getStatusBadge(selectedBookingForDetail.status)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white">
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><Users className="h-4 w-4 text-secondary" /> Datos de Contacto</h4>
+                    <div className="bg-muted/30 p-4 rounded-2xl space-y-2">
+                      <p className="text-sm font-medium flex items-center gap-2"><Mail className="h-3 w-3 text-muted-foreground" /> {selectedBookingForDetail.email}</p>
+                      <p className="text-sm font-black flex items-center gap-2 text-primary"><Phone className="h-3 w-3 text-muted-foreground" /> {selectedBookingForDetail.phone}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><Wind className="h-4 w-4 text-secondary" /> Procedimiento Clínico</h4>
+                    <div className="bg-muted/30 p-4 rounded-2xl space-y-2">
+                      <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Examen:</span> <Badge className="bg-primary text-[10px] font-black">{selectedBookingForDetail.examType}</Badge></div>
+                      <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Previsión:</span> <span className="text-sm font-black uppercase text-primary">{selectedBookingForDetail.prevision}</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><MapPin className="h-4 w-4 text-secondary" /> Logística de Muestras</h4>
+                    <div className="bg-muted/30 p-4 rounded-2xl space-y-4">
+                      <div>
+                        <Label className="text-[9px] font-black uppercase text-muted-foreground block mb-1">Dirección de Residencia</Label>
+                        <p className="text-xs font-bold leading-tight">{selectedBookingForDetail.address}, {selectedBookingForDetail.commune}</p>
+                      </div>
+                      {selectedBookingForDetail.pickupAddress && (
+                        <div className="border-t border-primary/10 pt-3">
+                          <Label className="text-[9px] font-black uppercase text-secondary block mb-1">Dirección de Retiro (Motoboy)</Label>
+                          <p className="text-xs font-black text-primary flex items-start gap-1">
+                            <MapPinned className="h-3 w-3 shrink-0 mt-0.5 text-secondary" />
+                            {selectedBookingForDetail.pickupAddress}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><Wallet className="h-4 w-4 text-secondary" /> Desglose Financiero</h4>
+                    <div className="bg-primary/5 p-4 rounded-2xl space-y-1">
+                      <div className="flex justify-between text-[10px] font-bold text-muted-foreground"><span>Valor Base:</span> <span>${selectedBookingForDetail.baseFee?.toLocaleString()}</span></div>
+                      {selectedBookingForDetail.deliveryFee > 0 && <div className="flex justify-between text-[10px] font-bold text-secondary"><span>Logística Motoboy:</span> <span>+${selectedBookingForDetail.deliveryFee?.toLocaleString()}</span></div>}
+                      {selectedBookingForDetail.discount > 0 && <div className="flex justify-between text-[10px] font-bold text-green-600"><span>Dcto. Previsión (15%):</span> <span>-${selectedBookingForDetail.discount?.toLocaleString()}</span></div>}
+                      <div className="flex justify-between text-base font-black text-primary italic pt-2 border-t border-primary/10"><span>TOTAL:</span> <span>${selectedBookingForDetail.total?.toLocaleString()} CLP</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-muted/50 p-6 flex justify-end border-t">
+                <Button onClick={() => setSelectedBookingForDetail(null)} className="rounded-full font-black px-10 bg-primary">Cerrar Ficha</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* CRM DIALOG */}
       <Dialog open={isQuoteDialogOpen} onOpenChange={setIsQuoteDialogOpen}>
