@@ -92,7 +92,6 @@ const bookingSchema = z.object({
   email: z.string().email("Email inválido").min(1, "Requerido"),
   phone: z.string().length(8, "Deben ser 8 dígitos"),
   address: z.string().min(5, "Dirección requerida"),
-  weight: z.string().min(1, "Indique peso"),
   prevision: z.enum(["fonasa", "isapre", "particular"], { required_error: "Indique su previsión" }),
   country: z.string().min(1, "Seleccione país"),
   region: z.string().min(1, "Seleccione región"),
@@ -137,7 +136,6 @@ export default function BookingPage() {
       email: "",
       phone: "",
       address: "",
-      weight: "",
       prevision: "particular",
       country: "Chile",
       region: "Metropolitana de Santiago",
@@ -314,7 +312,6 @@ export default function BookingPage() {
       email: values.email,
       phone: `+56 9 ${values.phone}`,
       address: values.address,
-      weight: values.weight,
       prevision: values.prevision,
       deliveryFee: deliveryFee,
       baseFee: currentBaseFee,
@@ -327,7 +324,6 @@ export default function BookingPage() {
     try {
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
       
-      // La activación del Trigger Email queda lista, pero se manejará internamente cuando el sistema de correo esté 100% operativo.
       const homeKitText = values.modality === 'home_kit' 
         ? `<p style="color: #1c68b6; font-weight: bold;">PROCEDIMIENTO TEST EN CASA (PASOS CRÍTICOS):</p>
            <ul>
@@ -567,7 +563,9 @@ export default function BookingPage() {
                       <FormField control={form.control} name="prevision" render={({ field }) => (
                         <FormItem><FormLabel className="font-bold">Previsión (15% Desc)</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="fonasa">Fonasa (15% Desc)</SelectItem><SelectItem value="isapre">Isapre (15% Desc)</SelectItem><SelectItem value="particular">Particular</SelectItem></SelectContent></Select></FormItem>
                       )} />
-                      <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel className="font-bold">Peso (kg)</FormLabel><Input type="number" {...field} className="h-12 rounded-xl" /></FormItem>)} />
+                      <FormField control={form.control} name="sex" render={({ field }) => (
+                        <FormItem><FormLabel className="font-bold">Sexo</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="male">Masculino</SelectItem><SelectItem value="female">Femenino</SelectItem><SelectItem value="not_specified">Prefiero no decir</SelectItem></SelectContent></Select></FormItem>
+                      )} />
                     </div>
 
                     <Card className="bg-primary/5 border-primary/10 rounded-[2rem] overflow-hidden">
