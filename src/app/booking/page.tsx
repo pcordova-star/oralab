@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -82,7 +83,7 @@ const DISCOUNT_RATE = 0.15;
 const timeSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00"];
 
 const bookingSchema = z.object({
-  examType: z.enum(["Lactulosa", "Fructosa", "Lactosa"], { required_error: "Seleccione tipo de examen" }),
+  examType: z.enum(["SIBO", "Lactulosa", "Fructosa", "Lactosa"], { required_error: "Seleccione tipo de examen" }),
   modality: z.enum(["presential", "home_kit"], { required_error: "Seleccione modalidad" }),
   scheduledDate: z.date({ required_error: "Seleccione una fecha" }),
   scheduledTime: z.string().min(1, "Seleccione una hora"),
@@ -126,7 +127,7 @@ export default function BookingPage() {
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      examType: "Lactulosa",
+      examType: "SIBO",
       modality: "presential",
       scheduledDate: undefined,
       scheduledTime: "",
@@ -435,7 +436,8 @@ export default function BookingPage() {
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl><SelectTrigger className="h-14 text-lg rounded-xl font-bold"><SelectValue placeholder="Seleccionar examen" /></SelectTrigger></FormControl>
                           <SelectContent>
-                            <SelectItem value="Lactulosa">Test Lactulosa (SIBO)</SelectItem>
+                            <SelectItem value="SIBO">Test de SIBO (Protocolo 90 min)</SelectItem>
+                            <SelectItem value="Lactulosa">Test Lactulosa (Protocolo 120 min)</SelectItem>
                             <SelectItem value="Fructosa">Test Fructosa</SelectItem>
                             <SelectItem value="Lactosa">Test Lactosa</SelectItem>
                           </SelectContent>

@@ -35,10 +35,25 @@ export interface ExamProtocol {
 }
 
 export const PROTOCOLS: Record<string, ExamProtocol> = {
+  SIBO: {
+    id: 'SIBO',
+    name: 'Test de SIBO (Protocolo 90 min)',
+    instructions: 'Protocolo optimizado para detección de sobrecrecimiento bacteriano con menos muestras.',
+    steps: [
+      { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo antes de ingerir el sustrato.' },
+      { name: 'Ingesta de Sustrato', type: 'ingest', durationMinutes: 5, description: 'Beba la solución lentamente durante 5 minutos.' },
+      { name: 'Espera Muestra 1', type: 'wait', durationMinutes: 25, description: 'Mantenga reposo absoluto.' },
+      { name: 'Muestra 2 (T-30)', type: 'breath', durationMinutes: 0, description: 'Sople en el segundo tubo.' },
+      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 30, description: 'Mantenga reposo absoluto.' },
+      { name: 'Muestra 3 (T-60)', type: 'breath', durationMinutes: 0, description: 'Sople en el tercer tubo.' },
+      { name: 'Espera Muestra 3', type: 'wait', durationMinutes: 30, description: 'Mantenga reposo absoluto.' },
+      { name: 'Muestra 4 (T-90)', type: 'breath', durationMinutes: 0, description: 'Sople en el último tubo.' },
+    ]
+  },
   Lactulosa: {
     id: 'Lactulosa',
-    name: 'Test de Lactulosa (SIBO/IMO)',
-    instructions: 'Este test evalúa el sobrecrecimiento bacteriano. Siga los tiempos estrictamente.',
+    name: 'Test de Lactulosa (Protocolo Extendido)',
+    instructions: 'Este test evalúa el sobrecrecimiento bacteriano con una curva detallada de 120 minutos.',
     steps: [
       { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo antes de ingerir nada.' },
       { name: 'Ingesta de Lactulosa', type: 'ingest', durationMinutes: 5, description: 'Beba la solución de lactulosa lentamente durante 5 minutos.' },

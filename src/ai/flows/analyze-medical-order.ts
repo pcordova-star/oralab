@@ -1,7 +1,8 @@
+
 'use server';
 /**
  * @fileOverview Un flujo de Genkit para analizar órdenes médicas mediante visión artificial.
- * Detecta exámenes de aire espirado (Lactulosa, Fructosa, Lactosa) y sugiere la selección.
+ * Detecta exámenes de aire espirado (Lactulosa, Fructosa, Lactosa, SIBO) y sugiere la selección.
  */
 
 import { ai } from '@/ai/genkit';
@@ -17,7 +18,7 @@ const AnalyzeMedicalOrderInputSchema = z.object({
 export type AnalyzeMedicalOrderInput = z.infer<typeof AnalyzeMedicalOrderInputSchema>;
 
 const AnalyzeMedicalOrderOutputSchema = z.object({
-  detectedExam: z.enum(['Lactulosa', 'Fructosa', 'Lactosa', 'Desconocido']).describe('El examen identificado en la orden.'),
+  detectedExam: z.enum(['SIBO', 'Lactulosa', 'Fructosa', 'Lactosa', 'Desconocido']).describe('El examen identificado en la orden.'),
   confidence: z.number().describe('Nivel de confianza de la detección 0-1.'),
   reasoning: z.string().describe('Breve explicación de por qué se eligió ese examen.'),
 });
@@ -35,9 +36,10 @@ export async function analyzeMedicalOrder(
         Tu única tarea es leer una fotografía de una orden médica y detectar qué examen de aire espirado se solicita.
         
         CRITERIOS DE BÚSQUEDA (PUEDEN ESTAR ESCRITOS A MANO O ABREVIADOS):
-        1. Lactulosa: Busca "Lactulosa", "Lactulon", "SIBO", "Sobrecrecimiento", "H2/CH4", "Test de aire SIBO".
-        2. Fructosa: Busca "Fructosa", "Intolerancia Fructosa", "Malabsorción Fructosa".
-        3. Lactosa: Busca "Lactosa", "Intolerancia Lactosa", "Test de aliento Lactosa".
+        1. SIBO: Busca específicamente "SIBO", "Test SIBO", "Sobrecrecimiento Bacteriano".
+        2. Lactulosa: Busca "Lactulosa", "Lactulon", "H2/CH4", "Test de aire SIBO prolongado".
+        3. Fructosa: Busca "Fructosa", "Intolerancia Fructosa", "Malabsorción Fructosa".
+        4. Lactosa: Busca "Lactosa", "Intolerancia Lactosa", "Test de aliento Lactosa".
 
         INSTRUCCIONES ADICIONALES:
         - Prioriza palabras clave aunque el resto del texto sea ilegible.
