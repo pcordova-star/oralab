@@ -41,7 +41,8 @@ import {
   ScanSearch,
   CircleDollarSign,
   Info,
-  Clock
+  MapPin,
+  MapPinned
 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
@@ -55,12 +56,6 @@ import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { jsPDF } from "jspdf";
 import { analyzeMedicalOrder } from "@/ai/flows/analyze-medical-order";
-
-const regions = [
-  "Metropolitana de Santiago", "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo", 
-  "Valparaíso", "O'Higgins", "Maule", "Ñuble", 
-  "Biobío", "La Araucanía", "Los Ríos", "Los Lagos", "Aysén", "Magallanes"
-];
 
 const communesByRegion: Record<string, string[]> = {
   "Metropolitana de Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa", "Tiltil", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"],
@@ -76,6 +71,7 @@ const DELIVERY_PRICES: Record<string, number> = {
   "Isla de Maipo": 30000, "El Monte": 30000, "Melipilla": 30000, "Curacaví": 30000, "María Pinto": 30000, "Pirque": 30000, "San José de Maipo": 30000, "Alhué": 30000, "Paine": 30000, "San Pedro": 30000, "Tiltil": 30000
 };
 
+const regions = ["Metropolitana de Santiago"];
 const BASE_FEE_LAB = 80000;
 const BASE_FEE_HOME = 100000;
 const DISCOUNT_RATE = 0.15;
@@ -93,6 +89,7 @@ const bookingSchema = z.object({
   email: z.string().email("Email inválido").min(1, "Requerido"),
   phone: z.string().length(8, "Deben ser 8 dígitos"),
   address: z.string().min(5, "Dirección requerida"),
+  pickupAddress: z.string().optional(),
   prevision: z.enum(["fonasa", "isapre", "particular"], { required_error: "Indique su previsión" }),
   country: z.string().min(1, "Seleccione país"),
   region: z.string().min(1, "Seleccione región"),
@@ -114,8 +111,6 @@ export default function BookingPage() {
   const [lastBookingValues, setLastBookingValues] = useState<BookingFormValues | null>(null);
   const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
-  
-  // AI State
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const db = useFirestore();
@@ -137,6 +132,7 @@ export default function BookingPage() {
       email: "",
       phone: "",
       address: "",
+      pickupAddress: "",
       prevision: "particular",
       country: "Chile",
       region: "Metropolitana de Santiago",
@@ -152,13 +148,8 @@ export default function BookingPage() {
   const selectedPrevision = form.watch("prevision");
 
   const availableCommunes = selectedRegion ? [...(communesByRegion[selectedRegion] || [])].sort() : [];
-
   const currentBaseFee = selectedModality === "home_kit" ? BASE_FEE_HOME : BASE_FEE_LAB;
-
-  const deliveryFee = (selectedModality === 'home_kit' && selectedCommune) 
-    ? (DELIVERY_PRICES[selectedCommune] || 30000) 
-    : 0;
-
+  const deliveryFee = (selectedModality === 'home_kit' && selectedCommune) ? (DELIVERY_PRICES[selectedCommune] || 30000) : 0;
   const discountAmount = (selectedPrevision === "fonasa" || selectedPrevision === "isapre") ? currentBaseFee * DISCOUNT_RATE : 0;
   const examSubtotal = currentBaseFee - discountAmount;
   const finalTotal = examSubtotal + deliveryFee;
@@ -196,13 +187,8 @@ export default function BookingPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
     if (!file.type.startsWith('image/')) {
-      toast({ 
-        variant: "destructive", 
-        title: "Imagen requerida", 
-        description: "Por favor sube una fotografía (JPG o PNG) de tu orden para que la IA pueda leerla." 
-      });
+      toast({ variant: "destructive", title: "Imagen requerida", description: "Por favor sube una fotografía de tu orden médica." });
       return;
     }
 
@@ -216,11 +202,7 @@ export default function BookingPage() {
           form.setValue("examType", result.detectedExam as any);
           toast({ title: "Orden Analizada", description: `Detectamos: ${result.detectedExam}. Selección actualizada.` });
         } else {
-          toast({ 
-            variant: "destructive", 
-            title: "Detección fallida", 
-            description: "No logramos leer el examen claramente. Por favor selecciónalo manualmente." 
-          });
+          toast({ variant: "destructive", title: "Detección fallida", description: "No logramos leer el examen claramente." });
         }
       } catch (err) {
         toast({ variant: "destructive", title: "Error al procesar", description: "Ocurrió un error técnico al analizar la foto." });
@@ -265,7 +247,7 @@ export default function BookingPage() {
     doc.text("CONFIRMACIÓN DE RESERVA CLÍNICA", margin, y);
     y += 15;
     doc.setFillColor(245, 247, 249);
-    doc.roundedRect(margin, y, 170, 85, 3, 3, 'FD');
+    doc.roundedRect(margin, y, 170, 95, 3, 3, 'FD');
     doc.setTextColor(60, 60, 60);
     doc.setFontSize(10);
     doc.text(`Paciente: ${lastBookingValues.firstName} ${lastBookingValues.lastNameFather}`, margin + 5, y + 15);
@@ -274,7 +256,14 @@ export default function BookingPage() {
     doc.text(`Hora: ${lastBookingValues.scheduledTime} hrs`, 130, y + 31);
     doc.text(`Previsión: ${lastBookingValues.prevision.toUpperCase()}`, margin + 5, y + 39);
     
-    y += 45;
+    if (lastBookingValues.modality === 'home_kit') {
+      doc.setFont("helvetica", "bold");
+      doc.text(`DIRECCIÓN DE RETIRO (Motoboy):`, margin + 5, y + 49);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${lastBookingValues.pickupAddress || lastBookingValues.address}`, margin + 5, y + 57);
+    }
+    
+    y += 65;
     doc.setFont("helvetica", "bold");
     doc.text("RESUMEN DE PAGO", margin + 5, y);
     doc.setFont("helvetica", "normal");
@@ -284,7 +273,7 @@ export default function BookingPage() {
     doc.setFont("helvetica", "bold");
     doc.text(`TOTAL A PAGAR: $${finalTotal.toLocaleString()}`, margin + 5, y + 32);
     
-    y += 50;
+    y += 45;
     doc.setFontSize(11);
     doc.text("INDICACIONES FUNDAMENTALES", margin, y);
     y += 8;
@@ -292,7 +281,7 @@ export default function BookingPage() {
     doc.setFont("helvetica", "normal");
     let instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
     if (lastBookingValues.modality === 'home_kit') {
-      instructions += "\n\nPROCEDIMIENTO TEST EN CASA:\n- Retira el kit a la hora elegida en Apoquindo 3990.\n- Recibe la instrucción del profesional a cargo.\n- Una vez realizado, coordina el retiro con el motoboy indicado en el flyer.\n- IMPORTANTE: El test tiene un plazo máximo de 6 horas para ser entregado en el laboratorio.";
+      instructions += "\n\nPROCEDIMIENTO TEST EN CASA:\n- Retira el kit a la hora elegida en Apoquindo 3990.\n- Recibe la instrucción del profesional.\n- Coordina el retiro con el motoboy al lugar indicado: " + (lastBookingValues.pickupAddress || lastBookingValues.address);
     }
     doc.text(doc.splitTextToSize(instructions, 170), margin, y);
     doc.save(`Reserva_Oralab_${lastBookingValues.firstName}.pdf`);
@@ -313,6 +302,7 @@ export default function BookingPage() {
       email: values.email,
       phone: `+56 9 ${values.phone}`,
       address: values.address,
+      pickupAddress: values.modality === 'home_kit' ? values.pickupAddress : null,
       prevision: values.prevision,
       deliveryFee: deliveryFee,
       baseFee: currentBaseFee,
@@ -324,41 +314,6 @@ export default function BookingPage() {
 
     try {
       await addDocumentNonBlocking(collection(db, "bookings"), bookingData);
-      
-      const homeKitText = values.modality === 'home_kit' 
-        ? `<p style="color: #1c68b6; font-weight: bold;">PROCEDIMIENTO TEST EN CASA (PASOS CRÍTICOS):</p>
-           <ul>
-             <li>Retira el kit presencialmente en Apoquindo 3990 a la hora de tu cita.</li>
-             <li>Recibirás la instrucción técnica del profesional a cargo.</li>
-             <li>Una vez terminado el test, coordina el retiro con el motoboy que aparece en tu flyer.</li>
-             <li><strong>TIEMPO LÍMITE:</strong> El test debe estar en el laboratorio en máximo 6 horas tras ser realizado.</li>
-           </ul>`
-        : "";
-
-      await addDocumentNonBlocking(collection(db, "mail"), {
-        to: values.email, 
-        message: {
-          subject: `Confirmación de Reserva Oralab: ${values.firstName} ${values.lastNameFather}`,
-          text: `Hola ${values.firstName}, tu reserva está confirmada para el día ${formattedDate}.`,
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 20px;">
-              <h2 style="color: #1c68b6;">Reserva Confirmada</h2>
-              <p>Hola <strong>${values.firstName}</strong>, tu cita para el test de <strong>${values.examType}</strong> ha sido agendada con éxito.</p>
-              <div style="padding: 15px; background: #f0f7ff; margin-bottom: 20px; border-radius: 10px;">
-                <p><strong>Día:</strong> ${formattedDate}</p>
-                <p><strong>Hora:</strong> ${values.scheduledTime} hrs</p>
-                <p><strong>Lugar:</strong> ${values.modality === 'home_kit' ? 'Test en Casa (Retiro Kit en Apoquindo 3990)' : 'Apoquindo 3990, Las Condes'}</p>
-              </div>
-              ${homeKitText}
-              <div style="border-top: 2px dashed #cbd5e1; padding-top: 15px; margin-top: 15px;">
-                <p><strong>Total Final a Pagar: $${finalTotal.toLocaleString()}</strong></p>
-              </div>
-              <p style="color: #d97706; font-weight: bold;">⚠️ RECUERDA: Ayuno de 12 horas y seguir la dieta blanda el día anterior.</p>
-              <p style="font-size: 11px; color: #64748b; text-align: center; margin-top: 30px;">© 2024 Oralab Clinical Lab. Tecnología Sunvou®.</p>
-            </div>
-          `
-        }
-      });
       setLastBookingValues(values);
       toast({ title: "Reserva Confirmada" });
       setStep(4);
@@ -369,6 +324,8 @@ export default function BookingPage() {
     }
   }
 
+  if (!isMounted) return null;
+
   if (step === 4) {
     return (
       <div className="flex flex-col min-h-screen bg-background pb-12">
@@ -377,9 +334,9 @@ export default function BookingPage() {
           <Card className="py-12 shadow-lg rounded-[2rem] border-primary/10">
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4" />
             <CardTitle className="text-3xl mb-4 font-black italic">¡Reserva Confirmada!</CardTitle>
-            <p className="mb-8 font-medium">Tu solicitud ha sido procesada exitosamente. Puedes descargar tu ficha de confirmación con los detalles y preparativos aquí mismo.</p>
+            <p className="mb-8 font-medium">Tu solicitud ha sido procesada exitosamente. Puedes descargar tu ficha de confirmación aquí.</p>
             <div className="flex flex-col gap-4 max-w-sm mx-auto">
-              <Button onClick={downloadPDF} variant="outline" className="rounded-full h-12 font-bold"><Download className="mr-2 h-4 w-4" /> Descargar Ficha PDF</Button>
+              <Button onClick={downloadPDF} variant="outline" className="rounded-full h-12 font-bold"><Download className="mr-2 h-4 w-4" /> Descargar Comprobante PDF</Button>
               <Link href="/"><Button className="rounded-full w-full h-12 font-black">Volver al inicio</Button></Link>
             </div>
           </Card>
@@ -415,15 +372,15 @@ export default function BookingPage() {
                         </div>
                         <div className="flex-1 text-center md:text-left">
                           <h4 className="font-black text-primary italic text-lg flex items-center justify-center md:justify-start gap-2">
-                            Escanea tu Orden <span className="text-[10px] bg-secondary/20 px-2 py-0.5 rounded text-secondary not-italic uppercase font-black">Opcional</span>
+                            Sugerencia con Foto <span className="text-[10px] bg-secondary/20 px-2 py-0.5 rounded text-secondary not-italic uppercase font-black">AI</span>
                           </h4>
-                          <p className="text-sm text-muted-foreground font-medium">Sube una foto clara para detectar el examen automáticamente.</p>
+                          <p className="text-sm text-muted-foreground font-medium">Sube tu orden médica para que la IA sugiera el examen.</p>
                         </div>
                         <div className="relative">
                           <Input type="file" accept="image/*" className="hidden" id="order-upload" onChange={handleFileUpload} disabled={isAnalyzing} />
                           <label htmlFor="order-upload">
                             <Button asChild variant="outline" className="rounded-full font-bold border-secondary text-secondary hover:bg-secondary hover:text-white cursor-pointer h-12 px-6">
-                              <span><FileUp className="mr-2 h-4 w-4" /> {isAnalyzing ? "Analizando..." : "Sugerir con Foto"}</span>
+                              <span><FileUp className="mr-2 h-4 w-4" /> {isAnalyzing ? "Analizando..." : "Escanear Orden"}</span>
                             </Button>
                           </label>
                         </div>
@@ -434,7 +391,7 @@ export default function BookingPage() {
                       <FormItem>
                         <FormLabel className="font-black text-xs uppercase tracking-widest text-muted-foreground">Tipo de Examen</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl><SelectTrigger className="h-14 text-lg rounded-xl font-bold"><SelectValue placeholder="Seleccionar examen" /></SelectTrigger></FormControl>
+                          <FormControl><SelectTrigger className="h-14 text-lg rounded-xl font-bold"><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent>
                             <SelectItem value="SIBO">Test de SIBO (Protocolo 90 min)</SelectItem>
                             <SelectItem value="Lactulosa">Test Lactulosa (Protocolo 120 min)</SelectItem>
@@ -471,31 +428,6 @@ export default function BookingPage() {
                       </FormItem>
                     )} />
 
-                    {selectedModality && (
-                      <div className="space-y-4 animate-in slide-in-from-bottom-4">
-                        {selectedModality === 'home_kit' && (
-                          <div className="bg-secondary/10 p-6 rounded-[2rem] border border-secondary/20 space-y-3">
-                            <h5 className="font-black text-secondary flex items-center gap-2 text-sm italic"><Info className="h-4 w-4" /> Procedimiento Test en Casa</h5>
-                            <ul className="text-xs font-medium text-muted-foreground space-y-2 list-disc pl-5">
-                              <li>Deberás <strong>retirar el kit</strong> presencialmente en el laboratorio (Apoquindo 3990).</li>
-                              <li>Recibirás la instrucción de uso por parte de un profesional.</li>
-                              <li>Tras realizar el test, coordina el retiro con el motoboy indicado en el flyer.</li>
-                              <li className="text-secondary font-black">IMPORTANTE: Plazo máximo de 6 horas para retorno al lab.</li>
-                            </ul>
-                          </div>
-                        )}
-                        <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-white p-2 rounded-xl"><CircleDollarSign className="h-6 w-6 text-primary" /></div>
-                            <div>
-                              <p className="text-[10px] font-black text-muted-foreground uppercase">Valor del Examen</p>
-                              <p className="text-2xl font-black text-primary italic">$ {currentBaseFee.toLocaleString()} CLP</p>
-                            </div>
-                          </div>
-                          {selectedModality === 'home_kit' && <Badge variant="outline" className="text-secondary border-secondary/20"><Truck className="h-3 w-3 mr-1" /> + Logística Motoboy</Badge>}
-                        </div>
-                      </div>
-                    )}
                     <Button type="button" onClick={nextStep} className="w-full h-16 rounded-[1.5rem] text-xl font-black">Continuar</Button>
                   </div>
                 )}
@@ -550,7 +482,26 @@ export default function BookingPage() {
                        <FormField control={form.control} name="phone" render={({ field }) => (<FormItem><FormLabel className="font-bold">Teléfono</FormLabel><div className="flex items-center gap-2"><span className="bg-muted px-3 h-12 rounded-xl flex items-center font-bold">+56 9</span><Input {...field} maxLength={8} className="rounded-xl h-12" /></div></FormItem>)} />
                     </div>
 
-                    <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel className="font-bold">Dirección</FormLabel><Input {...field} className="rounded-xl h-12" /></FormItem>)} />
+                    <div className="space-y-4 p-6 bg-muted/20 rounded-2xl border border-primary/5">
+                      <FormField control={form.control} name="address" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> Dirección de Residencia</FormLabel>
+                          <Input {...field} placeholder="Ej: Av. Apoquindo 3990, depto 605" className="rounded-xl h-12 bg-white" />
+                        </FormItem>
+                      )} />
+
+                      {selectedModality === 'home_kit' && (
+                        <FormField control={form.control} name="pickupAddress" render={({ field }) => (
+                          <FormItem className="animate-in slide-in-from-top-2">
+                            <FormLabel className="font-black text-secondary flex items-center gap-2 italic">
+                              <MapPinned className="h-4 w-4" /> Dirección de Retiro (Motoboy)
+                            </FormLabel>
+                            <Input {...field} placeholder="¿Dónde pasamos a buscar tus muestras? (Oficina, Domicilio, etc.)" className="rounded-xl h-12 border-secondary/30 bg-white" />
+                            <p className="text-[10px] text-muted-foreground italic font-medium">Especifica si es distinta a tu residencia para coordinar la logística.</p>
+                          </FormItem>
+                        )} />
+                      )}
+                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField control={form.control} name="region" render={({ field }) => (
