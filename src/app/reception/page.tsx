@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -70,7 +71,11 @@ import {
   Home,
   Building2,
   Wallet,
-  CalendarClock
+  CalendarClock,
+  Stethoscope,
+  BarChart3,
+  History,
+  Timer
 } from "lucide-react";
 import { format, parseISO, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
@@ -425,36 +430,61 @@ export default function ReceptionPage() {
     <div className="flex flex-col min-h-screen bg-muted/30 pb-20 font-body">
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <Tabs defaultValue="patients" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-full w-fit mx-auto grid grid-cols-6 shadow-inner border border-primary/5 mb-8 overflow-x-auto">
-            <TabsTrigger value="patients" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white text-[10px]">Agenda</TabsTrigger>
-            <TabsTrigger value="diagnostics" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white text-[10px]">Informes</TabsTrigger>
-            <TabsTrigger value="crm-ventas" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white text-[10px]">CRM Ventas</TabsTrigger>
-            <TabsTrigger value="news" className="rounded-full font-black px-4 data-[state=active]:bg-secondary data-[state=active]:text-white text-[10px]">Noticias</TabsTrigger>
-            <TabsTrigger value="investors" className="rounded-full font-black px-4 data-[state=active]:bg-primary data-[state=active]:text-white text-[10px]">Socios</TabsTrigger>
-            <TabsTrigger value="milestones" className="rounded-full font-black px-4 data-[state=active]:bg-amber-500 data-[state=active]:text-white text-[10px]">Hitos</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="clinical" className="space-y-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-b pb-6">
+            <div className="space-y-1 text-center md:text-left">
+               <h1 className="text-3xl font-black text-primary italic">Panel de Gestión Oralab</h1>
+               <p className="text-sm text-muted-foreground font-medium">Control unificado de clínica y estrategia comercial.</p>
+            </div>
+            <TabsList className="bg-muted/50 p-1 rounded-full shadow-inner border border-primary/5">
+              <TabsTrigger value="clinical" className="rounded-full font-black px-6 data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-2">
+                <Stethoscope className="h-4 w-4" /> Operación Clínica
+              </TabsTrigger>
+              <TabsTrigger value="strategic" className="rounded-full font-black px-6 data-[state=active]:bg-secondary data-[state=active]:text-white flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" /> Gestión Estratégica
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="patients">
+          {/* AREA CLINICA - PARA TENS */}
+          <TabsContent value="clinical" className="space-y-6 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               <Card className="lg:col-span-4 bg-white shadow-xl border-primary/10 rounded-[2rem] p-6 h-fit sticky top-20">
-                <div className="flex items-center gap-2 mb-4 text-primary font-black italic">
-                   <CalendarIcon className="h-5 w-5 text-secondary" /> Vista Mensual
+                <div className="flex items-center gap-2 mb-4 text-primary font-black italic border-b pb-2">
+                   <CalendarIcon className="h-5 w-5 text-secondary" /> Calendario de Atención
                 </div>
-                <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} locale={es} className="rounded-md border border-primary/5 mx-auto" modifiers={{ booked: datesWithBookings }} modifiersStyles={{ booked: { fontWeight: 'bold', border: '2px solid hsl(var(--secondary))', color: 'hsl(var(--primary))' } }} />
+                <Calendar 
+                  mode="single" 
+                  selected={selectedDate} 
+                  onSelect={setSelectedDate} 
+                  locale={es} 
+                  className="rounded-md mx-auto" 
+                  modifiers={{ booked: datesWithBookings }} 
+                  modifiersStyles={{ booked: { fontWeight: 'black', backgroundColor: 'hsl(var(--secondary)/0.1)', color: 'hsl(var(--primary))', borderRadius: '50%' } }} 
+                />
+                <div className="mt-6 p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                   <p className="text-[10px] font-black text-primary uppercase mb-2">Resumen Operativo</p>
+                   <div className="space-y-2">
+                      <div className="flex justify-between text-xs font-bold"><span>Total Hoy:</span> <span>{filteredBookings.length}</span></div>
+                      <div className="flex justify-between text-xs font-bold text-blue-600"><span>En Sala:</span> <span>{filteredBookings.filter(b => b.status === 'arrived').length}</span></div>
+                      <div className="flex justify-between text-xs font-bold text-green-600"><span>Finalizados:</span> <span>{filteredBookings.filter(b => b.status === 'completed').length}</span></div>
+                   </div>
+                </div>
               </Card>
+              
               <Card className="lg:col-span-8 bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
                 <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center py-6">
                   <div>
-                    <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2"><LayoutGrid className="h-6 w-6 text-secondary" /> Agenda del Día</CardTitle>
+                    <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2"><LayoutGrid className="h-6 w-6 text-secondary" /> Agenda de Pacientes</CardTitle>
                     <CardDescription className="font-bold text-secondary uppercase text-[10px] tracking-widest">{selectedDate ? format(selectedDate, "PPPP", { locale: es }) : "Seleccione una fecha"}</CardDescription>
                   </div>
-                  <Badge className="bg-primary text-white font-black px-4 rounded-full">{filteredBookings.length} Pacientes</Badge>
                 </CardHeader>
                 <Table>
-                  <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold">Hora</TableHead><TableHead className="font-bold">Paciente</TableHead><TableHead className="font-bold">Examen</TableHead><TableHead className="font-bold">Estado</TableHead><TableHead className="text-right font-bold">Gestión</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold">Hora</TableHead><TableHead className="font-bold">Paciente</TableHead><TableHead className="font-bold">Examen</TableHead><TableHead className="font-bold">Estado</TableHead><TableHead className="text-right font-bold">Acciones</TableHead></TableRow></TableHeader>
                   <TableBody>
-                    {filteredBookings.map((b) => (
+                    {filteredBookings.length === 0 ? (
+                      <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">No hay pacientes agendados para este día.</TableCell></TableRow>
+                    ) : filteredBookings.map((b) => (
                       <TableRow key={b.id} className="group hover:bg-muted/50 cursor-pointer" onClick={() => setSelectedBookingForDetail(b)}>
                         <TableCell className="font-black text-primary">{b.scheduledTime}</TableCell>
                         <TableCell>
@@ -476,12 +506,8 @@ export default function ReceptionPage() {
                                 setNewRescheduleDate(parseISO(b.scheduledDate));
                                 setNewRescheduleTime(b.scheduledTime);
                               }}
-                              title="Reagendar"
                             >
                               <CalendarClock className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary/40 hover:text-primary" onClick={() => setSelectedBookingForDetail(b)}>
-                              <Info className="h-4 w-4" />
                             </Button>
                             <Select value={b.status} onValueChange={(val) => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: val })}>
                               <SelectTrigger className="w-[120px] h-8 text-[9px] rounded-full font-black uppercase"><SelectValue /></SelectTrigger>
@@ -503,105 +529,123 @@ export default function ReceptionPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="crm-ventas">
-            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-              <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center">
-                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2"><ShoppingCart className="h-6 w-6 text-secondary" /> CRM Sunvou Chile</CardTitle>
-                <Button onClick={() => { resetQuoteForm(); setIsQuoteDialogOpen(true); }} className="bg-primary font-black rounded-full shadow-lg"><Plus className="mr-2 h-4 w-4" /> Nueva Propuesta</Button>
-              </CardHeader>
-              <Table>
-                <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold text-[10px] uppercase">Estado</TableHead><TableHead className="font-bold text-[10px] uppercase">Cliente</TableHead><TableHead className="font-bold text-[10px] uppercase text-right">Total IVA Inc.</TableHead><TableHead className="text-right font-bold text-[10px] uppercase">Acciones</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {quotations?.map((q) => (
-                    <TableRow key={q.id}>
-                      <TableCell><Badge variant="outline" className="text-[9px] font-black uppercase">{q.status}</Badge></TableCell>
-                      <TableCell className="font-bold text-primary">{q.clientName}<span className="text-[10px] text-muted-foreground block">{q.clientCompany}</span></TableCell>
-                      <TableCell className="text-right font-black">${Math.round((q.total || 0) * 1.19).toLocaleString()}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleEditOpen(q)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-secondary" onClick={() => downloadQuotationPDF(q)}><Download className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-300" onClick={() => deleteDocumentNonBlocking(doc(db!, "quotations", q.id))}><Trash2 className="h-4 w-4" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="news">
-            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-              <CardHeader className="bg-secondary/5 border-b flex flex-row justify-between items-center">
-                <CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2"><Newspaper className="h-6 w-6 text-secondary" /> Mural de Noticias</CardTitle>
-                <Button onClick={() => setIsNewsDialogOpen(true)} className="bg-primary font-black rounded-full"><Plus className="mr-2 h-4 w-4" /> Nueva Noticia</Button>
-              </CardHeader>
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {newsItems?.map((n) => (
-                  <Card key={n.id} className="overflow-hidden border-primary/5">
-                    <div className="relative aspect-video"><Image src={n.imageUrl} alt={n.title} fill className="object-cover" /></div>
-                    <CardContent className="p-4">
-                      <h4 className="font-black text-primary">{n.title}</h4>
-                      <Button variant="ghost" className="text-red-400 mt-2 h-8" onClick={() => deleteDocumentNonBlocking(doc(db!, "investor_updates", n.id))}><Trash2 className="h-3 w-3 mr-1" /> Eliminar</Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </Card>
-          </TabsContent>
+          {/* AREA ESTRATEGICA - PARA DIRECTOR */}
+          <TabsContent value="strategic" className="animate-in slide-in-from-bottom-4 duration-500">
+            <Tabs defaultValue="crm" className="space-y-6">
+              <TabsList className="bg-white p-1 rounded-xl shadow-sm border border-primary/5 w-fit">
+                <TabsTrigger value="crm" className="font-bold px-6">CRM Ventas</TabsTrigger>
+                <TabsTrigger value="mural" className="font-bold px-6">Noticias & Hitos</TabsTrigger>
+                <TabsTrigger value="partners" className="font-bold px-6">Socios Estratégicos</TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="milestones">
-            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-              <CardHeader className="bg-amber-50 border-b flex flex-row justify-between items-center">
-                <CardTitle className="text-2xl font-black text-amber-700 italic flex items-center gap-2"><Target className="h-6 w-6 text-amber-500" /> Cronograma de Hitos</CardTitle>
-                <Button onClick={() => setIsMilestoneDialogOpen(true)} className="bg-amber-600 hover:bg-amber-700 font-black rounded-full"><Plus className="mr-2 h-4 w-4" /> Nuevo Hito</Button>
-              </CardHeader>
-              <Table>
-                <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold">Fecha</TableHead><TableHead className="font-bold">Hito</TableHead><TableHead className="text-right font-bold">Gestión</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {milestones?.map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="font-black text-amber-700">{m.date}</TableCell>
-                      <TableCell className="font-bold text-primary">{m.title}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "milestones", m.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
+              <TabsContent value="crm" className="space-y-4">
+                <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+                  <CardHeader className="bg-primary/5 border-b flex flex-row justify-between items-center py-6">
+                    <div>
+                      <CardTitle className="text-xl font-black text-primary italic">Embudo de Ventas Sunvou</CardTitle>
+                      <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Gestión de representaciones oficiales</CardDescription>
+                    </div>
+                    <Button onClick={() => { resetQuoteForm(); setIsQuoteDialogOpen(true); }} className="bg-primary font-black rounded-full h-10 px-6">
+                      <Plus className="mr-2 h-4 w-4" /> Nueva Propuesta
+                    </Button>
+                  </CardHeader>
+                  <Table>
+                    <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold text-[10px] uppercase">Estado</TableHead><TableHead className="font-bold text-[10px] uppercase">Cliente / Institución</TableHead><TableHead className="font-bold text-[10px] uppercase text-right">Total IVA Inc.</TableHead><TableHead className="text-right font-bold text-[10px] uppercase">Gestión</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {quotations?.length === 0 ? (
+                        <TableRow><TableCell colSpan={4} className="text-center py-12 italic text-muted-foreground">No hay cotizaciones registradas.</TableCell></TableRow>
+                      ) : quotations?.map((q) => (
+                        <TableRow key={q.id}>
+                          <TableCell><Badge variant="outline" className="text-[9px] font-black uppercase">{q.status}</Badge></TableCell>
+                          <TableCell className="font-bold text-primary">{q.clientName}<span className="text-[10px] text-muted-foreground block font-bold uppercase">{q.clientCompany || "Particular"}</span></TableCell>
+                          <TableCell className="text-right font-black text-lg">${Math.round((q.total || 0) * 1.19).toLocaleString()}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleEditOpen(q)}><Pencil className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-secondary" onClick={() => downloadQuotationPDF(q)}><Download className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-300 hover:text-red-600" onClick={() => deleteDocumentNonBlocking(doc(db!, "quotations", q.id))}><Trash2 className="h-4 w-4" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </TabsContent>
 
-          <TabsContent value="investors">
-            <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-              <CardHeader className="bg-primary/5 border-b"><CardTitle className="text-2xl font-black text-primary italic flex items-center gap-2"><Users className="h-6 w-6 text-secondary" /> Gestión de Socios</CardTitle></CardHeader>
-              <Table>
-                <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold">Socio</TableHead><TableHead className="font-bold text-right">Monto</TableHead><TableHead className="text-right font-bold">Gestión</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {partners?.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-bold text-primary">{p.investorName}</TableCell>
-                      <TableCell className="text-right font-black text-secondary">${(p.amount || 0).toLocaleString()}</TableCell>
-                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => deleteDocumentNonBlocking(doc(db!, "contract_leads", p.id))}><Trash2 className="h-4 w-4 text-red-300" /></Button></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
+              <TabsContent value="mural" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+                   <CardHeader className="bg-secondary/5 border-b flex justify-between items-center py-6">
+                      <CardTitle className="text-xl font-black text-primary italic flex items-center gap-2"><Newspaper className="h-5 w-5 text-secondary" /> Mural de Actualizaciones</CardTitle>
+                      <Button variant="outline" size="sm" onClick={() => setIsNewsDialogOpen(true)} className="rounded-full border-primary text-primary font-bold"><Plus className="h-3 w-3 mr-1" /> Noticia</Button>
+                   </CardHeader>
+                   <div className="p-4 space-y-4 max-h-[500px] overflow-y-auto">
+                      {newsItems?.map((n) => (
+                        <div key={n.id} className="flex gap-4 p-3 bg-muted/20 rounded-2xl border border-primary/5">
+                           <div className="relative h-16 w-16 shrink-0 rounded-xl overflow-hidden"><Image src={n.imageUrl} alt={n.title} fill className="object-cover" /></div>
+                           <div className="flex-1 min-w-0">
+                              <p className="text-[9px] font-black text-secondary uppercase">{n.date}</p>
+                              <h4 className="font-bold text-sm text-primary truncate">{n.title}</h4>
+                              <Button variant="ghost" className="h-6 px-0 text-red-400 text-[10px] font-bold" onClick={() => deleteDocumentNonBlocking(doc(db!, "investor_updates", n.id))}><Trash2 className="h-3 w-3 mr-1" /> Eliminar</Button>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </Card>
+
+                <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+                   <CardHeader className="bg-amber-50 border-b flex justify-between items-center py-6">
+                      <CardTitle className="text-xl font-black text-amber-700 italic flex items-center gap-2"><Target className="h-5 w-5 text-amber-500" /> Cronograma Institucional</CardTitle>
+                      <Button variant="outline" size="sm" onClick={() => setIsMilestoneDialogOpen(true)} className="rounded-full border-amber-600 text-amber-700 font-bold"><Plus className="h-3 w-3 mr-1" /> Hito</Button>
+                   </CardHeader>
+                   <Table>
+                      <TableBody>
+                        {milestones?.map((m) => (
+                          <TableRow key={m.id}>
+                            <TableCell className="font-black text-amber-700 text-xs">{m.date}</TableCell>
+                            <TableCell className="font-bold text-primary text-xs">{m.title}</TableCell>
+                            <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-7 w-7 text-red-300" onClick={() => deleteDocumentNonBlocking(doc(db!, "milestones", m.id))}><Trash2 className="h-3 w-3" /></Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                   </Table>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="partners">
+                <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
+                  <CardHeader className="bg-primary/5 border-b"><CardTitle className="text-xl font-black text-primary italic">Socios Estratégicos Confirmados</CardTitle></CardHeader>
+                  <Table>
+                    <TableHeader><TableRow className="bg-muted/10"><TableHead className="font-bold">Inversionista / Socio</TableHead><TableHead className="font-bold text-right">Inversión Real</TableHead><TableHead className="text-right font-bold">Gestión</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {partners?.length === 0 ? (
+                        <TableRow><TableCell colSpan={3} className="text-center py-12 italic text-muted-foreground">Esperando ingreso de nuevos socios.</TableCell></TableRow>
+                      ) : partners?.map((p) => (
+                        <TableRow key={p.id}>
+                          <TableCell><div className="flex items-center gap-3"><div className="bg-secondary/10 p-2 rounded-full"><Users className="h-4 w-4 text-secondary" /></div><span className="font-bold text-primary">{p.investorName}</span></div></TableCell>
+                          <TableCell className="text-right font-black text-secondary text-lg">${(p.amount || 0).toLocaleString()}</TableCell>
+                          <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-8 w-8 text-red-300 hover:text-red-600" onClick={() => deleteDocumentNonBlocking(doc(db!, "contract_leads", p.id))}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </main>
 
-      {/* DETAIL DIALOG */}
+      {/* DETAIL DIALOG - FICHA CLINICA INTEGRADA */}
       <Dialog open={!!selectedBookingForDetail} onOpenChange={(open) => !open && setSelectedBookingForDetail(null)}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
+        <DialogContent className="max-w-4xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] overflow-y-auto">
           {selectedBookingForDetail && (
             <div className="flex flex-col">
               <div className="bg-primary p-8 text-white">
                 <DialogHeader className="p-0 space-y-0 text-left">
-                  <div className="flex justify-between items-start mb-6">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="space-y-1">
-                      <Badge className="bg-white/20 text-white border-none text-[10px] font-black uppercase tracking-widest mb-2">Ficha de Paciente</Badge>
+                      <Badge className="bg-white/20 text-white border-none text-[10px] font-black uppercase tracking-widest mb-2">Ficha Clínica Oralab</Badge>
                       <DialogTitle className="text-3xl font-black italic text-white leading-tight">
                         {selectedBookingForDetail.firstName} {selectedBookingForDetail.lastNameFather} {selectedBookingForDetail.lastNameMother}
                       </DialogTitle>
@@ -610,45 +654,77 @@ export default function ReceptionPage() {
                         {selectedBookingForDetail.modality === 'home_kit' ? 'Modalidad Test en Casa' : 'Atención Presencial en Laboratorio'}
                       </DialogDescription>
                     </div>
-                    <div className="text-right space-y-1">
+                    <div className="text-left md:text-right space-y-1">
                       <p className="text-[10px] font-black opacity-60 uppercase">Cita Programada</p>
-                      <p className="text-xl font-black">{format(parseISO(selectedBookingForDetail.scheduledDate), "dd/MM/yyyy")} @ {selectedBookingForDetail.scheduledTime}</p>
+                      <p className="text-xl font-black">{format(parseISO(selectedBookingForDetail.scheduledDate), "dd/MM/yyyy")} @ {selectedBookingForDetail.scheduledTime} hrs</p>
                       <div className="mt-2">{getStatusBadge(selectedBookingForDetail.status)}</div>
                     </div>
                   </div>
                 </DialogHeader>
               </div>
 
-              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white">
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><Users className="h-4 w-4 text-secondary" /> Datos de Contacto</h4>
-                    <div className="bg-muted/30 p-4 rounded-2xl space-y-2">
-                      <p className="text-sm font-medium flex items-center gap-2"><Mail className="h-3 w-3 text-muted-foreground" /> {selectedBookingForDetail.email}</p>
-                      <p className="text-sm font-black flex items-center gap-2 text-primary"><Phone className="h-3 w-3 text-muted-foreground" /> {selectedBookingForDetail.phone}</p>
+              <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8 bg-white">
+                <div className="lg:col-span-2 space-y-8">
+                  {/* BITACORA DE TIEMPOS (NUEVA SECCIÓN) */}
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2 border-b pb-2">
+                      <History className="h-4 w-4 text-secondary" /> Trazabilidad Asistente Digital
+                    </h4>
+                    <div className="bg-muted/30 p-4 rounded-2xl border border-primary/5 min-h-[100px]">
+                      {selectedBookingForDetail.testLogs && selectedBookingForDetail.testLogs.length > 0 ? (
+                        <div className="space-y-3">
+                          {selectedBookingForDetail.testLogs.map((log: any, idx: number) => (
+                            <div key={idx} className="flex items-center justify-between p-2 bg-white rounded-lg shadow-sm border border-primary/5 animate-in slide-in-from-left duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
+                               <div className="flex items-center gap-3">
+                                  <div className="bg-secondary/10 p-1.5 rounded-full"><Wind className="h-3 w-3 text-secondary" /></div>
+                                  <span className="text-xs font-bold text-primary">{log.stepName}</span>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                  <Timer className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-xs font-black text-secondary">{format(new Date(log.timestamp), "HH:mm:ss")} hrs</span>
+                               </div>
+                            </div>
+                          ))}
+                          <p className="text-[9px] font-bold text-muted-foreground italic text-center mt-2">Valores confirmados por el paciente a través del asistente digital.</p>
+                        </div>
+                      ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-center py-6">
+                           <History className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                           <p className="text-xs font-bold text-muted-foreground italic">No hay registros de trazabilidad aún.<br/>Asegúrate de que el paciente inicie su sesión en casa.</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><Wind className="h-4 w-4 text-secondary" /> Procedimiento Clínico</h4>
-                    <div className="bg-muted/30 p-4 rounded-2xl space-y-2">
-                      <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Examen:</span> <Badge className="bg-primary text-[10px] font-black">{selectedBookingForDetail.examType}</Badge></div>
-                      <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Previsión:</span> <span className="text-sm font-black uppercase text-primary">{selectedBookingForDetail.prevision}</span></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><Users className="h-4 w-4 text-secondary" /> Contacto</h4>
+                      <div className="bg-muted/30 p-4 rounded-2xl space-y-2">
+                        <p className="text-xs font-medium flex items-center gap-2"><Mail className="h-3 w-3 text-muted-foreground" /> {selectedBookingForDetail.email}</p>
+                        <p className="text-sm font-black flex items-center gap-2 text-primary"><Phone className="h-3 w-3 text-muted-foreground" /> {selectedBookingForDetail.phone}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><Wind className="h-4 w-4 text-secondary" /> Procedimiento</h4>
+                      <div className="bg-muted/30 p-4 rounded-2xl space-y-2">
+                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Examen:</span> <Badge className="bg-primary text-[9px] font-black">{selectedBookingForDetail.examType}</Badge></div>
+                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Previsión:</span> <span className="text-xs font-black uppercase text-primary">{selectedBookingForDetail.prevision}</span></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><MapPin className="h-4 w-4 text-secondary" /> Logística de Muestras</h4>
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><MapPin className="h-4 w-4 text-secondary" /> Logística</h4>
                     <div className="bg-muted/30 p-4 rounded-2xl space-y-4">
                       <div>
-                        <Label className="text-[9px] font-black uppercase text-muted-foreground block mb-1">Dirección de Residencia</Label>
+                        <Label className="text-[9px] font-black uppercase text-muted-foreground block mb-1">Residencia</Label>
                         <p className="text-xs font-bold leading-tight">{selectedBookingForDetail.address}, {selectedBookingForDetail.commune}</p>
                       </div>
                       {selectedBookingForDetail.pickupAddress && (
                         <div className="border-t border-primary/10 pt-3">
-                          <Label className="text-[9px] font-black uppercase text-secondary block mb-1">Dirección de Retiro (Motoboy)</Label>
+                          <Label className="text-[9px] font-black uppercase text-secondary block mb-1">Retiro (Motoboy)</Label>
                           <p className="text-xs font-black text-primary flex items-start gap-1">
                             <MapPinned className="h-3 w-3 shrink-0 mt-0.5 text-secondary" />
                             {selectedBookingForDetail.pickupAddress}
@@ -659,18 +735,18 @@ export default function ReceptionPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><Wallet className="h-4 w-4 text-secondary" /> Desglose Financiero</h4>
-                    <div className="bg-primary/5 p-4 rounded-2xl space-y-1">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><Wallet className="h-4 w-4 text-secondary" /> Financiero</h4>
+                    <div className="bg-primary/5 p-4 rounded-2xl space-y-1 border border-primary/10 shadow-sm">
                       <div className="flex justify-between text-[10px] font-bold text-muted-foreground"><span>Valor Base:</span> <span>${selectedBookingForDetail.baseFee?.toLocaleString()}</span></div>
-                      {selectedBookingForDetail.deliveryFee > 0 && <div className="flex justify-between text-[10px] font-bold text-secondary"><span>Logística Motoboy:</span> <span>+${selectedBookingForDetail.deliveryFee?.toLocaleString()}</span></div>}
-                      {selectedBookingForDetail.discount > 0 && <div className="flex justify-between text-[10px] font-bold text-green-600"><span>Dcto. Previsión (15%):</span> <span>-${selectedBookingForDetail.discount?.toLocaleString()}</span></div>}
-                      <div className="flex justify-between text-base font-black text-primary italic pt-2 border-t border-primary/10"><span>TOTAL:</span> <span>${selectedBookingForDetail.total?.toLocaleString()} CLP</span></div>
+                      {selectedBookingForDetail.deliveryFee > 0 && <div className="flex justify-between text-[10px] font-bold text-secondary"><span>Logística:</span> <span>+${selectedBookingForDetail.deliveryFee?.toLocaleString()}</span></div>}
+                      {selectedBookingForDetail.discount > 0 && <div className="flex justify-between text-[10px] font-bold text-green-600"><span>Dcto. (15%):</span> <span>-${selectedBookingForDetail.discount?.toLocaleString()}</span></div>}
+                      <div className="flex justify-between text-base font-black text-primary italic pt-2 border-t border-primary/10 mt-1"><span>TOTAL:</span> <span>${selectedBookingForDetail.total?.toLocaleString()}</span></div>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-muted/50 p-6 flex justify-between items-center border-t px-8">
+              <div className="bg-muted/50 p-6 flex justify-between items-center border-t px-8 sticky bottom-0 z-10">
                 <Button 
                   onClick={openRescheduleFromDetail} 
                   variant="outline" 
@@ -678,7 +754,7 @@ export default function ReceptionPage() {
                 >
                   <CalendarClock className="mr-2 h-4 w-4" /> Reagendar Cita
                 </Button>
-                <Button onClick={() => setSelectedBookingForDetail(null)} className="rounded-full font-black px-10 bg-primary">Cerrar Ficha</Button>
+                <Button onClick={() => setSelectedBookingForDetail(null)} className="rounded-full font-black px-10 bg-primary shadow-lg">Cerrar Ficha</Button>
               </div>
             </div>
           )}
@@ -693,13 +769,13 @@ export default function ReceptionPage() {
               <CalendarClock className="h-6 w-6 text-secondary" /> Reagendar Cita
             </DialogTitle>
             <DialogDescription className="font-bold text-muted-foreground">
-              Cambia la fecha y hora para: {reschedulingBooking?.firstName} {reschedulingBooking?.lastNameFather}
+              Programar nueva sesión para: {reschedulingBooking?.firstName} {reschedulingBooking?.lastNameFather}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6 py-4">
             <div className="space-y-2">
-              <Label className="font-black text-xs uppercase tracking-widest text-primary">Nueva Fecha</Label>
+              <Label className="font-black text-xs uppercase tracking-widest text-primary">Nueva Fecha de Atención</Label>
               <Calendar
                 mode="single"
                 selected={newRescheduleDate}
@@ -726,7 +802,7 @@ export default function ReceptionPage() {
 
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setReschedulingBooking(null)} className="rounded-full font-bold">Cancelar</Button>
-            <Button onClick={handleRescheduleSave} className="bg-primary rounded-full font-black px-8">Guardar Cambios</Button>
+            <Button onClick={handleRescheduleSave} className="bg-primary rounded-full font-black px-8">Confirmar Cambio</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
