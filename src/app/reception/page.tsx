@@ -70,7 +70,8 @@ import {
   Mail,
   Home,
   Building2,
-  Wallet
+  Wallet,
+  CalendarClock
 } from "lucide-react";
 import { format, parseISO, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
@@ -100,6 +101,8 @@ const SUNVOU_CATALOG = [
 
 const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 20 a 30 días hábiles (dependiendo del stock) tras recepción de orden de compra y pago de anticipo. El plazo de entrega inicia a partir de la confirmación del primer depósito.\n- Forma de pago: 70% contra orden de compra (anticipo) y 30% contra entrega.\n- Garantía: 2 años para equipo analizador y sensores.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
 
+const TIME_SLOTS = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00"];
+
 interface QuotationItem {
   description: string;
   quantity: number;
@@ -116,6 +119,11 @@ export default function ReceptionPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedBookingForDetail, setSelectedBookingForDetail] = useState<any>(null);
+
+  // RESCHEDULE State
+  const [reschedulingBooking, setReschedulingBooking] = useState<any>(null);
+  const [newRescheduleDate, setNewRescheduleDate] = useState<Date | undefined>(new Date());
+  const [newRescheduleTime, setNewRescheduleTime] = useState<string>("");
 
   // NEWS State
   const [isNewsDialogOpen, setIsNewsDialogOpen] = useState(false);
@@ -369,6 +377,28 @@ export default function ReceptionPage() {
     setMilestoneForm({ title: "", description: "", date: format(new Date(), "yyyy-MM-dd"), status: "pending" });
   };
 
+  const handleRescheduleSave = async () => {
+    if (!db || !reschedulingBooking || !newRescheduleDate || !newRescheduleTime) {
+      toast({ variant: "destructive", title: "Error", description: "Selecciona fecha y hora." });
+      return;
+    }
+
+    try {
+      const bookingRef = doc(db, "bookings", reschedulingBooking.id);
+      await updateDoc(bookingRef, {
+        scheduledDate: format(newRescheduleDate, "yyyy-MM-dd"),
+        scheduledTime: newRescheduleTime,
+        status: "rescheduled",
+        updatedAt: serverTimestamp()
+      });
+      
+      toast({ title: "Cita Reagendada", description: "El paciente ha sido movido a la nueva fecha." });
+      setReschedulingBooking(null);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error al reagendar" });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 uppercase font-black text-[9px]"><Clock className="h-3 w-3 mr-1" /> Agendado</Badge>;
@@ -376,6 +406,7 @@ export default function ReceptionPage() {
       case "in_progress": return <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 uppercase font-black text-[9px]"><Activity className="h-3 w-3 mr-1" /> En Curso</Badge>;
       case "completed": return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 uppercase font-black text-[9px]"><CheckCircle2 className="h-3 w-3 mr-1" /> Finalizado</Badge>;
       case "cancelled": return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 uppercase font-black text-[9px]"><AlertCircle className="h-3 w-3 mr-1" /> Cancelado</Badge>;
+      case "rescheduled": return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 uppercase font-black text-[9px]"><CalendarClock className="h-3 w-3 mr-1" /> Reagendado</Badge>;
       default: return <Badge variant="outline" className="text-[9px] uppercase font-black">{status}</Badge>;
     }
   };
@@ -428,6 +459,19 @@ export default function ReceptionPage() {
                         <TableCell>{getStatusBadge(b.status)}</TableCell>
                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex justify-end items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-secondary/60 hover:text-secondary" 
+                              onClick={() => {
+                                setReschedulingBooking(b);
+                                setNewRescheduleDate(parseISO(b.scheduledDate));
+                                setNewRescheduleTime(b.scheduledTime);
+                              }}
+                              title="Reagendar"
+                            >
+                              <CalendarClock className="h-4 w-4" />
+                            </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-primary/40 hover:text-primary" onClick={() => setSelectedBookingForDetail(b)}>
                               <Info className="h-4 w-4" />
                             </Button>
@@ -438,6 +482,7 @@ export default function ReceptionPage() {
                                 <SelectItem value="arrived">En sala</SelectItem>
                                 <SelectItem value="completed">Finalizado</SelectItem>
                                 <SelectItem value="cancelled">Cancelado</SelectItem>
+                                <SelectItem value="rescheduled">Reagendado</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -618,6 +663,52 @@ export default function ReceptionPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* RESCHEDULE DIALOG */}
+      <Dialog open={!!reschedulingBooking} onOpenChange={(open) => !open && setReschedulingBooking(null)}>
+        <DialogContent className="max-w-md rounded-[2rem]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-primary italic flex items-center gap-2">
+              <CalendarClock className="h-6 w-6 text-secondary" /> Reagendar Cita
+            </DialogTitle>
+            <DialogDescription className="font-bold text-muted-foreground">
+              Cambia la fecha y hora para: {reschedulingBooking?.firstName} {reschedulingBooking?.lastNameFather}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label className="font-black text-xs uppercase tracking-widest text-primary">Nueva Fecha</Label>
+              <Calendar
+                mode="single"
+                selected={newRescheduleDate}
+                onSelect={setNewRescheduleDate}
+                locale={es}
+                className="rounded-xl border border-primary/10 mx-auto"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="font-black text-xs uppercase tracking-widest text-primary">Nuevo Bloque Horario</Label>
+              <Select value={newRescheduleTime} onValueChange={setNewRescheduleTime}>
+                <SelectTrigger className="h-12 font-bold rounded-xl">
+                  <SelectValue placeholder="Seleccionar hora" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_SLOTS.map(slot => (
+                    <SelectItem key={slot} value={slot}>{slot} hrs</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setReschedulingBooking(null)} className="rounded-full font-bold">Cancelar</Button>
+            <Button onClick={handleRescheduleSave} className="bg-primary rounded-full font-black px-8">Guardar Cambios</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
