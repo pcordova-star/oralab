@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navbar } from "@/components/navbar";
 import { useFirestore } from "@/firebase";
 import { collection, getDocs, query, where, doc, updateDoc, arrayUnion } from "firebase/firestore";
@@ -30,7 +30,9 @@ import {
   ArrowLeft,
   ListChecks,
   History,
-  PencilLine
+  PencilLine,
+  Bell,
+  Volume2
 } from "lucide-react";
 import { PROTOCOLS } from "@/app/lib/types";
 import { cn } from "@/lib/utils";
@@ -61,6 +63,7 @@ export default function HomeTestPage() {
   const [booking, setBooking] = useState<any>(null);
   const [testState, setTestState] = useState<TestState | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
+  const alarmPlayedRef = useRef<number | null>(null);
   
   const db = useFirestore();
 
@@ -81,6 +84,15 @@ export default function HomeTestPage() {
       localStorage.setItem("oralab_test_session", JSON.stringify(testState));
     }
   }, [testState]);
+
+  const playAlarm = () => {
+    try {
+      const audio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7313063f90.mp3"); // Sonido corto y profesional
+      audio.play().catch(e => console.log("Audio play blocked by browser policy. Interaction needed."));
+    } catch (err) {
+      console.error("Error playing alarm sound", err);
+    }
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -107,8 +119,19 @@ export default function HomeTestPage() {
             
             if (nextRemaining <= 0) {
               clearInterval(interval);
+              // Trigger alarm only once per step
+              if (alarmPlayedRef.current !== testState.currentStepIndex) {
+                playAlarm();
+                alarmPlayedRef.current = testState.currentStepIndex;
+              }
             }
           }, 1000);
+        } else {
+          // If it was already 0 when effect ran
+          if (alarmPlayedRef.current !== testState.currentStepIndex) {
+            playAlarm();
+            alarmPlayedRef.current = testState.currentStepIndex;
+          }
         }
       } else {
         setTimeLeft(0);
@@ -175,7 +198,6 @@ export default function HomeTestPage() {
 
     const updatedLogs = [...(testState.logs || []), newLog];
 
-    // Persistir registro en Firestore para verificación clínica
     if (currentStep.type === 'breath') {
       try {
         await updateDoc(doc(db, "bookings", testState.bookingId), {
@@ -206,7 +228,7 @@ export default function HomeTestPage() {
   const restartProtocol = () => {
     const confirm1 = confirm("⚠️ ¿ESTÁS SEGURO QUE DESEAS REINICIAR EL PROTOCOLO?\n\nEsta acción borrará todo el historial de tiempos y volverás al Paso 1.");
     if (confirm1) {
-      const confirm2 = confirm("🚨 ¡ALERTA CRÍTICA!\n\nConfirmas que deseas ELIMINAR los datos actuales de esta sesión y empezar de cero?\n\nPresiona Aceptar para proceder.");
+      const confirm2 = confirm("🚨 ¡ALERTA CRÍTICA!\n\nConfirmas que deseas ELIMINAR los datos actuales de esta sesión y empezar de cero?");
       if (confirm2) {
         setTestState(prev => prev ? {
           ...prev,
@@ -222,9 +244,9 @@ export default function HomeTestPage() {
   };
 
   const cancelTest = () => {
-    const confirm1 = confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?\n\nSe perderá todo el progreso y se cerrará la sesión actual.");
+    const confirm1 = confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?");
     if (confirm1) {
-      const confirm2 = confirm("🚨 ¡ATENCIÓN!\n\nEstás a punto de ABANDONAR el asistente. Si no terminaste el test, las muestras recolectadas podrían ser inválidas.\n\n¿Deseas salir de todas formas?");
+      const confirm2 = confirm("🚨 ¡ATENCIÓN!\n\nEstás a punto de ABANDONAR el asistente. ¿Deseas salir de todas formas?");
       if (confirm2) {
         setTestState(null);
         setBooking(null);
@@ -308,7 +330,7 @@ export default function HomeTestPage() {
                     <div className="flex items-start gap-3 bg-amber-50 p-4 rounded-xl border border-amber-200">
                       <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                       <p className="text-xs text-amber-800 font-medium">
-                        Asegúrate de tener todos tus tubos numerados y el sustrato preparado antes de iniciar. Puedes anotar las horas en papel como respaldo.
+                        Asegúrate de tener todos tus tubos numerados y el sustrato preparado antes de iniciar. Activa el sonido de tu teléfono para escuchar la alarma.
                       </p>
                     </div>
                     <Button onClick={startTest} className="w-full h-14 rounded-xl text-lg font-black bg-secondary shadow-lg">
@@ -380,9 +402,14 @@ export default function HomeTestPage() {
             <p className="text-sm font-black text-primary truncate max-w-[150px]">{testState.patientName}</p>
           </div>
         </div>
-        <div className="text-right">
-           <p className="text-[10px] font-black text-muted-foreground uppercase leading-none">Inicio</p>
-           <p className="text-sm font-black text-primary">{getClockTime(testState.startTime || 0)}</p>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+             <p className="text-[10px] font-black text-muted-foreground uppercase leading-none">Inicio</p>
+             <p className="text-sm font-black text-primary">{getClockTime(testState.startTime || 0)}</p>
+          </div>
+          <div className="bg-secondary/10 p-2 rounded-full text-secondary animate-pulse-subtle">
+             <Volume2 className="h-4 w-4" />
+          </div>
         </div>
       </header>
 
@@ -447,8 +474,15 @@ export default function HomeTestPage() {
 
             {(currentStep.type === 'wait' || currentStep.type === 'ingest') && (
               <div className="py-6 space-y-4">
-                <div className="text-7xl font-black text-primary font-mono tracking-tighter tabular-nums drop-shadow-sm">
-                  {formatTime(timeLeft)}
+                <div className="relative inline-block">
+                  <div className="text-7xl font-black text-primary font-mono tracking-tighter tabular-nums drop-shadow-sm">
+                    {formatTime(timeLeft)}
+                  </div>
+                  {timeLeft > 0 && (
+                    <div className="absolute -top-4 -right-4 bg-secondary text-white p-1.5 rounded-full shadow-lg animate-bounce">
+                      <Bell className="h-4 w-4" />
+                    </div>
+                  )}
                 </div>
                 <div className="bg-secondary/10 border border-secondary/20 rounded-xl p-4 inline-block">
                    <p className="text-[10px] font-black text-secondary uppercase tracking-widest leading-none mb-1">Próxima acción a las:</p>
@@ -471,12 +505,15 @@ export default function HomeTestPage() {
                   </p>
                 </div>
               ) : timeLeft === 0 ? (
-                <Button 
-                  onClick={confirmStep} 
-                  className="w-full h-20 rounded-2xl text-xl font-black bg-primary shadow-xl animate-in zoom-in duration-300"
-                >
-                  Paso completado <ChevronRight className="ml-2 h-6 w-6" />
-                </Button>
+                <div className="space-y-4">
+                  <Button 
+                    onClick={confirmStep} 
+                    className="w-full h-20 rounded-2xl text-xl font-black bg-primary shadow-xl animate-in zoom-in duration-300"
+                  >
+                    Continuar protocolo <ChevronRight className="ml-2 h-6 w-6" />
+                  </Button>
+                  <p className="text-xs font-black text-secondary animate-pulse-subtle">🔔 Alarma activada: tiempo cumplido</p>
+                </div>
               ) : (
                 <div className="bg-muted/50 p-8 rounded-2xl border-dashed border-2 border-muted">
                   <p className="text-sm font-bold text-muted-foreground italic flex items-center justify-center gap-2">
@@ -494,7 +531,6 @@ export default function HomeTestPage() {
           </CardFooter>
         </Card>
 
-        {/* Bitácora Digital en tiempo real */}
         {testState.logs && testState.logs.length > 0 && (
           <Card className="rounded-3xl border-primary/10 shadow-lg overflow-hidden bg-white/50">
             <div className="p-4 bg-primary/5 border-b border-primary/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -521,7 +557,7 @@ export default function HomeTestPage() {
 
         <div className="text-center bg-primary/5 p-4 rounded-2xl border border-primary/10">
           <p className="text-[11px] text-primary/70 font-bold italic leading-relaxed">
-            * Si tu teléfono tiene problemas, usa la hora programada en la bitácora para guiarte manualmente con un reloj convencional.
+            * El asistente te avisará con sonido cuando el tiempo termine. Mantén el volumen alto.
           </p>
         </div>
       </main>
