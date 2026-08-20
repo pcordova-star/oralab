@@ -50,11 +50,11 @@ import { collection, serverTimestamp, query, where, getDocs } from "firebase/fir
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, isBefore, isWeekend } from "date-fns";
+import { format, isBefore, isWeekend, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { jsPDF } from "jspdf";
+import { jsPDF } from "jsPDF";
 import { analyzeMedicalOrder } from "@/ai/flows/analyze-medical-order";
 
 const communesByRegion: Record<string, string[]> = {
@@ -159,8 +159,18 @@ export default function BookingPage() {
       if (!selectedDate || !db) return;
       setIsLoadingSlots(true);
       form.setValue("scheduledTime", ""); 
+      
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
+
+      // BLOQUEO MANUAL POR FALTA DE ATENCIÓN (MAÑANA)
+      if (formattedDate === tomorrowStr) {
+        setOccupiedSlots(timeSlots); // Marcar todos los bloques como tomados
+        setIsLoadingSlots(false);
+        return;
+      }
+
       try {
-        const formattedDate = format(selectedDate, "yyyy-MM-dd");
         const q = query(
           collection(db, "bookings"),
           where("scheduledDate", "==", formattedDate),
@@ -447,7 +457,17 @@ export default function BookingPage() {
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="single" selected={field.value} onSelect={(d) => { field.onChange(d); setIsCalendarOpen(false); }} disabled={(d) => isBefore(d, OPERATIONS_START_DATE) || isWeekend(d)} locale={es} />
+                            <Calendar 
+                              mode="single" 
+                              selected={field.value} 
+                              onSelect={(d) => { field.onChange(d); setIsCalendarOpen(false); }} 
+                              disabled={(d) => {
+                                const tomorrow = addDays(new Date(), 1);
+                                const isTomorrow = format(d, "yyyy-MM-dd") === format(tomorrow, "yyyy-MM-dd");
+                                return isBefore(d, OPERATIONS_START_DATE) || isWeekend(d) || isTomorrow;
+                              }} 
+                              locale={es} 
+                            />
                           </PopoverContent>
                         </Popover>
                       </FormItem>
