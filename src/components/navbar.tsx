@@ -3,6 +3,11 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useUser, useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export function Logo() {
   return (
@@ -42,6 +47,62 @@ export function Logo() {
 }
 
 export function Navbar() {
+  const { user } = useUser();
+  const auth = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
+  
+  const isAdminPage = pathname?.startsWith('/reception') || pathname?.startsWith('/admin');
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      toast({
+        title: "Sesión cerrada",
+        description: "Has salido del panel administrativo correctamente.",
+      });
+      router.push("/login");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo cerrar la sesión.",
+      });
+    }
+  };
+
+  // HEADER SIMPLIFICADO PARA ADMIN
+  if (isAdminPage) {
+    return (
+      <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+            <Link href="/reception">
+              <Logo />
+            </Link>
+            
+            <div className="flex items-center gap-4">
+              <span className="hidden md:block text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted px-3 py-1 rounded-full border border-primary/5">
+                Panel Administrativo
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleLogout}
+                className="text-red-500 font-bold hover:bg-red-50 hover:text-red-600 rounded-full h-10 px-4 border border-red-100"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Cerrar Sesión
+              </Button>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  // HEADER PÚBLICO ESTÁNDAR
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
