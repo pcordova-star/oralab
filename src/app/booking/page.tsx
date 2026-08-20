@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -43,7 +42,7 @@ import {
   Info,
   MapPin,
   MapPinned
-} from "lucide-react";
+} from "lucide-center";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
@@ -54,7 +53,7 @@ import { format, isBefore, isWeekend, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { jsPDF } from "jsPDF";
+import { jsPDF } from "jspdf";
 import { analyzeMedicalOrder } from "@/ai/flows/analyze-medical-order";
 
 const communesByRegion: Record<string, string[]> = {
@@ -290,6 +289,10 @@ export default function BookingPage() {
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     let instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
+    
+    // NOTA DE REAGENDAMIENTO VIA WHATSAPP
+    instructions += "\n\nREAGENDAMIENTO:\nEn caso de requerir reagendar su hora, por favor solicítelo con anticipación vía WhatsApp al +56 9 3685 0468.";
+
     if (lastBookingValues.modality === 'home_kit') {
       instructions += "\n\nPROCEDIMIENTO TEST EN CASA:\n- Retira el kit a la hora elegida en Apoquindo 3990.\n- Recibe la instrucción del profesional.\n- Coordina el retiro con el motoboy al lugar indicado: " + (lastBookingValues.pickupAddress || lastBookingValues.address);
     }

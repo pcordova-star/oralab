@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -399,6 +398,15 @@ export default function ReceptionPage() {
     }
   };
 
+  const openRescheduleFromDetail = () => {
+    if (!selectedBookingForDetail) return;
+    const booking = selectedBookingForDetail;
+    setSelectedBookingForDetail(null);
+    setReschedulingBooking(booking);
+    setNewRescheduleDate(parseISO(booking.scheduledDate));
+    setNewRescheduleTime(booking.scheduledTime);
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 uppercase font-black text-[9px]"><Clock className="h-3 w-3 mr-1" /> Agendado</Badge>;
@@ -662,7 +670,14 @@ export default function ReceptionPage() {
                 </div>
               </div>
               
-              <div className="bg-muted/50 p-6 flex justify-end border-t">
+              <div className="bg-muted/50 p-6 flex justify-between items-center border-t px-8">
+                <Button 
+                  onClick={openRescheduleFromDetail} 
+                  variant="outline" 
+                  className="rounded-full font-bold border-primary text-primary hover:bg-primary hover:text-white"
+                >
+                  <CalendarClock className="mr-2 h-4 w-4" /> Reagendar Cita
+                </Button>
                 <Button onClick={() => setSelectedBookingForDetail(null)} className="rounded-full font-black px-10 bg-primary">Cerrar Ficha</Button>
               </div>
             </div>
