@@ -49,9 +49,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const reportData = [
   { time: 0, h2: 5, ch4: 2, h2s: 0.8, co2: 'OK', symptoms: 'Ninguno' },
-  { time: 20, h2: 7, ch4: 3, h2s: 1.0, co2: 'OK', symptoms: 'Borborigmos' },
-  { time: 40, h2: 12, ch4: 4, h2s: 1.1, co2: 'OK', symptoms: 'Distensión' },
-  { time: 60, h2: 28, h2_alert: true, ch4: 5, h2s: 1.3, co2: 'OK', symptoms: 'Gases' },
+  { time: 30, h2: 7, ch4: 3, h2s: 1.0, co2: 'OK', symptoms: 'Borborigmos' },
+  { time: 60, h2: 12, ch4: 4, h2s: 1.1, co2: 'OK', symptoms: 'Distensión' },
   { time: 90, h2: 45, h2_alert: true, ch4: 6, h2s: 1.5, co2: 'OK', symptoms: 'Cólicos' },
   { time: 120, h2: 38, ch4: 5, h2s: 1.4, co2: 'OK', symptoms: 'Leve' },
   { time: 150, h2: 25, h2_alert: false, ch4: 4, h2s: 1.2, co2: 'OK', symptoms: 'Final' },
@@ -331,55 +330,55 @@ const InteractiveAssistantSim = () => {
       instruction: "Sopla en el primer tubo antes de ingerir el sustrato.",
       importance: "Este es tu punto cero. Nos permite saber cuántos gases produce tu cuerpo naturalmente antes del estímulo.",
       icon: <Wind className="h-8 w-8" />,
-      badge: "Paso 1 / 14",
+      badge: "Muestra 1 / 7",
       button: "Confirmar Soplido",
       time: "00:00"
     },
     {
       title: "Ingesta del Sustrato",
       instruction: "Bebe la solución lentamente durante 5 minutos.",
-      importance: "El sustrato (lactulosa o azúcar) es el 'alimento' que las bacterias fermentarán si están presentes en exceso.",
+      importance: "El sustrato es el 'alimento' que las bacterias fermentarán si están presentes en exceso.",
       icon: <Droplets className="h-8 w-8" />,
-      badge: "Paso 2 / 14",
+      badge: "Ingesta",
       button: "Comenzar Ingesta",
       time: "05:00"
     },
     {
       title: "Periodo de Espera",
-      instruction: "Mantén reposo absoluto durante 20 minutos.",
-      importance: "El reposo es vital. La actividad física altera la respiración y puede diluir los gases, dando un falso negativo.",
+      instruction: "Mantén reposo absoluto durante 30 minutos.",
+      importance: "El intervalo de 30 minutos es el estándar de oro para construir una curva metabólica fiable.",
       icon: <Timer className="h-8 w-8" />,
-      badge: "Paso 3 / 14",
+      badge: "Espera Fija",
       button: "Esperando...",
-      time: "14:52",
+      time: "24:52",
       isWaiting: true
     },
     {
-      title: "Segunda Muestra (T-20)",
+      title: "Segunda Muestra (T-30)",
       instruction: "Sopla suavemente en el tubo número 2.",
-      importance: "Aquí evaluamos el inicio del tránsito. Detectar gases tempranos sugiere bacterias en el intestino delgado (SIBO).",
+      importance: "Aquí evaluamos el inicio del tránsito. Detectar gases a los 30 min sugiere bacterias en el intestino delgado.",
       icon: <Wind className="h-8 w-8" />,
-      badge: "Paso 4 / 14",
+      badge: "Muestra 2 / 7",
       button: "Confirmar Soplido",
       time: "00:00"
     },
     {
-      title: "Seguimiento Seriados",
-      instruction: "Este proceso se repite cada 20-30 minutos.",
-      importance: "Repetiremos los soplidos y esperas 10 veces más. Esto construye tu curva metabólica completa para el médico.",
+      title: "Seguimiento Extendido",
+      instruction: "Este proceso se repite cada 30 minutos.",
+      importance: "Repetiremos los soplidos hasta completar los 180 minutos (3 horas) según protocolo internacional.",
       icon: <RotateCcw className="h-8 w-8" />,
-      badge: "Pasos 5 al 13",
-      button: "Simular Ciclo Completo",
+      badge: "Muestras 3 a 7",
+      button: "Simular Protocolo 3h",
       time: "--:--"
     },
     {
       title: "¡Test Finalizado!",
       instruction: "Has completado todas las muestras con éxito.",
-      importance: "¡Excelente! Has garantizado una toma de muestra profesional. Ahora solo entrega tus tubos en el laboratorio.",
+      importance: "Has garantizado una toma de muestra profesional. Ahora entrega tus tubos en el laboratorio.",
       icon: <CheckCircle2 className="h-10 w-10 text-secondary" />,
-      badge: "Paso 14 / 14",
+      badge: "Protocolo Logrado",
       button: "Ver Resumen",
-      time: "LISTO",
+      time: "180 MIN",
       isFinal: true
     }
   ];
@@ -581,7 +580,7 @@ export default function HomePage() {
                 { 
                   step: "04", 
                   title: "Seguimiento", 
-                  desc: "Durante 2-3 horas tomaremos muestras seriadas para construir tu curva metabólica.",
+                  desc: "Durante 3 horas tomaremos muestras seriadas cada 30 minutos para tu curva metabólica.",
                   icon: <Timer className="h-6 w-6" />,
                   color: "bg-primary/5 text-primary"
                 },
@@ -618,7 +617,7 @@ export default function HomePage() {
              <div className="space-y-6 lg:order-1">
                 <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Máxima Flexibilidad</Badge>
                 <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">También en tu <br/><span className="text-secondary">Domicilio o Trabajo</span></h2>
-                <p className="text-lg text-muted-foreground font-medium">Lleva la misma precisión clínica a donde estés. Retira tu kit y nuestro asistente digital te guiará paso a paso en cada soplido y espera, cronometrando tus intervalos para asegurar la máxima calidad sin salir de tu entorno.</p>
+                <p className="text-lg text-muted-foreground font-medium">Lleva la misma precisión clínica a donde estés. Retira tu kit y nuestro asistente digital te guiará paso a paso en cada soplido y espera, cronometrando tus intervalos de 30 minutos para asegurar resultados válidos.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                   <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
                     <Home className="h-5 w-5 text-secondary" />
@@ -644,7 +643,7 @@ export default function HomePage() {
           <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-6">
               <h2 className="text-3xl md:text-5xl font-black text-primary italic">Resultados con <br/>Rigor Científico</h2>
-              <p className="text-lg text-muted-foreground">Generamos informes detallados con curvas de Hidrógeno, Metano y Sulfuro, permitiendo un diagnóstico diferencial preciso para tu médico.</p>
+              <p className="text-lg text-muted-foreground">Generamos informes detallados con curvas de Hidrógeno, Metano y Sulfuro, siguiendo el estándar de 180 minutos para intolerancias.</p>
             </div>
             <ClinicalReportVisualizer />
           </div>
