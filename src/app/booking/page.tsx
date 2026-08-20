@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -42,7 +43,7 @@ import {
   Info,
   MapPin,
   MapPinned
-} from "lucide-center";
+} from "lucide-react";
 import Link from "next/link";
 import { useFirestore } from "@/firebase";
 import { collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
@@ -390,7 +391,7 @@ export default function BookingPage() {
                           <p className="text-sm text-muted-foreground font-medium">Sube tu orden médica para que la IA sugiera el examen.</p>
                         </div>
                         <div className="relative">
-                          <Input type="file" accept="image/*" className="hidden" id="order-upload" onChange={handleFileUpload} disabled={isAnalyzing} />
+                          <input type="file" accept="image/*" className="hidden" id="order-upload" onChange={handleFileUpload} disabled={isAnalyzing} />
                           <label htmlFor="order-upload">
                             <Button asChild variant="outline" className="rounded-full font-bold border-secondary text-secondary hover:bg-secondary hover:text-white cursor-pointer h-12 px-6">
                               <span><FileUp className="mr-2 h-4 w-4" /> {isAnalyzing ? "Analizando..." : "Escanear Orden"}</span>

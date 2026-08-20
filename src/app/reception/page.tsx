@@ -665,7 +665,7 @@ export default function ReceptionPage() {
 
               <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8 bg-white">
                 <div className="lg:col-span-2 space-y-8">
-                  {/* BITACORA DE TIEMPOS (NUEVA SECCIÓN) */}
+                  {/* BITACORA DE TIEMPOS */}
                   <div className="space-y-4">
                     <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2 border-b pb-2">
                       <History className="h-4 w-4 text-secondary" /> Trazabilidad Asistente Digital
@@ -814,7 +814,7 @@ export default function ReceptionPage() {
             <DialogTitle className="text-2xl font-black text-primary italic">
               {editingQuoteId ? "Editar Cotización" : "Nueva Cotización Sunvou"}
             </DialogTitle>
-            <DialogDescription className="sr-only">Formulario para la gestión comercial de equipos y sensores Sunvou.</DialogDescription>
+            <DialogDescription className="text-xs font-bold text-muted-foreground uppercase">Gestión comercial de equipos y sensores Sunvou Chile.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-primary/5 p-4 rounded-2xl">
@@ -863,7 +863,7 @@ export default function ReceptionPage() {
         <DialogContent className="max-w-2xl rounded-[2rem]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-primary italic">Publicar Noticia</DialogTitle>
-            <DialogDescription>Añade una nueva actualización para el mural de inversores.</DialogDescription>
+            <DialogDescription className="font-bold text-muted-foreground">Añade una nueva actualización para el mural de inversores.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2"><Label className="font-bold">Título</Label><Input value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} /></div>
@@ -879,7 +879,7 @@ export default function ReceptionPage() {
         <DialogContent className="rounded-[2rem]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-amber-700 italic">Nuevo Hito de Proyecto</DialogTitle>
-            <DialogDescription>Registra un avance técnico o administrativo en el cronograma institucional.</DialogDescription>
+            <DialogDescription className="font-bold text-amber-900/60">Registra un avance técnico o administrativo en el cronograma institucional.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2"><Label className="font-bold">Título</Label><Input value={milestoneForm.title} onChange={(e) => setMilestoneForm({...milestoneForm, title: e.target.value})} /></div>

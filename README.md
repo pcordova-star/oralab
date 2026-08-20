@@ -9,7 +9,7 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 - **Administración Segmentada**: Dashboard dividido en **Área Clínica** (para TENS) y **Gestión Estratégica** (para Dirección).
 - **Logística Home Kit**: Los pacientes declaran una "Dirección de Retiro" específica para el motoboy.
 - **Seguridad**: Header administrativo simplificado (solo Logo y Cerrar Sesión) para evitar distracciones operativas.
-- **Agendamiento**: Sistema de bloqueo dinámico de fechas y gestión de reagendamiento integrada en la ficha del paciente.
+- **Agendamiento**: Sistema de bloqueo dinámico de fechas para mañana y gestión de reagendamiento integrada en la ficha del paciente.
 
 ## Comandos Git para la Terminal
 Para guardar y subir tus avances, utiliza esta secuencia:
