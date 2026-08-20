@@ -590,21 +590,25 @@ export default function ReceptionPage() {
           {selectedBookingForDetail && (
             <div className="flex flex-col">
               <div className="bg-primary p-8 text-white">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="space-y-1">
-                    <Badge className="bg-white/20 text-white border-none text-[10px] font-black uppercase tracking-widest mb-2">Ficha de Paciente</Badge>
-                    <h2 className="text-3xl font-black italic">{selectedBookingForDetail.firstName} {selectedBookingForDetail.lastNameFather} {selectedBookingForDetail.lastNameMother}</h2>
-                    <p className="text-sm opacity-80 font-bold flex items-center gap-2">
-                      {selectedBookingForDetail.modality === 'home_kit' ? <Home className="h-3 w-3" /> : <Building2 className="h-3 w-3" />}
-                      {selectedBookingForDetail.modality === 'home_kit' ? 'Modalidad Test en Casa' : 'Atención Presencial en Laboratorio'}
-                    </p>
+                <DialogHeader className="p-0 space-y-0 text-left">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="space-y-1">
+                      <Badge className="bg-white/20 text-white border-none text-[10px] font-black uppercase tracking-widest mb-2">Ficha de Paciente</Badge>
+                      <DialogTitle className="text-3xl font-black italic text-white leading-tight">
+                        {selectedBookingForDetail.firstName} {selectedBookingForDetail.lastNameFather} {selectedBookingForDetail.lastNameMother}
+                      </DialogTitle>
+                      <DialogDescription className="text-sm opacity-80 font-bold flex items-center gap-2 text-white">
+                        {selectedBookingForDetail.modality === 'home_kit' ? <Home className="h-3 w-3" /> : <Building2 className="h-3 w-3" />}
+                        {selectedBookingForDetail.modality === 'home_kit' ? 'Modalidad Test en Casa' : 'Atención Presencial en Laboratorio'}
+                      </DialogDescription>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <p className="text-[10px] font-black opacity-60 uppercase">Cita Programada</p>
+                      <p className="text-xl font-black">{format(parseISO(selectedBookingForDetail.scheduledDate), "dd/MM/yyyy")} @ {selectedBookingForDetail.scheduledTime}</p>
+                      <div className="mt-2">{getStatusBadge(selectedBookingForDetail.status)}</div>
+                    </div>
                   </div>
-                  <div className="text-right space-y-1">
-                    <p className="text-[10px] font-black opacity-60 uppercase">Cita Programada</p>
-                    <p className="text-xl font-black">{format(parseISO(selectedBookingForDetail.scheduledDate), "dd/MM/yyyy")} @ {selectedBookingForDetail.scheduledTime}</p>
-                    <div className="mt-2">{getStatusBadge(selectedBookingForDetail.status)}</div>
-                  </div>
-                </div>
+                </DialogHeader>
               </div>
 
               <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white">
@@ -716,7 +720,10 @@ export default function ReceptionPage() {
       <Dialog open={isQuoteDialogOpen} onOpenChange={setIsQuoteDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem]">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black text-primary italic">{editingQuoteId ? "Editar Cotización" : "Nueva Cotización Sunvou"}</DialogTitle>
+            <DialogTitle className="text-2xl font-black text-primary italic">
+              {editingQuoteId ? "Editar Cotización" : "Nueva Cotización Sunvou"}
+            </DialogTitle>
+            <DialogDescription className="sr-only">Formulario para la gestión comercial de equipos y sensores Sunvou.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-primary/5 p-4 rounded-2xl">
@@ -763,7 +770,10 @@ export default function ReceptionPage() {
       {/* NEWS DIALOG */}
       <Dialog open={isNewsDialogOpen} onOpenChange={setIsNewsDialogOpen}>
         <DialogContent className="max-w-2xl rounded-[2rem]">
-          <DialogHeader><DialogTitle className="text-2xl font-black text-primary italic">Publicar Noticia</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-primary italic">Publicar Noticia</DialogTitle>
+            <DialogDescription>Añade una nueva actualización para el mural de inversores.</DialogDescription>
+          </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2"><Label className="font-bold">Título</Label><Input value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} /></div>
             <div className="space-y-2"><Label className="font-bold">URL Imagen</Label><Input value={newsForm.imageUrl} onChange={(e) => setNewsForm({...newsForm, imageUrl: e.target.value})} /></div>
@@ -776,7 +786,10 @@ export default function ReceptionPage() {
       {/* MILESTONE DIALOG */}
       <Dialog open={isMilestoneDialogOpen} onOpenChange={setIsMilestoneDialogOpen}>
         <DialogContent className="rounded-[2rem]">
-          <DialogHeader><DialogTitle className="text-2xl font-black text-amber-700 italic">Nuevo Hito de Proyecto</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-amber-700 italic">Nuevo Hito de Proyecto</DialogTitle>
+            <DialogDescription>Registra un avance técnico o administrativo en el cronograma institucional.</DialogDescription>
+          </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2"><Label className="font-bold">Título</Label><Input value={milestoneForm.title} onChange={(e) => setMilestoneForm({...milestoneForm, title: e.target.value})} /></div>
             <div className="space-y-2"><Label className="font-bold">Fecha</Label><Input type="date" value={milestoneForm.date} onChange={(e) => setMilestoneForm({...milestoneForm, date: e.target.value})} /></div>
