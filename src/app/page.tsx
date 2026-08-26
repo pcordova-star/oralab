@@ -28,7 +28,8 @@ import {
   Briefcase,
   Users,
   FileText,
-  Handshake
+  Handshake,
+  Microscope
 } from "lucide-react";
 import { 
   LineChart, 
@@ -79,8 +80,8 @@ const TechnologicalHeroTitle = () => {
             transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
             className="text-5xl md:text-7xl lg:text-8xl font-black text-primary leading-[0.95] tracking-tighter italic"
           >
-            Test <span className="text-secondary relative">
-              SIBO
+            Aire <span className="text-secondary relative">
+              Espirado
               <motion.span 
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
@@ -99,8 +100,8 @@ const TechnologicalHeroTitle = () => {
         >
           <div className="h-[2px] w-12 bg-secondary/50 hidden lg:block" />
           <p className="text-2xl md:text-4xl font-bold text-primary/40 tracking-tighter">
-            con <span className="text-primary font-black uppercase tracking-widest relative group cursor-default">
-              precisión clínica
+            SIBO e <span className="text-primary font-black uppercase tracking-widest relative group cursor-default">
+              Intolerancias
               <motion.span 
                 animate={{ left: ["-100%", "100%"] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
@@ -130,10 +131,10 @@ const ClinicalReportVisualizer = () => {
             <div className="flex items-center gap-2 mb-1">
               <Badge variant="secondary" className="bg-secondary/10 text-secondary border-secondary/20 font-black">SUNVOU® CERTIFIED</Badge>
             </div>
-            <h3 className="text-base md:text-xl font-black text-primary italic">Resumen Técnico de Biomarcadores</h3>
+            <h3 className="text-base md:text-xl font-black text-primary italic">Análisis de Biomarcadores Metabólicos</h3>
           </div>
           <div className="text-left sm:text-right">
-            <Badge className="bg-red-50 text-white border-none animate-pulse text-[10px] md:text-xs">POSITIVO SIBO (H₂)</Badge>
+            <Badge className="bg-blue-500 text-white border-none text-[10px] md:text-xs">PRECISIÓN DE LABORATORIO</Badge>
           </div>
         </div>
 
@@ -157,10 +158,10 @@ const ClinicalReportVisualizer = () => {
                 contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
               />
               {!isMobile && <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />}
-              <ReferenceArea x1={0} x2={90} y1={0} y2={60} fill="#f8fafc" fillOpacity={0.5} />
-              <Line name="H₂" type="monotone" dataKey="h2" stroke="#1c68b6" strokeWidth={isMobile ? 3 : 4} dot={!isMobile} />
-              <Line name="CH₄" type="monotone" dataKey="ch4" stroke="#10b981" strokeWidth={isMobile ? 2 : 3} dot={!isMobile} />
-              <Line name="H₂S" type="monotone" dataKey="h2s" stroke="#f59e0b" strokeWidth={isMobile ? 2 : 3} dot={!isMobile} />
+              <ReferenceArea x1={0} x2={180} y1={0} y2={60} fill="#f8fafc" fillOpacity={0.5} />
+              <Line name="H₂ (Hidrógeno)" type="monotone" dataKey="h2" stroke="#1c68b6" strokeWidth={isMobile ? 3 : 4} dot={!isMobile} />
+              <Line name="CH₄ (Metano)" type="monotone" dataKey="ch4" stroke="#10b981" strokeWidth={isMobile ? 2 : 3} dot={!isMobile} />
+              <Line name="H₂S (Sulfuro)" type="monotone" dataKey="h2s" stroke="#f59e0b" strokeWidth={isMobile ? 2 : 3} dot={!isMobile} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -209,7 +210,7 @@ const TechScannerAnimation = () => {
   );
 };
 
-const SIBOEducationSection = () => {
+const DigestiveHealthEducationSection = () => {
   return (
     <section className="py-24 bg-primary text-white overflow-hidden relative">
       <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
@@ -221,19 +222,21 @@ const SIBOEducationSection = () => {
             viewport={{ once: true }}
             className="space-y-8"
           >
-            <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">¿Qué es el SIBO?</Badge>
+            <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Diagnóstico Multidisciplinario</Badge>
             <h2 className="text-4xl md:text-6xl font-black italic leading-tight">
-              Entendiendo el <span className="text-secondary">Sobrecrecimiento Bacteriano</span>
+              Mucho más que <span className="text-secondary">SIBO</span>
             </h2>
             <div className="space-y-6 text-lg md:text-xl opacity-90 leading-relaxed font-medium">
               <p>
-                El SIBO ocurre cuando hay un exceso de bacterias en el <strong>intestino delgado</strong>, una sección que normalmente es casi estéril.
+                Utilizamos tecnología de punta para identificar diversos trastornos digestivos que afectan tu calidad de vida diaria.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
                {[
-                 { icon: <Zap className="h-6 w-6 text-secondary" />, title: "Robo de Nutrientes", desc: "Las bacterias consumen tus alimentos antes que tú." },
-                 { icon: <AlertCircle className="h-6 w-6 text-secondary" />, title: "Gases y Toxinas", desc: "La fermentación produce Hidrógeno y Metano." },
+                 { icon: <Zap className="h-6 w-6 text-secondary" />, title: "Intolerancias", desc: "Detección precisa de malabsorción de Lactosa y Fructosa." },
+                 { icon: <Activity className="h-6 w-6 text-secondary" />, title: "SIBO e IMO", desc: "Sobrecrecimiento bacteriano y de arqueas metanogénicas." },
+                 { icon: <Beaker className="h-6 w-6 text-secondary" />, title: "Tiempo de Tránsito", desc: "Evaluación de la velocidad del vaciado gástrico e intestinal." },
+                 { icon: <AlertCircle className="h-6 w-6 text-secondary" />, title: "Disbiosis H2S", desc: "Muestra de gases sulfhídricos para casos complejos." },
                ].map((item, i) => (
                  <div key={i} className="bg-white/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-sm">
                    <div className="mb-4">{item.icon}</div>
@@ -243,6 +246,14 @@ const SIBOEducationSection = () => {
                ))}
             </div>
           </motion.div>
+          <div className="hidden lg:flex justify-center">
+             <div className="relative">
+                <div className="absolute -inset-4 bg-secondary/20 blur-3xl rounded-full" />
+                <div className="relative bg-white/5 border border-white/10 p-12 rounded-[3rem] backdrop-blur-xl">
+                   <Microscope className="h-64 w-64 text-secondary opacity-50" />
+                </div>
+             </div>
+          </div>
         </div>
       </div>
     </section>
@@ -267,14 +278,14 @@ const InteractiveAssistantSim = () => {
       instruction: "Sopla en el primer tubo antes de ingerir el sustrato.",
       importance: "Este es tu punto cero. Nos permite saber cuántos gases produce tu cuerpo naturalmente.",
       icon: <Wind className="h-8 w-8" />,
-      badge: "Muestra 1 / 7",
+      badge: "Muestra 1",
       button: "Confirmar Soplido",
       time: "00:00"
     },
     {
       title: "Ingesta del Sustrato",
-      instruction: "Beba la solución lentamente durante 2 minutos.",
-      importance: "El sustrato es el 'alimento' que las bacterias fermentarán si están presentes en exceso.",
+      instruction: "Beba la solución (Lactosa, Fructosa, etc.) en 2 minutos.",
+      importance: "El sustrato es el reactivo que nos permitirá evaluar la respuesta de tu organismo.",
       icon: <Droplets className="h-8 w-8" />,
       badge: "Ingesta",
       button: "Comenzar Ingesta",
@@ -283,30 +294,30 @@ const InteractiveAssistantSim = () => {
     {
       title: "Periodo de Espera",
       instruction: "Mantén reposo absoluto durante 28 minutos.",
-      importance: "El intervalo de 30 minutos es el estándar de oro para construir una curva metabólica fiable.",
+      importance: "Los intervalos de 30 minutos son el estándar para construir una curva metabólica fiable.",
       icon: <Timer className="h-8 w-8" />,
-      badge: "Espera Fija",
+      badge: "Protocolo 180 min",
       button: "Esperando...",
       time: "28:00",
       isWaiting: true
     },
     {
-      title: "Segunda Muestra (T-30)",
-      instruction: "Sopla suavemente en el tubo número 2.",
-      importance: "Aquí evaluamos el inicio del tránsito intestinal.",
+      title: "Siguientes Muestras",
+      instruction: "Soplarás cada 30 minutos hasta completar la curva.",
+      importance: "Para intolerancias realizamos 7 muestras y para SIBO 4 muestras exactas.",
       icon: <Wind className="h-8 w-8" />,
-      badge: "Muestra 2 / 7",
-      button: "Confirmar Soplido",
-      time: "00:00"
+      badge: "Seguimiento",
+      button: "Ver Siguiente Paso",
+      time: "30:00"
     },
     {
       title: "¡Test Finalizado!",
       instruction: "Has completado todas las muestras con éxito.",
-      importance: "Has garantizado una toma de muestra profesional. Ahora entrega tus tubos en el laboratorio.",
+      importance: "Ahora entrega tus tubos en el laboratorio para su análisis digital Sunvou®.",
       icon: <CheckCircle2 className="h-10 w-10 text-secondary" />,
-      badge: "Protocolo Logrado",
+      badge: "Procedimiento Logrado",
       button: "Ver Resumen",
-      time: "180 MIN",
+      time: "OK",
       isFinal: true
     }
   ];
@@ -438,14 +449,14 @@ export default function HomePage() {
           </div>
         </section>
 
-        <SIBOEducationSection />
+        <DigestiveHealthEducationSection />
 
-        <section className="py-24 bg-muted/20 border-y">
+        <section className="py-24 bg-white border-y">
            <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
              <div className="space-y-6 lg:order-1">
                 <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Máxima Flexibilidad</Badge>
                 <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">También en tu <br/><span className="text-secondary">Domicilio o Trabajo</span></h2>
-                <p className="text-lg text-muted-foreground font-medium">Lleva la misma precisión clínica a donde estés. Nuestro asistente digital te guiará paso a paso, incluyendo el enjuague bucal previo para asegurar una muestra pura.</p>
+                <p className="text-lg text-muted-foreground font-medium">Lleva la misma precisión clínica a donde estés. Nuestro asistente digital te guiará paso a paso, incluyendo el enjuague bucal previo para asegurar una muestra pura de alta resolución.</p>
                 <div className="flex flex-wrap gap-4 pt-6">
                   <Link href="/home-test"><Button className="rounded-full h-14 px-8 font-black text-lg bg-primary shadow-xl">Probar Asistente Digital</Button></Link>
                 </div>
@@ -455,12 +466,23 @@ export default function HomePage() {
              </div>
            </div>
         </section>
+
+        <section className="py-24 bg-muted/20">
+          <div className="container mx-auto px-4">
+             <div className="text-center mb-16 space-y-4">
+                <h2 className="text-3xl md:text-5xl font-black text-primary italic">Resultados de Grado Clínico</h2>
+                <div className="h-1 w-20 bg-secondary mx-auto rounded-full" />
+                <p className="max-w-2xl mx-auto text-muted-foreground font-medium">Entregamos reportes detallados compatibles con los estándares del Consenso Norteamericano de 2017.</p>
+             </div>
+             <ClinicalReportVisualizer />
+          </div>
+        </section>
       </main>
 
       <footer className="bg-white border-t border-border py-20">
         <div className="container mx-auto px-4 text-center">
           <Logo />
-          <p className="text-muted-foreground text-sm leading-relaxed mt-6">Laboratorio especializado en Salud Digestiva. Partner tecnológico Sunvou® en Chile.</p>
+          <p className="text-muted-foreground text-sm leading-relaxed mt-6">Laboratorio especializado en Salud Digestiva Avanzada. Partner tecnológico Sunvou® en Chile.</p>
         </div>
       </footer>
     </div>
