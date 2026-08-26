@@ -88,9 +88,19 @@ export default function HomeTestPage() {
       }
     }
 
+    // Listener para re-solicitar Wake Lock si la pestaña vuelve a ser visible
+    const handleVisibilityChange = async () => {
+      if (wakeLockRef.current !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       stopAlarm();
       releaseWakeLock();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (audioRef.current) {
         audioRef.current = null;
       }
@@ -111,19 +121,34 @@ export default function HomeTestPage() {
 
   // Función para mantener la pantalla encendida (Wake Lock)
   const requestWakeLock = async () => {
-    if ('wakeLock' in navigator && !wakeLockRef.current) {
+    if ('wakeLock' in navigator && !wakeLockRef.current && document.visibilityState === 'visible') {
       try {
         wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+        
+        // Listener para cuando el bloqueo se libera (ej: por batería baja)
+        wakeLockRef.current.addEventListener('release', () => {
+          wakeLockRef.current = null;
+        });
+        
         console.log("Wake Lock activo: La pantalla no se apagará.");
-      } catch (err) {
-        console.error("Wake Lock fallido:", err);
+      } catch (err: any) {
+        // Silenciar errores de política de permisos o visibilidad para no romper la UI
+        if (err.name === 'NotAllowedError') {
+          console.warn("Wake Lock bloqueado por política de permisos del navegador.");
+        } else {
+          console.warn("Wake Lock fallido:", err.message);
+        }
       }
     }
   };
 
   const releaseWakeLock = async () => {
     if (wakeLockRef.current) {
-      await wakeLockRef.current.release();
+      try {
+        await wakeLockRef.current.release();
+      } catch (e) {
+        // ignore
+      }
       wakeLockRef.current = null;
     }
   };
