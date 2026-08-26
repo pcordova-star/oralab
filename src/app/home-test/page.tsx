@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Navbar } from "@/components/navbar";
-import { useFirestore } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
 import { collection, getDocs, query, where, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,7 +88,14 @@ export default function HomeTestPage() {
   const playAlarm = () => {
     try {
       const audio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7313063f90.mp3");
-      audio.play().catch(e => console.log("Audio play blocked by browser policy. Interaction needed."));
+      audio.play().catch(e => {
+        console.log("Audio play blocked by browser policy. Interaction needed.");
+        toast({
+          variant: "destructive",
+          title: "Audio bloqueado",
+          description: "Haz clic en 'Probar Alarma' para habilitar el sonido."
+        });
+      });
     } catch (err) {
       console.error("Error playing alarm sound", err);
     }
@@ -395,9 +401,15 @@ export default function HomeTestPage() {
              <p className="text-[10px] font-black text-muted-foreground uppercase leading-none">Inicio</p>
              <p className="text-sm font-black text-primary">{getClockTime(testState.startTime || 0)}</p>
           </div>
-          <div className="bg-secondary/10 p-2 rounded-full text-secondary animate-pulse-subtle">
-             <Volume2 className="h-4 w-4" />
-          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={playAlarm}
+            className="h-9 px-3 rounded-full bg-secondary/10 hover:bg-secondary/20 border-secondary/20 text-secondary flex items-center gap-2"
+          >
+             <Volume2 className="h-4 w-4 animate-pulse-subtle" />
+             <span className="text-[10px] font-black uppercase hidden sm:inline">Probar Alarma</span>
+          </Button>
         </div>
       </header>
 
