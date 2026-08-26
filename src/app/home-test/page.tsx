@@ -473,15 +473,15 @@ export default function HomeTestPage() {
             variant="outline" 
             size="sm" 
             onClick={() => playAlarm(true)}
-            className="h-9 px-3 rounded-full bg-secondary/10 hover:bg-secondary/20 border-secondary/20 text-secondary flex items-center gap-2"
+            className="h-9 px-3 rounded-full bg-secondary/10 hover:bg-secondary/20 border-secondary/20 text-secondary flex items-center gap-2 animate-pulse"
           >
-             <Volume2 className="h-4 w-4 animate-pulse-subtle" />
+             <Volume2 className="h-4 w-4" />
              <span className="text-[10px] font-black uppercase hidden sm:inline">Probar Alarma</span>
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-md flex-grow space-y-6">
+      <main className="container mx-auto px-4 py-6 max-md flex-grow space-y-6">
         <div className="flex items-center justify-between">
           <Badge variant="outline" className="font-black border-primary/20 text-primary uppercase text-[10px] px-3 py-1">
             PASO {testState.currentStepIndex + 1} / {protocol.steps.length}
@@ -555,7 +555,7 @@ export default function HomeTestPage() {
                     Confirmar soplido <CheckCircle2 className="h-6 w-6" />
                   </Button>
                   <p className="text-[11px] font-bold text-amber-600 flex items-center justify-center gap-1">
-                    <PencilLine className="h-3 w-3" /> Recuerda anotar la hora en tu ficha ficha
+                    <PencilLine className="h-3 w-3" /> Recuerda anotar la hora en tu ficha física
                   </p>
                 </div>
               ) : timeLeft === 0 ? (
@@ -563,7 +563,7 @@ export default function HomeTestPage() {
                   <Button onClick={confirmStep} className="w-full h-20 rounded-2xl text-xl font-black bg-primary shadow-xl animate-in zoom-in duration-300">
                     Continuar protocolo <ChevronRight className="ml-2 h-6 w-6" />
                   </Button>
-                  <p className="text-xs font-black text-secondary animate-pulse-subtle">🔔 Alarma sonando: tiempo cumplido</p>
+                  <p className="text-xs font-black text-secondary animate-pulse">🔔 Alarma sonando: tiempo cumplido</p>
                 </div>
               ) : (
                 <div className="bg-muted/50 p-8 rounded-2xl border-dashed border-2 border-muted">
