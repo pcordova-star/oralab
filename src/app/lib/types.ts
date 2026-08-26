@@ -41,8 +41,8 @@ export const PROTOCOLS: Record<string, ExamProtocol> = {
     instructions: 'Protocolo optimizado para detección de sobrecrecimiento bacteriano con 4 muestras cada 30 minutos.',
     steps: [
       { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo antes de ingerir el sustrato.' },
-      { name: 'Ingesta de Sustrato', type: 'ingest', durationMinutes: 5, description: 'Beba la solución lentamente durante 5 minutos.' },
-      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 25, description: 'Mantenga reposo absoluto hasta completar los 30 minutos.' },
+      { name: 'Ingesta de Sustrato', type: 'ingest', durationMinutes: 2, description: 'Beba la solución lentamente durante 2 minutos.' },
+      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 28, description: 'Mantenga reposo absoluto hasta completar los 30 minutos.' },
       { name: 'Muestra 2 (T-30)', type: 'breath', durationMinutes: 0, description: 'Sople en el segundo tubo.' },
       { name: 'Espera Muestra 3', type: 'wait', durationMinutes: 30, description: 'Mantenga reposo absoluto.' },
       { name: 'Muestra 3 (T-60)', type: 'breath', durationMinutes: 0, description: 'Sople en el tercer tubo.' },
@@ -56,8 +56,8 @@ export const PROTOCOLS: Record<string, ExamProtocol> = {
     instructions: 'Este test evalúa el SIBO o tiempo de tránsito con una curva extendida de 7 muestras cada 30 minutos.',
     steps: [
       { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo antes de ingerir nada.' },
-      { name: 'Ingesta de Lactulosa', type: 'ingest', durationMinutes: 5, description: 'Beba la solución de lactulosa lentamente durante 5 minutos.' },
-      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 25, description: 'Reposo absoluto. No coma ni beba.' },
+      { name: 'Ingesta de Lactulosa', type: 'ingest', durationMinutes: 2, description: 'Beba la solución de lactulosa lentamente durante 2 minutos.' },
+      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 28, description: 'Reposo absoluto. No coma ni beba.' },
       { name: 'Muestra 2 (T-30)', type: 'breath', durationMinutes: 0, description: 'Sople en el segundo tubo.' },
       { name: 'Espera Muestra 3', type: 'wait', durationMinutes: 30, description: 'Reposo absoluto.' },
       { name: 'Muestra 3 (T-60)', type: 'breath', durationMinutes: 0, description: 'Sople en el tercer tubo.' },
@@ -77,8 +77,8 @@ export const PROTOCOLS: Record<string, ExamProtocol> = {
     instructions: 'Evalúa malabsorción de fructosa con un seguimiento extendido de 7 muestras cada 30 minutos.',
     steps: [
       { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo.' },
-      { name: 'Ingesta de Fructosa', type: 'ingest', durationMinutes: 5, description: 'Beba la solución de fructosa.' },
-      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 25, description: 'Reposo absoluto.' },
+      { name: 'Ingesta de Fructosa', type: 'ingest', durationMinutes: 2, description: 'Beba la solución de fructosa durante 2 minutos.' },
+      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 28, description: 'Reposo absoluto.' },
       { name: 'Muestra 2 (T-30)', type: 'breath', durationMinutes: 0, description: 'Sople en el segundo tubo.' },
       { name: 'Espera Muestra 3', type: 'wait', durationMinutes: 30, description: 'Reposo absoluto.' },
       { name: 'Muestra 3 (T-60)', type: 'breath', durationMinutes: 0, description: 'Sople en el tercer tubo.' },
@@ -98,8 +98,8 @@ export const PROTOCOLS: Record<string, ExamProtocol> = {
     instructions: 'Evalúa intolerancia a la lactosa con un seguimiento de 7 muestras cada 30 minutos.',
     steps: [
       { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo.' },
-      { name: 'Ingesta de Lactosa', type: 'ingest', durationMinutes: 5, description: 'Beba la solución de lactosa.' },
-      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 25, description: 'Reposo absoluto.' },
+      { name: 'Ingesta de Lactosa', type: 'ingest', durationMinutes: 2, description: 'Beba la solución de lactosa durante 2 minutos.' },
+      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 28, description: 'Reposo absoluto.' },
       { name: 'Muestra 2 (T-30)', type: 'breath', durationMinutes: 0, description: 'Sople en el segundo tubo.' },
       { name: 'Espera Muestra 3', type: 'wait', durationMinutes: 30, description: 'Reposo absoluto.' },
       { name: 'Muestra 3 (T-60)', type: 'breath', durationMinutes: 0, description: 'Sople en el tercer tubo.' },

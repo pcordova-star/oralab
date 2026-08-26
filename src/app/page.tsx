@@ -336,21 +336,21 @@ const InteractiveAssistantSim = () => {
     },
     {
       title: "Ingesta del Sustrato",
-      instruction: "Bebe la solución lentamente durante 5 minutos.",
+      instruction: "Beba la solución lentamente durante 2 minutos.",
       importance: "El sustrato es el 'alimento' que las bacterias fermentarán si están presentes en exceso.",
       icon: <Droplets className="h-8 w-8" />,
       badge: "Ingesta",
       button: "Comenzar Ingesta",
-      time: "05:00"
+      time: "02:00"
     },
     {
       title: "Periodo de Espera",
-      instruction: "Mantén reposo absoluto durante 30 minutos.",
+      instruction: "Mantén reposo absoluto durante 28 minutos.",
       importance: "El intervalo de 30 minutos es el estándar de oro para construir una curva metabólica fiable.",
       icon: <Timer className="h-8 w-8" />,
       badge: "Espera Fija",
       button: "Esperando...",
-      time: "24:52",
+      time: "28:00",
       isWaiting: true
     },
     {
