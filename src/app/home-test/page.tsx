@@ -226,6 +226,7 @@ export default function HomeTestPage() {
 
   const restartProtocol = () => {
     if (confirm("⚠️ ¿ESTÁS SEGURO QUE DESEAS REINICIAR EL PROTOCOLO?")) {
+      alarmPlayedRef.current = null;
       setTestState(prev => prev ? {
         ...prev,
         currentStepIndex: 0,
@@ -269,7 +270,7 @@ export default function HomeTestPage() {
   };
 
   const getStepImage = (type: string) => {
-    const imageId = type === 'breath' ? 'step-breath' : type === 'ingest' ? 'step-ingest' : type === 'mouthwash' ? 'step-ingest' : 'step-wait';
+    const imageId = type === 'breath' ? 'step-breath' : type === 'ingest' ? 'step-ingest' : type === 'mouthwash' ? 'step-mouthwash' : 'step-wait';
     return PlaceHolderImages.find(img => img.id === imageId) || PlaceHolderImages[0];
   };
 
