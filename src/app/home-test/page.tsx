@@ -40,6 +40,9 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Link from "next/link";
 import { format } from "date-fns";
 
+// URL de un sonido de campana melódica suave
+const ALARM_URL = "https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3";
+
 interface LogEntry {
   stepName: string;
   timestamp: string;
@@ -69,8 +72,9 @@ export default function HomeTestPage() {
   const db = useFirestore();
 
   useEffect(() => {
-    // Inicializar el objeto de audio una sola vez
-    audioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+    // Inicializar el objeto de audio con loop activado por defecto para las alertas
+    audioRef.current = new Audio(ALARM_URL);
+    audioRef.current.loop = true;
     
     const savedState = localStorage.getItem("oralab_test_session");
     if (savedState) {
@@ -89,10 +93,18 @@ export default function HomeTestPage() {
     }
   }, [testState]);
 
+  const stopAlarm = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  };
+
   const playAlarm = (isTest = false) => {
     if (!audioRef.current) return;
 
-    // Reiniciar el audio si ya se estaba reproduciendo
+    // Si es una prueba, no queremos que suene en bucle para siempre
+    audioRef.current.loop = !isTest;
     audioRef.current.currentTime = 0;
     
     const playPromise = audioRef.current.play();
@@ -103,8 +115,12 @@ export default function HomeTestPage() {
           if (isTest) {
             toast({
               title: "¡Sonido Activado!",
-              description: "La alarma funciona correctamente. Ahora sonará automáticamente al terminar cada tiempo.",
+              description: "La alarma funciona correctamente. Sonará en bucle cuando llegue el momento de tu próximo paso.",
             });
+            // Si es prueba, detenerla después de 3 segundos para no molestar
+            setTimeout(() => {
+              if (isTest) stopAlarm();
+            }, 3000);
           }
         })
         .catch(error => {
@@ -193,8 +209,6 @@ export default function HomeTestPage() {
 
   const startTest = () => {
     if (!booking) return;
-    // Intentar activar el audio al inicio del test (algunos navegadores lo permiten con este click)
-    playAlarm();
     
     const newState: TestState = {
       bookingId: booking.id,
@@ -212,6 +226,9 @@ export default function HomeTestPage() {
 
   const confirmStep = async () => {
     if (!testState || !db) return;
+    
+    // DETENER ALARMA AL AVANZAR
+    stopAlarm();
     
     const currentProtocol = PROTOCOLS[testState.examType];
     const isLastStep = testState.currentStepIndex === currentProtocol.steps.length - 1;
@@ -254,6 +271,7 @@ export default function HomeTestPage() {
 
   const restartProtocol = () => {
     if (confirm("⚠️ ¿ESTÁS SEGURO QUE DESEAS REINICIAR EL PROTOCOLO?")) {
+      stopAlarm();
       alarmPlayedRef.current = null;
       setTestState(prev => prev ? {
         ...prev,
@@ -269,6 +287,7 @@ export default function HomeTestPage() {
 
   const cancelTest = () => {
     if (confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?")) {
+      stopAlarm();
       setTestState(null);
       setBooking(null);
       localStorage.removeItem("oralab_test_session");
@@ -509,7 +528,7 @@ export default function HomeTestPage() {
                     Confirmar soplido <CheckCircle2 className="h-6 w-6" />
                   </Button>
                   <p className="text-[11px] font-bold text-amber-600 flex items-center justify-center gap-1">
-                    <PencilLine className="h-3 w-3" /> Recuerda anotar la hora en tu ficha física
+                    <PencilLine className="h-3 w-3" /> Recuerda anotar la hora en tu ficha ficha
                   </p>
                 </div>
               ) : timeLeft === 0 ? (
@@ -517,7 +536,7 @@ export default function HomeTestPage() {
                   <Button onClick={confirmStep} className="w-full h-20 rounded-2xl text-xl font-black bg-primary shadow-xl animate-in zoom-in duration-300">
                     Continuar protocolo <ChevronRight className="ml-2 h-6 w-6" />
                   </Button>
-                  <p className="text-xs font-black text-secondary animate-pulse-subtle">🔔 Alarma activada: tiempo cumplido</p>
+                  <p className="text-xs font-black text-secondary animate-pulse-subtle">🔔 Alarma sonando: tiempo cumplido</p>
                 </div>
               ) : (
                 <div className="bg-muted/50 p-8 rounded-2xl border-dashed border-2 border-muted">
