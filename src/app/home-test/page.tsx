@@ -64,10 +64,14 @@ export default function HomeTestPage() {
   const [testState, setTestState] = useState<TestState | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const alarmPlayedRef = useRef<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const db = useFirestore();
 
   useEffect(() => {
+    // Inicializar el objeto de audio una sola vez
+    audioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+    
     const savedState = localStorage.getItem("oralab_test_session");
     if (savedState) {
       try {
@@ -85,19 +89,34 @@ export default function HomeTestPage() {
     }
   }, [testState]);
 
-  const playAlarm = () => {
-    try {
-      const audio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7313063f90.mp3");
-      audio.play().catch(e => {
-        console.log("Audio play blocked by browser policy. Interaction needed.");
-        toast({
-          variant: "destructive",
-          title: "Audio bloqueado",
-          description: "Haz clic en 'Probar Alarma' para habilitar el sonido."
+  const playAlarm = (isTest = false) => {
+    if (!audioRef.current) return;
+
+    // Reiniciar el audio si ya se estaba reproduciendo
+    audioRef.current.currentTime = 0;
+    
+    const playPromise = audioRef.current.play();
+
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          if (isTest) {
+            toast({
+              title: "¡Sonido Activado!",
+              description: "La alarma funciona correctamente. Ahora sonará automáticamente al terminar cada tiempo.",
+            });
+          }
+        })
+        .catch(error => {
+          console.error("Audio playback error:", error);
+          if (isTest) {
+            toast({
+              variant: "destructive",
+              title: "Permiso de audio requerido",
+              description: "Tu navegador bloqueó el sonido. Por favor, intenta de nuevo o revisa los permisos de tu sitio.",
+            });
+          }
         });
-      });
-    } catch (err) {
-      console.error("Error playing alarm sound", err);
     }
   };
 
@@ -174,6 +193,9 @@ export default function HomeTestPage() {
 
   const startTest = () => {
     if (!booking) return;
+    // Intentar activar el audio al inicio del test (algunos navegadores lo permiten con este click)
+    playAlarm();
+    
     const newState: TestState = {
       bookingId: booking.id,
       patientName: `${booking.firstName} ${booking.lastNameFather}`,
@@ -404,7 +426,7 @@ export default function HomeTestPage() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={playAlarm}
+            onClick={() => playAlarm(true)}
             className="h-9 px-3 rounded-full bg-secondary/10 hover:bg-secondary/20 border-secondary/20 text-secondary flex items-center gap-2"
           >
              <Volume2 className="h-4 w-4 animate-pulse-subtle" />
