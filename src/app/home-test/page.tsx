@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import Image from "next/image";
+import Image from "image/placeholder";
 import { 
   Timer, 
   CheckCircle2, 
@@ -69,6 +70,8 @@ export default function HomeTestPage() {
   const alarmPlayedRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playPromiseRef = useRef<Promise<void> | null>(null);
+  const wakeLockRef = useRef<any>(null);
+  const titleIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const db = useFirestore();
 
@@ -87,8 +90,9 @@ export default function HomeTestPage() {
     }
 
     return () => {
+      stopAlarm();
+      releaseWakeLock();
       if (audioRef.current) {
-        audioRef.current.pause();
         audioRef.current = null;
       }
     };
@@ -97,17 +101,53 @@ export default function HomeTestPage() {
   useEffect(() => {
     if (testState) {
       localStorage.setItem("oralab_test_session", JSON.stringify(testState));
+      // Intentar solicitar Wake Lock cuando el test está activo
+      if (!testState.isCompleted) {
+        requestWakeLock();
+      } else {
+        releaseWakeLock();
+      }
     }
   }, [testState]);
 
+  // Función para mantener la pantalla encendida (Wake Lock)
+  const requestWakeLock = async () => {
+    if ('wakeLock' in navigator && !wakeLockRef.current) {
+      try {
+        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+        console.log("Wake Lock activo: La pantalla no se apagará.");
+      } catch (err) {
+        console.error("Wake Lock fallido:", err);
+      }
+    }
+  };
+
+  const releaseWakeLock = async () => {
+    if (wakeLockRef.current) {
+      await wakeLockRef.current.release();
+      wakeLockRef.current = null;
+    }
+  };
+
   const stopAlarm = async () => {
+    // Detener vibración
+    if ('vibrate' in navigator) {
+      navigator.vibrate(0);
+    }
+
+    // Resetear título
+    if (titleIntervalRef.current) {
+      clearInterval(titleIntervalRef.current);
+      titleIntervalRef.current = null;
+      document.title = "Oralab - Salud Digestiva Avanzada";
+    }
+
     if (audioRef.current) {
-      // Si hay una promesa de reproducción pendiente, esperamos a que se resuelva antes de pausar
       if (playPromiseRef.current) {
         try {
           await playPromiseRef.current;
         } catch (e) {
-          // Ignorar error si la reproducción fue cancelada
+          // Ignorar cancelación
         } finally {
           playPromiseRef.current = null;
         }
@@ -121,41 +161,47 @@ export default function HomeTestPage() {
     if (!audioRef.current) return;
 
     try {
-      // Primero detenemos cualquier reproducción previa de forma segura
       await stopAlarm();
 
-      // Configurar modo
       audioRef.current.loop = !isTest;
       audioRef.current.currentTime = 0;
       
-      // Guardar la promesa de reproducción para evitar el error de interrupción
       playPromiseRef.current = audioRef.current.play();
       
       if (playPromiseRef.current !== undefined) {
         await playPromiseRef.current;
         
+        // Activar Vibración si no es prueba
+        if (!isTest && 'vibrate' in navigator) {
+          navigator.vibrate([500, 200, 500, 200, 500]); // Patrón de pulsos
+        }
+
+        // Título intermitente
+        if (!isTest && !titleIntervalRef.current) {
+          titleIntervalRef.current = setInterval(() => {
+            document.title = document.title === "⚠️ SOPLAR AHORA ⚠️" ? "Oralab Test" : "⚠️ SOPLAR AHORA ⚠️";
+          }, 1000);
+        }
+
         if (isTest) {
           toast({
-            title: "¡Sonido Activado!",
-            description: "La alarma funciona correctamente. Sonará en bucle cuando llegue el momento de tu próximo paso.",
+            title: "¡Sonido y Vibración Activados!",
+            description: "La alerta funciona correctamente. Mantén esta pestaña abierta para asegurar el aviso.",
           });
-          // Si es prueba, detenerla después de 3 segundos
           setTimeout(() => {
             stopAlarm();
           }, 3000);
         }
       }
     } catch (error: any) {
-      // Solo loguear si no es un error de interrupción esperado (AbortError)
       if (error.name !== 'AbortError') {
         console.error("Audio playback error:", error);
       }
-      
       if (isTest) {
         toast({
           variant: "destructive",
           title: "Permiso de audio requerido",
-          description: "Tu navegador bloqueó el sonido. Por favor, intenta de nuevo o revisa los permisos de tu sitio.",
+          description: "Tu navegador bloqueó el sonido. Por favor, intenta de nuevo o revisa los permisos del sitio.",
         });
       }
     } finally {
@@ -237,6 +283,9 @@ export default function HomeTestPage() {
   const startTest = () => {
     if (!booking) return;
     
+    // Solicitar Wake Lock al iniciar
+    requestWakeLock();
+
     const newState: TestState = {
       bookingId: booking.id,
       patientName: `${booking.firstName} ${booking.lastNameFather}`,
@@ -254,7 +303,6 @@ export default function HomeTestPage() {
   const confirmStep = async () => {
     if (!testState || !db) return;
     
-    // DETENER ALARMA AL AVANZAR
     await stopAlarm();
     
     const currentProtocol = PROTOCOLS[testState.examType];
@@ -285,6 +333,7 @@ export default function HomeTestPage() {
     if (isLastStep) {
       setTestState({ ...testState, logs: updatedLogs, isCompleted: true });
       localStorage.removeItem("oralab_test_session");
+      releaseWakeLock();
       toast({ title: "¡Test Finalizado!", description: "Has completado todas las muestras correctamente." });
     } else {
       setTestState({
@@ -315,6 +364,7 @@ export default function HomeTestPage() {
   const cancelTest = async () => {
     if (confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?")) {
       await stopAlarm();
+      releaseWakeLock();
       setTestState(null);
       setBooking(null);
       localStorage.removeItem("oralab_test_session");
@@ -563,13 +613,14 @@ export default function HomeTestPage() {
                   <Button onClick={confirmStep} className="w-full h-20 rounded-2xl text-xl font-black bg-primary shadow-xl animate-in zoom-in duration-300">
                     Continuar protocolo <ChevronRight className="ml-2 h-6 w-6" />
                   </Button>
-                  <p className="text-xs font-black text-secondary animate-pulse">🔔 Alarma sonando: tiempo cumplido</p>
+                  <p className="text-xs font-black text-secondary animate-pulse">🔔 Alarma y vibración activas: tiempo cumplido</p>
                 </div>
               ) : (
                 <div className="bg-muted/50 p-8 rounded-2xl border-dashed border-2 border-muted">
                   <p className="text-sm font-bold text-muted-foreground italic flex items-center justify-center gap-2">
                     <Clock className="h-4 w-4" /> Esperando el tiempo de protocolo...
                   </p>
+                  <p className="text-[10px] mt-2 opacity-50">Mantén esta pantalla encendida.</p>
                 </div>
               )}
             </div>
