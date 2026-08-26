@@ -68,13 +68,13 @@ export default function HomeTestPage() {
   const [timeLeft, setTimeLeft] = useState(0);
   const alarmPlayedRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playPromiseRef = useRef<Promise<void> | null>(null);
   
   const db = useFirestore();
 
   useEffect(() => {
-    // Inicializar el objeto de audio con loop activado por defecto para las alertas
+    // Inicializar el objeto de audio
     audioRef.current = new Audio(ALARM_URL);
-    audioRef.current.loop = true;
     
     const savedState = localStorage.getItem("oralab_test_session");
     if (savedState) {
@@ -85,6 +85,13 @@ export default function HomeTestPage() {
         console.error("Failed to parse saved state", e);
       }
     }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -93,46 +100,66 @@ export default function HomeTestPage() {
     }
   }, [testState]);
 
-  const stopAlarm = () => {
+  const stopAlarm = async () => {
     if (audioRef.current) {
+      // Si hay una promesa de reproducción pendiente, esperamos a que se resuelva antes de pausar
+      if (playPromiseRef.current) {
+        try {
+          await playPromiseRef.current;
+        } catch (e) {
+          // Ignorar error si la reproducción fue cancelada
+        } finally {
+          playPromiseRef.current = null;
+        }
+      }
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
   };
 
-  const playAlarm = (isTest = false) => {
+  const playAlarm = async (isTest = false) => {
     if (!audioRef.current) return;
 
-    // Si es una prueba, no queremos que suene en bucle para siempre
-    audioRef.current.loop = !isTest;
-    audioRef.current.currentTime = 0;
-    
-    const playPromise = audioRef.current.play();
+    try {
+      // Primero detenemos cualquier reproducción previa de forma segura
+      await stopAlarm();
 
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          if (isTest) {
-            toast({
-              title: "¡Sonido Activado!",
-              description: "La alarma funciona correctamente. Sonará en bucle cuando llegue el momento de tu próximo paso.",
-            });
-            // Si es prueba, detenerla después de 3 segundos para no molestar
-            setTimeout(() => {
-              if (isTest) stopAlarm();
-            }, 3000);
-          }
-        })
-        .catch(error => {
-          console.error("Audio playback error:", error);
-          if (isTest) {
-            toast({
-              variant: "destructive",
-              title: "Permiso de audio requerido",
-              description: "Tu navegador bloqueó el sonido. Por favor, intenta de nuevo o revisa los permisos de tu sitio.",
-            });
-          }
+      // Configurar modo
+      audioRef.current.loop = !isTest;
+      audioRef.current.currentTime = 0;
+      
+      // Guardar la promesa de reproducción para evitar el error de interrupción
+      playPromiseRef.current = audioRef.current.play();
+      
+      if (playPromiseRef.current !== undefined) {
+        await playPromiseRef.current;
+        
+        if (isTest) {
+          toast({
+            title: "¡Sonido Activado!",
+            description: "La alarma funciona correctamente. Sonará en bucle cuando llegue el momento de tu próximo paso.",
+          });
+          // Si es prueba, detenerla después de 3 segundos
+          setTimeout(() => {
+            stopAlarm();
+          }, 3000);
+        }
+      }
+    } catch (error: any) {
+      // Solo loguear si no es un error de interrupción esperado (AbortError)
+      if (error.name !== 'AbortError') {
+        console.error("Audio playback error:", error);
+      }
+      
+      if (isTest) {
+        toast({
+          variant: "destructive",
+          title: "Permiso de audio requerido",
+          description: "Tu navegador bloqueó el sonido. Por favor, intenta de nuevo o revisa los permisos de tu sitio.",
         });
+      }
+    } finally {
+      playPromiseRef.current = null;
     }
   };
 
@@ -179,7 +206,7 @@ export default function HomeTestPage() {
     }
 
     return () => clearInterval(interval);
-  }, [testState]);
+  }, [testState?.currentStepIndex, testState?.isPaused, testState?.isCompleted, testState?.stepStartTime]);
 
   const handleLookup = async () => {
     if (!db || !searchName.trim()) return;
@@ -228,7 +255,7 @@ export default function HomeTestPage() {
     if (!testState || !db) return;
     
     // DETENER ALARMA AL AVANZAR
-    stopAlarm();
+    await stopAlarm();
     
     const currentProtocol = PROTOCOLS[testState.examType];
     const isLastStep = testState.currentStepIndex === currentProtocol.steps.length - 1;
@@ -269,9 +296,9 @@ export default function HomeTestPage() {
     }
   };
 
-  const restartProtocol = () => {
+  const restartProtocol = async () => {
     if (confirm("⚠️ ¿ESTÁS SEGURO QUE DESEAS REINICIAR EL PROTOCOLO?")) {
-      stopAlarm();
+      await stopAlarm();
       alarmPlayedRef.current = null;
       setTestState(prev => prev ? {
         ...prev,
@@ -285,9 +312,9 @@ export default function HomeTestPage() {
     }
   };
 
-  const cancelTest = () => {
+  const cancelTest = async () => {
     if (confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?")) {
-      stopAlarm();
+      await stopAlarm();
       setTestState(null);
       setBooking(null);
       localStorage.removeItem("oralab_test_session");
