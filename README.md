@@ -1,21 +1,20 @@
 
 # Oralab - Salud Digestiva Avanzada
 
-Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializado en tests de aire espirado.
+Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializado en tests de aire espirado para el diagnóstico de SIBO e Intolerancias Alimentarias.
 
 ## Estado del Proyecto
-- **Protocolos Clínicos 2017**: Implementados intervalos fijos de 30 minutos para todos los tests. 4 muestras para SIBO (90 min) y 7 muestras para Intolerancias (180 min), cumpliendo con el Consenso Norteamericano.
-- **Asistente con Alarma**: El asistente interactivo en casa ahora incluye una **alarma sonora** automática al cumplirse los tiempos de espera.
-- **Trazabilidad Clínica**: El panel administrativo permite ver la **Bitácora de Tiempos** exacta de cada soplido realizado por el paciente.
-- **Administración Segmentada**: Dashboard dividido en **Área Clínica** (para TENS) y **Gestión Estratégica** (para Dirección).
-- **Logística Home Kit**: Los pacientes declaran una "Dirección de Retiro" específica para el motoboy.
-- **Agendamiento**: Sistema de bloqueo dinámico de fechas para mañana y gestión de reagendamiento integrada.
+- **Protocolos Clínicos 2017**: Implementados intervalos fijos de 30 minutos para todos los tests. 4 muestras para SIBO (90 min) y 7 muestras para Intolerancias (180 min), cumpliendo estrictamente con el Consenso Norteamericano.
+- **Enfoque Integral**: Narrativa y visualización expandida para cubrir SIBO, Intolerancias (Lactosa, Fructosa, Lactulosa) y Salud Digestiva Avanzada.
+- **Asistente de Alta Seguridad**: El asistente domiciliario incluye **alarma sonora en loop**, vibración háptica y **Wake Lock API** para evitar que el móvil se suspenda y detenga el cronómetro.
+- **Trazabilidad Clínica**: El panel administrativo permite ver la **Bitácora de Tiempos** exacta de cada soplido realizado por el paciente para validación de resultados.
+- **Administración Segmentada**: Dashboard unificado dividido en **Área Clínica** (para TENS) y **Gestión Estratégica** (CRM Sunvou para Dirección).
 
 ## Comandos Git para la Terminal
 Para guardar y subir tus avances, utiliza esta secuencia:
 ```bash
 git add .
-git commit -m "Oralab: Protocolos de 30 min, alarmas sonoras y trazabilidad clínica"
+git commit -m "Oralab: Diagnóstico integral, Wake Lock y alertas de seguridad"
 git push
 ```
 
