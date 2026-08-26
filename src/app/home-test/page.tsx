@@ -32,7 +32,8 @@ import {
   History,
   PencilLine,
   Bell,
-  Volume2
+  Volume2,
+  Sparkles
 } from "lucide-react";
 import { PROTOCOLS } from "@/app/lib/types";
 import { cn } from "@/lib/utils";
@@ -87,7 +88,7 @@ export default function HomeTestPage() {
 
   const playAlarm = () => {
     try {
-      const audio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7313063f90.mp3"); // Sonido corto y profesional
+      const audio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7313063f90.mp3");
       audio.play().catch(e => console.log("Audio play blocked by browser policy. Interaction needed."));
     } catch (err) {
       console.error("Error playing alarm sound", err);
@@ -103,7 +104,7 @@ export default function HomeTestPage() {
       
       const currentStep = currentProtocol.steps[testState.currentStepIndex];
       
-      if (currentStep?.type === 'wait' || currentStep?.type === 'ingest') {
+      if (currentStep?.type === 'wait' || currentStep?.type === 'ingest' || currentStep?.type === 'mouthwash') {
         const duration = currentStep.durationMinutes * 60;
         const elapsedSinceStepStart = Math.floor((Date.now() - (testState.stepStartTime || Date.now())) / 1000);
         const remaining = Math.max(0, duration - elapsedSinceStepStart);
@@ -119,7 +120,6 @@ export default function HomeTestPage() {
             
             if (nextRemaining <= 0) {
               clearInterval(interval);
-              // Trigger alarm only once per step
               if (alarmPlayedRef.current !== testState.currentStepIndex) {
                 playAlarm();
                 alarmPlayedRef.current = testState.currentStepIndex;
@@ -127,7 +127,6 @@ export default function HomeTestPage() {
             }
           }, 1000);
         } else {
-          // If it was already 0 when effect ran
           if (alarmPlayedRef.current !== testState.currentStepIndex) {
             playAlarm();
             alarmPlayedRef.current = testState.currentStepIndex;
@@ -226,33 +225,25 @@ export default function HomeTestPage() {
   };
 
   const restartProtocol = () => {
-    const confirm1 = confirm("⚠️ ¿ESTÁS SEGURO QUE DESEAS REINICIAR EL PROTOCOLO?\n\nEsta acción borrará todo el historial de tiempos y volverás al Paso 1.");
-    if (confirm1) {
-      const confirm2 = confirm("🚨 ¡ALERTA CRÍTICA!\n\nConfirmas que deseas ELIMINAR los datos actuales de esta sesión y empezar de cero?");
-      if (confirm2) {
-        setTestState(prev => prev ? {
-          ...prev,
-          currentStepIndex: 0,
-          startTime: Date.now(),
-          stepStartTime: Date.now(),
-          isCompleted: false,
-          logs: []
-        } : null);
-        toast({ title: "Protocolo reiniciado", description: "Volviendo al Paso 1." });
-      }
+    if (confirm("⚠️ ¿ESTÁS SEGURO QUE DESEAS REINICIAR EL PROTOCOLO?")) {
+      setTestState(prev => prev ? {
+        ...prev,
+        currentStepIndex: 0,
+        startTime: Date.now(),
+        stepStartTime: Date.now(),
+        isCompleted: false,
+        logs: []
+      } : null);
+      toast({ title: "Protocolo reiniciado" });
     }
   };
 
   const cancelTest = () => {
-    const confirm1 = confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?");
-    if (confirm1) {
-      const confirm2 = confirm("🚨 ¡ATENCIÓN!\n\nEstás a punto de ABANDONAR el asistente. ¿Deseas salir de todas formas?");
-      if (confirm2) {
-        setTestState(null);
-        setBooking(null);
-        localStorage.removeItem("oralab_test_session");
-        toast({ title: "Sesión cancelada" });
-      }
+    if (confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?")) {
+      setTestState(null);
+      setBooking(null);
+      localStorage.removeItem("oralab_test_session");
+      toast({ title: "Sesión cancelada" });
     }
   };
 
@@ -270,7 +261,7 @@ export default function HomeTestPage() {
     if (!testState) return "";
     const protocol = PROTOCOLS[testState.examType];
     const step = protocol.steps[testState.currentStepIndex];
-    if (step.type === 'wait' || step.type === 'ingest') {
+    if (step.type === 'wait' || step.type === 'ingest' || step.type === 'mouthwash') {
       const scheduledTime = (testState.stepStartTime || Date.now()) + (step.durationMinutes * 60 * 1000);
       return format(new Date(scheduledTime), "HH:mm");
     }
@@ -278,8 +269,8 @@ export default function HomeTestPage() {
   };
 
   const getStepImage = (type: string) => {
-    const imageId = type === 'breath' ? 'step-breath' : type === 'ingest' ? 'step-ingest' : 'step-wait';
-    return PlaceHolderImages.find(img => img.id === imageId);
+    const imageId = type === 'breath' ? 'step-breath' : type === 'ingest' ? 'step-ingest' : type === 'mouthwash' ? 'step-ingest' : 'step-wait';
+    return PlaceHolderImages.find(img => img.id === imageId) || PlaceHolderImages[0];
   };
 
   if (!testState) {
@@ -365,7 +356,6 @@ export default function HomeTestPage() {
           <p className="text-sm text-muted-foreground font-medium mb-6">
             Has completado todas las muestras. Entrega tus tubos en el laboratorio en las próximas 24 horas.
           </p>
-
           <div className="bg-muted/30 rounded-2xl p-4 mb-8 text-left">
             <h4 className="text-xs font-black text-primary uppercase mb-3 flex items-center gap-2">
               <History className="h-3 w-3" /> Resumen de Tiempos
@@ -379,12 +369,9 @@ export default function HomeTestPage() {
               ))}
             </div>
           </div>
-
-          <div className="space-y-4">
-            <Button onClick={() => window.location.href = '/'} className="w-full h-14 rounded-2xl font-black text-lg shadow-lg">
-              Terminar y salir
-            </Button>
-          </div>
+          <Button onClick={() => window.location.href = '/'} className="w-full h-14 rounded-2xl font-black text-lg shadow-lg">
+            Terminar y salir
+          </Button>
         </Card>
       </div>
     );
@@ -419,51 +406,40 @@ export default function HomeTestPage() {
             PASO {testState.currentStepIndex + 1} / {protocol.steps.length}
           </Badge>
           <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={restartProtocol} 
-              className="text-primary font-black hover:bg-primary/5 text-[10px] h-9 px-3 border border-primary/10 rounded-full"
-            >
+            <Button variant="ghost" size="sm" onClick={restartProtocol} className="text-primary font-black text-[10px] h-9 px-3 border border-primary/10 rounded-full">
               <RotateCcw className="h-3 w-3 mr-1" /> Reiniciar
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={cancelTest} 
-              className="text-red-500 font-black hover:bg-red-50 text-[10px] h-9 px-3 border border-red-100 rounded-full"
-            >
+            <Button variant="ghost" size="sm" onClick={cancelTest} className="text-red-500 font-black text-[10px] h-9 px-3 border border-red-100 rounded-full">
               <XCircle className="h-3 w-3 mr-1" /> Cancelar
             </Button>
           </div>
         </div>
 
-        <div className="mb-4">
-          <Progress value={progress} className="h-2 rounded-full" />
-        </div>
+        <Progress value={progress} className="h-2 rounded-full mb-4" />
 
         <Card className="rounded-[2.5rem] shadow-2xl border-primary/5 bg-white relative mt-10">
-          {stepImageData && (
-            <div className="relative w-full aspect-[3/2] overflow-hidden group rounded-t-[2.5rem]">
-              <Image 
-                src={stepImageData.imageUrl} 
-                alt={stepImageData.description}
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-                data-ai-hint={stepImageData.imageHint}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-60" />
-            </div>
-          )}
+          <div className="relative w-full aspect-[3/2] overflow-hidden rounded-t-[2.5rem]">
+            <Image 
+              src={stepImageData.imageUrl} 
+              alt={stepImageData.description}
+              fill
+              className="object-cover"
+              data-ai-hint={stepImageData.imageHint}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-60" />
+          </div>
           
           <div className="p-10 text-center space-y-8">
             <div className={cn(
               "w-20 h-20 rounded-2xl flex items-center justify-center mx-auto -mt-20 relative z-10 shadow-2xl transition-all duration-500",
               currentStep.type === 'breath' ? "bg-blue-100 text-blue-600 animate-pulse" :
-              currentStep.type === 'ingest' ? "bg-amber-100 text-amber-600" : "bg-primary text-white"
+              currentStep.type === 'ingest' ? "bg-amber-100 text-amber-600" : 
+              currentStep.type === 'mouthwash' ? "bg-emerald-100 text-emerald-600" :
+              "bg-primary text-white"
             )}>
               {currentStep.type === 'breath' && <Wind className="h-10 w-10" />}
               {currentStep.type === 'ingest' && <Droplets className="h-10 w-10" />}
+              {currentStep.type === 'mouthwash' && <Sparkles className="h-10 w-10" />}
               {currentStep.type === 'wait' && <Timer className="h-10 w-10" />}
             </div>
 
@@ -472,10 +448,10 @@ export default function HomeTestPage() {
               <p className="text-muted-foreground font-medium text-base leading-relaxed px-4">{currentStep.description}</p>
             </div>
 
-            {(currentStep.type === 'wait' || currentStep.type === 'ingest') && (
+            {(currentStep.type === 'wait' || currentStep.type === 'ingest' || currentStep.type === 'mouthwash') && (
               <div className="py-6 space-y-4">
                 <div className="relative inline-block">
-                  <div className="text-7xl font-black text-primary font-mono tracking-tighter tabular-nums drop-shadow-sm">
+                  <div className="text-7xl font-black text-primary font-mono tracking-tighter tabular-nums">
                     {formatTime(timeLeft)}
                   </div>
                   {timeLeft > 0 && (
@@ -494,10 +470,7 @@ export default function HomeTestPage() {
             <div className="pt-6">
               {currentStep.type === 'breath' ? (
                 <div className="space-y-4">
-                  <Button 
-                    onClick={confirmStep} 
-                    className="w-full h-20 rounded-2xl text-xl font-black bg-secondary hover:bg-secondary/90 shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
-                  >
+                  <Button onClick={confirmStep} className="w-full h-20 rounded-2xl text-xl font-black bg-secondary hover:bg-secondary/90 shadow-xl flex items-center justify-center gap-2">
                     Confirmar soplido <CheckCircle2 className="h-6 w-6" />
                   </Button>
                   <p className="text-[11px] font-bold text-amber-600 flex items-center justify-center gap-1">
@@ -506,10 +479,7 @@ export default function HomeTestPage() {
                 </div>
               ) : timeLeft === 0 ? (
                 <div className="space-y-4">
-                  <Button 
-                    onClick={confirmStep} 
-                    className="w-full h-20 rounded-2xl text-xl font-black bg-primary shadow-xl animate-in zoom-in duration-300"
-                  >
+                  <Button onClick={confirmStep} className="w-full h-20 rounded-2xl text-xl font-black bg-primary shadow-xl animate-in zoom-in duration-300">
                     Continuar protocolo <ChevronRight className="ml-2 h-6 w-6" />
                   </Button>
                   <p className="text-xs font-black text-secondary animate-pulse-subtle">🔔 Alarma activada: tiempo cumplido</p>
@@ -537,9 +507,6 @@ export default function HomeTestPage() {
               <h3 className="text-xs font-black text-primary uppercase flex items-center gap-2">
                 <ListChecks className="h-4 w-4" /> Bitácora Digital
               </h3>
-              <p className="text-[10px] font-black text-secondary italic uppercase tracking-tight flex items-center gap-1">
-                <PencilLine className="h-3 w-3" /> Anota estos tiempos en tu ficha física
-              </p>
             </div>
             <div className="p-4 space-y-2 max-h-40 overflow-y-auto">
               {[...testState.logs].reverse().map((log, idx) => (
@@ -554,12 +521,6 @@ export default function HomeTestPage() {
             </div>
           </Card>
         )}
-
-        <div className="text-center bg-primary/5 p-4 rounded-2xl border border-primary/10">
-          <p className="text-[11px] text-primary/70 font-bold italic leading-relaxed">
-            * El asistente te avisará con sonido cuando el tiempo termine. Mantén el volumen alto.
-          </p>
-        </div>
       </main>
     </div>
   );

@@ -22,7 +22,7 @@ export interface Appointment {
 
 export interface ProtocolStep {
   name: string;
-  type: 'breath' | 'ingest' | 'wait';
+  type: 'breath' | 'ingest' | 'wait' | 'mouthwash';
   durationMinutes: number;
   description: string;
 }
@@ -40,9 +40,10 @@ export const PROTOCOLS: Record<string, ExamProtocol> = {
     name: 'Test de SIBO (Protocolo 90 min)',
     instructions: 'Protocolo optimizado para detección de sobrecrecimiento bacteriano con 4 muestras cada 30 minutos.',
     steps: [
+      { name: 'Enjuague Bucal', type: 'mouthwash', durationMinutes: 1, description: 'Realice un enjuague vigoroso con agua durante 1 minuto para limpiar la cavidad oral.' },
       { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo antes de ingerir el sustrato.' },
       { name: 'Ingesta de Sustrato', type: 'ingest', durationMinutes: 2, description: 'Beba la solución lentamente durante 2 minutos.' },
-      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 28, description: 'Mantenga reposo absoluto hasta completar los 30 minutos.' },
+      { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 28, description: 'Mantenga reposo absoluto hasta completar los 30 minutos desde el inicio.' },
       { name: 'Muestra 2 (T-30)', type: 'breath', durationMinutes: 0, description: 'Sople en el segundo tubo.' },
       { name: 'Espera Muestra 3', type: 'wait', durationMinutes: 30, description: 'Mantenga reposo absoluto.' },
       { name: 'Muestra 3 (T-60)', type: 'breath', durationMinutes: 0, description: 'Sople en el tercer tubo.' },
@@ -55,6 +56,7 @@ export const PROTOCOLS: Record<string, ExamProtocol> = {
     name: 'Test de Lactulosa (Protocolo 180 min)',
     instructions: 'Este test evalúa el SIBO o tiempo de tránsito con una curva extendida de 7 muestras cada 30 minutos.',
     steps: [
+      { name: 'Enjuague Bucal', type: 'mouthwash', durationMinutes: 1, description: 'Realice un enjuague con agua durante 1 minuto.' },
       { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo antes de ingerir nada.' },
       { name: 'Ingesta de Lactulosa', type: 'ingest', durationMinutes: 2, description: 'Beba la solución de lactulosa lentamente durante 2 minutos.' },
       { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 28, description: 'Reposo absoluto. No coma ni beba.' },
@@ -76,6 +78,7 @@ export const PROTOCOLS: Record<string, ExamProtocol> = {
     name: 'Test de Fructosa (Protocolo 180 min)',
     instructions: 'Evalúa malabsorción de fructosa con un seguimiento extendido de 7 muestras cada 30 minutos.',
     steps: [
+      { name: 'Enjuague Bucal', type: 'mouthwash', durationMinutes: 1, description: 'Realice un enjuague con agua durante 1 minuto.' },
       { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo.' },
       { name: 'Ingesta de Fructosa', type: 'ingest', durationMinutes: 2, description: 'Beba la solución de fructosa durante 2 minutos.' },
       { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 28, description: 'Reposo absoluto.' },
@@ -97,6 +100,7 @@ export const PROTOCOLS: Record<string, ExamProtocol> = {
     name: 'Test de Lactosa (Protocolo 180 min)',
     instructions: 'Evalúa intolerancia a la lactosa con un seguimiento de 7 muestras cada 30 minutos.',
     steps: [
+      { name: 'Enjuague Bucal', type: 'mouthwash', durationMinutes: 1, description: 'Realice un enjuague con agua durante 1 minuto.' },
       { name: 'Muestra Basal (T-0)', type: 'breath', durationMinutes: 0, description: 'Sople en el primer tubo.' },
       { name: 'Ingesta de Lactosa', type: 'ingest', durationMinutes: 2, description: 'Beba la solución de lactosa durante 2 minutos.' },
       { name: 'Espera Muestra 2', type: 'wait', durationMinutes: 28, description: 'Reposo absoluto.' },

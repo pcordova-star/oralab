@@ -36,6 +36,12 @@
       "description": "Paciente sentado cómodamente en reposo absoluto leyendo o descansando",
       "imageUrl": "https://picsum.photos/seed/wait-step/600/400",
       "imageHint": "person resting"
+    },
+    {
+      "id": "step-mouthwash",
+      "description": "Persona realizando un enjuague bucal con agua para higiene previa al test",
+      "imageUrl": "https://picsum.photos/seed/mouthwash/600/400",
+      "imageHint": "mouthwash hygiene"
     }
   ]
 }

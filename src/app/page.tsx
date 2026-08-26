@@ -129,7 +129,6 @@ const ClinicalReportVisualizer = () => {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Badge variant="secondary" className="bg-secondary/10 text-secondary border-secondary/20 font-black">SUNVOU® CERTIFIED</Badge>
-              {!isMobile && <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">ID: ORL-2024-0526</span>}
             </div>
             <h3 className="text-base md:text-xl font-black text-primary italic">Resumen Técnico de Biomarcadores</h3>
           </div>
@@ -156,11 +155,10 @@ const ClinicalReportVisualizer = () => {
               />
               <Tooltip 
                 contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
-                itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
               />
               {!isMobile && <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />}
-              <ReferenceArea x1={0} x2={90} y1={0} y2={60} fill="#f8fafc" fillOpacity={0.5} label={!isMobile ? { position: 'top', value: 'Ventana SIBO', fontSize: 10, fill: '#94a3b8' } : undefined} />
-              <Line name="H₂" type="monotone" dataKey="h2" stroke="#1c68b6" strokeWidth={isMobile ? 3 : 4} dot={!isMobile} activeDot={{ r: 6 }} />
+              <ReferenceArea x1={0} x2={90} y1={0} y2={60} fill="#f8fafc" fillOpacity={0.5} />
+              <Line name="H₂" type="monotone" dataKey="h2" stroke="#1c68b6" strokeWidth={isMobile ? 3 : 4} dot={!isMobile} />
               <Line name="CH₄" type="monotone" dataKey="ch4" stroke="#10b981" strokeWidth={isMobile ? 2 : 3} dot={!isMobile} />
               <Line name="H₂S" type="monotone" dataKey="h2s" stroke="#f59e0b" strokeWidth={isMobile ? 2 : 3} dot={!isMobile} />
             </LineChart>
@@ -204,34 +202,9 @@ const TechScannerAnimation = () => {
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
         className="absolute w-full h-full border-2 border-dashed border-secondary/20 rounded-full"
       />
-      <motion.div 
-        animate={{ rotate: -360 }}
-        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-        className="absolute w-[80%] h-[80%] border border-white/10 rounded-full"
-      />
       <div className="relative z-10 bg-white/5 backdrop-blur-xl p-6 md:p-8 rounded-full border border-white/20 shadow-2xl flex items-center justify-center">
         <Wind className="h-10 w-10 md:h-16 md:w-16 text-secondary animate-pulse" />
       </div>
-      {[
-        { label: "H₂", color: "text-blue-400", delay: 0 },
-        { label: "CH₄", color: "text-emerald-400", delay: 2 },
-        { label: "H₂S", color: "text-amber-400", delay: 4 },
-      ].map((gas, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0 }}
-          animate={{ 
-            opacity: [0, 1, 0],
-            y: [20, -100],
-            x: [0, (i - 1) * 40],
-            scale: [0.5, 1, 0.5]
-          }}
-          transition={{ duration: 4, delay: gas.delay, repeat: Infinity, ease: "easeOut" }}
-          className={`absolute font-black text-lg md:text-xl ${gas.color} pointer-events-none`}
-        >
-          {gas.label}
-        </motion.div>
-      ))}
     </div>
   );
 };
@@ -254,13 +227,9 @@ const SIBOEducationSection = () => {
             </h2>
             <div className="space-y-6 text-lg md:text-xl opacity-90 leading-relaxed font-medium">
               <p>
-                El SIBO (Small Intestinal Bacterial Overgrowth) ocurre cuando hay un exceso de bacterias en el <strong>intestino delgado</strong>, una sección que normalmente es casi estéril.
-              </p>
-              <p>
-                A diferencia del intestino grueso, rico en microbiota vital, el delgado se mantiene limpio para evitar la competencia en la absorción de nutrientes. Cuando las bacterias del colon migran hacia arriba, se produce el desequilibrio.
+                El SIBO ocurre cuando hay un exceso de bacterias en el <strong>intestino delgado</strong>, una sección que normalmente es casi estéril.
               </p>
             </div>
-            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
                {[
                  { icon: <Zap className="h-6 w-6 text-secondary" />, title: "Robo de Nutrientes", desc: "Las bacterias consumen tus alimentos antes que tú." },
@@ -274,47 +243,6 @@ const SIBOEducationSection = () => {
                ))}
             </div>
           </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="relative"
-          >
-            <div className="glass-panel !bg-white/5 rounded-[3rem] p-8 md:p-12 border-white/10 shadow-2xl">
-              <h3 className="text-2xl font-black text-secondary italic mb-8 flex items-center gap-3">
-                <Stethoscope className="h-6 w-6" /> Síntomas Comunes
-              </h3>
-              <div className="space-y-4">
-                {[
-                  { label: "Dolor y Distensión Abdominal", level: 95 },
-                  { label: "Flatulencia y Malestar Estomacal", level: 88 },
-                  { label: "Diarrea o Estreñimiento Crónico", level: 75 },
-                  { label: "Deficiencias Nutricionales (B12, Hierro)", level: 60 },
-                ].map((symptom, i) => (
-                  <div key={i} className="space-y-2">
-                    <div className="flex justify-between text-sm font-bold">
-                      <span>{symptom.label}</span>
-                      <span className="text-secondary">{symptom.level}% frecuencia</span>
-                    </div>
-                    <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                       <motion.div 
-                         initial={{ width: 0 }}
-                         whileInView={{ width: `${symptom.level}%` }}
-                         transition={{ duration: 1, delay: i * 0.2 }}
-                         className="h-full bg-secondary"
-                       />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-10 p-6 bg-secondary/20 rounded-2xl border border-secondary/30">
-                <p className="text-sm italic font-bold leading-relaxed">
-                  "El SIBO no es una enfermedad per se, sino un síntoma de un desajuste subyacente que requiere un mapa metabólico preciso para su tratamiento."
-                </p>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </div>
     </section>
@@ -326,9 +254,18 @@ const InteractiveAssistantSim = () => {
 
   const simSteps = [
     {
+      title: "Enjuague Bucal",
+      instruction: "Enjuague su boca con agua durante 1 minuto.",
+      importance: "Limpia la cavidad oral de bacterias que podrían falsear los resultados iniciales.",
+      icon: <Sparkles className="h-8 w-8" />,
+      badge: "Preparación",
+      button: "Comenzar Enjuague",
+      time: "01:00"
+    },
+    {
       title: "Muestra Basal (T-0)",
       instruction: "Sopla en el primer tubo antes de ingerir el sustrato.",
-      importance: "Este es tu punto cero. Nos permite saber cuántos gases produce tu cuerpo naturalmente antes del estímulo.",
+      importance: "Este es tu punto cero. Nos permite saber cuántos gases produce tu cuerpo naturalmente.",
       icon: <Wind className="h-8 w-8" />,
       badge: "Muestra 1 / 7",
       button: "Confirmar Soplido",
@@ -356,20 +293,11 @@ const InteractiveAssistantSim = () => {
     {
       title: "Segunda Muestra (T-30)",
       instruction: "Sopla suavemente en el tubo número 2.",
-      importance: "Aquí evaluamos el inicio del tránsito. Detectar gases a los 30 min sugiere bacterias en el intestino delgado.",
+      importance: "Aquí evaluamos el inicio del tránsito intestinal.",
       icon: <Wind className="h-8 w-8" />,
       badge: "Muestra 2 / 7",
       button: "Confirmar Soplido",
       time: "00:00"
-    },
-    {
-      title: "Seguimiento Extendido",
-      instruction: "Este proceso se repite cada 30 minutos.",
-      importance: "Repetiremos los soplidos hasta completar los 180 minutos (3 horas) según protocolo internacional.",
-      icon: <RotateCcw className="h-8 w-8" />,
-      badge: "Muestras 3 a 7",
-      button: "Simular Protocolo 3h",
-      time: "--:--"
     },
     {
       title: "¡Test Finalizado!",
@@ -441,6 +369,7 @@ const InteractiveAssistantSim = () => {
               <div className={cn(
                 "w-24 h-24 rounded-3xl flex items-center justify-center mx-auto transition-all duration-500 shadow-inner",
                 current.isFinal ? "bg-green-100 text-green-600 scale-110 shadow-lg" : 
+                current.title === "Enjuague Bucal" ? "bg-emerald-100 text-emerald-600" :
                 current.title.includes("Muestra") ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-600"
               )}>
                 <motion.div
@@ -487,20 +416,10 @@ export default function HomePage() {
       
       <main className="flex-grow">
         <section className="relative pt-10 pb-16 md:pt-20 md:pb-20 lg:pt-32 lg:pb-32 overflow-hidden">
-          <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-            <div className="absolute top-[-10%] left-[-10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-primary/10 rounded-full blur-[80px] md:blur-[120px] animate-blob" />
-          </div>
           <div className="container mx-auto px-4 text-center lg:text-left">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <div className="space-y-6 md:space-y-8">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap justify-center lg:justify-start gap-2 md:gap-3">
-                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20">
-                    <Activity className="h-3.5 w-3.5" /> Laboratorio Especializado
-                  </span>
-                </motion.div>
-                
                 <TechnologicalHeroTitle />
-
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -508,7 +427,7 @@ export default function HomePage() {
                   className="pt-8 flex justify-center lg:justify-start"
                 >
                   <Link href="/booking">
-                    <Button size="lg" className="group rounded-full h-20 px-12 text-2xl font-black shadow-2xl bg-primary hover:bg-secondary transition-all hover:scale-105 active:scale-95 border-4 border-white/10">
+                    <Button size="lg" className="group rounded-full h-20 px-12 text-2xl font-black shadow-2xl bg-primary hover:bg-secondary transition-all hover:scale-105">
                       Reserva tu cita <ChevronRight className="ml-2 h-8 w-8 group-hover:translate-x-2 transition-transform" />
                     </Button>
                   </Link>
@@ -521,116 +440,14 @@ export default function HomePage() {
 
         <SIBOEducationSection />
 
-        <section className="py-24 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">¿Por qué mi especialista me solicitó este test?</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-              <Card className="p-8 border-blue-100 bg-blue-50/30 rounded-[2rem]">
-                 <Users className="h-10 w-10 text-primary mx-auto mb-4" />
-                 <h3 className="text-4xl font-black text-primary mb-2">78%</h3>
-                 <p className="text-sm font-bold text-muted-foreground">Muchos casos de 'estrés' son en realidad desequilibrios bacterianos (SIBO).</p>
-              </Card>
-              <Card className="p-8 border-emerald-100 bg-emerald-50/30 rounded-[2rem]">
-                 <BarChart3 className="h-10 w-10 text-secondary mx-auto mb-4" />
-                 <h3 className="text-4xl font-black text-primary mb-2">30%</h3>
-                 <p className="text-sm font-bold text-muted-foreground">Nuestra tecnología detecta gases que equipos básicos no pueden ver.</p>
-              </Card>
-              <Card className="p-8 border-amber-100 bg-amber-50/30 rounded-[2rem]">
-                 <ClipboardCheck className="h-10 w-10 text-amber-600 mx-auto mb-4" />
-                 <h3 className="text-4xl font-black text-primary mb-2">3 hrs</h3>
-                 <p className="text-sm font-bold text-muted-foreground">Generamos el mapa metabólico completo para tu tratamiento.</p>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-24 bg-background overflow-hidden">
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
-              <Badge className="bg-primary/10 text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Procedimiento en Consulta</Badge>
-              <h2 className="text-3xl md:text-5xl font-black text-primary italic">Atención Presencial <span className="text-secondary">en Laboratorio</span></h2>
-              <p className="text-lg text-muted-foreground font-medium italic">Así es la experiencia presencial guiada por nuestros profesionales en Las Condes.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { 
-                  step: "01", 
-                  title: "Preparación", 
-                  desc: "Un ayuno de 12h y dieta blanda el día anterior aseguran que tu sistema esté en reposo absoluto.",
-                  icon: <Coffee className="h-6 w-6" />,
-                  color: "bg-blue-50 text-blue-600"
-                },
-                { 
-                  step: "02", 
-                  title: "Toma Basal", 
-                  desc: "Realizamos una primera medición soplando en un tubo para establecer tu punto de partida.",
-                  icon: <Wind className="h-6 w-6" />,
-                  color: "bg-emerald-50 text-emerald-600"
-                },
-                { 
-                  step: "03", 
-                  title: "El Sustrato", 
-                  desc: "Beberás una solución líquida dulce que servirá de estímulo controlado para las bacterias.",
-                  icon: <Beaker className="h-6 w-6" />,
-                  color: "bg-amber-50 text-amber-600"
-                },
-                { 
-                  step: "04", 
-                  title: "Seguimiento", 
-                  desc: "Durante 3 horas tomaremos muestras seriadas cada 30 minutos para tu curva metabólica.",
-                  icon: <Timer className="h-6 w-6" />,
-                  color: "bg-primary/5 text-primary"
-                },
-              ].map((item, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="relative group"
-                >
-                  <Card className="h-full border-primary/5 shadow-lg rounded-[2.5rem] p-8 hover:shadow-2xl transition-all duration-500 overflow-hidden bg-white">
-                    <div className="absolute -right-4 -top-4 text-8xl font-black opacity-[0.03] italic group-hover:scale-110 transition-transform">{item.step}</div>
-                    <div className={cn("p-4 rounded-2xl w-fit mb-6", item.color)}>
-                      {item.icon}
-                    </div>
-                    <h4 className="text-xl font-black text-primary mb-3 italic">{item.title}</h4>
-                    <p className="text-sm text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
-                  </Card>
-                  {i < 3 && (
-                    <div className="hidden lg:block absolute top-1/2 -right-4 translate-x-1/2 -translate-y-1/2 z-10">
-                      <ChevronRight className="h-6 w-6 text-primary/20" />
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section className="py-24 bg-muted/20 border-y">
            <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
              <div className="space-y-6 lg:order-1">
                 <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Máxima Flexibilidad</Badge>
                 <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">También en tu <br/><span className="text-secondary">Domicilio o Trabajo</span></h2>
-                <p className="text-lg text-muted-foreground font-medium">Lleva la misma precisión clínica a donde estés. Retira tu kit y nuestro asistente digital te guiará paso a paso en cada soplido y espera, cronometrando tus intervalos de 30 minutos para asegurar resultados válidos.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                  <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
-                    <Home className="h-5 w-5 text-secondary" />
-                    <span className="text-sm font-bold text-primary">Comodidad de tu hogar</span>
-                  </div>
-                  <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-primary/5 shadow-sm">
-                    <Briefcase className="h-5 w-5 text-secondary" />
-                    <span className="text-sm font-bold text-primary">Sin pausar tu jornada laboral</span>
-                  </div>
-                </div>
+                <p className="text-lg text-muted-foreground font-medium">Lleva la misma precisión clínica a donde estés. Nuestro asistente digital te guiará paso a paso, incluyendo el enjuague bucal previo para asegurar una muestra pura.</p>
                 <div className="flex flex-wrap gap-4 pt-6">
                   <Link href="/home-test"><Button className="rounded-full h-14 px-8 font-black text-lg bg-primary shadow-xl">Probar Asistente Digital</Button></Link>
-                  <Link href="/how-it-works"><Button variant="outline" className="rounded-full h-14 px-8 font-bold border-primary text-primary">Ver Protocolos</Button></Link>
                 </div>
              </div>
              <div className="lg:order-2">
@@ -638,60 +455,12 @@ export default function HomePage() {
              </div>
            </div>
         </section>
-
-        <section className="py-24 bg-white">
-          <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-6">
-              <h2 className="text-3xl md:text-5xl font-black text-primary italic">Resultados con <br/>Rigor Científico</h2>
-              <p className="text-lg text-muted-foreground">Generamos informes detallados con curvas de Hidrógeno, Metano y Sulfuro, siguiendo el estándar de 180 minutos para intolerancias.</p>
-            </div>
-            <ClinicalReportVisualizer />
-          </div>
-        </section>
       </main>
 
       <footer className="bg-white border-t border-border py-20">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-          <div className="col-span-1 lg:col-span-2 space-y-6">
-            <Logo />
-            <p className="text-muted-foreground text-sm leading-relaxed">Laboratorio especializado en Salud Digestiva. Partner tecnológico Sunvou® en Chile.</p>
-            <div className="flex gap-4">
-              <Link href="/agreements">
-                <Button variant="outline" size="sm" className="rounded-full font-bold border-primary/20 text-primary">
-                  <Handshake className="h-4 w-4 mr-2" /> Convenios Institucionales
-                </Button>
-              </Link>
-            </div>
-          </div>
-          <div>
-            <h5 className="font-black text-primary mb-6 uppercase tracking-widest">Sede Las Condes</h5>
-            <div className="flex items-start gap-3 text-muted-foreground text-sm">
-              <MapPin className="h-5 w-5 text-secondary shrink-0 mt-1" />
-              <span>Apoquindo 3990, Of. 605, Las Condes.</span>
-            </div>
-          </div>
-          <div className="flex flex-col gap-4 group">
-            <h5 className="font-black text-primary mb-2 uppercase tracking-widest">Accesos</h5>
-            <Link 
-              href="/agreements" 
-              className="text-xs text-primary font-black flex items-center gap-2 hover:text-secondary"
-            >
-              <Handshake className="h-3 w-3" /> Convenios Institucionales
-            </Link>
-            <Link 
-              href="/investors" 
-              className="text-xs text-muted-foreground/60 hover:text-primary transition-all flex items-center gap-2"
-            >
-              <Users className="h-3 w-3" /> Portal de Inversionistas
-            </Link>
-            <Link 
-              href="/terms" 
-              className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
-            >
-              <FileText className="h-3 w-3" /> Términos y Condiciones
-            </Link>
-            <Link href="/login" className="text-xs text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-2"><Lock className="h-3 w-3" /> Acceso Administrativo</Link>
-          </div>
+        <div className="container mx-auto px-4 text-center">
+          <Logo />
+          <p className="text-muted-foreground text-sm leading-relaxed mt-6">Laboratorio especializado en Salud Digestiva. Partner tecnológico Sunvou® en Chile.</p>
         </div>
       </footer>
     </div>
