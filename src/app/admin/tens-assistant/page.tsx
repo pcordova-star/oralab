@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -142,7 +141,7 @@ export default function TensAssistantPage() {
             <h1 className="text-4xl font-black text-primary flex items-center gap-3 italic">
               <Users className="h-10 w-10 text-secondary" /> Control Multi-Paciente
             </h1>
-            <p className="text-muted-foreground font-medium">Gestión didáctica de protocolos Sunvou® en tiempo real.</p>
+            <p className="text-muted-foreground font-medium">Protocolos Sunvou® en tiempo real.</p>
           </motion.div>
           
           <motion.div 
@@ -222,6 +221,7 @@ function PatientTestCard({ booking, now, onStart, onConfirm, onAlarm }: { bookin
   }, [now, isStarted, currentStep, logs, onAlarm]);
 
   const progress = protocol ? (currentStepIndex / protocol.steps.length) * 100 : 0;
+  // Permitir confirmar de inmediato si no es un paso de 'espera'
   const isButtonDisabled = currentStep?.type === 'wait' && timeLeft > 0 && !isDue;
 
   return (
