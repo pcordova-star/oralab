@@ -10,6 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import Image from "next/image";
 import { 
   Timer, 
@@ -72,6 +82,14 @@ export default function HomeTestPage() {
   const wakeLockRef = useRef<any>(null);
   const titleIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
+  // State for Confirmation Dialog
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    action: () => void;
+  } | null>(null);
+
   const db = useFirestore();
 
   useEffect(() => {
@@ -346,30 +364,26 @@ export default function HomeTestPage() {
   };
 
   const restartProtocol = () => {
-    if (confirm("⚠️ ¿ESTÁS SEGURO QUE DESEAS REINICIAR EL PROTOCOLO?")) {
-      stopAlarm();
-      alarmPlayedRef.current = null;
-      setTestState(prev => prev ? {
-        ...prev,
-        currentStepIndex: 0,
-        startTime: Date.now(),
-        stepStartTime: Date.now(),
-        isCompleted: false,
-        logs: []
-      } : null);
-      toast({ title: "Protocolo reiniciado" });
-    }
+    stopAlarm();
+    alarmPlayedRef.current = null;
+    setTestState(prev => prev ? {
+      ...prev,
+      currentStepIndex: 0,
+      startTime: Date.now(),
+      stepStartTime: Date.now(),
+      isCompleted: false,
+      logs: []
+    } : null);
+    toast({ title: "Protocolo reiniciado" });
   };
 
   const cancelTest = () => {
-    if (confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?")) {
-      stopAlarm();
-      releaseWakeLock();
-      setTestState(null);
-      setBooking(null);
-      localStorage.removeItem("oralab_test_session");
-      toast({ title: "Sesión cancelada" });
-    }
+    stopAlarm();
+    releaseWakeLock();
+    setTestState(null);
+    setBooking(null);
+    localStorage.removeItem("oralab_test_session");
+    toast({ title: "Sesión cancelada" });
   };
 
   const formatTime = (seconds: number) => {
@@ -536,10 +550,30 @@ export default function HomeTestPage() {
             PASO {testState.currentStepIndex + 1} / {protocol.steps.length}
           </Badge>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={restartProtocol} className="text-primary font-black text-[10px] h-9 px-3 border border-primary/10 rounded-full">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setConfirmConfig({
+                isOpen: true,
+                title: "¿Reiniciar Protocolo?",
+                description: "Se borrará tu progreso actual y volverás al paso 1.",
+                action: restartProtocol
+              })} 
+              className="text-primary font-black text-[10px] h-9 px-3 border border-primary/10 rounded-full"
+            >
               <RotateCcw className="h-3 w-3 mr-1" /> Reiniciar
             </Button>
-            <Button variant="ghost" size="sm" onClick={cancelTest} className="text-red-500 font-black text-[10px] h-9 px-3 border border-red-100 rounded-full">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setConfirmConfig({
+                isOpen: true,
+                title: "¿Cancelar Test?",
+                description: "Se perderá toda la información de la sesión actual.",
+                action: cancelTest
+              })} 
+              className="text-red-500 font-black text-[10px] h-9 px-3 border border-red-100 rounded-full"
+            >
               <XCircle className="h-3 w-3 mr-1" /> Cancelar
             </Button>
           </div>
@@ -653,6 +687,28 @@ export default function HomeTestPage() {
           </Card>
         )}
       </main>
+
+      {/* Global Confirmation Dialog */}
+      <AlertDialog open={confirmConfig?.isOpen} onOpenChange={(open) => !open && setConfirmConfig(null)}>
+        <AlertDialogContent className="rounded-[2rem]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black text-primary italic">{confirmConfig?.title}</AlertDialogTitle>
+            <AlertDialogDescription className="font-medium">{confirmConfig?.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full font-bold">Volver</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                confirmConfig?.action();
+                setConfirmConfig(null);
+              }}
+              className="bg-primary rounded-full font-black px-6"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

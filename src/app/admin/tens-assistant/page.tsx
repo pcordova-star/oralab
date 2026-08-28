@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -6,18 +5,27 @@ import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, doc, arrayUnion, serverTimestamp, deleteField } from "firebase/firestore";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
 import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { 
   Users, 
   Play, 
   CheckCircle2, 
   Clock, 
-  Timer, 
   Volume2, 
   Activity, 
   Wind, 
@@ -33,7 +41,6 @@ import { PROTOCOLS } from "@/app/lib/types";
 import { format } from "date-fns";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
 const ALARM_URL = "https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3";
 
@@ -42,6 +49,14 @@ export default function TensAssistantPage() {
   const db = useFirestore();
   const [now, setNow] = useState(Date.now());
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // State for Global Confirmation Dialog
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    action: () => void;
+  } | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -87,7 +102,7 @@ export default function TensAssistantPage() {
   };
 
   const handleResetTest = (bookingId: string) => {
-    if (!db || !confirm("¿Seguro que deseas reiniciar el protocolo de este paciente? Se borrarán los soplidos actuales.")) return;
+    if (!db) return;
     updateDocumentNonBlocking(doc(db, "bookings", bookingId), {
       status: "arrived",
       testLogs: [],
@@ -97,7 +112,7 @@ export default function TensAssistantPage() {
   };
 
   const handleCancelTest = (bookingId: string) => {
-    if (!db || !confirm("¿Deseas cancelar el test en curso? El paciente volverá a 'En Sala'.")) return;
+    if (!db) return;
     updateDocumentNonBlocking(doc(db, "bookings", bookingId), {
       status: "arrived",
       testLogs: [],
@@ -155,7 +170,7 @@ export default function TensAssistantPage() {
             <h1 className="text-4xl font-black text-primary flex items-center gap-3 italic">
               <Users className="h-10 w-10 text-secondary" /> Control Multi-Paciente
             </h1>
-            <p className="text-muted-foreground font-medium">Coordinación técnica de sala.</p>
+            <p className="text-muted-foreground font-medium">Protocolos Sunvou® en tiempo real.</p>
           </div>
           
           <div className="bg-white p-5 rounded-[2rem] border shadow-xl flex items-center gap-6">
@@ -190,8 +205,18 @@ export default function TensAssistantPage() {
                 booking={booking} 
                 now={now} 
                 onStart={() => handleStartTest(booking.id)}
-                onReset={() => handleResetTest(booking.id)}
-                onCancel={() => handleCancelTest(booking.id)}
+                onReset={() => setConfirmConfig({
+                  isOpen: true,
+                  title: "¿Reiniciar Protocolo?",
+                  description: "Se borrarán todos los soplidos registrados para este paciente hoy.",
+                  action: () => handleResetTest(booking.id)
+                })}
+                onCancel={() => setConfirmConfig({
+                  isOpen: true,
+                  title: "¿Cancelar Protocolo?",
+                  description: "El test se detendrá y el paciente volverá al estado 'En Sala'.",
+                  action: () => handleCancelTest(booking.id)
+                })}
                 onConfirm={() => handleConfirmStep(booking)}
                 onAlarm={playAlarm}
               />
@@ -199,6 +224,28 @@ export default function TensAssistantPage() {
           </div>
         )}
       </main>
+
+      {/* Global Confirmation Dialog */}
+      <AlertDialog open={confirmConfig?.isOpen} onOpenChange={(open) => !open && setConfirmConfig(null)}>
+        <AlertDialogContent className="rounded-[2rem]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black text-primary italic">{confirmConfig?.title}</AlertDialogTitle>
+            <AlertDialogDescription className="font-medium">{confirmConfig?.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full font-bold">Volver</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                confirmConfig?.action();
+                setConfirmConfig(null);
+              }}
+              className="bg-primary rounded-full font-black px-6"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -414,4 +461,3 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
     </Card>
   );
 }
-

@@ -11,6 +11,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -62,6 +72,9 @@ export default function QuotationsPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
+
+  // Confirmation state
+  const [quoteToDelete, setQuoteToDelete] = useState<string | null>(null);
 
   // CRM State
   const [exchangeRate, setExchangeRate] = useState(DEFAULT_USD_RATE);
@@ -372,7 +385,7 @@ export default function QuotationsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!db || !confirm("¿Eliminar esta cotización del registro?")) return;
+    if (!db) return;
     try {
       await deleteDoc(doc(db, "quotations", id));
       toast({ title: "Eliminado", description: "Cotización eliminada correctamente." });
@@ -649,7 +662,7 @@ export default function QuotationsPage() {
                             variant="ghost" 
                             size="icon" 
                             className="text-red-300 hover:text-red-600 rounded-full h-8 w-8"
-                            onClick={() => handleDelete(q.id)}
+                            onClick={() => setQuoteToDelete(q.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -663,6 +676,28 @@ export default function QuotationsPage() {
           </div>
         </Card>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!quoteToDelete} onOpenChange={(open) => !open && setQuoteToDelete(null)}>
+        <AlertDialogContent className="rounded-[2rem]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black text-primary italic">¿Eliminar Registro?</AlertDialogTitle>
+            <AlertDialogDescription className="font-medium">Esta acción no se puede deshacer. La cotización se borrará permanentemente del CRM.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full font-bold">Volver</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (quoteToDelete) handleDelete(quoteToDelete);
+                setQuoteToDelete(null);
+              }}
+              className="bg-red-500 hover:bg-red-600 rounded-full font-black px-6"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
