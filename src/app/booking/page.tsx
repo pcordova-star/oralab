@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -101,7 +100,8 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
-const OPERATIONS_START_DATE = new Date(2025, 2, 1);
+// CONFIGURACIÓN DE APERTURA: SEPTIEMBRE 2025
+const OPERATIONS_START_DATE = new Date(2025, 8, 1);
 
 export default function BookingPage() {
   const [step, setStep] = useState(1);
@@ -165,7 +165,7 @@ export default function BookingPage() {
 
       // BLOQUEO MANUAL POR FALTA DE ATENCIÓN (MAÑANA)
       if (formattedDate === tomorrowStr) {
-        setOccupiedSlots(timeSlots); // Marcar todos los bloques como tomados
+        setOccupiedSlots(timeSlots); 
         setIsLoadingSlots(false);
         return;
       }
@@ -291,7 +291,6 @@ export default function BookingPage() {
     doc.setFont("helvetica", "normal");
     let instructions = "1. Ayuno estricto de 12 horas.\n2. Dieta blanda el día anterior.\n3. No fumar ni realizar ejercicio intenso 2 horas antes.\n4. No haber tomado antibióticos ni probióticos en las últimas 4 semanas.";
     
-    // NOTA DE REAGENDAMIENTO VIA WHATSAPP
     instructions += "\n\nREAGENDAMIENTO:\nEn caso de requerir reagendar su hora, por favor solicítelo con anticipación vía WhatsApp al +56 9 3685 0468.";
 
     if (lastBookingValues.modality === 'home_kit') {
@@ -304,7 +303,6 @@ export default function BookingPage() {
   async function onSubmit(values: BookingFormValues) {
     if (!db) return;
     setIsSubmitting(true);
-    const formattedDate = format(values.scheduledDate, "d 'de' MMMM, yyyy", { locale: es });
     const bookingData = {
       examType: values.examType,
       modality: values.modality,
@@ -466,9 +464,8 @@ export default function BookingPage() {
                               selected={field.value} 
                               onSelect={(d) => { field.onChange(d); setIsCalendarOpen(false); }} 
                               disabled={(d) => {
-                                const tomorrow = addDays(new Date(), 1);
-                                const isTomorrow = format(d, "yyyy-MM-dd") === format(tomorrow, "yyyy-MM-dd");
-                                return isBefore(d, OPERATIONS_START_DATE) || isWeekend(d) || isTomorrow;
+                                // Deshabilitar fechas anteriores a Septiembre 2025 y fines de semana
+                                return isBefore(d, OPERATIONS_START_DATE) || isWeekend(d);
                               }} 
                               locale={es} 
                             />
