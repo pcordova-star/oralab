@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
@@ -161,8 +161,22 @@ export default function ReceptionPage() {
   const { data: agreementRequests } = useCollection(agreementRequestsRef);
   const { data: leads } = useCollection(leadsRef);
 
-  const bookings = (rawBookings || []).sort((a, b) => (b.scheduledDate || "").localeCompare(a.scheduledDate || ""));
-  const filteredBookings = bookings.filter(b => selectedDate && b.scheduledDate === format(selectedDate, "yyyy-MM-dd"));
+  const bookings = useMemo(() => (rawBookings || []).sort((a, b) => (b.scheduledDate || "").localeCompare(a.scheduledDate || "")), [rawBookings]);
+  const filteredBookings = useMemo(() => bookings.filter(b => selectedDate && b.scheduledDate === format(selectedDate, "yyyy-MM-dd")), [bookings, selectedDate]);
+
+  // Identificar fechas con reservas para resaltar en el calendario
+  const bookedDates = useMemo(() => {
+    const datesMap = new Map();
+    bookings.forEach(b => {
+      if (b.scheduledDate && b.status !== 'cancelled') {
+        try {
+          const d = parseISO(b.scheduledDate);
+          datesMap.set(b.scheduledDate, d);
+        } catch (e) {}
+      }
+    });
+    return Array.from(datesMap.values());
+  }, [bookings]);
 
   const resetQuoteForm = () => {
     setEditingQuoteId(null);
@@ -300,10 +314,23 @@ export default function ReceptionPage() {
           <TabsContent value="clinical" className="space-y-6 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <Card className="lg:col-span-4 bg-white shadow-xl border-primary/10 rounded-[2rem] p-6 h-fit sticky top-20">
-                <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} locale={es} className="rounded-md mx-auto" />
+                <Calendar 
+                  mode="single" 
+                  selected={selectedDate} 
+                  onSelect={setSelectedDate} 
+                  locale={es} 
+                  className="rounded-md mx-auto"
+                  modifiers={{ booked: bookedDates }}
+                  modifiersClassNames={{
+                    booked: "font-black text-secondary underline decoration-4 underline-offset-4"
+                  }}
+                />
                 <div className="mt-6 p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
                    <div className="flex justify-between text-xs font-bold"><span>Total Hoy:</span> <span>{filteredBookings.length}</span></div>
                    <div className="flex justify-between text-xs font-bold text-blue-600"><span>En Sala:</span> <span>{filteredBookings.filter(b => b.status === 'arrived').length}</span></div>
+                </div>
+                <div className="mt-4 p-3 bg-secondary/10 rounded-xl border border-secondary/20">
+                   <p className="text-[10px] font-bold text-secondary text-center uppercase tracking-widest">Días con subrayado tienen reservas</p>
                 </div>
               </Card>
               <Card className="lg:col-span-8 bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
