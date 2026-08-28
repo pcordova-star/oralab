@@ -88,7 +88,6 @@ export default function HomeTestPage() {
       }
     }
 
-    // Listener para re-solicitar Wake Lock si la pestaña vuelve a ser visible
     const handleVisibilityChange = async () => {
       if (wakeLockRef.current !== null && document.visibilityState === 'visible') {
         requestWakeLock();
@@ -110,7 +109,6 @@ export default function HomeTestPage() {
   useEffect(() => {
     if (testState) {
       localStorage.setItem("oralab_test_session", JSON.stringify(testState));
-      // Intentar solicitar Wake Lock cuando el test está activo
       if (!testState.isCompleted) {
         requestWakeLock();
       } else {
@@ -119,23 +117,15 @@ export default function HomeTestPage() {
     }
   }, [testState]);
 
-  // Función para mantener la pantalla encendida (Wake Lock)
   const requestWakeLock = async () => {
     if ('wakeLock' in navigator && !wakeLockRef.current && document.visibilityState === 'visible') {
       try {
         wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-        
-        // Listener para cuando el bloqueo se libera (ej: por batería baja)
         wakeLockRef.current.addEventListener('release', () => {
           wakeLockRef.current = null;
         });
-        
-        console.log("Wake Lock activo: La pantalla no se apagará.");
       } catch (err: any) {
-        // Silenciar errores de política de permisos o visibilidad para no romper la UI
-        if (err.name === 'NotAllowedError') {
-          console.warn("Wake Lock bloqueado por política de permisos del navegador.");
-        } else {
+        if (err.name !== 'NotAllowedError') {
           console.warn("Wake Lock fallido:", err.message);
         }
       }
@@ -146,14 +136,12 @@ export default function HomeTestPage() {
     if (wakeLockRef.current) {
       try {
         await wakeLockRef.current.release();
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
       wakeLockRef.current = null;
     }
   };
 
-  const stopAlarm = async () => {
+  const stopAlarm = () => {
     // Detener vibración
     if ('vibrate' in navigator) {
       navigator.vibrate(0);
@@ -166,18 +154,20 @@ export default function HomeTestPage() {
       document.title = "Oralab - Salud Digestiva Avanzada";
     }
 
-    if (audioRef.current) {
+    const audio = audioRef.current;
+    if (audio) {
+      // Manejo no-bloqueante de la detención para evitar colgar la UI
       if (playPromiseRef.current) {
-        try {
-          await playPromiseRef.current;
-        } catch (e) {
-          // Ignorar cancelación
-        } finally {
+        playPromiseRef.current.then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }).catch(() => {}).finally(() => {
           playPromiseRef.current = null;
-        }
+        });
+      } else {
+        audio.pause();
+        audio.currentTime = 0;
       }
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
     }
   };
 
@@ -185,22 +175,21 @@ export default function HomeTestPage() {
     if (!audioRef.current) return;
 
     try {
-      await stopAlarm();
+      stopAlarm();
 
       audioRef.current.loop = !isTest;
       audioRef.current.currentTime = 0;
       
-      playPromiseRef.current = audioRef.current.play();
+      const playPromise = audioRef.current.play();
+      playPromiseRef.current = playPromise;
       
-      if (playPromiseRef.current !== undefined) {
-        await playPromiseRef.current;
+      if (playPromise !== undefined) {
+        await playPromise;
         
-        // Activar Vibración si no es prueba
         if (!isTest && 'vibrate' in navigator) {
-          navigator.vibrate([500, 200, 500, 200, 500]); // Patrón de pulsos
+          navigator.vibrate([500, 200, 500, 200, 500]);
         }
 
-        // Título intermitente
         if (!isTest && !titleIntervalRef.current) {
           titleIntervalRef.current = setInterval(() => {
             document.title = document.title === "⚠️ SOPLAR AHORA ⚠️" ? "Oralab Test" : "⚠️ SOPLAR AHORA ⚠️";
@@ -209,27 +198,20 @@ export default function HomeTestPage() {
 
         if (isTest) {
           toast({
-            title: "¡Sonido y Vibración Activados!",
-            description: "La alerta funciona correctamente. Mantén esta pestaña abierta para asegurar el aviso.",
+            title: "¡Alerta Activada!",
+            description: "El sonido y la vibración funcionan correctamente.",
           });
-          setTimeout(() => {
-            stopAlarm();
-          }, 3000);
+          setTimeout(() => stopAlarm(), 3000);
         }
       }
     } catch (error: any) {
-      if (error.name !== 'AbortError') {
-        console.error("Audio playback error:", error);
-      }
-      if (isTest) {
+      if (error.name !== 'AbortError' && isTest) {
         toast({
           variant: "destructive",
           title: "Permiso de audio requerido",
-          description: "Tu navegador bloqueó el sonido. Por favor, intenta de nuevo o revisa los permisos del sitio.",
+          description: "Tu navegador bloqueó el sonido. Por favor, intenta de nuevo.",
         });
       }
-    } finally {
-      playPromiseRef.current = null;
     }
   };
 
@@ -306,10 +288,7 @@ export default function HomeTestPage() {
 
   const startTest = () => {
     if (!booking) return;
-    
-    // Solicitar Wake Lock al iniciar
     requestWakeLock();
-
     const newState: TestState = {
       bookingId: booking.id,
       patientName: `${booking.firstName} ${booking.lastNameFather}`,
@@ -326,8 +305,7 @@ export default function HomeTestPage() {
 
   const confirmStep = async () => {
     if (!testState || !db) return;
-    
-    await stopAlarm();
+    stopAlarm();
     
     const currentProtocol = PROTOCOLS[testState.examType];
     const isLastStep = testState.currentStepIndex === currentProtocol.steps.length - 1;
@@ -349,16 +327,14 @@ export default function HomeTestPage() {
             timestamp: nowISO
           })
         });
-      } catch (e) {
-        console.error("Error logging step:", e);
-      }
+      } catch (e) {}
     }
 
     if (isLastStep) {
       setTestState({ ...testState, logs: updatedLogs, isCompleted: true });
       localStorage.removeItem("oralab_test_session");
       releaseWakeLock();
-      toast({ title: "¡Test Finalizado!", description: "Has completado todas las muestras correctamente." });
+      toast({ title: "¡Test Finalizado!" });
     } else {
       setTestState({
         ...testState,
@@ -369,9 +345,9 @@ export default function HomeTestPage() {
     }
   };
 
-  const restartProtocol = async () => {
+  const restartProtocol = () => {
     if (confirm("⚠️ ¿ESTÁS SEGURO QUE DESEAS REINICIAR EL PROTOCOLO?")) {
-      await stopAlarm();
+      stopAlarm();
       alarmPlayedRef.current = null;
       setTestState(prev => prev ? {
         ...prev,
@@ -385,9 +361,9 @@ export default function HomeTestPage() {
     }
   };
 
-  const cancelTest = async () => {
+  const cancelTest = () => {
     if (confirm("⚠️ ¿DESEAS CANCELAR EL TEST COMPLETAMENTE?")) {
-      await stopAlarm();
+      stopAlarm();
       releaseWakeLock();
       setTestState(null);
       setBooking(null);
@@ -465,12 +441,11 @@ export default function HomeTestPage() {
                     <h3 className="font-black text-primary text-xl">{booking.firstName} {booking.lastNameFather}</h3>
                     <Badge className="bg-primary font-bold mt-2">Test: {booking.examType}</Badge>
                   </div>
-                  
                   <div className="space-y-4">
                     <div className="flex items-start gap-3 bg-amber-50 p-4 rounded-xl border border-amber-200">
                       <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                       <p className="text-xs text-amber-800 font-medium">
-                        Asegúrate de tener todos tus tubos numerados y el sustrato preparado antes de iniciar. Activa el sonido de tu teléfono para escuchar la alarma.
+                        Asegúrate de tener todos tus tubos numerados y el sustrato preparado antes de iniciar. Activa el sonido de tu teléfono.
                       </p>
                     </div>
                     <Button onClick={startTest} className="w-full h-14 rounded-xl text-lg font-black bg-secondary shadow-lg">
@@ -637,7 +612,7 @@ export default function HomeTestPage() {
                   <Button onClick={confirmStep} className="w-full h-20 rounded-2xl text-xl font-black bg-primary shadow-xl animate-in zoom-in duration-300">
                     Continuar protocolo <ChevronRight className="ml-2 h-6 w-6" />
                   </Button>
-                  <p className="text-xs font-black text-secondary animate-pulse">🔔 Alarma y vibración activas: tiempo cumplido</p>
+                  <p className="text-xs font-black text-secondary animate-pulse">🔔 Alarma y vibración activas</p>
                 </div>
               ) : (
                 <div className="bg-muted/50 p-8 rounded-2xl border-dashed border-2 border-muted">
