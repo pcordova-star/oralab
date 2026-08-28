@@ -6,7 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, doc, arrayUnion, serverTimestamp, deleteField } from "firebase/firestore";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -45,7 +45,9 @@ export default function TensAssistantPage() {
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
-    audioRef.current = new Audio(ALARM_URL);
+    if (typeof window !== 'undefined') {
+      audioRef.current = new Audio(ALARM_URL);
+    }
     return () => clearInterval(timer);
   }, []);
 
@@ -76,10 +78,10 @@ export default function TensAssistantPage() {
     updateDocumentNonBlocking(doc(db, "bookings", bookingId), {
       status: "in_progress",
       testStartTime: serverTimestamp(),
-      testLogs: arrayUnion({
+      testLogs: [{
         stepName: "Inicio de Protocolo",
         timestamp: new Date().toISOString()
-      })
+      }]
     });
     toast({ title: "Test Iniciado", description: "El protocolo ha comenzado." });
   };
@@ -91,17 +93,17 @@ export default function TensAssistantPage() {
       testLogs: [],
       testStartTime: deleteField()
     });
-    toast({ title: "Protocolo Reiniciado", description: "El paciente ha vuelto a estado 'En Sala'." });
+    toast({ title: "Protocolo Reiniciado" });
   };
 
   const handleCancelTest = (bookingId: string) => {
-    if (!db || !confirm("¿Deseas cancelar el test en curso?")) return;
+    if (!db || !confirm("¿Deseas cancelar el test en curso? El paciente volverá a 'En Sala'.")) return;
     updateDocumentNonBlocking(doc(db, "bookings", bookingId), {
       status: "arrived",
       testLogs: [],
       testStartTime: deleteField()
     });
-    toast({ title: "Test Cancelado", description: "Se ha detenido el cronómetro clínico." });
+    toast({ title: "Test Cancelado" });
   };
 
   const handleConfirmStep = (booking: any) => {
@@ -109,7 +111,7 @@ export default function TensAssistantPage() {
     const protocol = PROTOCOLS[booking.examType];
     if (!protocol) return;
 
-    const currentStepIndex = (booking.testLogs?.length || 0) - 1;
+    const currentStepIndex = (booking.testLogs?.length || 1) - 1;
     const currentProtocolStep = protocol.steps[currentStepIndex];
 
     if (!currentProtocolStep) return;
@@ -129,15 +131,15 @@ export default function TensAssistantPage() {
     updateDocumentNonBlocking(doc(db, "bookings", booking.id), updates);
     
     if (isLastStep) {
-      toast({ title: "Test Completado", description: "Protocolo terminado." });
+      toast({ title: "Test Completado" });
     } else {
-      toast({ title: "Paso Confirmado", description: `${currentProtocolStep.name} registrado.` });
+      toast({ title: "Paso Registrado", description: currentProtocolStep.name });
     }
   };
 
   if (isUserLoading || isLoading) return null;
   if (user?.email !== "admin@oralab.cl") {
-    return <div className="p-20 text-center font-black text-primary italic">Acceso restringido al personal TENS de Oralab.</div>;
+    return <div className="p-20 text-center font-black text-primary italic">Acceso restringido.</div>;
   }
 
   return (
@@ -146,21 +148,17 @@ export default function TensAssistantPage() {
       
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+          <div>
             <Link href="/reception" className="inline-flex items-center text-primary hover:underline mb-2 text-sm font-bold">
               <ArrowLeft className="mr-1 h-3 w-3" /> Volver a Recepción
             </Link>
             <h1 className="text-4xl font-black text-primary flex items-center gap-3 italic">
               <Users className="h-10 w-10 text-secondary" /> Control Multi-Paciente
             </h1>
-            <p className="text-muted-foreground font-medium">Protocolos Sunvou® en tiempo real.</p>
-          </motion.div>
+            <p className="text-muted-foreground font-medium">Coordinación técnica de sala.</p>
+          </div>
           
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }} 
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white p-5 rounded-[2rem] border shadow-xl flex items-center gap-6"
-          >
+          <div className="bg-white p-5 rounded-[2rem] border shadow-xl flex items-center gap-6">
              <div className="text-right">
                 <p className="text-[10px] font-black text-muted-foreground uppercase leading-none tracking-widest">Hora de Sala</p>
                 <p className="text-2xl font-black text-primary font-mono tabular-nums">{format(now, "HH:mm:ss")}</p>
@@ -169,19 +167,19 @@ export default function TensAssistantPage() {
                variant="outline" 
                size="icon" 
                onClick={playAlarm} 
-               className="rounded-full h-12 w-12 border-secondary text-secondary hover:bg-secondary hover:text-white transition-all shadow-lg"
+               className="rounded-full h-12 w-12 border-secondary text-secondary hover:bg-secondary hover:text-white transition-all shadow-lg active:scale-90"
              >
                 <Volume2 className="h-6 w-6" />
              </Button>
-          </motion.div>
+          </div>
         </div>
 
         {activeBookings.length === 0 ? (
           <Card className="border-dashed border-4 border-muted-foreground/10 bg-white/50 rounded-[4rem] p-32 text-center">
             <Activity className="h-16 w-16 text-muted-foreground/30 mx-auto mb-6" />
-            <h2 className="text-3xl font-black text-primary/40 italic mb-2 uppercase tracking-tighter">Sin actividad en sala</h2>
+            <h2 className="text-3xl font-black text-primary/40 italic mb-2 uppercase tracking-tighter">Sin pacientes activos</h2>
             <p className="text-muted-foreground font-medium max-w-xs mx-auto">
-              Marca a un paciente como "En Sala" desde el panel de recepción para comenzar su protocolo.
+              Marca a un paciente como "En Sala" desde el panel de recepción para comenzar.
             </p>
           </Card>
         ) : (
@@ -218,7 +216,10 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
 
   useEffect(() => {
     if (isStarted && currentStep && (currentStep.type === 'wait' || currentStep.type === 'ingest' || currentStep.type === 'mouthwash')) {
-      const lastLogTime = new Date(logs[logs.length - 1].timestamp).getTime();
+      const lastLog = logs[logs.length - 1];
+      if (!lastLog) return;
+      
+      const lastLogTime = new Date(lastLog.timestamp).getTime();
       const durationSeconds = currentStep.durationMinutes * 60;
       const elapsedSeconds = Math.floor((now - lastLogTime) / 1000);
       const remaining = Math.max(0, durationSeconds - elapsedSeconds);
@@ -235,21 +236,20 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
   }, [now, isStarted, currentStep, logs, onAlarm, isDue]);
 
   const progress = protocol ? (currentStepIndex / protocol.steps.length) * 100 : 0;
-  // Solo bloqueamos el botón si es un paso de ESPERA y el tiempo no ha terminado
   const isButtonDisabled = currentStep?.type === 'wait' && timeLeft > 0 && !isDue;
 
   return (
     <Card className={cn(
-      "rounded-[3rem] shadow-2xl overflow-hidden transition-all duration-700",
-      isDue ? "border-red-500 ring-8 ring-red-500/10 scale-[1.02]" : "border-primary/5 hover:border-primary/20"
+      "rounded-[3rem] shadow-2xl overflow-hidden transition-all duration-500",
+      isDue ? "border-red-500 ring-8 ring-red-500/10 scale-[1.02]" : "border-primary/5"
     )}>
       <CardHeader className={cn(
         "p-8 text-white relative",
         isDue ? "bg-red-500 animate-pulse" : "bg-primary"
       )}>
-        <div className="flex justify-between items-start relative z-10">
+        <div className="flex justify-between items-start relative z-20">
           <div className="flex-1">
-            <Badge className="bg-white/20 hover:bg-white/30 text-white border-none mb-3 font-black uppercase text-[10px] tracking-widest px-4 py-1">
+            <Badge className="bg-white/20 text-white border-none mb-3 font-black uppercase text-[10px] tracking-widest px-4 py-1">
               {booking.examType}
             </Badge>
             <CardTitle className="text-2xl font-black italic leading-none truncate">{booking.firstName} {booking.lastNameFather}</CardTitle>
@@ -258,47 +258,48 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
             </p>
           </div>
           <div className="flex flex-col items-end gap-3">
-            <div className="bg-white/20 p-4 rounded-3xl backdrop-blur-md">
-              {isStarted ? <Timer className="h-8 w-8 animate-pulse" /> : <Activity className="h-8 w-8" />}
-            </div>
-            {isStarted && (
-              <div className="flex gap-2 relative z-20">
+             <div className="flex gap-2">
                 <Button 
-                  variant="outline" 
+                  type="button"
+                  variant="ghost" 
                   size="icon" 
-                  onClick={(e) => { e.stopPropagation(); onReset(); }} 
-                  className="h-9 w-9 rounded-full bg-white/10 hover:bg-white text-white hover:text-primary border-white/20" 
-                  title="Reiniciar Protocolo"
+                  onClick={onReset} 
+                  className="h-10 w-10 rounded-full bg-white/10 hover:bg-white text-white hover:text-primary transition-all active:scale-90" 
+                  title="Reiniciar"
                 >
                   <RotateCcw className="h-5 w-5" />
                 </Button>
                 <Button 
-                  variant="outline" 
+                  type="button"
+                  variant="ghost" 
                   size="icon" 
-                  onClick={(e) => { e.stopPropagation(); onCancel(); }} 
-                  className="h-9 w-9 rounded-full bg-white/10 hover:bg-red-600 text-white border-white/20" 
-                  title="Cancelar Test"
+                  onClick={onCancel} 
+                  className="h-10 w-10 rounded-full bg-white/10 hover:bg-red-600 text-white transition-all active:scale-90" 
+                  title="Cancelar"
                 >
                   <XCircle className="h-5 w-5" />
                 </Button>
-              </div>
-            )}
+             </div>
           </div>
         </div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-16 -mt-16" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-16 -mt-16 z-10" />
       </CardHeader>
 
       <CardContent className="p-8 space-y-8">
         {!isStarted ? (
           <div className="text-center py-10 space-y-6">
-            <div className="bg-secondary/10 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner group">
-               <Play className="h-10 w-10 text-secondary fill-secondary group-hover:scale-125 transition-transform ml-1" />
+            <div className="bg-secondary/10 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner">
+               <Play className="h-10 w-10 text-secondary fill-secondary ml-1" />
             </div>
             <div className="space-y-2">
-              <p className="text-lg font-black text-primary italic">Paciente Listo</p>
-              <p className="text-sm font-medium text-muted-foreground px-6">Prepare el sustrato y verifique los tubos antes de iniciar el cronómetro clínico.</p>
+              <p className="text-lg font-black text-primary italic">Paciente en Sala</p>
+              <p className="text-sm font-medium text-muted-foreground px-6">Prepare el sustrato para iniciar el protocolo.</p>
             </div>
-            <Button onClick={onStart} className="w-full h-16 rounded-2xl bg-secondary hover:bg-secondary/90 font-black text-lg shadow-xl shadow-secondary/20">
+            <Button 
+              type="button"
+              onClick={onStart} 
+              className="w-full h-16 rounded-2xl bg-secondary hover:bg-secondary/90 font-black text-lg shadow-xl active:scale-95 transition-transform"
+            >
               Iniciar Protocolo
             </Button>
           </div>
@@ -307,9 +308,9 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
             <div className="space-y-4">
               <div className="flex justify-between items-center text-[10px] font-black uppercase text-muted-foreground tracking-widest">
                 <span>Paso {currentStepIndex + 1} de {protocol.steps.length}</span>
-                <span className="text-primary font-black">{Math.round(progress)}% COMPLETADO</span>
+                <span className="text-primary font-black">{Math.round(progress)}%</span>
               </div>
-              <Progress value={progress} className="h-3 rounded-full bg-muted border border-primary/5" />
+              <Progress value={progress} className="h-3 rounded-full bg-muted" />
             </div>
 
             <div className={cn(
@@ -322,21 +323,21 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
               <div className="flex flex-col items-center text-center space-y-6">
                 <div className={cn(
                   "p-5 rounded-3xl shadow-lg",
-                  currentStep?.type === 'breath' ? "bg-blue-500 text-white animate-bounce" : 
+                  currentStep?.type === 'breath' ? "bg-blue-500 text-white" : 
                   currentStep?.type === 'ingest' ? "bg-amber-500 text-white" :
                   currentStep?.type === 'mouthwash' ? "bg-emerald-500 text-white" :
                   "bg-slate-400 text-white"
                 )}>
-                  {currentStep?.type === 'breath' ? <Wind className="h-10 w-10" /> : 
+                  {currentStep?.type === 'breath' ? <Wind className="h-10 w-10 animate-pulse" /> : 
                    currentStep?.type === 'ingest' ? <Droplets className="h-10 w-10" /> :
                    currentStep?.type === 'mouthwash' ? <Sparkles className="h-10 w-10" /> :
                    <Clock className="h-10 w-10" />}
                 </div>
                 
                 <div className="space-y-1">
-                   <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Acción a realizar ahora:</p>
+                   <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Acción Actual:</p>
                    <h3 className={cn(
-                     "text-2xl font-black italic leading-tight",
+                     "text-2xl font-black italic",
                      currentStep?.type === 'breath' ? "text-blue-700" : 
                      currentStep?.type === 'ingest' ? "text-amber-700" :
                      currentStep?.type === 'mouthwash' ? "text-emerald-700" :
@@ -349,19 +350,16 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
                      <p className="text-6xl font-black text-primary font-mono tracking-tighter tabular-nums">
                        {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                      </p>
-                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2">
-                        Intervalo de seguridad activo
-                     </p>
                   </div>
                 ) : isDue ? (
-                  <div className="bg-red-500 text-white p-4 rounded-2xl w-full flex items-center justify-center gap-3 animate-pulse shadow-xl">
+                  <div className="bg-red-500 text-white p-4 rounded-2xl w-full flex items-center justify-center gap-3 animate-pulse">
                      <AlertCircle className="h-6 w-6" />
-                     <p className="text-sm font-black uppercase italic">¡Tiempo Cumplido! Realizar ahora</p>
+                     <p className="text-sm font-black uppercase italic">¡Tiempo Cumplido!</p>
                   </div>
                 ) : currentStep?.type === 'breath' && (
-                  <div className="bg-blue-500 text-white p-4 rounded-2xl w-full flex items-center justify-center gap-3 animate-pulse shadow-xl">
+                  <div className="bg-blue-500 text-white p-4 rounded-2xl w-full flex items-center justify-center gap-3">
                      <Wind className="h-6 w-6" />
-                     <p className="text-sm font-black uppercase italic">Solicitar soplido clínico</p>
+                     <p className="text-sm font-black uppercase italic">Solicitar Soplido</p>
                   </div>
                 )}
               </div>
@@ -369,27 +367,25 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
 
             <div className="space-y-4">
               <Button 
+                type="button"
                 onClick={onConfirm}
                 disabled={isButtonDisabled}
                 className={cn(
-                  "w-full h-20 rounded-3xl font-black text-xl shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3",
-                  isDue ? "bg-red-500 hover:bg-red-600 animate-bounce" : 
+                  "w-full h-20 rounded-3xl font-black text-xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3",
+                  isDue ? "bg-red-500 hover:bg-red-600" : 
                   currentStep?.type === 'breath' ? "bg-blue-600 hover:bg-blue-700" :
                   "bg-primary"
                 )}
               >
-                {nextStep ? (
-                  <>Confirmar Acción <CheckCircle2 className="h-8 w-8" /></>
-                ) : (
-                  <>Finalizar Protocolo <CheckCircle2 className="h-8 w-8" /></>
-                )}
+                {nextStep ? "Confirmar y Continuar" : "Finalizar Protocolo"}
+                <CheckCircle2 className="h-6 w-6" />
               </Button>
 
               {nextStep && (
                 <div className="flex items-center justify-center gap-2 p-3 bg-muted/20 rounded-2xl border border-dashed border-muted-foreground/20">
-                   <p className="text-[10px] font-black text-muted-foreground uppercase">Siguiente Paso:</p>
-                   <Badge variant="outline" className="bg-white font-bold text-[10px] border-primary/10">
-                     {nextStep.name} ({nextStep.durationMinutes > 0 ? `${nextStep.durationMinutes} min` : 'Instante'})
+                   <p className="text-[10px] font-black text-muted-foreground uppercase">Siguiente:</p>
+                   <Badge variant="outline" className="bg-white font-bold text-[10px]">
+                     {nextStep.name}
                    </Badge>
                 </div>
               )}
@@ -400,31 +396,22 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
         <div className="pt-6 border-t border-dashed">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2 tracking-widest">
-              <History className="h-3 w-3" /> Bitácora del Paciente
+              <History className="h-3 w-3" /> Bitácora Digital
             </h4>
-            <Badge className="bg-muted text-muted-foreground text-[8px] font-black">{logs.length} Eventos</Badge>
           </div>
           <ScrollArea className="h-28">
             <div className="space-y-2 pr-3">
               {logs.slice().reverse().map((log: any, i: number) => (
                 <div key={i} className="flex justify-between items-center p-2 rounded-xl bg-muted/30 border border-primary/5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1 h-1 rounded-full bg-secondary" />
-                    <span className="text-[10px] font-bold text-primary/70">{log.stepName}</span>
-                  </div>
-                  <span className="text-[10px] font-black text-secondary">{format(new Date(log.timestamp), "HH:mm:ss")} hrs</span>
+                  <span className="text-[10px] font-bold text-primary/70">{log.stepName}</span>
+                  <span className="text-[10px] font-black text-secondary">{format(new Date(log.timestamp), "HH:mm:ss")}</span>
                 </div>
               ))}
             </div>
           </ScrollArea>
         </div>
       </CardContent>
-      
-      <CardFooter className="bg-muted/30 border-t p-4 flex justify-center">
-         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
-           <Activity className="h-3 w-3 text-secondary" /> Trazabilidad Clínica Oralab
-         </p>
-      </CardFooter>
     </Card>
   );
 }
+
