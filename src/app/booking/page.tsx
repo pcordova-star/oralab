@@ -163,8 +163,8 @@ export default function BookingPage() {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
       const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
-      // BLOQUEO MANUAL POR FALTA DE ATENCIÓN (MAÑANA)
-      if (formattedDate === tomorrowStr) {
+      // BLOQUEO MANUAL: AGOSTO Y PRIMER LUNES DE SEPTIEMBRE
+      if (formattedDate === "2025-08-31" || formattedDate === "2025-09-01" || formattedDate === tomorrowStr) {
         setOccupiedSlots(timeSlots); 
         setIsLoadingSlots(false);
         return;
