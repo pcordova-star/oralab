@@ -25,7 +25,9 @@ import {
   ClipboardCheck,
   ShieldCheck,
   MessageCircle,
-  ChevronDown
+  ChevronDown,
+  Volume2,
+  Bell
 } from "lucide-react";
 import { 
   LineChart, 
@@ -79,6 +81,83 @@ const EXAMS = [
     icon: <Beaker className="h-6 w-6 text-primary" />
   }
 ];
+
+const HomeTestSimulator = () => {
+  const [step, setStep] = useState(0);
+  
+  const steps = [
+    { title: "Enjuague Bucal", type: "mouthwash", icon: <Sparkles className="h-8 w-8" />, color: "text-emerald-400" },
+    { title: "Muestra Basal (T-0)", type: "breath", icon: <Wind className="h-8 w-8" />, color: "text-blue-400" },
+    { title: "Ingesta Sustrato", type: "ingest", icon: <Droplets className="h-8 w-8" />, color: "text-amber-400" },
+    { title: "Reposo (28 min)", type: "wait", icon: <Timer className="h-8 w-8" />, color: "text-secondary" },
+    { title: "Alarma Activa", type: "alarm", icon: <Bell className="h-8 w-8 animate-bounce" />, color: "text-red-400" },
+    { title: "Muestra 2 (T-30)", type: "breath", icon: <Wind className="h-8 w-8" />, color: "text-blue-400" },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStep((prev) => (prev + 1) % steps.length);
+    }, 2500);
+    return () => clearInterval(timer);
+  }, [steps.length]);
+
+  return (
+    <div className="w-full max-w-[320px] aspect-[9/16] bg-slate-900 rounded-[3rem] border-[8px] border-slate-800 shadow-2xl relative overflow-hidden flex flex-col p-6 font-body">
+      {/* Notch */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20" />
+      
+      {/* App Content */}
+      <div className="flex-1 bg-white rounded-2xl overflow-hidden flex flex-col">
+        <header className="p-3 border-b bg-slate-50 flex items-center justify-between">
+          <Logo />
+          <Volume2 className="h-4 w-4 text-primary" />
+        </header>
+        
+        <div className="flex-1 p-4 flex flex-col items-center justify-center text-center space-y-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.2 }}
+              className="space-y-4 w-full"
+            >
+              <div className={cn("mx-auto w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center shadow-inner", steps[step].color)}>
+                {steps[step].icon}
+              </div>
+              <div>
+                <Badge variant="outline" className="mb-2 text-[8px] font-black uppercase tracking-widest border-primary/20 text-primary">PASO {step + 1} / {steps.length}</Badge>
+                <h4 className="text-sm font-black text-slate-900 leading-tight italic">{steps[step].title}</h4>
+                <p className="text-[10px] text-slate-500 mt-2 leading-tight">Simulación de protocolo acelerado para demostración.</p>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          
+          <div className="w-full space-y-2">
+            {steps[step].type === 'wait' || steps[step].type === 'alarm' ? (
+              <div className="text-4xl font-black text-primary tabular-nums">
+                {steps[step].type === 'alarm' ? "0:00" : "27:54"}
+              </div>
+            ) : null}
+            <Button className={cn("w-full rounded-xl text-[10px] font-black h-10 shadow-lg", steps[step].type === 'alarm' ? "bg-red-500 animate-pulse" : "bg-primary")}>
+              {steps[step].type === 'breath' ? "CONFIRMAR SOPLIDO" : "CONTINUAR TEST"}
+            </Button>
+          </div>
+        </div>
+        
+        <footer className="p-3 bg-slate-50 border-t">
+          <div className="flex justify-between items-center text-[8px] font-bold text-slate-400">
+             <span>BITÁCORA ACTIVA</span>
+             <Activity className="h-3 w-3 text-secondary" />
+          </div>
+        </footer>
+      </div>
+      
+      {/* Home Indicator */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-slate-700 rounded-full" />
+    </div>
+  );
+};
 
 const TechnologicalHeroTitle = () => {
   return (
@@ -277,7 +356,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* HOME KIT SECTION */}
+        {/* HOME KIT SECTION WITH SIMULATOR */}
         <section className="py-24 bg-background overflow-hidden">
           <div className="container mx-auto px-4">
              <div className="glass-panel !bg-primary rounded-[3rem] p-8 md:p-20 shadow-2xl border-none relative text-white">
@@ -308,9 +387,20 @@ export default function HomePage() {
                       </Button>
                     </Link>
                   </div>
-                  <div className="relative hidden lg:block">
-                     <div className="aspect-[4/3] bg-white/5 rounded-[2.5rem] border border-white/10 p-4 flex items-center justify-center">
-                        <Activity className="h-48 w-48 text-secondary opacity-50" />
+                  <div className="relative hidden lg:flex justify-center">
+                     {/* ANIMATED SIMULATOR */}
+                     <HomeTestSimulator />
+                     
+                     <div className="absolute -bottom-6 -right-6 glass-panel !bg-white/10 p-6 rounded-3xl border-white/20 backdrop-blur-xl animate-float">
+                        <div className="flex items-center gap-3">
+                           <div className="bg-secondary p-2 rounded-lg">
+                              <Bell className="h-5 w-5 text-white animate-ring" />
+                           </div>
+                           <div>
+                              <p className="text-xs font-black uppercase tracking-tighter">Alarmas de Alta Seguridad</p>
+                              <p className="text-[10px] opacity-70">Sonido + Vibración + Wake Lock</p>
+                           </div>
+                        </div>
                      </div>
                   </div>
                 </div>
