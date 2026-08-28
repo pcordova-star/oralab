@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, doc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, doc, updateDoc, arrayUnion, serverTimestamp, deleteField } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,8 @@ import {
   RotateCcw,
   ArrowLeft,
   ChevronRight,
-  ArrowRightCircle
+  ArrowRightCircle,
+  XCircle
 } from "lucide-react";
 import { PROTOCOLS } from "@/app/lib/types";
 import { format, differenceInSeconds } from "date-fns";
@@ -87,6 +88,34 @@ export default function TensAssistantPage() {
       toast({ title: "Test Iniciado", description: "El protocolo ha comenzado." });
     } catch (e) {
       toast({ variant: "destructive", title: "Error", description: "No se pudo iniciar el test." });
+    }
+  };
+
+  const handleResetTest = async (bookingId: string) => {
+    if (!db || !confirm("¿Seguro que deseas reiniciar el protocolo de este paciente? Se borrarán los soplidos actuales.")) return;
+    try {
+      await updateDoc(doc(db, "bookings", bookingId), {
+        status: "arrived",
+        testLogs: [],
+        testStartTime: deleteField()
+      });
+      toast({ title: "Protocolo Reiniciado", description: "El paciente ha vuelto a estado 'En Sala'." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "No se pudo reiniciar el test." });
+    }
+  };
+
+  const handleCancelTest = async (bookingId: string) => {
+    if (!db || !confirm("¿Deseas cancelar el test en curso?")) return;
+    try {
+      await updateDoc(doc(db, "bookings", bookingId), {
+        status: "arrived",
+        testLogs: [],
+        testStartTime: deleteField()
+      });
+      toast({ title: "Test Cancelado", description: "Se ha detenido el cronómetro clínico." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "No se pudo cancelar." });
     }
   };
 
@@ -180,6 +209,8 @@ export default function TensAssistantPage() {
                 booking={booking} 
                 now={now} 
                 onStart={() => handleStartTest(booking.id)}
+                onReset={() => handleResetTest(booking.id)}
+                onCancel={() => handleCancelTest(booking.id)}
                 onConfirm={() => handleConfirmStep(booking)}
                 onAlarm={playAlarm}
               />
@@ -191,7 +222,7 @@ export default function TensAssistantPage() {
   );
 }
 
-function PatientTestCard({ booking, now, onStart, onConfirm, onAlarm }: { booking: any, now: number, onStart: () => void, onConfirm: () => void, onAlarm: () => void }) {
+function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, onAlarm }: { booking: any, now: number, onStart: () => void, onReset: () => void, onCancel: () => void, onConfirm: () => void, onAlarm: () => void }) {
   const protocol = PROTOCOLS[booking.examType];
   const logs = booking.testLogs || [];
   const currentStepIndex = logs.length - 1;
@@ -221,7 +252,6 @@ function PatientTestCard({ booking, now, onStart, onConfirm, onAlarm }: { bookin
   }, [now, isStarted, currentStep, logs, onAlarm]);
 
   const progress = protocol ? (currentStepIndex / protocol.steps.length) * 100 : 0;
-  // Permitir confirmar de inmediato si no es un paso de 'espera'
   const isButtonDisabled = currentStep?.type === 'wait' && timeLeft > 0 && !isDue;
 
   return (
@@ -234,20 +264,31 @@ function PatientTestCard({ booking, now, onStart, onConfirm, onAlarm }: { bookin
         isDue ? "bg-red-500 animate-pulse" : "bg-primary"
       )}>
         <div className="flex justify-between items-start relative z-10">
-          <div>
+          <div className="flex-1">
             <Badge className="bg-white/20 hover:bg-white/30 text-white border-none mb-3 font-black uppercase text-[10px] tracking-widest px-4 py-1">
               {booking.examType}
             </Badge>
-            <CardTitle className="text-2xl font-black italic leading-none">{booking.firstName} {booking.lastNameFather}</CardTitle>
+            <CardTitle className="text-2xl font-black italic leading-none truncate">{booking.firstName} {booking.lastNameFather}</CardTitle>
             <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mt-2 flex items-center gap-1">
               <Clock className="h-3 w-3" /> Llegada: {booking.scheduledTime} hrs
             </p>
           </div>
-          <div className="bg-white/20 p-4 rounded-3xl backdrop-blur-md">
-            {isStarted ? <Timer className="h-8 w-8 animate-pulse" /> : <Activity className="h-8 w-8" />}
+          <div className="flex flex-col items-end gap-2">
+            <div className="bg-white/20 p-4 rounded-3xl backdrop-blur-md">
+              {isStarted ? <Timer className="h-8 w-8 animate-pulse" /> : <Activity className="h-8 w-8" />}
+            </div>
+            {isStarted && (
+              <div className="flex gap-2">
+                <Button variant="ghost" size="icon" onClick={onReset} className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/30 text-white" title="Reiniciar Protocolo">
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/30 text-white" title="Cancelar Test">
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
-        {/* Background shape */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-16 -mt-16" />
       </CardHeader>
 
