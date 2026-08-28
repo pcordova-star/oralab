@@ -1,9 +1,11 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, doc, updateDoc, arrayUnion, serverTimestamp, deleteField } from "firebase/firestore";
+import { collection, query, where, doc, arrayUnion, serverTimestamp, deleteField } from "firebase/firestore";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +18,6 @@ import {
   CheckCircle2, 
   Clock, 
   Timer, 
-  Bell, 
   Volume2, 
   Activity, 
   Wind, 
@@ -24,16 +25,12 @@ import {
   Sparkles, 
   History,
   AlertCircle,
-  Pause,
   RotateCcw,
   ArrowLeft,
-  ChevronRight,
-  ArrowRightCircle,
   XCircle
 } from "lucide-react";
 import { PROTOCOLS } from "@/app/lib/types";
-import { format, differenceInSeconds } from "date-fns";
-import { es } from "date-fns/locale";
+import { format } from "date-fns";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -74,81 +71,67 @@ export default function TensAssistantPage() {
     }
   };
 
-  const handleStartTest = async (bookingId: string) => {
+  const handleStartTest = (bookingId: string) => {
     if (!db) return;
-    try {
-      await updateDoc(doc(db, "bookings", bookingId), {
-        status: "in_progress",
-        testStartTime: serverTimestamp(),
-        testLogs: arrayUnion({
-          stepName: "Inicio de Protocolo",
-          timestamp: new Date().toISOString()
-        })
-      });
-      toast({ title: "Test Iniciado", description: "El protocolo ha comenzado." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo iniciar el test." });
-    }
+    updateDocumentNonBlocking(doc(db, "bookings", bookingId), {
+      status: "in_progress",
+      testStartTime: serverTimestamp(),
+      testLogs: arrayUnion({
+        stepName: "Inicio de Protocolo",
+        timestamp: new Date().toISOString()
+      })
+    });
+    toast({ title: "Test Iniciado", description: "El protocolo ha comenzado." });
   };
 
-  const handleResetTest = async (bookingId: string) => {
+  const handleResetTest = (bookingId: string) => {
     if (!db || !confirm("¿Seguro que deseas reiniciar el protocolo de este paciente? Se borrarán los soplidos actuales.")) return;
-    try {
-      await updateDoc(doc(db, "bookings", bookingId), {
-        status: "arrived",
-        testLogs: [],
-        testStartTime: deleteField()
-      });
-      toast({ title: "Protocolo Reiniciado", description: "El paciente ha vuelto a estado 'En Sala'." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo reiniciar el test." });
-    }
+    updateDocumentNonBlocking(doc(db, "bookings", bookingId), {
+      status: "arrived",
+      testLogs: [],
+      testStartTime: deleteField()
+    });
+    toast({ title: "Protocolo Reiniciado", description: "El paciente ha vuelto a estado 'En Sala'." });
   };
 
-  const handleCancelTest = async (bookingId: string) => {
+  const handleCancelTest = (bookingId: string) => {
     if (!db || !confirm("¿Deseas cancelar el test en curso?")) return;
-    try {
-      await updateDoc(doc(db, "bookings", bookingId), {
-        status: "arrived",
-        testLogs: [],
-        testStartTime: deleteField()
-      });
-      toast({ title: "Test Cancelado", description: "Se ha detenido el cronómetro clínico." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo cancelar." });
-    }
+    updateDocumentNonBlocking(doc(db, "bookings", bookingId), {
+      status: "arrived",
+      testLogs: [],
+      testStartTime: deleteField()
+    });
+    toast({ title: "Test Cancelado", description: "Se ha detenido el cronómetro clínico." });
   };
 
-  const handleConfirmStep = async (booking: any) => {
+  const handleConfirmStep = (booking: any) => {
     if (!db) return;
     const protocol = PROTOCOLS[booking.examType];
     if (!protocol) return;
 
     const currentStepIndex = (booking.testLogs?.length || 0) - 1;
-    const nextStep = protocol.steps[currentStepIndex + 1];
+    const currentProtocolStep = protocol.steps[currentStepIndex];
 
-    if (!nextStep) {
-      await updateDoc(doc(db, "bookings", booking.id), {
-        status: "completed",
-        testLogs: arrayUnion({
-          stepName: "Protocolo Finalizado",
-          timestamp: new Date().toISOString()
-        })
-      });
-      toast({ title: "Test Completado", description: "Protocolo terminado." });
-      return;
+    if (!currentProtocolStep) return;
+
+    const isLastStep = currentStepIndex === protocol.steps.length - 1;
+    const updates: any = {
+      testLogs: arrayUnion({
+        stepName: currentProtocolStep.name,
+        timestamp: new Date().toISOString()
+      })
+    };
+
+    if (isLastStep) {
+      updates.status = "completed";
     }
 
-    try {
-      await updateDoc(doc(db, "bookings", booking.id), {
-        testLogs: arrayUnion({
-          stepName: nextStep.name,
-          timestamp: new Date().toISOString()
-        })
-      });
-      toast({ title: "Paso Confirmado", description: `${nextStep.name} registrado.` });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo registrar la muestra." });
+    updateDocumentNonBlocking(doc(db, "bookings", booking.id), updates);
+    
+    if (isLastStep) {
+      toast({ title: "Test Completado", description: "Protocolo terminado." });
+    } else {
+      toast({ title: "Paso Confirmado", description: `${currentProtocolStep.name} registrado.` });
     }
   };
 
@@ -249,9 +232,10 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
       setTimeLeft(0);
       setIsStartedDue(false);
     }
-  }, [now, isStarted, currentStep, logs, onAlarm]);
+  }, [now, isStarted, currentStep, logs, onAlarm, isDue]);
 
   const progress = protocol ? (currentStepIndex / protocol.steps.length) * 100 : 0;
+  // Solo bloqueamos el botón si es un paso de ESPERA y el tiempo no ha terminado
   const isButtonDisabled = currentStep?.type === 'wait' && timeLeft > 0 && !isDue;
 
   return (
@@ -273,17 +257,29 @@ function PatientTestCard({ booking, now, onStart, onReset, onCancel, onConfirm, 
               <Clock className="h-3 w-3" /> Llegada: {booking.scheduledTime} hrs
             </p>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-3">
             <div className="bg-white/20 p-4 rounded-3xl backdrop-blur-md">
               {isStarted ? <Timer className="h-8 w-8 animate-pulse" /> : <Activity className="h-8 w-8" />}
             </div>
             {isStarted && (
-              <div className="flex gap-2">
-                <Button variant="ghost" size="icon" onClick={onReset} className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/30 text-white" title="Reiniciar Protocolo">
-                  <RotateCcw className="h-4 w-4" />
+              <div className="flex gap-2 relative z-20">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={(e) => { e.stopPropagation(); onReset(); }} 
+                  className="h-9 w-9 rounded-full bg-white/10 hover:bg-white text-white hover:text-primary border-white/20" 
+                  title="Reiniciar Protocolo"
+                >
+                  <RotateCcw className="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/30 text-white" title="Cancelar Test">
-                  <XCircle className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={(e) => { e.stopPropagation(); onCancel(); }} 
+                  className="h-9 w-9 rounded-full bg-white/10 hover:bg-red-600 text-white border-white/20" 
+                  title="Cancelar Test"
+                >
+                  <XCircle className="h-5 w-5" />
                 </Button>
               </div>
             )}
