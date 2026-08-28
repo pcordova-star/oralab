@@ -12,24 +12,14 @@ import {
   Beaker,
   AlertCircle,
   Stethoscope,
-  ClipboardCheck,
-  MapPin,
-  Lock,
   ChevronRight,
   Sparkles,
   Wind,
-  BarChart3,
   Timer,
-  Home,
   Droplets,
-  RotateCcw,
   CheckCircle2,
-  Coffee,
-  Briefcase,
-  Users,
-  FileText,
-  Handshake,
-  Microscope
+  Microscope,
+  Lock
 } from "lucide-react";
 import { 
   LineChart, 
@@ -42,7 +32,6 @@ import {
   Legend, 
   ReferenceArea 
 } from 'recharts';
-import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -142,26 +131,12 @@ const ClinicalReportVisualizer = () => {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={reportData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
               {!isMobile && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />}
-              <XAxis 
-                dataKey="time" 
-                tick={{ fontSize: 10, fontWeight: 'bold' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis 
-                tick={{ fontSize: 10, fontWeight: 'bold' }}
-                axisLine={false}
-                tickLine={false}
-                hide={isMobile}
-              />
-              <Tooltip 
-                contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
-              />
+              <XAxis dataKey="time" tick={{ fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} hide={isMobile} />
+              <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
               {!isMobile && <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />}
-              <ReferenceArea x1={0} x2={180} y1={0} y2={60} fill="#f8fafc" fillOpacity={0.5} />
               <Line name="H₂ (Hidrógeno)" type="monotone" dataKey="h2" stroke="#1c68b6" strokeWidth={isMobile ? 3 : 4} dot={!isMobile} />
               <Line name="CH₄ (Metano)" type="monotone" dataKey="ch4" stroke="#10b981" strokeWidth={isMobile ? 2 : 3} dot={!isMobile} />
-              <Line name="H₂S (Sulfuro)" type="monotone" dataKey="h2s" stroke="#f59e0b" strokeWidth={isMobile ? 2 : 3} dot={!isMobile} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -173,17 +148,15 @@ const ClinicalReportVisualizer = () => {
                 <TableHead className="h-8 text-[9px] md:text-[10px] font-bold">Tiempo</TableHead>
                 <TableHead className="h-8 text-[9px] md:text-[10px] font-bold">H₂ (ppm)</TableHead>
                 <TableHead className="h-8 text-[9px] md:text-[10px] font-bold">CH₄ (ppm)</TableHead>
-                <TableHead className="h-8 text-[9px] md:text-[10px] font-bold">H₂S (ppm)</TableHead>
                 <TableHead className="h-8 text-[9px] md:text-[10px] font-bold">Síntomas</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {reportData.slice(0, 5).map((row, i) => (
-                <TableRow key={i} className="hover:bg-primary/5">
+                <TableRow key={i}>
                   <TableCell className="py-2 text-[9px] md:text-[10px] font-bold">{row.time} min</TableCell>
                   <TableCell className={cn("py-2 text-[9px] md:text-[10px] font-black", row.h2 > 20 ? "text-red-600" : "text-primary")}>{row.h2}</TableCell>
                   <TableCell className="py-2 text-[9px] md:text-[10px] font-medium">{row.ch4}</TableCell>
-                  <TableCell className="py-2 text-[9px] md:text-[10px] font-medium text-amber-600">{row.h2s}</TableCell>
                   <TableCell className="py-2 text-[9px] md:text-[10px] italic text-muted-foreground">{row.symptoms}</TableCell>
                 </TableRow>
               ))}
@@ -195,238 +168,13 @@ const ClinicalReportVisualizer = () => {
   );
 };
 
-const TechScannerAnimation = () => {
-  return (
-    <div className="relative w-full aspect-square max-w-[280px] md:max-w-[400px] flex items-center justify-center mx-auto">
-      <motion.div 
-        animate={{ rotate: 360 }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        className="absolute w-full h-full border-2 border-dashed border-secondary/20 rounded-full"
-      />
-      <div className="relative z-10 bg-white/5 backdrop-blur-xl p-6 md:p-8 rounded-full border border-white/20 shadow-2xl flex items-center justify-center">
-        <Wind className="h-10 w-10 md:h-16 md:w-16 text-secondary animate-pulse" />
-      </div>
-    </div>
-  );
-};
-
-const DigestiveHealthEducationSection = () => {
-  return (
-    <section className="py-24 bg-primary text-white overflow-hidden relative">
-      <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <motion.div 
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="space-y-8"
-          >
-            <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Diagnóstico Multidisciplinario</Badge>
-            <h2 className="text-4xl md:text-6xl font-black italic leading-tight">
-              Mucho más que <span className="text-secondary">SIBO</span>
-            </h2>
-            <div className="space-y-6 text-lg md:text-xl opacity-90 leading-relaxed font-medium">
-              <p>
-                Utilizamos tecnología de punta para identificar diversos trastornos digestivos que afectan tu calidad de vida diaria.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-               {[
-                 { icon: <Zap className="h-6 w-6 text-secondary" />, title: "Intolerancias", desc: "Detección precisa de malabsorción de Lactosa y Fructosa." },
-                 { icon: <Activity className="h-6 w-6 text-secondary" />, title: "SIBO e IMO", desc: "Sobrecrecimiento bacteriano y de arqueas metanogénicas." },
-                 { icon: <Beaker className="h-6 w-6 text-secondary" />, title: "Tiempo de Tránsito", desc: "Evaluación de la velocidad del vaciado gástrico e intestinal." },
-                 { icon: <AlertCircle className="h-6 w-6 text-secondary" />, title: "Disbiosis H2S", desc: "Muestra de gases sulfhídricos para casos complejos." },
-               ].map((item, i) => (
-                 <div key={i} className="bg-white/10 p-6 rounded-[2rem] border border-white/10 backdrop-blur-sm">
-                   <div className="mb-4">{item.icon}</div>
-                   <h4 className="font-black text-lg mb-2">{item.title}</h4>
-                   <p className="text-sm opacity-70 leading-relaxed">{item.desc}</p>
-                 </div>
-               ))}
-            </div>
-          </motion.div>
-          <div className="hidden lg:flex justify-center">
-             <div className="relative">
-                <div className="absolute -inset-4 bg-secondary/20 blur-3xl rounded-full" />
-                <div className="relative bg-white/5 border border-white/10 p-12 rounded-[3rem] backdrop-blur-xl">
-                   <Microscope className="h-64 w-64 text-secondary opacity-50" />
-                </div>
-             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-const InteractiveAssistantSim = () => {
-  const [step, setStep] = useState(0);
-
-  const simSteps = [
-    {
-      title: "Enjuague Bucal",
-      instruction: "Enjuague su boca con agua durante 1 minuto.",
-      importance: "Limpia la cavidad oral de bacterias que podrían falsear los resultados iniciales.",
-      icon: <Sparkles className="h-8 w-8" />,
-      badge: "Preparación",
-      button: "Comenzar Enjuague",
-      time: "01:00"
-    },
-    {
-      title: "Muestra Basal (T-0)",
-      instruction: "Sopla en el primer tubo antes de ingerir el sustrato.",
-      importance: "Este es tu punto cero. Nos permite saber cuántos gases produce tu cuerpo naturalmente.",
-      icon: <Wind className="h-8 w-8" />,
-      badge: "Muestra 1",
-      button: "Confirmar Soplido",
-      time: "00:00"
-    },
-    {
-      title: "Ingesta del Sustrato",
-      instruction: "Beba la solución (Lactosa, Fructosa, etc.) en 2 minutos.",
-      importance: "El sustrato es el reactivo que nos permitirá evaluar la respuesta de tu organismo.",
-      icon: <Droplets className="h-8 w-8" />,
-      badge: "Ingesta",
-      button: "Comenzar Ingesta",
-      time: "02:00"
-    },
-    {
-      title: "Periodo de Espera",
-      instruction: "Mantén reposo absoluto durante 28 minutos.",
-      importance: "Los intervalos de 30 minutos son el estándar para construir una curva metabólica fiable.",
-      icon: <Timer className="h-8 w-8" />,
-      badge: "Protocolo 180 min",
-      button: "Esperando...",
-      time: "28:00",
-      isWaiting: true
-    },
-    {
-      title: "Siguientes Muestras",
-      instruction: "Soplarás cada 30 minutos hasta completar la curva.",
-      importance: "Para intolerancias realizamos 7 muestras y para SIBO 4 muestras exactas.",
-      icon: <Wind className="h-8 w-8" />,
-      badge: "Seguimiento",
-      button: "Ver Siguiente Paso",
-      time: "30:00"
-    },
-    {
-      title: "¡Test Finalizado!",
-      instruction: "Has completado todas las muestras con éxito.",
-      importance: "Ahora entrega tus tubos en el laboratorio para su análisis digital Sunvou®.",
-      icon: <CheckCircle2 className="h-10 w-10 text-secondary" />,
-      badge: "Procedimiento Logrado",
-      button: "Ver Resumen",
-      time: "OK",
-      isFinal: true
-    }
-  ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setStep((prev) => (prev + 1) % simSteps.length);
-    }, 4500); 
-    return () => clearInterval(timer);
-  }, [simSteps.length]);
-
-  const current = simSteps[step];
-
-  return (
-    <div className="relative w-full max-w-sm mx-auto">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, y: 20, scale: 0.8 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          className="absolute -top-24 left-0 right-0 z-20 px-2"
-        >
-          <div className="bg-primary text-white p-4 rounded-2xl shadow-xl relative border-2 border-white/20">
-            <p className="text-[11px] font-bold leading-relaxed italic">
-              <Sparkles className="h-3 w-3 inline mr-1 text-secondary" /> {current.importance}
-            </p>
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rotate-45 border-r-2 border-b-2 border-white/20" />
-          </div>
-        </motion.div>
-      </AnimatePresence>
-
-      <div className="relative glass-panel !bg-white rounded-[3rem] p-8 shadow-2xl border-primary/10 overflow-hidden min-h-[500px] flex flex-col">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-muted">
-           <motion.div 
-             key={step}
-             initial={{ width: "0%" }}
-             animate={{ width: "100%" }}
-             transition={{ duration: 4.5, ease: "linear" }}
-             className="h-full bg-secondary"
-           />
-        </div>
-
-        <div className="mt-6 space-y-6 text-center flex-grow flex flex-col justify-center">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <Badge className={cn(
-                "font-black uppercase text-[10px] px-3 py-1 rounded-full",
-                current.isFinal ? "bg-green-500" : "bg-secondary"
-              )}>
-                {current.badge}
-              </Badge>
-
-              <div className={cn(
-                "w-24 h-24 rounded-3xl flex items-center justify-center mx-auto transition-all duration-500 shadow-inner",
-                current.isFinal ? "bg-green-100 text-green-600 scale-110 shadow-lg" : 
-                current.title === "Enjuague Bucal" ? "bg-emerald-100 text-emerald-600" :
-                current.title.includes("Muestra") ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-600"
-              )}>
-                <motion.div
-                  animate={current.isFinal ? { scale: [1, 1.2, 1] } : {}}
-                  transition={{ repeat: Infinity, duration: 2 }}
-                >
-                  {current.icon}
-                </motion.div>
-              </div>
-
-              <div className="space-y-2 px-2">
-                <h4 className="text-2xl font-black text-primary italic leading-tight">{current.title}</h4>
-                <p className="text-sm font-bold text-muted-foreground leading-snug">{current.instruction}</p>
-              </div>
-
-              <div className="pt-4">
-                <Button 
-                  className={cn(
-                    "w-full rounded-2xl font-black shadow-lg transition-all h-14 text-base",
-                    current.isWaiting ? "bg-slate-200 text-slate-500 border border-slate-300" : 
-                    current.isFinal ? "bg-green-600 hover:bg-green-700" : "bg-primary hover:bg-primary/90"
-                  )}
-                >
-                  {current.button}
-                </Button>
-                {current.time !== "--:--" && (
-                  <p className="mt-3 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Cronómetro: {current.time}
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen selection:bg-secondary selection:text-white overflow-x-hidden font-body">
       <Navbar />
       
       <main className="flex-grow">
-        <section className="relative pt-10 pb-16 md:pt-20 md:pb-20 lg:pt-32 lg:pb-32 overflow-hidden">
+        <section className="relative pt-10 pb-16 md:pt-20 md:pb-20 lg:pt-32 lg:pb-32">
           <div className="container mx-auto px-4 text-center lg:text-left">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <div className="space-y-6 md:space-y-8">
@@ -444,26 +192,19 @@ export default function HomePage() {
                   </Link>
                 </motion.div>
               </div>
-              <div className="hidden lg:block relative"><TechScannerAnimation /></div>
+              <div className="hidden lg:flex justify-center relative">
+                 <div className="w-full max-w-[400px] aspect-square bg-secondary/10 rounded-full flex items-center justify-center p-12 border-4 border-dashed border-secondary/30 animate-pulse">
+                    <Microscope className="h-32 w-32 text-secondary" />
+                 </div>
+              </div>
             </div>
           </div>
         </section>
 
-        <DigestiveHealthEducationSection />
-
-        <section className="py-24 bg-white border-y">
-           <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16 items-center">
-             <div className="space-y-6 lg:order-1">
-                <Badge className="bg-secondary text-primary font-black px-4 py-1 border-none uppercase tracking-widest">Máxima Flexibilidad</Badge>
-                <h2 className="text-3xl md:text-5xl font-black text-primary italic leading-tight">También en tu <br/><span className="text-secondary">Domicilio o Trabajo</span></h2>
-                <p className="text-lg text-muted-foreground font-medium">Lleva la misma precisión clínica a donde estés. Nuestro asistente digital te guiará paso a paso, incluyendo el enjuague bucal previo para asegurar una muestra pura de alta resolución.</p>
-                <div className="flex flex-wrap gap-4 pt-6">
-                  <Link href="/home-test"><Button className="rounded-full h-14 px-8 font-black text-lg bg-primary shadow-xl">Probar Asistente Digital</Button></Link>
-                </div>
-             </div>
-             <div className="lg:order-2">
-               <InteractiveAssistantSim />
-             </div>
+        <section className="py-24 bg-primary text-white">
+           <div className="container mx-auto px-4 text-center">
+              <h2 className="text-4xl md:text-6xl font-black italic mb-8">Tecnología Sunvou® Certificada</h2>
+              <p className="text-xl opacity-80 max-w-2xl mx-auto font-medium">Somos partners de Sunvou en Chile, trayendo la mayor precisión global para el diagnóstico de SIBO e Intolerancias.</p>
            </div>
         </section>
 
@@ -472,7 +213,6 @@ export default function HomePage() {
              <div className="text-center mb-16 space-y-4">
                 <h2 className="text-3xl md:text-5xl font-black text-primary italic">Resultados de Grado Clínico</h2>
                 <div className="h-1 w-20 bg-secondary mx-auto rounded-full" />
-                <p className="max-w-2xl mx-auto text-muted-foreground font-medium">Entregamos reportes detallados compatibles con los estándares del Consenso Norteamericano de 2017.</p>
              </div>
              <ClinicalReportVisualizer />
           </div>
@@ -480,9 +220,31 @@ export default function HomePage() {
       </main>
 
       <footer className="bg-white border-t border-border py-20">
-        <div className="container mx-auto px-4 text-center">
-          <Logo />
-          <p className="text-muted-foreground text-sm leading-relaxed mt-6">Laboratorio especializado en Salud Digestiva Avanzada. Partner tecnológico Sunvou® en Chile.</p>
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-12">
+            <div className="text-center md:text-left space-y-4">
+              <Logo />
+              <p className="text-muted-foreground text-sm max-w-xs leading-relaxed">Laboratorio especializado en Salud Digestiva Avanzada. Partner tecnológico Sunvou® en Chile.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-12 text-sm">
+               <div className="space-y-4">
+                  <h4 className="font-black text-primary uppercase text-[10px] tracking-widest">Atención</h4>
+                  <ul className="space-y-2 font-bold text-muted-foreground">
+                    <li><Link href="/booking" className="hover:text-primary">Reservas</Link></li>
+                    <li><Link href="/home-test" className="hover:text-primary">Test en Casa</Link></li>
+                    <li><Link href="/agreements" className="hover:text-primary">Convenios</Link></li>
+                  </ul>
+               </div>
+               <div className="space-y-4">
+                  <h4 className="font-black text-primary uppercase text-[10px] tracking-widest">Corporativo</h4>
+                  <ul className="space-y-2 font-bold text-muted-foreground">
+                    <li><Link href="/investors" className="hover:text-primary">Inversores</Link></li>
+                    <li><Link href="/sunvou" className="hover:text-primary">Tecnología</Link></li>
+                    <li><Link href="/login" className="hover:text-primary flex items-center gap-1"><Lock className="h-3 w-3" /> Acceso Personal</Link></li>
+                  </ul>
+               </div>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, LayoutDashboard, Globe } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export function Logo() {
@@ -83,6 +83,12 @@ export function Navbar() {
             </Link>
             
             <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-primary hover:bg-primary/5 rounded-full px-4 border border-primary/10">
+                  <Globe className="h-3 w-3 mr-2" /> Ver Sitio Público
+                </Button>
+              </Link>
+              <div className="h-6 w-px bg-border hidden md:block" />
               <span className="hidden md:block text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted px-3 py-1 rounded-full border border-primary/5">
                 Panel Administrativo
               </span>
@@ -118,27 +124,35 @@ export function Navbar() {
                   Mi Test (En Casa)
                 </Button>
               </Link>
-              <Link href="/agreements">
+              <Link href="/investors">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-black text-primary hover:text-secondary uppercase tracking-widest">
+                  Inversionistas
+                </Button>
+              </Link>
+              <Link href="/agreements">
+                <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-bold text-muted-foreground hover:text-primary">
                   Convenios
                 </Button>
               </Link>
               <Link href="/sunvou">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-bold text-muted-foreground hover:text-primary">
-                  Tecnología Sunvou
-                </Button>
-              </Link>
-              <Link href="/how-it-works">
-                <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-bold text-muted-foreground hover:text-primary">
-                  Cómo funciona
+                  Sunvou®
                 </Button>
               </Link>
             </div>
-            <Link href="/booking">
-              <Button size="sm" className="rounded-full font-bold shadow-sm bg-primary hover:bg-primary/90 text-xs md:text-sm">
-                Agendar Examen
-              </Button>
-            </Link>
+            {user?.email === 'admin@oralab.cl' ? (
+              <Link href="/reception">
+                <Button size="sm" className="rounded-full font-black bg-primary text-xs md:text-sm shadow-lg">
+                  <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/booking">
+                <Button size="sm" className="rounded-full font-bold shadow-sm bg-primary hover:bg-primary/90 text-xs md:text-sm">
+                  Agendar Examen
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
