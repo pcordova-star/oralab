@@ -69,7 +69,8 @@ import {
   Handshake,
   Package,
   ShoppingCart,
-  Calculator
+  Calculator,
+  PlayCircle
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -276,6 +277,7 @@ export default function ReceptionPage() {
     switch (status) {
       case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 uppercase font-black text-[9px]">Agendado</Badge>;
       case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-700 uppercase font-black text-[9px]">En Sala</Badge>;
+      case "in_progress": return <Badge variant="outline" className="bg-amber-50 text-amber-700 uppercase font-black text-[9px]">En Curso</Badge>;
       case "completed": return <Badge variant="outline" className="bg-green-50 text-green-700 uppercase font-black text-[9px]">Finalizado</Badge>;
       default: return <Badge variant="outline" className="text-[9px] uppercase font-black">{status}</Badge>;
     }
@@ -314,6 +316,15 @@ export default function ReceptionPage() {
           <TabsContent value="clinical" className="space-y-6 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <Card className="lg:col-span-4 bg-white shadow-xl border-primary/10 rounded-[2rem] p-6 h-fit sticky top-20">
+                <div className="mb-6">
+                  <Link href="/admin/tens-assistant">
+                    <Button className="w-full h-14 bg-secondary hover:bg-secondary/90 font-black text-white rounded-2xl shadow-lg flex items-center justify-center gap-2 italic">
+                       <PlayCircle className="h-6 w-6" /> CONTROL ASISTENTE TENS
+                    </Button>
+                  </Link>
+                  <p className="text-[10px] text-center font-bold text-muted-foreground mt-2 uppercase tracking-widest italic">Coordinación de sala multi-paciente</p>
+                </div>
+                
                 <Calendar 
                   mode="single" 
                   selected={selectedDate} 
@@ -328,9 +339,6 @@ export default function ReceptionPage() {
                 <div className="mt-6 p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
                    <div className="flex justify-between text-xs font-bold"><span>Total Hoy:</span> <span>{filteredBookings.length}</span></div>
                    <div className="flex justify-between text-xs font-bold text-blue-600"><span>En Sala:</span> <span>{filteredBookings.filter(b => b.status === 'arrived').length}</span></div>
-                </div>
-                <div className="mt-4 p-3 bg-secondary/10 rounded-xl border border-secondary/20">
-                   <p className="text-[10px] font-bold text-secondary text-center uppercase tracking-widest">Días con subrayado tienen reservas</p>
                 </div>
               </Card>
               <Card className="lg:col-span-8 bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
@@ -351,7 +359,7 @@ export default function ReceptionPage() {
                             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                               <Select value={b.status} onValueChange={(val) => updateDocumentNonBlocking(doc(db!, "bookings", b.id), { status: val })}>
                                 <SelectTrigger className="w-[110px] h-8 text-[9px] font-black uppercase"><SelectValue /></SelectTrigger>
-                                <SelectContent><SelectItem value="pending">Agendado</SelectItem><SelectItem value="arrived">En sala</SelectItem><SelectItem value="completed">Finalizado</SelectItem></SelectContent>
+                                <SelectContent><SelectItem value="pending">Agendado</SelectItem><SelectItem value="arrived">En sala</SelectItem><SelectItem value="in_progress">En curso</SelectItem><SelectItem value="completed">Finalizado</SelectItem></SelectContent>
                               </Select>
                             </TableCell>
                           </TableRow>

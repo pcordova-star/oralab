@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, LayoutDashboard, Globe } from "lucide-react";
+import { LogOut, LayoutDashboard, Globe, Timer } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export function Logo() {
@@ -82,16 +82,18 @@ export function Navbar() {
               <Logo />
             </Link>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
+              <Link href="/admin/tens-assistant">
+                <Button variant="ghost" size="sm" className="hidden md:flex text-[10px] font-black uppercase text-secondary hover:bg-secondary/5 rounded-full px-4 border border-secondary/10">
+                  <Timer className="h-3 w-3 mr-2" /> Asistente TENS
+                </Button>
+              </Link>
               <Link href="/">
                 <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-primary hover:bg-primary/5 rounded-full px-4 border border-primary/10">
                   <Globe className="h-3 w-3 mr-2" /> Ver Sitio Público
                 </Button>
               </Link>
               <div className="h-6 w-px bg-border hidden md:block" />
-              <span className="hidden md:block text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted px-3 py-1 rounded-full border border-primary/5">
-                Panel Administrativo
-              </span>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -99,7 +101,7 @@ export function Navbar() {
                 className="text-red-500 font-bold hover:bg-red-50 hover:text-red-600 rounded-full h-10 px-4 border border-red-100"
               >
                 <LogOut className="h-4 w-4 mr-2" />
-                Cerrar Sesión
+                Salir
               </Button>
             </div>
           </div>
