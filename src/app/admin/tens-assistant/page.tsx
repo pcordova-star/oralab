@@ -95,13 +95,10 @@ export default function TensAssistantPage() {
     const protocol = PROTOCOLS[booking.examType];
     if (!protocol) return;
 
-    // El índice actual es la cantidad de pasos completados (logs)
-    // Pero el primer log es "Inicio de Protocolo", así que el primer paso real es logs.length - 1
     const currentStepIndex = (booking.testLogs?.length || 0) - 1;
     const nextStep = protocol.steps[currentStepIndex + 1];
 
     if (!nextStep) {
-      // Si no hay más pasos, finalizar
       await updateDoc(doc(db, "bookings", booking.id), {
         status: "completed",
         testLogs: arrayUnion({
@@ -190,14 +187,12 @@ function PatientTestCard({ booking, now, onStart, onConfirm, onAlarm }: { bookin
   const protocol = PROTOCOLS[booking.examType];
   const logs = booking.testLogs || [];
   
-  // El primer log es "Inicio de Protocolo". El primer paso real es el índice 0.
   const currentStepIndex = logs.length - 1;
   const isStarted = booking.status === "in_progress";
   
   const currentStep = protocol?.steps[currentStepIndex];
   const nextStep = protocol?.steps[currentStepIndex + 1];
   
-  // Calcular tiempo restante para el paso actual si es de espera
   const [timeLeft, setTimeLeft] = useState(0);
   const [isDue, setIsStartedDue] = useState(false);
 
@@ -220,6 +215,10 @@ function PatientTestCard({ booking, now, onStart, onConfirm, onAlarm }: { bookin
   }, [now, isStarted, currentStep, logs, onAlarm]);
 
   const progress = protocol ? (currentStepIndex / protocol.steps.length) * 100 : 0;
+
+  // El botón solo se bloquea si es un paso de "espera" y aún queda tiempo.
+  // Los pasos de ingesta, enjuague o soplido (que tienen duración 0) pueden confirmarse antes.
+  const isButtonDisabled = currentStep?.type === 'wait' && timeLeft > 0 && !isDue;
 
   return (
     <Card className={cn(
@@ -271,9 +270,15 @@ function PatientTestCard({ booking, now, onStart, onConfirm, onAlarm }: { bookin
               <div className="flex items-center gap-4 mb-3">
                 <div className={cn(
                   "p-2 rounded-lg",
-                  currentStep?.type === 'breath' ? "bg-blue-100 text-blue-600" : "bg-amber-100 text-amber-600"
+                  currentStep?.type === 'breath' ? "bg-blue-100 text-blue-600" : 
+                  currentStep?.type === 'ingest' ? "bg-amber-100 text-amber-600" :
+                  currentStep?.type === 'mouthwash' ? "bg-emerald-100 text-emerald-600" :
+                  "bg-slate-100 text-slate-600"
                 )}>
-                  {currentStep?.type === 'breath' ? <Wind className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                  {currentStep?.type === 'breath' ? <Wind className="h-5 w-5" /> : 
+                   currentStep?.type === 'ingest' ? <Droplets className="h-5 w-5" /> :
+                   currentStep?.type === 'mouthwash' ? <Sparkles className="h-5 w-5" /> :
+                   <Clock className="h-5 w-5" />}
                 </div>
                 <div>
                    <p className="text-[10px] font-black text-muted-foreground uppercase leading-none">Acción Actual</p>
@@ -286,7 +291,9 @@ function PatientTestCard({ booking, now, onStart, onConfirm, onAlarm }: { bookin
                    <p className="text-4xl font-black text-primary font-mono tabular-nums">
                      {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                    </p>
-                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Esperando siguiente muestra</p>
+                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">
+                     {currentStep?.type === 'wait' ? 'Esperando siguiente muestra' : 'Tiempo sugerido para acción'}
+                   </p>
                 </div>
               ) : isDue ? (
                 <div className="bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-3 animate-pulse">
@@ -303,7 +310,7 @@ function PatientTestCard({ booking, now, onStart, onConfirm, onAlarm }: { bookin
 
             <Button 
               onClick={onConfirm}
-              disabled={timeLeft > 0 && !isDue}
+              disabled={isButtonDisabled}
               className={cn(
                 "w-full h-16 rounded-2xl font-black text-lg shadow-lg transition-all",
                 isDue ? "bg-red-500 hover:bg-red-600 animate-bounce" : "bg-primary"
