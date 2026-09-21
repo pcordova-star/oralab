@@ -163,8 +163,10 @@ export default function BookingPage() {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
       const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
-      // BLOQUEO MANUAL: AGOSTO Y PRIMER LUNES DE SEPTIEMBRE
-      if (formattedDate === "2025-08-31" || formattedDate === "2025-09-01" || formattedDate === tomorrowStr) {
+      // BLOQUEO TOTAL SEPTIEMBRE 2025
+      const isSeptember2025 = selectedDate.getMonth() === 8 && selectedDate.getFullYear() === 2025;
+
+      if (isSeptember2025 || formattedDate === "2025-08-31" || formattedDate === tomorrowStr) {
         setOccupiedSlots(timeSlots); 
         setIsLoadingSlots(false);
         return;
