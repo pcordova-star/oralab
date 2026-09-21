@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -100,8 +101,8 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
-// CONFIGURACIÓN DE APERTURA: SEPTIEMBRE 2025
-const OPERATIONS_START_DATE = new Date(2025, 8, 1);
+// CONFIGURACIÓN DE APERTURA: SEPTIEMBRE 2026
+const OPERATIONS_START_DATE = new Date(2026, 8, 1);
 
 export default function BookingPage() {
   const [step, setStep] = useState(1);
@@ -163,10 +164,10 @@ export default function BookingPage() {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
       const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
-      // BLOQUEO TOTAL SEPTIEMBRE 2025
-      const isSeptember2025 = selectedDate.getMonth() === 8 && selectedDate.getFullYear() === 2025;
+      // BLOQUEO TOTAL SEPTIEMBRE 2026
+      const isSeptember2026 = selectedDate.getMonth() === 8 && selectedDate.getFullYear() === 2026;
 
-      if (isSeptember2025 || formattedDate === "2025-08-31" || formattedDate === tomorrowStr) {
+      if (isSeptember2026 || formattedDate === "2026-08-31" || formattedDate === "2026-09-01" || formattedDate === tomorrowStr) {
         setOccupiedSlots(timeSlots); 
         setIsLoadingSlots(false);
         return;
@@ -466,7 +467,7 @@ export default function BookingPage() {
                               selected={field.value} 
                               onSelect={(d) => { field.onChange(d); setIsCalendarOpen(false); }} 
                               disabled={(d) => {
-                                // Deshabilitar fechas anteriores a Septiembre 2025 y fines de semana
+                                // Deshabilitar fechas anteriores a Septiembre 2026 y fines de semana
                                 return isBefore(d, OPERATIONS_START_DATE) || isWeekend(d);
                               }} 
                               locale={es} 
