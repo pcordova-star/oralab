@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -164,10 +163,11 @@ export default function BookingPage() {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
       const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
-      // BLOQUEO TOTAL SEPTIEMBRE 2026
+      // BLOQUEO TOTAL SEPTIEMBRE 2026 Y PRIMERA SEMANA OCTUBRE 2026
       const isSeptember2026 = selectedDate.getMonth() === 8 && selectedDate.getFullYear() === 2026;
+      const isFirstWeekOctober2026 = selectedDate.getMonth() === 9 && selectedDate.getFullYear() === 2026 && selectedDate.getDate() <= 7;
 
-      if (isSeptember2026 || formattedDate === "2026-08-31" || formattedDate === "2026-09-01" || formattedDate === tomorrowStr) {
+      if (isSeptember2026 || isFirstWeekOctober2026 || formattedDate === "2026-08-31" || formattedDate === "2026-09-01" || formattedDate === tomorrowStr) {
         setOccupiedSlots(timeSlots); 
         setIsLoadingSlots(false);
         return;
