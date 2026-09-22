@@ -27,7 +27,9 @@ import {
   MessageCircle,
   ChevronDown,
   Volume2,
-  Bell
+  Bell,
+  MapPin,
+  ExternalLink
 } from "lucide-react";
 import { 
   LineChart, 
@@ -44,6 +46,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import Image from "next/image";
 
 const reportData = [
   { time: 0, h2: 5, ch4: 2, h2s: 0.8, co2: 'OK', symptoms: 'Ninguno' },
@@ -506,6 +509,61 @@ export default function HomePage() {
               </motion.div>
            </div>
         </section>
+
+        {/* CYBERSALUD PARTNERSHIP SECTION */}
+        <section className="py-24 bg-muted/30 border-t relative overflow-hidden">
+          <div className="container mx-auto px-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="max-w-5xl mx-auto"
+            >
+              <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl border border-primary/5 flex flex-col md:flex-row items-center gap-10 md:gap-16">
+                <div className="shrink-0 w-full md:w-auto flex justify-center">
+                  <a href="https://www.cybersalud.cl" target="_blank" rel="noopener noreferrer" className="block group transition-all duration-500 hover:scale-105">
+                    <div className="relative bg-muted/20 p-6 rounded-[2.5rem] border border-primary/10 overflow-hidden shadow-inner">
+                      <Image 
+                        src="/logo_cybersalud.jpg" 
+                        alt="Logo Cybersalud" 
+                        width={240} 
+                        height={100} 
+                        className="h-auto w-auto max-w-[200px] md:max-w-[240px]"
+                      />
+                      <div className="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </a>
+                </div>
+                
+                <div className="flex-1 space-y-6 text-center md:text-left">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-[10px] font-black uppercase tracking-widest">
+                    <Handshake className="h-3 w-3" /> Partner en Telemedicina
+                  </div>
+                  <h3 className="text-2xl md:text-4xl font-black text-primary italic leading-tight">
+                    ¿Necesitas asistencia médica y seguimiento?
+                  </h3>
+                  <p className="text-lg text-muted-foreground font-medium leading-relaxed">
+                    A través de nuestra alianza con <strong>Cybersalud</strong>, ponemos a tu disposición especialistas que te ayudarán con la interpretación clínica de tus resultados y el tratamiento médico posterior a tu test de aire espirado.
+                  </p>
+                  <div className="pt-4 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-6">
+                    <a href="https://www.cybersalud.cl" target="_blank" rel="noopener noreferrer">
+                      <Button className="rounded-full bg-primary hover:bg-secondary font-black h-14 px-8 shadow-lg transition-all group">
+                        Visitar Cybersalud <ExternalLink className="ml-2 h-4 w-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                      </Button>
+                    </a>
+                    <div className="flex flex-col items-center md:items-start">
+                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Especialidades</p>
+                       <div className="flex gap-2">
+                          <Badge variant="outline" className="text-[9px] font-black border-primary/20">GASTROENTEROLOGÍA</Badge>
+                          <Badge variant="outline" className="text-[9px] font-black border-primary/20">NUTRICIÓN</Badge>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
       </main>
 
       <footer className="bg-white border-t border-border py-20">
@@ -550,7 +608,7 @@ export default function HomePage() {
   );
 }
 
-function MapPin(props: any) {
+function Handshake(props: any) {
   return (
     <svg
       {...props}
@@ -564,8 +622,15 @@ function MapPin(props: any) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-      <circle cx="12" cy="10" r="3" />
+      <path d="m11 17 2 2 6-6" />
+      <path d="m18 14 2.5 2.5a3.37 3.37 0 0 1 0 4.75 3.37 3.37 0 0 1-4.75 0L13 18.5" />
+      <path d="m6.33 21 2.5-2.5" />
+      <path d="m5 13 3.1 3.1" />
+      <path d="m9.27 17 2.15-2.15" />
+      <path d="M18.1 9.91a8.23 8.23 0 0 0-11.47 0" />
+      <path d="M20 7a10.66 10.66 0 0 0-15.54 0" />
+      <path d="M12 13a4.71 4.71 0 0 1 3.42 1.42L18 17l-3.5 3.5L12 18" />
+      <path d="M12 13a4.71 4.71 0 0 0-3.42 1.42L5 18l3.5 3.5L12 18" />
     </svg>
   )
 }
