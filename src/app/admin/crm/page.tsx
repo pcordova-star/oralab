@@ -501,7 +501,7 @@ export default function CRMPage() {
                             ))}
                          </DropdownMenuContent>
                        </DropdownMenu>
-                       <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-red-300 hover:text-red-500 hover:bg-red-50" onClick={() => handleDelete(selectedLead)}>
+                       <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-red-300 hover:text-red-50" onClick={() => handleDelete(selectedLead)}>
                           <Trash2 className="h-5 w-5" />
                        </Button>
                     </div>
