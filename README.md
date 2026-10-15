@@ -1,3 +1,6 @@
+git add .
+git commit -m "Oralab: Implementación Pipeline Estratégico y ajustes de agenda"
+git push
 
 # Oralab - Salud Digestiva Avanzada
 
