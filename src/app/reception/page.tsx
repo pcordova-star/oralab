@@ -70,7 +70,9 @@ import {
   Package,
   ShoppingCart,
   Calculator,
-  PlayCircle
+  PlayCircle,
+  TrendingUp,
+  ArrowRight
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -373,6 +375,23 @@ export default function ReceptionPage() {
           </TabsContent>
 
           <TabsContent value="strategic" className="space-y-6">
+            <div className="mb-8">
+               <Card className="bg-primary text-white rounded-[2rem] p-8 shadow-2xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:scale-110 transition-transform duration-700" />
+                  <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div className="space-y-2 text-center md:text-left">
+                       <h2 className="text-3xl font-black italic">Gestión de Pipeline B2B</h2>
+                       <p className="text-white/80 font-medium max-w-lg">Administra el embudo de ventas, haz seguimiento a convenios y convierte prospectos en alianzas reales.</p>
+                    </div>
+                    <Link href="/admin/crm">
+                       <Button size="lg" className="bg-secondary hover:bg-white hover:text-primary text-white font-black h-16 px-10 rounded-2xl shadow-xl transition-all active:scale-95 text-lg italic">
+                          ENTRAR AL PIPELINE <TrendingUp className="ml-2 h-6 w-6" />
+                       </Button>
+                    </Link>
+                  </div>
+               </Card>
+            </div>
+
             <Tabs defaultValue="crm" className="space-y-6">
               <TabsList className="bg-white p-1 rounded-xl shadow-sm border border-primary/5">
                 <TabsTrigger value="crm" className="font-bold">CRM Ventas</TabsTrigger>
@@ -409,7 +428,12 @@ export default function ReceptionPage() {
 
               <TabsContent value="requests" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-                  <CardHeader className="bg-secondary/5 border-b py-6"><CardTitle className="text-xl font-black text-primary italic flex items-center gap-2"><Handshake className="h-5 w-5" /> Convenios Institucionales</CardTitle></CardHeader>
+                  <CardHeader className="bg-secondary/5 border-b py-6 flex justify-between items-center">
+                    <CardTitle className="text-xl font-black text-primary italic flex items-center gap-2"><Handshake className="h-5 w-5" /> Convenios Institucionales</CardTitle>
+                    <Link href="/admin/crm">
+                      <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase">Ver en Pipeline <ArrowRight className="ml-1 h-3 w-3" /></Button>
+                    </Link>
+                  </CardHeader>
                   <div className="max-h-[500px] overflow-y-auto">
                     <Table>
                       <TableBody>
@@ -419,7 +443,10 @@ export default function ReceptionPage() {
                               <p className="font-black text-primary text-sm">{r.institution}</p>
                               <p className="text-[10px] text-muted-foreground">{r.name} - {r.email}</p>
                             </TableCell>
-                            <TableCell className="text-right"><Button variant="ghost" size="icon" className="text-red-300" onClick={() => deleteDocumentNonBlocking(doc(db!, "agreement_requests", r.id))}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant="outline" className="text-[8px] font-black uppercase mr-2">{r.status || 'Nuevo'}</Badge>
+                              <Button variant="ghost" size="icon" className="text-red-300" onClick={() => deleteDocumentNonBlocking(doc(db!, "agreement_requests", r.id))}><Trash2 className="h-4 w-4" /></Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -427,7 +454,12 @@ export default function ReceptionPage() {
                   </div>
                 </Card>
                 <Card className="bg-white shadow-xl border-primary/10 rounded-[2rem] overflow-hidden">
-                  <CardHeader className="bg-blue-50 border-b py-6"><CardTitle className="text-xl font-black text-blue-700 italic flex items-center gap-2"><MessageSquare className="h-5 w-5" /> Leads Interesados B2B</CardTitle></CardHeader>
+                  <CardHeader className="bg-blue-50 border-b py-6 flex justify-between items-center">
+                    <CardTitle className="text-xl font-black text-blue-700 italic flex items-center gap-2"><MessageSquare className="h-5 w-5" /> Leads Interesados B2B</CardTitle>
+                    <Link href="/admin/crm">
+                      <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase">Ver en Pipeline <ArrowRight className="ml-1 h-3 w-3" /></Button>
+                    </Link>
+                  </CardHeader>
                   <div className="max-h-[500px] overflow-y-auto">
                     <Table>
                       <TableBody>
@@ -437,7 +469,10 @@ export default function ReceptionPage() {
                               <p className="font-black text-blue-800 text-sm">{l.name}</p>
                               <p className="text-[10px] text-muted-foreground">{l.institution}</p>
                             </TableCell>
-                            <TableCell className="text-right"><Button variant="ghost" size="icon" className="text-red-300" onClick={() => deleteDocumentNonBlocking(doc(db!, "leads", l.id))}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant="outline" className="text-[8px] font-black uppercase mr-2">{l.status || 'Nuevo'}</Badge>
+                              <Button variant="ghost" size="icon" className="text-red-300" onClick={() => deleteDocumentNonBlocking(doc(db!, "leads", l.id))}><Trash2 className="h-4 w-4" /></Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

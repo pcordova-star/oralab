@@ -98,6 +98,24 @@
         "institution": { "type": "string" },
         "phone": { "type": "string" },
         "message": { "type": "string" },
+        "status": { "type": "string", "enum": ["new", "contacted", "qualified", "proposal", "closed_won", "closed_lost"] },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "institution", "createdAt"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "Prospecto comercial B2B para tecnología Sunvou.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "institution": { "type": "string" },
+        "phone": { "type": "string" },
+        "message": { "type": "string" },
+        "status": { "type": "string", "enum": ["new", "contacted", "qualified", "proposal", "closed_won", "closed_lost"] },
+        "notes": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "email", "institution", "createdAt"]
@@ -126,6 +144,10 @@
     "/agreement_requests/{requestId}": {
       "schema": "AgreementRequest",
       "description": "Solicitudes de convenio de instituciones o médicos."
+    },
+    "/leads/{leadId}": {
+      "schema": "Lead",
+      "description": "Prospectos interesados en equipos Sunvou."
     }
   }
 }
