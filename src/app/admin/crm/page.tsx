@@ -5,7 +5,8 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp, addDoc } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { 
   DropdownMenu,
@@ -27,6 +29,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Users, 
   Mail, 
@@ -47,7 +56,10 @@ import {
   ChevronRight,
   Handshake,
   Stethoscope,
-  Filter
+  Filter,
+  Plus,
+  User,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -73,7 +85,20 @@ export default function CRMPage() {
   
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isNewProspectDialogOpen, setIsNewProspectDialogOpen] = useState(false);
   const [searchFilter, setSearchFilter] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form State for new prospect
+  const [newProspect, setNewProspect] = useState({
+    type: 'B2B Lead',
+    name: '',
+    email: '',
+    phone: '',
+    institution: '',
+    message: '',
+    status: 'new'
+  });
 
   // Queries
   const leadsQuery = useMemoFirebase(() => db ? query(collection(db, "leads"), orderBy("createdAt", "desc")) : null, [db]);
@@ -107,6 +132,40 @@ export default function CRMPage() {
       won: allProspects.filter(p => p.status === 'closed_won').length,
     };
   }, [allProspects]);
+
+  const handleCreateProspect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db) return;
+    if (!newProspect.name || !newProspect.email || !newProspect.institution) {
+      toast({ variant: "destructive", title: "Campos incompletos", description: "Nombre, email e institución son obligatorios." });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const collectionName = newProspect.type === 'B2B Lead' ? "leads" : "agreement_requests";
+    
+    try {
+      const data = {
+        name: newProspect.name,
+        email: newProspect.email,
+        phone: newProspect.phone,
+        institution: newProspect.institution,
+        message: newProspect.message,
+        status: newProspect.status,
+        createdAt: serverTimestamp()
+      };
+      
+      await addDocumentNonBlocking(collection(db, collectionName), data);
+      
+      toast({ title: "Prospecto Creado", description: `${newProspect.name} ha sido añadido al pipeline.` });
+      setIsNewProspectDialogOpen(false);
+      setNewProspect({ type: 'B2B Lead', name: '', email: '', phone: '', institution: '', message: '', status: 'new' });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "No se pudo guardar el prospecto." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleUpdateStatus = async (prospect: any, newStatus: string) => {
     if (!db) return;
@@ -170,15 +229,23 @@ export default function CRMPage() {
             <p className="text-muted-foreground font-medium">Gestión de prospectos B2B y convenios institucionales.</p>
           </div>
 
-          <div className="flex gap-4">
-             <div className="bg-white p-4 rounded-2xl border shadow-sm flex items-center gap-4">
-                <div className="bg-blue-50 p-2 rounded-lg text-blue-600"><Users className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-black uppercase text-muted-foreground">Total Leads</p><p className="text-xl font-black">{stats.total}</p></div>
+          <div className="flex flex-col sm:flex-row gap-4">
+             <div className="flex gap-4">
+                <div className="bg-white p-4 rounded-2xl border shadow-sm flex items-center gap-4">
+                    <div className="bg-blue-50 p-2 rounded-lg text-blue-600"><Users className="h-5 w-5" /></div>
+                    <div><p className="text-[10px] font-black uppercase text-muted-foreground">Total Leads</p><p className="text-xl font-black">{stats.total}</p></div>
+                </div>
+                <div className="bg-white p-4 rounded-2xl border shadow-sm flex items-center gap-4">
+                    <div className="bg-green-50 p-2 rounded-lg text-green-600"><CheckCircle2 className="h-5 w-5" /></div>
+                    <div><p className="text-[10px] font-black uppercase text-muted-foreground">Cierres Won</p><p className="text-xl font-black">{stats.won}</p></div>
+                </div>
              </div>
-             <div className="bg-white p-4 rounded-2xl border shadow-sm flex items-center gap-4">
-                <div className="bg-green-50 p-2 rounded-lg text-green-600"><CheckCircle2 className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-black uppercase text-muted-foreground">Cierres Won</p><p className="text-xl font-black">{stats.won}</p></div>
-             </div>
+             <Button 
+               onClick={() => setIsNewProspectDialogOpen(true)}
+               className="h-16 px-8 rounded-2xl bg-primary hover:bg-secondary font-black shadow-lg text-lg italic transition-all group"
+             >
+                <Plus className="mr-2 h-6 w-6 group-hover:rotate-90 transition-transform" /> INGRESAR PROSPECTO
+             </Button>
           </div>
         </div>
 
@@ -269,6 +336,106 @@ export default function CRMPage() {
            </div>
         </Card>
       </main>
+
+      {/* FORMULARIO NUEVO PROSPECTO */}
+      <Dialog open={isNewProspectDialogOpen} onOpenChange={setIsNewProspectDialogOpen}>
+        <DialogContent className="max-w-xl rounded-[2.5rem] p-8">
+           <DialogHeader>
+              <DialogTitle className="text-3xl font-black text-primary italic">Nuevo Prospecto</DialogTitle>
+              <DialogDescription className="font-medium">Ingresa los datos para iniciar el seguimiento comercial.</DialogDescription>
+           </DialogHeader>
+
+           <form onSubmit={handleCreateProspect} className="space-y-6 pt-4">
+              <div className="space-y-4">
+                 <div className="space-y-2">
+                    <Label className="font-bold">Categoría de Prospecto</Label>
+                    <Select value={newProspect.type} onValueChange={(v) => setNewProspect({...newProspect, type: v})}>
+                       <SelectTrigger className="h-12 rounded-xl">
+                          <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent>
+                          <SelectItem value="B2B Lead">B2B Lead (Venta Equipos)</SelectItem>
+                          <SelectItem value="Convenio">Convenio Institucional</SelectItem>
+                       </SelectContent>
+                    </Select>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <Label className="font-bold">Nombre de Contacto</Label>
+                       <div className="relative">
+                          <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            className="pl-10 h-12 rounded-xl"
+                            value={newProspect.name}
+                            onChange={(e) => setNewProspect({...newProspect, name: e.target.value})}
+                            placeholder="Ej: Dr. Ricardo Lagos"
+                          />
+                       </div>
+                    </div>
+                    <div className="space-y-2">
+                       <Label className="font-bold">Institución / Clínica</Label>
+                       <div className="relative">
+                          <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            className="pl-10 h-12 rounded-xl"
+                            value={newProspect.institution}
+                            onChange={(e) => setNewProspect({...newProspect, institution: e.target.value})}
+                            placeholder="Nombre del centro"
+                          />
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <Label className="font-bold">Correo Electrónico</Label>
+                       <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            type="email"
+                            className="pl-10 h-12 rounded-xl"
+                            value={newProspect.email}
+                            onChange={(e) => setNewProspect({...newProspect, email: e.target.value})}
+                            placeholder="contacto@empresa.cl"
+                          />
+                       </div>
+                    </div>
+                    <div className="space-y-2">
+                       <Label className="font-bold">Teléfono</Label>
+                       <div className="relative">
+                          <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            className="pl-10 h-12 rounded-xl"
+                            value={newProspect.phone}
+                            onChange={(e) => setNewProspect({...newProspect, phone: e.target.value})}
+                            placeholder="+56 9 ..."
+                          />
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="space-y-2">
+                    <Label className="font-bold">Consulta / Requerimiento</Label>
+                    <Textarea 
+                       className="rounded-xl min-h-[100px]"
+                       placeholder="Detalles sobre el interés del prospecto..."
+                       value={newProspect.message}
+                       onChange={(e) => setNewProspect({...newProspect, message: e.target.value})}
+                    />
+                 </div>
+              </div>
+
+              <DialogFooter className="gap-2">
+                 <Button type="button" variant="ghost" onClick={() => setIsNewProspectDialogOpen(false)} className="rounded-xl font-bold">Cancelar</Button>
+                 <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black bg-primary px-8">
+                    {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
+                    Crear Prospecto
+                 </Button>
+              </DialogFooter>
+           </form>
+        </DialogContent>
+      </Dialog>
 
       {/* DETALLE Y EDICIÓN DE PROSPECTO */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
