@@ -4,22 +4,28 @@
 Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializado en tests de aire espirado para el diagnóstico de SIBO e Intolerancias Alimentarias.
 
 ## Estado del Proyecto
-- **Lanzamiento Septiembre 2026**: El sistema de agendamiento ha sido configurado para iniciar operaciones oficialmente el 1 de septiembre de 2026. 
-- **Bloqueos de Agenda**: Septiembre 2026 y la primera semana de Octubre 2026 están marcados como ocupados para permitir la marcha blanca institucional.
-- **Protocolos Clínicos 2017**: Implementados intervalos fijos de 30 minutos para todos los tests. 4 muestras para SIBO (90 min) y 7 muestras para Intolerancias (180 min), cumpliendo estrictamente con el Consenso Norteamericano.
-- **Pipeline Estratégico (CRM)**: Nueva sección administrativa para la gestión de prospectos B2B (Sunvou) y convenios institucionales con tablero Kanban y bitácora de seguimiento.
-- **Asistente de Alta Seguridad**: El asistente domiciliario incluye **alarma sonora en loop**, vibración háptica y **Wake Lock API** para evitar que el móvil se suspenda.
-- **Trazabilidad Clínica**: El panel administrativo permite ver la **Bitácora de Tiempos** exacta de cada soplido realizado por el paciente para validación de resultados.
-- **Administración Segmentada**: Dashboard unificado dividido en **Área Clínica** (para personal TENS) y **Gestión Estratégica** (CRM Sunvou e Inversores).
+- **Lanzamiento Septiembre 2026**: El sistema de agendamiento está configurado para iniciar operaciones el 1 de septiembre de 2026.
+- **Bloqueos de Agenda**: Septiembre 2026 y la primera semana de Octubre 2026 están marcados como ocupados para la marcha blanca.
+- **Pipeline B2B (CRM)**: Nueva sección administrativa en `/admin/crm` para gestión de prospectos y convenios institucionales.
+- **Alianza Cybersalud**: Integración en el Home para seguimiento médico de pacientes.
+- **Asistente TENS**: Panel de control multi-paciente con cronómetros y alarmas de seguridad.
 
 ## Comandos Git para la Terminal
 Para guardar y subir tus avances, utiliza esta secuencia:
 ```bash
 git add .
-git commit -m "Oralab: Implementación Pipeline Estratégico y formulario de prospectos"
+git commit -m "Oralab: Implementación Pipeline Estratégico y ajustes de agenda"
 git push
 ```
 
+### Solución a error "Invalid username or token"
+Si al hacer `git push` recibes un error de autenticación, es porque GitHub ya no acepta tu contraseña normal. Debes usar un **Personal Access Token (PAT)**:
+
+1. Ve a GitHub: **Settings** > **Developer settings** > **Personal access tokens** > **Tokens (classic)**.
+2. Genera un nuevo token con permisos de `repo`.
+3. Cuando la terminal te pida la contraseña, pega el **Token** generado en lugar de tu clave habitual.
+
+---
 ## Configuración de Correos (Trigger Email Extension)
 Para que las confirmaciones de reserva lleguen a los pacientes, la extensión en Firebase Console debe configurarse así:
 
