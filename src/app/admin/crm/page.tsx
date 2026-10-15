@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp, addDoc } from "firebase/firestore";
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,22 +43,15 @@ import {
   MessageSquare, 
   MoreVertical, 
   Trash2, 
-  Pencil, 
-  CheckCircle2, 
-  XCircle, 
-  ArrowRight, 
-  Clock, 
-  Briefcase,
   TrendingUp,
   FileText,
-  LayoutGrid,
   ChevronRight,
-  Handshake,
-  Stethoscope,
   Filter,
   Plus,
   User,
-  Loader2
+  Loader2,
+  CheckCircle2,
+  Clock
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -89,7 +81,6 @@ export default function CRMPage() {
   const [searchFilter, setSearchFilter] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form State for new prospect
   const [newProspect, setNewProspect] = useState({
     type: 'B2B Lead',
     name: '',
@@ -100,7 +91,6 @@ export default function CRMPage() {
     status: 'new'
   });
 
-  // Queries
   const leadsQuery = useMemoFirebase(() => db ? query(collection(db, "leads"), orderBy("createdAt", "desc")) : null, [db]);
   const agreementsQuery = useMemoFirebase(() => db ? query(collection(db, "agreement_requests"), orderBy("createdAt", "desc")) : null, [db]);
 
@@ -175,7 +165,7 @@ export default function CRMPage() {
         status: newStatus,
         updatedAt: serverTimestamp() 
       });
-      toast({ title: "Estado actualizado", description: `Movido a: ${STAGES.find(s => s.id === newStatus)?.label}` });
+      toast({ title: "Estado actualizado" });
     } catch (e) {
       toast({ variant: "destructive", title: "Error" });
     }
@@ -337,7 +327,6 @@ export default function CRMPage() {
         </Card>
       </main>
 
-      {/* FORMULARIO NUEVO PROSPECTO */}
       <Dialog open={isNewProspectDialogOpen} onOpenChange={setIsNewProspectDialogOpen}>
         <DialogContent className="max-w-xl rounded-[2.5rem] p-8">
            <DialogHeader>
@@ -437,7 +426,6 @@ export default function CRMPage() {
         </DialogContent>
       </Dialog>
 
-      {/* DETALLE Y EDICIÓN DE PROSPECTO */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl rounded-[2.5rem] p-8 overflow-hidden">
           {selectedLead && (
