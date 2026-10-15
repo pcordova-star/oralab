@@ -18,30 +18,16 @@ git push
 ```
 
 ### Solución al error "Invalid username or token"
-Si el comando `git push` falla directamente sin pedirte usuario/contraseña, ejecuta estos pasos:
+Si el comando `git push` falla, ejecuta este comando exacto para vincular tu Token de Acceso Personal (PAT) al repositorio:
 
-1. **Limpiar credenciales guardadas**:
-   Ejecuta este comando para que Git olvide la contraseña antigua:
-   ```bash
-   git config --global --unset credential.helper
-   ```
+```bash
+git remote set-url origin https://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@github.com/pcordova-star/oralab.git
+```
 
-2. **Intentar subir de nuevo**:
-   ```bash
-   git push
-   ```
-   - **Username**: Escribe tu nombre de usuario de GitHub.
-   - **Password**: Pega tu **Personal Access Token (PAT)** (empieza con `ghp_...`). *Nota: No verás nada al pegar, es normal.*
-
-3. **Método Definitivo (Si lo anterior falla)**:
-   Si sigue fallando, vincula el token directamente al repositorio con este comando (reemplaza `<TOKEN>` por tu código ghp_...):
-   ```bash
-   git remote set-url origin https://<TOKEN>@github.com/pcordova-star/oralab.git
-   ```
-   Luego simplemente haz:
-   ```bash
-   git push
-   ```
+Luego, simplemente haz:
+```bash
+git push
+```
 
 ---
 © 2024 Oralab Clinical Lab. Tecnología Sunvou®.
