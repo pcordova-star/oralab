@@ -10,7 +10,7 @@ Este es el repositorio oficial de **Oralab**, un laboratorio clínico especializ
 - **Alianza Cybersalud**: Integración en el Home para seguimiento médico de pacientes.
 
 ## Comandos Git para la Terminal
-Para guardar y subir tus avances, utiliza esta secuencia en la terminal:
+Para guardar y subir tus avances, utiliza esta secuencia:
 ```bash
 git add .
 git commit -m "Oralab: Implementación Pipeline Estratégico y ajustes de agenda"
@@ -18,15 +18,30 @@ git push
 ```
 
 ### Solución al error "Invalid username or token"
-GitHub ya no acepta tu contraseña normal para subir cambios desde la terminal. Debes usar un **Personal Access Token (PAT)**:
+Si el comando `git push` falla directamente sin pedirte usuario/contraseña, ejecuta estos pasos:
 
-1. **Generar el Token**: Ve a GitHub > **Settings** > **Developer settings** > **Personal access tokens** > **Tokens (classic)**.
-2. **Permisos**: Genera uno nuevo con el permiso `repo` marcado.
-3. **Copiar**: Copia el código generado (empieza con `ghp_...`).
-4. **Dónde ponerlo**: 
-   - Al hacer `git push`, la terminal te pedirá `Username`: Escribe tu nombre de usuario de GitHub.
-   - Luego te pedirá `Password`: **Pega aquí el Token** (No verás asteriscos ni letras al pegar, es normal).
-   - Presiona **Enter** y listo.
+1. **Limpiar credenciales guardadas**:
+   Ejecuta este comando para que Git olvide la contraseña antigua:
+   ```bash
+   git config --global --unset credential.helper
+   ```
+
+2. **Intentar subir de nuevo**:
+   ```bash
+   git push
+   ```
+   - **Username**: Escribe tu nombre de usuario de GitHub.
+   - **Password**: Pega tu **Personal Access Token (PAT)** (empieza con `ghp_...`). *Nota: No verás nada al pegar, es normal.*
+
+3. **Método Definitivo (Si lo anterior falla)**:
+   Si sigue fallando, vincula el token directamente al repositorio con este comando (reemplaza `<TOKEN>` por tu código ghp_...):
+   ```bash
+   git remote set-url origin https://<TOKEN>@github.com/pcordova-star/oralab.git
+   ```
+   Luego simplemente haz:
+   ```bash
+   git push
+   ```
 
 ---
 © 2024 Oralab Clinical Lab. Tecnología Sunvou®.
