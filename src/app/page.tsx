@@ -338,7 +338,12 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <Logo />
           <p className="text-muted-foreground text-sm mt-4">Laboratorio especializado en Salud Digestiva Avanzada.</p>
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-8">© 2024 Oralab Clinical Lab. Apoquindo 3990, Of. 605.</p>
+          <div className="flex justify-center gap-8 text-xs font-bold text-primary/60 mt-8 mb-8">
+            <Link href="/login" className="hover:text-secondary flex items-center gap-1"><Lock className="h-3 w-3" /> Acceso Personal</Link>
+            <Link href="/terms" className="hover:text-secondary">Términos y Condiciones</Link>
+            <Link href="/sunvou" className="hover:text-secondary">Tecnología Sunvou®</Link>
+          </div>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">© 2024 Oralab Clinical Lab. Apoquindo 3990, Of. 605.</p>
         </div>
       </footer>
     </div>
