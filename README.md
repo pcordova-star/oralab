@@ -13,18 +13,22 @@ Para guardar y subir tus avances, utiliza esta secuencia:
 
 ```bash
 git add .
-git commit -m "Oralab: Limpieza de seguridad y actualización de pipeline"
+git commit -m "Oralab: Actualización de funcionalidades y accesos"
 git push
 ```
 
-### Solución al error de autenticación
-Si el comando `git push` falla por credenciales, configura tu token de forma segura ejecutando esto en la terminal (reemplaza `<TOKEN>` por tu token real):
+### Cómo usar el Token de GitHub
+Cuando ejecutas `git push` y la terminal te solicite credenciales:
+1. **Username**: Escribe tu nombre de usuario de GitHub.
+2. **Password**: **PEGA TU TOKEN** (ghp_...). 
+   - *Nota: No verás que se escriba nada en la pantalla al pegar el token, es normal por seguridad. Solo pégalo y presiona Enter.*
+
+### Configuración Automática del Token
+Si no quieres que te lo pida cada vez, ejecuta esto una sola vez reemplazando `<TOKEN>` por tu código real:
 
 ```bash
 git remote set-url origin https://<TOKEN>@github.com/pcordova-star/oralab.git
 ```
-
-**Importante:** Nunca guardes el token dentro de archivos de texto que subas al repositorio.
 
 ---
 © 2024 Oralab Clinical Lab. Tecnología Sunvou®.
