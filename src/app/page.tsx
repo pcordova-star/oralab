@@ -221,6 +221,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen selection:bg-secondary selection:text-white overflow-x-hidden font-body">
       <Navbar />
       <main className="flex-grow">
+        {/* HERO SECTION */}
         <section className="relative pt-10 pb-16 md:pt-20 md:pb-20 lg:pt-32 lg:pb-40">
           <div className="container mx-auto px-4 text-center lg:text-left">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -240,6 +241,70 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* EXAMS GRID SECTION */}
+        <section className="py-24 bg-white relative">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16 space-y-4">
+              <h2 className="text-3xl md:text-5xl font-black text-primary italic">Nuestros Servicios</h2>
+              <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {EXAMS.map((exam, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="p-8 rounded-[2rem] bg-muted/30 border border-primary/5 hover:border-secondary/50 transition-all group">
+                  <div className="bg-white p-4 rounded-2xl inline-block mb-6 shadow-sm group-hover:scale-110 transition-transform">{exam.icon}</div>
+                  <h3 className="text-xl font-black text-primary mb-3 italic">{exam.title}</h3>
+                  <p className="text-sm text-muted-foreground font-medium leading-relaxed mb-4">{exam.desc}</p>
+                  <Badge variant="outline" className="font-bold">{exam.duration}</Badge>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* INTERACTIVE REPORT SECTION */}
+        <section className="py-24 bg-background overflow-hidden">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div className="space-y-8">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">
+                  <ShieldCheck className="h-3 w-3" /> Reportes Clínicos
+                </div>
+                <h2 className="text-3xl md:text-6xl font-black text-primary italic leading-tight">Resultados de alta precisión para tu médico.</h2>
+                <p className="text-xl text-muted-foreground font-medium leading-relaxed">Entregamos gráficas detalladas de Hidrógeno y Metano. La tecnología Sunvou® permite una lectura precisa que facilita el diagnóstico de SIBO e IMO.</p>
+                <div className="space-y-4">
+                   <div className="flex items-center gap-4 text-primary font-bold italic"><CheckCircle2 className="h-6 w-6 text-secondary" /> Corrección de CO2 alveolar</div>
+                   <div className="flex items-center gap-4 text-primary font-bold italic"><CheckCircle2 className="h-6 w-6 text-secondary" /> Sensores Sunvou® Gold Standard</div>
+                </div>
+              </div>
+              <ClinicalReportVisualizer />
+            </div>
+          </div>
+        </section>
+
+        {/* HOME TEST SIMULATOR SECTION */}
+        <section className="py-24 bg-primary relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl" />
+           <div className="container mx-auto px-4 relative z-10">
+              <div className="grid lg:grid-cols-2 gap-16 items-center">
+                 <div className="order-2 lg:order-1 flex justify-center"><HomeTestSimulator /></div>
+                 <div className="order-1 lg:order-2 space-y-8 text-white text-center lg:text-left">
+                    <h2 className="text-4xl md:text-6xl font-black italic leading-tight">Tu test en casa, guiado por IA.</h2>
+                    <p className="text-xl text-white/80 font-medium leading-relaxed">Si eliges la modalidad Home-Kit, nuestro asistente digital te guiará paso a paso en el protocolo de soplido con alertas en tiempo real.</p>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="bg-white/10 p-6 rounded-3xl backdrop-blur-sm border border-white/10">
+                          <Timer className="h-8 w-8 text-secondary mb-3" />
+                          <p className="font-black text-sm uppercase">Cronómetro Inteligente</p>
+                       </div>
+                       <div className="bg-white/10 p-6 rounded-3xl backdrop-blur-sm border border-white/10">
+                          <Bell className="h-8 w-8 text-secondary mb-3" />
+                          <p className="font-black text-sm uppercase">Alertas Sonoras</p>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+           </div>
         </section>
 
         {/* ALIANZA CYBERSALUD */}
