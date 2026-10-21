@@ -51,7 +51,8 @@ import {
   User,
   Loader2,
   CheckCircle2,
-  Clock
+  Clock,
+  CalendarDays
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -88,7 +89,8 @@ export default function CRMPage() {
     phone: '',
     institution: '',
     message: '',
-    status: 'new'
+    status: 'new',
+    date: format(new Date(), "yyyy-MM-dd") // Fecha por defecto hoy
   });
 
   const leadsQuery = useMemoFirebase(() => db ? query(collection(db, "leads"), orderBy("createdAt", "desc")) : null, [db]);
@@ -109,8 +111,9 @@ export default function CRMPage() {
         p.institution?.toLowerCase().includes(searchFilter.toLowerCase())
       )
       .sort((a, b) => {
-        const dateA = a.createdAt?.seconds || 0;
-        const dateB = b.createdAt?.seconds || 0;
+        // Ordenar por fecha de creación (Timestamp o Date)
+        const dateA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : (a.createdAt instanceof Date ? a.createdAt.getTime() : 0);
+        const dateB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : (b.createdAt instanceof Date ? b.createdAt.getTime() : 0);
         return dateB - dateA;
       });
   }, [leadsData, agreementsData, searchFilter]);
@@ -135,6 +138,9 @@ export default function CRMPage() {
     const collectionName = newProspect.type === 'B2B Lead' ? "leads" : "agreement_requests";
     
     try {
+      // Creamos la fecha a partir del string del input, asumiendo mediodía para evitar saltos de zona horaria
+      const creationDate = new Date(newProspect.date + "T12:00:00");
+
       const data = {
         name: newProspect.name,
         email: newProspect.email,
@@ -142,14 +148,24 @@ export default function CRMPage() {
         institution: newProspect.institution,
         message: newProspect.message,
         status: newProspect.status,
-        createdAt: serverTimestamp()
+        createdAt: creationDate,
+        registeredAt: serverTimestamp() // Audit trail de cuándo se metió al sistema realmente
       };
       
       await addDocumentNonBlocking(collection(db, collectionName), data);
       
       toast({ title: "Prospecto Creado", description: `${newProspect.name} ha sido añadido al pipeline.` });
       setIsNewProspectDialogOpen(false);
-      setNewProspect({ type: 'B2B Lead', name: '', email: '', phone: '', institution: '', message: '', status: 'new' });
+      setNewProspect({ 
+        type: 'B2B Lead', 
+        name: '', 
+        email: '', 
+        phone: '', 
+        institution: '', 
+        message: '', 
+        status: 'new',
+        date: format(new Date(), "yyyy-MM-dd")
+      });
     } catch (e) {
       toast({ variant: "destructive", title: "Error", description: "No se pudo guardar el prospecto." });
     } finally {
@@ -313,7 +329,7 @@ export default function CRMPage() {
                               <div className="flex items-center gap-2 pt-2 border-t border-dashed">
                                 <Clock className="h-3 w-3 text-muted-foreground" />
                                 <span className="text-[9px] font-bold text-muted-foreground uppercase">
-                                  {prospect.createdAt?.seconds ? format(new Date(prospect.createdAt.seconds * 1000), "dd MMM", { locale: es }) : "Reciente"}
+                                  {prospect.createdAt?.seconds ? format(new Date(prospect.createdAt.seconds * 1000), "dd MMM yy", { locale: es }) : (prospect.createdAt instanceof Date ? format(prospect.createdAt, "dd MMM yy", { locale: es }) : "Reciente")}
                                 </span>
                               </div>
                             </div>
@@ -328,7 +344,7 @@ export default function CRMPage() {
       </main>
 
       <Dialog open={isNewProspectDialogOpen} onOpenChange={setIsNewProspectDialogOpen}>
-        <DialogContent className="max-w-xl rounded-[2.5rem] p-8">
+        <DialogContent className="max-w-xl rounded-[2.5rem] p-8 max-h-[90vh] overflow-y-auto">
            <DialogHeader>
               <DialogTitle className="text-3xl font-black text-primary italic">Nuevo Prospecto</DialogTitle>
               <DialogDescription className="font-medium">Ingresa los datos para iniciar el seguimiento comercial.</DialogDescription>
@@ -336,17 +352,30 @@ export default function CRMPage() {
 
            <form onSubmit={handleCreateProspect} className="space-y-6 pt-4">
               <div className="space-y-4">
-                 <div className="space-y-2">
-                    <Label className="font-bold">Categoría de Prospecto</Label>
-                    <Select value={newProspect.type} onValueChange={(v) => setNewProspect({...newProspect, type: v})}>
-                       <SelectTrigger className="h-12 rounded-xl">
-                          <SelectValue />
-                       </SelectTrigger>
-                       <SelectContent>
-                          <SelectItem value="B2B Lead">B2B Lead (Venta Equipos)</SelectItem>
-                          <SelectItem value="Convenio">Convenio Institucional</SelectItem>
-                       </SelectContent>
-                    </Select>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label className="font-bold">Categoría de Prospecto</Label>
+                        <Select value={newProspect.type} onValueChange={(v) => setNewProspect({...newProspect, type: v})}>
+                          <SelectTrigger className="h-12 rounded-xl">
+                              <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="B2B Lead">B2B Lead (Venta Equipos)</SelectItem>
+                              <SelectItem value="Convenio">Convenio Institucional</SelectItem>
+                          </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="font-bold flex items-center gap-2">
+                           <CalendarDays className="h-4 w-4 text-secondary" /> Fecha de Contacto
+                        </Label>
+                        <Input 
+                          type="date"
+                          className="h-12 rounded-xl"
+                          value={newProspect.date}
+                          onChange={(e) => setNewProspect({...newProspect, date: e.target.value})}
+                        />
+                    </div>
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -427,7 +456,7 @@ export default function CRMPage() {
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-3xl rounded-[2.5rem] p-8 overflow-hidden">
+        <DialogContent className="max-w-3xl rounded-[2.5rem] p-8 overflow-hidden max-h-[90vh] overflow-y-auto">
           {selectedLead && (
             <div className="space-y-8">
               <DialogHeader>
@@ -454,6 +483,9 @@ export default function CRMPage() {
                           <p className="text-sm font-bold flex items-center gap-2"><User className="h-4 w-4 text-secondary" /> {selectedLead.name}</p>
                           <p className="text-sm font-bold flex items-center gap-2"><Mail className="h-4 w-4 text-secondary" /> {selectedLead.email}</p>
                           <p className="text-sm font-bold flex items-center gap-2"><Phone className="h-4 w-4 text-secondary" /> {selectedLead.phone || "No registrado"}</p>
+                          <p className="text-[10px] font-black text-muted-foreground flex items-center gap-2 uppercase tracking-widest mt-4">
+                             <CalendarDays className="h-3 w-3" /> Contacto: {selectedLead.createdAt?.seconds ? format(new Date(selectedLead.createdAt.seconds * 1000), "PPPP", { locale: es }) : (selectedLead.createdAt instanceof Date ? format(selectedLead.createdAt, "PPPP", { locale: es }) : "Fecha no registrada")}
+                          </p>
                        </div>
                     </div>
 
