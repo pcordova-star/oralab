@@ -4,7 +4,7 @@ Este es el repositorio oficial de **Oralab**, especializado en tests de aire esp
 
 ## Guía de Configuración Git
 
-Para subir cambios sin errores de permisos ni bloqueos de seguridad de GitHub, sigue estos pasos:
+Para subir cambios de forma segura, sigue estos pasos:
 
 ### 1. Limpiar Configuración Antigua
 Ejecuta este comando para asegurarte de que Git te pida tus credenciales actuales:

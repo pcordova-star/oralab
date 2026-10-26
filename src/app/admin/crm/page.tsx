@@ -90,7 +90,7 @@ export default function CRMPage() {
     institution: '',
     message: '',
     status: 'new',
-    date: format(new Date(), "yyyy-MM-dd") // Fecha por defecto hoy
+    date: format(new Date(), "yyyy-MM-dd")
   });
 
   const leadsQuery = useMemoFirebase(() => db ? query(collection(db, "leads"), orderBy("createdAt", "desc")) : null, [db]);
@@ -111,7 +111,6 @@ export default function CRMPage() {
         p.institution?.toLowerCase().includes(searchFilter.toLowerCase())
       )
       .sort((a, b) => {
-        // Ordenar por fecha de creación (Timestamp o Date)
         const dateA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : (a.createdAt instanceof Date ? a.createdAt.getTime() : 0);
         const dateB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : (b.createdAt instanceof Date ? b.createdAt.getTime() : 0);
         return dateB - dateA;
@@ -138,7 +137,7 @@ export default function CRMPage() {
     const collectionName = newProspect.type === 'B2B Lead' ? "leads" : "agreement_requests";
     
     try {
-      // Creamos la fecha a partir del string del input, asumiendo mediodía para evitar saltos de zona horaria
+      // Usar la fecha seleccionada por el usuario
       const creationDate = new Date(newProspect.date + "T12:00:00");
 
       const data = {
@@ -149,7 +148,7 @@ export default function CRMPage() {
         message: newProspect.message,
         status: newProspect.status,
         createdAt: creationDate,
-        registeredAt: serverTimestamp() // Audit trail de cuándo se metió al sistema realmente
+        registeredAt: serverTimestamp()
       };
       
       await addDocumentNonBlocking(collection(db, collectionName), data);

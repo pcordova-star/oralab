@@ -9,7 +9,6 @@ import {
   Activity, 
   Zap,
   Beaker,
-  AlertCircle,
   Stethoscope,
   ChevronRight,
   Sparkles,
@@ -23,13 +22,12 @@ import {
   Clock,
   ClipboardCheck,
   ShieldCheck,
-  MessageCircle,
-  ChevronDown,
   Volume2,
   Bell,
   MapPin,
   ExternalLink,
-  Handshake
+  Handshake,
+  FlaskConical
 } from "lucide-react";
 import { 
   LineChart, 
@@ -41,7 +39,6 @@ import {
   ResponsiveContainer, 
   Legend 
 } from 'recharts';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -200,8 +197,8 @@ const ClinicalReportVisualizer = () => {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={reportData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
               {!isMobile && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />}
-              <XAxis dataKey="time" tick={{ fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} hide={isMobile} />
+              <XAxis dataKey="time" tick={{ fontSize: 10, fontStyle: 'normal' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fontStyle: 'normal' }} axisLine={false} tickLine={false} hide={isMobile} />
               <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
               {!isMobile && <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />}
               <Line name="H₂ (Hidrógeno)" type="monotone" dataKey="h2" stroke="#1c68b6" strokeWidth={isMobile ? 3 : 4} dot={!isMobile} />
@@ -279,6 +276,115 @@ export default function HomePage() {
               </div>
               <ClinicalReportVisualizer />
             </div>
+          </div>
+        </section>
+
+        {/* CIENCIA Y PROFUNDIDAD CLÍNICA - SECCIÓN SOLICITADA */}
+        <section className="py-24 bg-white">
+          <div className="container mx-auto px-4">
+             <div className="grid lg:grid-cols-3 gap-12">
+                {/* Resultados de SIBO e Intolerancias */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }} 
+                  whileInView={{ opacity: 1, y: 0 }} 
+                  viewport={{ once: true }}
+                  className="space-y-6"
+                >
+                   <div className="bg-primary/5 p-8 rounded-[2.5rem] border border-primary/5 h-full">
+                      <div className="bg-primary text-white w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
+                         <Stethoscope className="h-7 w-7" />
+                      </div>
+                      <h3 className="text-2xl font-black text-primary italic mb-4">Resultados de SIBO e Intolerancias</h3>
+                      <div className="space-y-6 text-sm">
+                         <div className="space-y-2">
+                            <Badge className="bg-secondary/10 text-secondary border-none font-black text-[10px]">SIBO</Badge>
+                            <p className="text-muted-foreground leading-relaxed">Se identifica un <strong>resultado</strong> positivo cuando las bacterias del colon se encuentran en exceso en el intestino delgado. Al consumir el sustrato, estas fermentan antes de tiempo, generando gases detectables al exhalar.</p>
+                         </div>
+                         <div className="space-y-2">
+                            <Badge className="bg-secondary/10 text-secondary border-none font-black text-[10px]">INTOLERANCIAS</Badge>
+                            <p className="text-muted-foreground leading-relaxed">El <strong>resultado</strong> evalúa la capacidad de absorber azúcares como lactosa o fructosa. Al no absorberse, pasan al colon donde la microbiota las fermenta, provocando síntomas gastrointestinales.</p>
+                         </div>
+                      </div>
+                   </div>
+                </motion.div>
+
+                {/* Gases Medidos */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }} 
+                  whileInView={{ opacity: 1, y: 0 }} 
+                  viewport={{ once: true }} 
+                  transition={{ delay: 0.1 }}
+                  className="space-y-6"
+                >
+                   <div className="bg-secondary/5 p-8 rounded-[2.5rem] border border-secondary/5 h-full">
+                      <div className="bg-secondary text-white w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-secondary/20">
+                         <FlaskConical className="h-7 w-7" />
+                      </div>
+                      <h3 className="text-2xl font-black text-primary italic mb-4">Biomarcadores Clave</h3>
+                      <div className="space-y-4">
+                         <div className="flex items-start gap-3 p-3 bg-white rounded-2xl shadow-sm border border-primary/5">
+                            <div className="font-black text-primary text-xs mt-1">H₂</div>
+                            <div>
+                               <p className="font-bold text-xs text-primary">Hidrógeno</p>
+                               <p className="text-[11px] text-muted-foreground">Indicador principal de fermentación bacteriana rápida de azúcares. Señala SIBO o malabsorción de carbohidratos.</p>
+                            </div>
+                         </div>
+                         <div className="flex items-start gap-3 p-3 bg-white rounded-2xl shadow-sm border border-primary/5">
+                            <div className="font-black text-primary text-xs mt-1">CH₄</div>
+                            <div>
+                               <p className="font-bold text-xs text-primary">Metano</p>
+                               <p className="text-[11px] text-muted-foreground">Producido por arqueas. Asociado a síntomas de lentitud intestinal y estreñimiento.</p>
+                            </div>
+                         </div>
+                         <div className="flex items-start gap-3 p-3 bg-white rounded-2xl shadow-sm border border-primary/5">
+                            <div className="font-black text-primary text-xs mt-1">CO₂</div>
+                            <div>
+                               <p className="font-bold text-xs text-primary">Dióxido de Carbono</p>
+                               <p className="text-[11px] text-muted-foreground">Indicador de calidad. Garantiza que la muestra provenga del aire alveolar profundo.</p>
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+                </motion.div>
+
+                {/* Proceso de la Prueba */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }} 
+                  whileInView={{ opacity: 1, y: 0 }} 
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-6"
+                >
+                   <div className="bg-muted/50 p-8 rounded-[2.5rem] border border-muted-foreground/10 h-full">
+                      <div className="bg-slate-700 text-white w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-slate-700/20">
+                         <ClipboardCheck className="h-7 w-7" />
+                      </div>
+                      <h3 className="text-2xl font-black text-primary italic mb-4">Protocolo en Laboratorio</h3>
+                      <div className="relative pl-6 space-y-6 border-l-2 border-dashed border-primary/20">
+                         <div className="relative">
+                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary" />
+                            <p className="font-black text-[10px] text-primary uppercase">Preparación</p>
+                            <p className="text-xs text-muted-foreground">Ayuno de 12h y dieta blanda estricta el día anterior.</p>
+                         </div>
+                         <div className="relative">
+                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary" />
+                            <p className="font-black text-[10px] text-primary uppercase">Muestra basal (T-0)</p>
+                            <p className="text-xs text-muted-foreground">Exhalación inicial en ayunas para punto de comparación.</p>
+                         </div>
+                         <div className="relative">
+                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary" />
+                            <p className="font-black text-[10px] text-primary uppercase">Muestreo Seriado</p>
+                            <p className="text-xs text-muted-foreground">Exhalaciones cada 15 a 30 min durante 2-3 horas.</p>
+                         </div>
+                         <div className="relative">
+                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary" />
+                            <p className="font-black text-[10px] text-primary uppercase">Resultado</p>
+                            <p className="text-xs text-muted-foreground">Trazado automático de curvas para obtención del reporte final.</p>
+                         </div>
+                      </div>
+                   </div>
+                </motion.div>
+             </div>
           </div>
         </section>
 
