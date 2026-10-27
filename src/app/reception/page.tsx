@@ -100,9 +100,7 @@ const SUNVOU_CATALOG = [
   { description: "Capacitación Técnica y Protocolos Clínicos Sunvou Chile", unitPriceUSD: 0 }
 ];
 
-const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 20 a 30 días hábiles (dependiendo del stock) tras recepción de orden de compra y pago de anticipo.\n- Forma de pago: 70% contra orden de compra y 30% contra entrega.\n- Garantía: 2 años.\n- Incluye capacitación técnica Sunvou Chile.";
-
-const TIME_SLOTS = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00"];
+const DEFAULT_NOTES = "Vigencia de cotización: 15 días.\n- Plazo de Entrega: 20 a 30 días hábiles (dependiendo del stock) tras recepción de orden de compra y pago de anticipo.\n- Forma de pago: 70% contra orden de compra (anticipo) y 30% contra entrega.\n- Garantía: 2 años para equipo analizador y sensores.\n- Incluye capacitación técnica y protocolos clínicos Sunvou Chile.";
 
 interface QuotationItem {
   description: string;
@@ -151,7 +149,6 @@ export default function ReceptionPage() {
     }
   }, [user, isUserLoading, router]);
 
-  // Firestore Queries
   const bookingsRef = useMemoFirebase(() => db ? collection(db, "bookings") : null, [db]);
   const newsRef = useMemoFirebase(() => db ? query(collection(db, "investor_updates"), orderBy("date", "desc")) : null, [db]);
   const quotationsRef = useMemoFirebase(() => db ? query(collection(db, "quotations"), orderBy("createdAt", "desc")) : null, [db]);
@@ -167,7 +164,6 @@ export default function ReceptionPage() {
   const bookings = useMemo(() => (rawBookings || []).sort((a, b) => (b.scheduledDate || "").localeCompare(a.scheduledDate || "")), [rawBookings]);
   const filteredBookings = useMemo(() => bookings.filter(b => selectedDate && b.scheduledDate === format(selectedDate, "yyyy-MM-dd")), [bookings, selectedDate]);
 
-  // Identificar fechas con reservas para resaltar en el calendario
   const bookedDates = useMemo(() => {
     const datesMap = new Map();
     bookings.forEach(b => {
@@ -264,22 +260,172 @@ export default function ReceptionPage() {
   };
 
   const downloadQuotationPDF = (quote: any) => {
-    const pdf = new jsPDF();
-    pdf.setFontSize(20);
-    pdf.text("TRESNA - ORALAB", 20, 20);
-    pdf.setFontSize(12);
-    pdf.text(`Propuesta Técnico-Comercial: SUN-${quote.id?.substr(0, 6).toUpperCase() || 'NEW'}`, 20, 30);
-    pdf.text(`Destinatario: ${quote.clientName}`, 20, 40);
-    pdf.text(`Institución: ${quote.clientCompany || 'Particular'}`, 20, 48);
-    pdf.text(`Total IVA Inc.: $${Math.round((quote.total || 0) * 1.19).toLocaleString()}`, 20, 60);
-    pdf.save(`Propuesta_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
+    const doc = new jsPDF();
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    let y = 15;
+
+    const primaryColor = [28, 104, 182]; // Azul Oralab
+    const secondaryColor = [25, 204, 204]; // Turquesa
+    
+    // Header Institucional
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.rect(0, 0, 210, 45, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text("TRESNA - ORALAB", margin, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("División de Diagnóstico de Aire Espirado", margin, 32);
+    doc.text("Representante Oficial Sunvou® Breath Diagnostics en Chile", margin, 37);
+
+    doc.setFontSize(9);
+    doc.text(`Fecha: ${format(new Date(), "dd/MM/yyyy")}`, 155, 25);
+    doc.text(`Propuesta: SUN-${quote.id?.substr(0, 6).toUpperCase() || 'NEW'}`, 155, 30);
+
+    y = 55;
+
+    // Sección de Introducción Institucional
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("PRESENTACIÓN INSTITUCIONAL", margin, y);
+    y += 7;
+    
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    const introText = "Tresna SpA, mediante su unidad clínica Oralab, actúa como representante oficial y exclusivo de Sunvou® Breath Diagnostics en el territorio nacional. Sunvou® es una marca líder mundial en el desarrollo de analizadores de gases de alta precisión para el diagnóstico no invasivo de trastornos gastrointestinales. Con presencia en más de 40 países, sus equipos utilizan sensores electromecánicos de última generación que garantizan mediciones estables de H2, CH4, H2S y CO2, cumpliendo con los estándares internacionales de exactitud clínica.";
+    const splitIntro = doc.splitTextToSize(introText, 170);
+    doc.text(splitIntro, margin, y);
+    y += (splitIntro.length * 5) + 8;
+
+    doc.setDrawColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    // Datos del Cliente
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("DESTINATARIO", margin, y);
+    y += 7;
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(margin, y, 170, 35, 3, 3, 'FD');
+    
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Nombre: ${quote.clientName}`, margin + 5, y + 10);
+    doc.text(`Institución: ${quote.clientCompany || 'Particular'}`, margin + 5, y + 18);
+    doc.text(`Email: ${quote.clientEmail}`, margin + 5, y + 26);
+    doc.text(`Teléfono: ${quote.clientPhone || 'No registrado'}`, 110, y + 10);
+    y += 45;
+
+    // Tabla de Items
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("DETALLE DE EQUIPAMIENTO E INSUMOS", margin, y);
+    y += 7;
+
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.rect(margin, y, 170, 9, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.text("Descripción del Producto / Servicio", margin + 3, y + 6);
+    doc.text("Cant.", 130, y + 6);
+    doc.text("Unitario", 145, y + 6);
+    doc.text("Subtotal", 172, y + 6);
+    y += 11;
+
+    doc.setTextColor(60, 60, 60);
+    doc.setFont("helvetica", "normal");
+    
+    const itemsToPrint = quote.items || [];
+    itemsToPrint.forEach((item: any) => {
+      const splitDesc = doc.splitTextToSize(item.description, 95);
+      const rowHeight = (splitDesc.length * 5) + 3;
+      
+      if (y + rowHeight > pageHeight - 65) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.text(splitDesc, margin + 3, y + 4);
+      doc.text(item.quantity.toString(), 133, y + 4, { align: 'center' });
+      doc.text(`$${Math.round(item.unitPrice).toLocaleString()}`, 158, y + 4, { align: 'right' });
+      doc.text(`$${Math.round(item.unitPrice * item.quantity).toLocaleString()}`, 188, y + 4, { align: 'right' });
+      y += rowHeight;
+      doc.setDrawColor(240, 240, 240);
+      doc.line(margin, y, margin + 170, y);
+    });
+
+    y += 10;
+    
+    // Desglose de Totales
+    const netTotal = quote.total || 0;
+    const iva = netTotal * IVA_RATE;
+    const grossTotal = netTotal * (1 + IVA_RATE);
+
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.text(`SUBTOTAL NETO:`, 140, y, { align: 'right' });
+    doc.text(`$${Math.round(netTotal).toLocaleString()}`, 188, y, { align: 'right' });
+    y += 6;
+    doc.text(`IVA (19%):`, 140, y, { align: 'right' });
+    doc.text(`$${Math.round(iva).toLocaleString()}`, 188, y, { align: 'right' });
+    y += 9;
+    
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(`TOTAL (IVA INC.):`, 140, y, { align: 'right' });
+    doc.text(`$${Math.round(grossTotal).toLocaleString()}`, 188, y, { align: 'right' });
+    y += 15;
+
+    // Notas y Condiciones
+    if (y > pageHeight - 50) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFontSize(10);
+    doc.text("CONDICIONES COMERCIALES Y SOPORTE", margin, y);
+    y += 6;
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    const splitNotes = doc.splitTextToSize(quote.notes || DEFAULT_NOTES, 170);
+    doc.text(splitNotes, margin, y);
+
+    // Pie de Página Corporativo
+    doc.setFillColor(245, 247, 249);
+    doc.rect(0, pageHeight - 30, 210, 30, 'F');
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("Tresna SpA | Oralab Clinical Lab - Representación Oficial Sunvou® en Chile.", margin, pageHeight - 15);
+    doc.setFont("helvetica", "normal");
+    doc.text("Av. Apoquindo 3990, Of. 605, Las Condes, Santiago | contacto@oralab.cl", margin, pageHeight - 10);
+    doc.text(`Tasa aplicada: $${quote.exchangeRate || DEFAULT_USD_RATE} CLP/USD`, 160, pageHeight - 10);
+
+    doc.save(`Propuesta_Sunvou_${quote.clientName.replace(/\s+/g, '_')}.pdf`);
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending": return <Badge variant="outline" className="bg-slate-50 text-slate-700 uppercase font-black text-[9px]">Agendado</Badge>;
       case "arrived": return <Badge variant="outline" className="bg-blue-50 text-blue-700 uppercase font-black text-[9px]">En Sala</Badge>;
-      case "in_progress": return <Badge variant="outline" className="bg-amber-50 text-amber-700 uppercase font-black text-[9px]">En Curso</Badge>;
+      case "in_progress": return <Badge variant="outline" className="bg-amber-100 text-amber-700 uppercase font-black text-[9px]">En Curso</Badge>;
       case "completed": return <Badge variant="outline" className="bg-green-50 text-green-700 uppercase font-black text-[9px]">Finalizado</Badge>;
       default: return <Badge variant="outline" className="text-[9px] uppercase font-black">{status}</Badge>;
     }
