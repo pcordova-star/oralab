@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -183,6 +184,14 @@ const TechnologicalHeroTitle = () => {
 
 const ClinicalReportVisualizer = () => {
   const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <div className="h-[300px] w-full bg-muted/20 animate-pulse rounded-[2rem]" />;
+
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="relative w-full glass-panel rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-8 shadow-2xl border-primary/10 overflow-hidden bg-white/70">
       <div className="flex flex-col gap-4 md:gap-6">
@@ -279,7 +288,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* CIENCIA Y PROFUNDIDAD CLÍNICA - SECCIÓN SOLICITADA */}
+        {/* CIENCIA Y PROFUNDIDAD CLÍNICA */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
              <div className="grid lg:grid-cols-3 gap-12">
