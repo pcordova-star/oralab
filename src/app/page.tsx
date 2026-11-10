@@ -452,7 +452,14 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <Logo />
           <p className="text-muted-foreground text-sm mt-4">Laboratorio especializado en Salud Digestiva Avanzada.</p>
-          <div className="flex justify-center gap-8 text-xs font-bold text-primary/60 mt-8 mb-8">
+          <nav aria-label="Información" className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-bold text-primary/60 mt-8">
+            <Link href="/test-aire-espirado" className="hover:text-secondary">Test de aire espirado</Link>
+            <Link href="/sibo" className="hover:text-secondary">SIBO</Link>
+            <Link href="/imo" className="hover:text-secondary">IMO</Link>
+            <Link href="/intolerancias" className="hover:text-secondary">Intolerancias</Link>
+            <Link href="/test-a-domicilio" className="hover:text-secondary">Test a domicilio</Link>
+          </nav>
+          <div className="flex justify-center gap-8 text-xs font-bold text-primary/60 mt-6 mb-8">
             <Link href="/login" className="hover:text-secondary flex items-center gap-1"><Lock className="h-3 w-3" /> Acceso Personal</Link>
             <Link href="/terms" className="hover:text-secondary">Términos y Condiciones</Link>
             <Link href="/sunvou" className="hover:text-secondary">Tecnología Sunvou®</Link>
