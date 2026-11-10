@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
+import Link from "next/link";
+import { Lock } from "lucide-react";
 import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -87,7 +89,9 @@ const chartData = MILESTONES_CATALOG.map(m => ({
   color: m.id === 'm1' ? '#1c68b6' : m.id === 'm2' ? '#19cccc' : '#10b981'
 }));
 
-export default function InvestorsDashboardPage() {
+const ADMIN_EMAIL = "admin@oralab.cl";
+
+function InvestorsDashboard() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
 
@@ -355,4 +359,35 @@ export default function InvestorsDashboardPage() {
       </main>
     </div>
   );
+}
+
+// Acceso restringido: las consultas a la base de datos solo se ejecutan
+// después de comprobar que hay una sesión de administrador.
+export default function InvestorsDashboardPage() {
+  const { user, isUserLoading } = useUser();
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground italic">
+        Verificando acceso...
+      </div>
+    );
+  }
+
+  if (!user || user.email !== ADMIN_EMAIL) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center">
+        <Lock className="h-10 w-10 text-primary/40" />
+        <h1 className="text-2xl font-black text-primary">Acceso restringido</h1>
+        <p className="text-muted-foreground max-w-sm">
+          Esta sección es privada. Inicia sesión con una cuenta autorizada para continuar.
+        </p>
+        <Link href="/login" className="rounded-full bg-primary text-primary-foreground font-bold px-6 py-3">
+          Iniciar sesión
+        </Link>
+      </div>
+    );
+  }
+
+  return <InvestorsDashboard />;
 }

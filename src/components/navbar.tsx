@@ -125,11 +125,6 @@ export function Navbar() {
                   Mi Test (En Casa)
                 </Button>
               </Link>
-              <Link href="/investors">
-                <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-black text-primary hover:text-secondary uppercase tracking-widest">
-                  Inversionistas
-                </Button>
-              </Link>
               <Link href="/agreements">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-bold text-muted-foreground hover:text-primary">
                   Convenios
