@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -21,7 +20,8 @@ import {
   Mail,
   User,
   Building2,
-  Send
+  Send,
+  MapPin
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -351,7 +351,7 @@ export default function SunvouPage() {
               <div className="flex flex-col sm:flex-row justify-center gap-6">
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:auto">
                   <Button size="lg" className="w-full sm:w-auto rounded-full h-16 px-12 text-xl font-black bg-secondary hover:bg-white hover:text-primary transition-all shadow-2xl">
-                    <MessageCircle className="h-6 w-6 mr-2" /> WhatsApp Especialista
+                    <MessageCircle className="h-6 w-6 mr-2" /> WhatsApp Corporativo
                   </Button>
                 </a>
               </div>
@@ -367,9 +367,9 @@ export default function SunvouPage() {
             <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Representante Sunvou® Breath Diagnostics Chile</p>
           </div>
           <div className="flex gap-8 text-sm font-bold text-primary/60">
-            <Link href="/" className="hover:text-secondary">Oralab Inicio</Link>
+            <Link href="/" className="hover:text-secondary">Inicio</Link>
             <Link href="/how-it-works" className="hover:text-secondary">Protocolos</Link>
-            <Link href="/booking" className="hover:text-secondary">Reservas</Link>
+            <Link href="/agreements" className="hover:text-secondary">Convenios</Link>
           </div>
         </div>
       </footer>

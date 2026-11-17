@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, LayoutDashboard, Globe, Timer } from "lucide-react";
+import { LogOut, LayoutDashboard, Globe, Timer, Building2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export function Logo() {
@@ -109,7 +109,7 @@ export function Navbar() {
     );
   }
 
-  // HEADER PÚBLICO ESTÁNDAR
+  // HEADER PÚBLICO ESTÁNDAR - SIN BOTÓN DE AGENDA
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
@@ -122,7 +122,7 @@ export function Navbar() {
             <div className="hidden md:flex items-center gap-2 lg:gap-6 mr-2">
               <Link href="/home-test">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-black text-secondary hover:text-primary uppercase tracking-widest border border-secondary/20 rounded-full px-4">
-                  Mi Test (En Casa)
+                  Guía de Test
                 </Button>
               </Link>
               <Link href="/investors">
@@ -137,7 +137,7 @@ export function Navbar() {
               </Link>
               <Link href="/sunvou">
                 <Button variant="ghost" size="sm" className="text-xs lg:text-sm font-bold text-muted-foreground hover:text-primary">
-                  Sunvou®
+                  Tecnología B2B
                 </Button>
               </Link>
             </div>
@@ -148,9 +148,9 @@ export function Navbar() {
                 </Button>
               </Link>
             ) : (
-              <Link href="/booking">
-                <Button size="sm" className="rounded-full font-bold shadow-sm bg-primary hover:bg-primary/90 text-xs md:text-sm">
-                  Agendar Examen
+              <Link href="/sunvou#contact-form">
+                <Button size="sm" className="rounded-full font-black bg-primary text-xs md:text-sm shadow-lg flex items-center gap-2">
+                  <Building2 className="h-4 w-4" /> Alianza Corporativa
                 </Button>
               </Link>
             )}

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -16,7 +15,8 @@ import {
   ShieldCheck,
   Zap,
   Users,
-  MessageCircle
+  MessageCircle,
+  MapPin
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -96,7 +96,7 @@ export default function AgreementsPage() {
   const benefits = [
     {
       title: "Tarifas Preferenciales",
-      desc: "Precios especiales y descuentos exclusivos para los pacientes derivados de tu centro médico.",
+      desc: "Precios especiales y descuentos exclusivos para los centros médicos con alto volumen de derivación.",
       icon: <Zap className="h-6 w-6 text-secondary" />
     },
     {
@@ -110,8 +110,8 @@ export default function AgreementsPage() {
       icon: <Users className="h-6 w-6 text-secondary" />
     },
     {
-      title: "Material para Pacientes",
-      desc: "Entrega de material educativo impreso y digital para facilitar la preparación del test.",
+      title: "Kits de Recolección",
+      desc: "Suministro continuo de insumos y material educativo para facilitar el proceso al paciente.",
       icon: <CheckCircle2 className="h-6 w-6 text-secondary" />
     }
   ];
@@ -195,7 +195,7 @@ export default function AgreementsPage() {
                     <li className="flex gap-3"><span className="text-secondary font-black">01.</span> Recepción de solicitud y validación de datos.</li>
                     <li className="flex gap-3"><span className="text-secondary font-black">02.</span> Reunión técnica para definir términos y tarifas.</li>
                     <li className="flex gap-3"><span className="text-secondary font-black">03.</span> Firma de convenio y entrega de material promocional.</li>
-                    <li className="flex gap-3"><span className="text-secondary font-black">04.</span> ¡Listo! Tus pacientes ya pueden agendar con beneficios.</li>
+                    <li className="flex gap-3"><span className="text-secondary font-black">04.</span> ¡Listo! Ya pueden derivar sus muestras a nuestro centro.</li>
                   </ul>
                 </div>
               </div>
@@ -325,7 +325,7 @@ export default function AgreementsPage() {
                 <p className="text-xl opacity-80">Conversa directamente con nuestro equipo técnico y comercial vía WhatsApp para resolver inquietudes inmediatas.</p>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   <Button size="lg" className="rounded-full h-16 px-10 text-xl font-black bg-secondary hover:bg-white hover:text-primary transition-all shadow-2xl">
-                     WhatsApp Especialista
+                     WhatsApp Corporativo
                   </Button>
                 </a>
              </motion.div>
@@ -342,7 +342,7 @@ export default function AgreementsPage() {
           <div className="flex gap-8 text-sm font-bold text-primary/60">
             <Link href="/" className="hover:text-secondary">Inicio</Link>
             <Link href="/sunvou" className="hover:text-secondary">Sunvou Chile</Link>
-            <Link href="/booking" className="hover:text-secondary">Reservas</Link>
+            <Link href="/how-it-works" className="hover:text-secondary">Protocolos</Link>
           </div>
         </div>
       </footer>

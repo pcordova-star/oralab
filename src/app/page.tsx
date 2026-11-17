@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -28,7 +27,8 @@ import {
   MapPin,
   ExternalLink,
   Handshake,
-  FlaskConical
+  FlaskConical,
+  Building2
 } from "lucide-react";
 import { 
   LineChart, 
@@ -59,25 +59,25 @@ const EXAMS = [
   {
     title: "Test de SIBO",
     desc: "Detecta el sobrecrecimiento bacteriano en el intestino delgado mediante hidrógeno y metano.",
-    duration: "90 min",
+    duration: "Protocolo 90 min",
     icon: <Activity className="h-6 w-6 text-primary" />
   },
   {
     title: "Intolerancia Lactosa",
     desc: "Identifica la incapacidad de digerir el azúcar de la leche y derivados.",
-    duration: "180 min",
+    duration: "Protocolo 180 min",
     icon: <Droplets className="h-6 w-6 text-primary" />
   },
   {
     title: "Intolerancia Fructosa",
     desc: "Evaluación de malabsorción de azúcares presentes en frutas y miel.",
-    duration: "180 min",
+    duration: "Protocolo 180 min",
     icon: <Zap className="h-6 w-6 text-primary" />
   },
   {
     title: "Test Lactulosa",
     desc: "Prueba estándar de oro para evaluar el tiempo de tránsito intestinal y SIBO distal.",
-    duration: "180 min",
+    duration: "Protocolo 180 min",
     icon: <Beaker className="h-6 w-6 text-primary" />
   }
 ];
@@ -233,8 +233,16 @@ export default function HomePage() {
               <div className="space-y-6 md:space-y-8">
                 <TechnologicalHeroTitle />
                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1, duration: 0.5 }} className="pt-8 flex flex-wrap justify-center lg:justify-start gap-4">
-                  <Link href="/booking"><Button size="lg" className="group rounded-full h-20 px-12 text-2xl font-black shadow-2xl bg-primary hover:bg-secondary transition-all hover:scale-105">Reserva tu cita <ChevronRight className="ml-2 h-8 w-8 group-hover:translate-x-2 transition-transform" /></Button></Link>
-                  <Link href="/how-it-works"><Button variant="outline" size="lg" className="rounded-full h-20 px-8 text-xl font-bold border-2 border-primary text-primary">¿Cómo funciona?</Button></Link>
+                  <Link href="/sunvou">
+                    <Button size="lg" className="group rounded-full h-20 px-12 text-2xl font-black shadow-2xl bg-primary hover:bg-secondary transition-all hover:scale-105">
+                      Alianzas B2B <ChevronRight className="ml-2 h-8 w-8 group-hover:translate-x-2 transition-transform" />
+                    </Button>
+                  </Link>
+                  <Link href="/how-it-works">
+                    <Button variant="outline" size="lg" className="rounded-full h-20 px-8 text-xl font-bold border-2 border-primary text-primary">
+                      ¿Cómo funciona?
+                    </Button>
+                  </Link>
                 </motion.div>
               </div>
               <div className="hidden lg:flex justify-center relative">
@@ -252,7 +260,7 @@ export default function HomePage() {
         <section className="py-24 bg-white relative">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16 space-y-4">
-              <h2 className="text-3xl md:text-5xl font-black text-primary italic">Nuestros Servicios</h2>
+              <h2 className="text-3xl md:text-5xl font-black text-primary italic">Áreas de Especialidad</h2>
               <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -268,29 +276,13 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* INTERACTIVE REPORT SECTION */}
-        <section className="py-24 bg-background overflow-hidden">
-          <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div className="space-y-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">
-                  <ShieldCheck className="h-3 w-3" /> Reportes Clínicos
-                </div>
-                <h2 className="text-3xl md:text-6xl font-black text-primary italic leading-tight">Resultados de alta precisión para tu médico.</h2>
-                <p className="text-xl text-muted-foreground font-medium leading-relaxed">Entregamos gráficas detalladas de Hidrógeno y Metano. La tecnología Sunvou® permite una lectura precisa que facilita el diagnóstico de SIBO e IMO.</p>
-                <div className="space-y-4">
-                   <div className="flex items-center gap-4 text-primary font-bold italic"><CheckCircle2 className="h-6 w-6 text-secondary" /> Corrección de CO2 alveolar</div>
-                   <div className="flex items-center gap-4 text-primary font-bold italic"><CheckCircle2 className="h-6 w-6 text-secondary" /> Sensores Sunvou® Gold Standard</div>
-                </div>
-              </div>
-              <ClinicalReportVisualizer />
-            </div>
-          </div>
-        </section>
-
         {/* CIENCIA Y PROFUNDIDAD CLÍNICA */}
-        <section className="py-24 bg-white">
+        <section className="py-24 bg-background overflow-hidden border-y">
           <div className="container mx-auto px-4">
+             <div className="text-center mb-20 space-y-4">
+                <h2 className="text-3xl md:text-5xl font-black text-primary italic">Ciencia del Aire Espirado</h2>
+                <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full" />
+             </div>
              <div className="grid lg:grid-cols-3 gap-12">
                 {/* Resultados de SIBO e Intolerancias */}
                 <motion.div 
@@ -299,25 +291,25 @@ export default function HomePage() {
                   viewport={{ once: true }}
                   className="space-y-6"
                 >
-                   <div className="bg-primary/5 p-8 rounded-[2.5rem] border border-primary/5 h-full">
+                   <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-primary/5 h-full">
                       <div className="bg-primary text-white w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
                          <Stethoscope className="h-7 w-7" />
                       </div>
-                      <h3 className="text-2xl font-black text-primary italic mb-4">Resultados de SIBO e Intolerancias</h3>
+                      <h3 className="text-2xl font-black text-primary italic mb-4">Análisis de Resultados</h3>
                       <div className="space-y-6 text-sm">
                          <div className="space-y-2">
                             <Badge className="bg-secondary/10 text-secondary border-none font-black text-[10px]">SIBO</Badge>
-                            <p className="text-muted-foreground leading-relaxed">Se identifica un <strong>resultado</strong> positivo cuando las bacterias del colon se encuentran en exceso en el intestino delgado. Al consumir el sustrato, estas fermentan antes de tiempo, generando gases detectables al exhalar.</p>
+                            <p className="text-muted-foreground leading-relaxed">Se identifica un <strong>resultado</strong> positivo cuando las bacterias del colon se encuentran en exceso en el intestino delgado, generando gases detectables al exhalar.</p>
                          </div>
                          <div className="space-y-2">
                             <Badge className="bg-secondary/10 text-secondary border-none font-black text-[10px]">INTOLERANCIAS</Badge>
-                            <p className="text-muted-foreground leading-relaxed">El <strong>resultado</strong> evalúa la capacidad de absorber azúcares como lactosa o fructosa. Al no absorberse, pasan al colon donde la microbiota las fermenta, provocando síntomas gastrointestinales.</p>
+                            <p className="text-muted-foreground leading-relaxed">El <strong>resultado</strong> evalúa la malabsorción de azúcares. Al no absorberse, pasan al colon donde la microbiota las fermenta, provocando síntomas.</p>
                          </div>
                       </div>
                    </div>
                 </motion.div>
 
-                {/* Gases Medidos */}
+                {/* Biomarcadores Clave */}
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }} 
                   whileInView={{ opacity: 1, y: 0 }} 
@@ -325,38 +317,38 @@ export default function HomePage() {
                   transition={{ delay: 0.1 }}
                   className="space-y-6"
                 >
-                   <div className="bg-secondary/5 p-8 rounded-[2.5rem] border border-secondary/5 h-full">
+                   <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-secondary/5 h-full">
                       <div className="bg-secondary text-white w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-secondary/20">
                          <FlaskConical className="h-7 w-7" />
                       </div>
-                      <h3 className="text-2xl font-black text-primary italic mb-4">Biomarcadores Clave</h3>
+                      <h3 className="text-2xl font-black text-primary italic mb-4">Biomarcadores</h3>
                       <div className="space-y-4">
-                         <div className="flex items-start gap-3 p-3 bg-white rounded-2xl shadow-sm border border-primary/5">
+                         <div className="flex items-start gap-3 p-3 bg-muted/20 rounded-2xl border border-primary/5">
                             <div className="font-black text-primary text-xs mt-1">H₂</div>
                             <div>
                                <p className="font-bold text-xs text-primary">Hidrógeno</p>
-                               <p className="text-[11px] text-muted-foreground">Indicador principal de fermentación bacteriana rápida de azúcares. Señala SIBO o malabsorción de carbohidratos.</p>
+                               <p className="text-[11px] text-muted-foreground">Indicador principal de fermentación bacteriana rápida. Señala SIBO o malabsorción.</p>
                             </div>
                          </div>
-                         <div className="flex items-start gap-3 p-3 bg-white rounded-2xl shadow-sm border border-primary/5">
+                         <div className="flex items-start gap-3 p-3 bg-muted/20 rounded-2xl border border-primary/5">
                             <div className="font-black text-primary text-xs mt-1">CH₄</div>
                             <div>
                                <p className="font-bold text-xs text-primary">Metano</p>
-                               <p className="text-[11px] text-muted-foreground">Producido por arqueas. Asociado a síntomas de lentitud intestinal y estreñimiento.</p>
+                               <p className="text-[11px] text-muted-foreground">Asociado a síntomas de lentitud intestinal y estreñimiento.</p>
                             </div>
                          </div>
-                         <div className="flex items-start gap-3 p-3 bg-white rounded-2xl shadow-sm border border-primary/5">
+                         <div className="flex items-start gap-3 p-3 bg-muted/20 rounded-2xl border border-primary/5">
                             <div className="font-black text-primary text-xs mt-1">CO₂</div>
                             <div>
                                <p className="font-bold text-xs text-primary">Dióxido de Carbono</p>
-                               <p className="text-[11px] text-muted-foreground">Indicador de calidad. Garantiza que la muestra provenga del aire alveolar profundo.</p>
+                               <p className="text-[11px] text-muted-foreground">Garantiza que la muestra provenga del aire alveolar profundo para máxima precisión.</p>
                             </div>
                          </div>
                       </div>
                    </div>
                 </motion.div>
 
-                {/* Proceso de la Prueba */}
+                {/* Proceso */}
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }} 
                   whileInView={{ opacity: 1, y: 0 }} 
@@ -364,31 +356,26 @@ export default function HomePage() {
                   transition={{ delay: 0.2 }}
                   className="space-y-6"
                 >
-                   <div className="bg-muted/50 p-8 rounded-[2.5rem] border border-muted-foreground/10 h-full">
-                      <div className="bg-slate-700 text-white w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-slate-700/20">
+                   <div className="bg-primary p-8 rounded-[2.5rem] shadow-xl h-full text-white">
+                      <div className="bg-white/10 text-white w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border border-white/20">
                          <ClipboardCheck className="h-7 w-7" />
                       </div>
-                      <h3 className="text-2xl font-black text-primary italic mb-4">Protocolo en Laboratorio</h3>
-                      <div className="relative pl-6 space-y-6 border-l-2 border-dashed border-primary/20">
+                      <h3 className="text-2xl font-black italic mb-4">Protocolo Técnico</h3>
+                      <div className="relative pl-6 space-y-6 border-l-2 border-dashed border-white/20">
                          <div className="relative">
-                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary" />
-                            <p className="font-black text-[10px] text-primary uppercase">Preparación</p>
-                            <p className="text-xs text-muted-foreground">Ayuno de 12h y dieta blanda estricta el día anterior.</p>
+                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-secondary" />
+                            <p className="font-black text-[10px] uppercase text-secondary">Recepción Muestras</p>
+                            <p className="text-xs opacity-80">Ingreso controlado de kits enviados por clínicas asociadas.</p>
                          </div>
                          <div className="relative">
-                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary" />
-                            <p className="font-black text-[10px] text-primary uppercase">Muestra basal (T-0)</p>
-                            <p className="text-xs text-muted-foreground">Exhalación inicial en ayunas para punto de comparación.</p>
+                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-secondary" />
+                            <p className="font-black text-[10px] uppercase text-secondary">Procesamiento</p>
+                            <p className="text-xs opacity-80">Análisis con equipos Sunvou® DA7349 de alta fidelidad.</p>
                          </div>
                          <div className="relative">
-                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary" />
-                            <p className="font-black text-[10px] text-primary uppercase">Muestreo Seriado</p>
-                            <p className="text-xs text-muted-foreground">Exhalaciones cada 15 a 30 min durante 2-3 horas.</p>
-                         </div>
-                         <div className="relative">
-                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary" />
-                            <p className="font-black text-[10px] text-primary uppercase">Resultado</p>
-                            <p className="text-xs text-muted-foreground">Trazado automático de curvas para obtención del reporte final.</p>
+                            <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-secondary" />
+                            <p className="font-black text-[10px] uppercase text-secondary">Trazado Digital</p>
+                            <p className="text-xs opacity-80">Generación automática de curvas metabólicas para el especialista.</p>
                          </div>
                       </div>
                    </div>
@@ -397,38 +384,14 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* HOME TEST SIMULATOR SECTION */}
-        <section className="py-24 bg-primary relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl" />
-           <div className="container mx-auto px-4 relative z-10">
-              <div className="grid lg:grid-cols-2 gap-16 items-center">
-                 <div className="order-2 lg:order-1 flex justify-center"><HomeTestSimulator /></div>
-                 <div className="order-1 lg:order-2 space-y-8 text-white text-center lg:text-left">
-                    <h2 className="text-4xl md:text-6xl font-black italic leading-tight">Tu test en casa, guiado por IA.</h2>
-                    <p className="text-xl text-white/80 font-medium leading-relaxed">Si eliges la modalidad Home-Kit, nuestro asistente digital te guiará paso a paso en el protocolo de soplido con alertas en tiempo real.</p>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="bg-white/10 p-6 rounded-3xl backdrop-blur-sm border border-white/10">
-                          <Timer className="h-8 w-8 text-secondary mb-3" />
-                          <p className="font-black text-sm uppercase">Cronómetro Inteligente</p>
-                       </div>
-                       <div className="bg-white/10 p-6 rounded-3xl backdrop-blur-sm border border-white/10">
-                          <Bell className="h-8 w-8 text-secondary mb-3" />
-                          <p className="font-black text-sm uppercase">Alertas Sonoras</p>
-                       </div>
-                    </div>
-                 </div>
-              </div>
-           </div>
-        </section>
-
         {/* ALIANZA CYBERSALUD */}
-        <section className="py-24 bg-muted/30 border-t relative overflow-hidden">
+        <section className="py-24 bg-white relative overflow-hidden">
           <div className="container mx-auto px-4">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-5xl mx-auto">
-              <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl border border-primary/5 flex flex-col md:flex-row items-center gap-10 md:gap-16">
+              <div className="bg-muted/30 rounded-[3rem] p-8 md:p-12 border border-primary/5 flex flex-col md:flex-row items-center gap-10 md:gap-16">
                 <div className="shrink-0 w-full md:w-auto flex justify-center">
                   <a href="https://www.cybersalud.cl" target="_blank" rel="noopener noreferrer" className="block group transition-all duration-500 hover:scale-105">
-                    <div className="relative bg-muted/20 p-6 rounded-[2.5rem] border border-primary/10 overflow-hidden shadow-inner">
+                    <div className="relative bg-white p-6 rounded-[2.5rem] border border-primary/10 overflow-hidden shadow-xl">
                       <Image src="/logo_cybersalud.jpg" alt="Logo Cybersalud" width={240} height={100} className="h-auto w-auto max-w-[200px] md:max-w-[240px]" />
                     </div>
                   </a>
@@ -437,8 +400,8 @@ export default function HomePage() {
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-[10px] font-black uppercase tracking-widest">
                     <Handshake className="h-3 w-3" /> Partner en Telemedicina
                   </div>
-                  <h3 className="text-2xl md:text-4xl font-black text-primary italic leading-tight">¿Necesitas asistencia médica y seguimiento?</h3>
-                  <p className="text-lg text-muted-foreground font-medium">A través de nuestra alianza con Cybersalud, ponemos a tu disposición especialistas que te ayudarán con la interpretación clínica de tus resultados.</p>
+                  <h3 className="text-2xl md:text-4xl font-black text-primary italic leading-tight">Apoyo en Interpretación Clínica</h3>
+                  <p className="text-lg text-muted-foreground font-medium">A través de nuestra alianza con Cybersalud, ponemos a disposición especialistas para ayudar en la lectura clínica de reportes complejos.</p>
                   <a href="https://www.cybersalud.cl" target="_blank" rel="noopener noreferrer" className="inline-block">
                     <Button className="rounded-full bg-primary hover:bg-secondary font-black h-14 px-8 shadow-lg transition-all group">Visitar Cybersalud <ExternalLink className="ml-2 h-4 w-4" /></Button>
                   </a>
@@ -447,11 +410,32 @@ export default function HomePage() {
             </motion.div>
           </div>
         </section>
+
+        {/* CORPORATE CTA */}
+        <section className="py-24 bg-primary text-white text-center">
+          <div className="container mx-auto px-4">
+             <motion.div
+               initial={{ opacity: 0, scale: 0.95 }}
+               whileInView={{ opacity: 1, scale: 1 }}
+               viewport={{ once: true }}
+               className="max-w-2xl mx-auto space-y-8"
+             >
+                <Building2 className="h-16 w-16 text-secondary mx-auto mb-4 animate-float" />
+                <h2 className="text-3xl md:text-5xl font-black italic">¿Eres una institución de salud?</h2>
+                <p className="text-xl opacity-80">Conoce nuestros planes de convenio y externaliza tu laboratorio de aire espirado con la mayor precisión de Chile.</p>
+                <Link href="/agreements">
+                  <Button size="lg" className="rounded-full h-16 px-10 text-xl font-black bg-secondary hover:bg-white hover:text-primary transition-all shadow-2xl">
+                     Ver Convenios Institucionales
+                  </Button>
+                </Link>
+             </motion.div>
+          </div>
+        </section>
       </main>
       <footer className="bg-white border-t border-border py-20">
         <div className="container mx-auto px-4 text-center">
           <Logo />
-          <p className="text-muted-foreground text-sm mt-4">Laboratorio especializado en Salud Digestiva Avanzada.</p>
+          <p className="text-muted-foreground text-sm mt-4">Laboratorio Especializado B2B en Salud Digestiva Avanzada.</p>
           <div className="flex justify-center gap-8 text-xs font-bold text-primary/60 mt-8 mb-8">
             <Link href="/login" className="hover:text-secondary flex items-center gap-1"><Lock className="h-3 w-3" /> Acceso Personal</Link>
             <Link href="/terms" className="hover:text-secondary">Términos y Condiciones</Link>

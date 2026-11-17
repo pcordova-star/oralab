@@ -15,7 +15,8 @@ import {
   MessageCircle,
   ClipboardCheck,
   UserRound,
-  Microscope
+  Microscope,
+  Building2
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -26,27 +27,27 @@ export default function HowItWorksPage() {
   const steps = [
     {
       title: "1. Preparación previa",
-      description: "El éxito del test comienza en casa. Deberás seguir una dieta sencilla el día anterior (dieta blanda) y un ayuno de 12 horas para que tu sistema digestivo esté en reposo absoluto al momento del examen.",
+      description: "El éxito del test comienza con el paciente. Deberá seguir una dieta blanda el día anterior y un ayuno de 12 horas para que su sistema digestivo esté en reposo absoluto.",
       icon: <Coffee className="h-8 w-8 text-secondary" />,
     },
     {
-      title: "2. Primera medición",
-      description: "Al llegar, realizaremos una primera toma de aliento (basal). Esto nos sirve para conocer el estado de tu organismo antes de comenzar el estudio propiamente tal.",
+      title: "2. Recolección de muestras",
+      description: "Utilizando nuestros kits de recolección, se toman muestras de aliento en intervalos regulares siguiendo el protocolo indicado para cada azúcar (Lactosa, Fructosa o Lactulosa).",
       icon: <Wind className="h-8 w-8 text-secondary" />,
     },
     {
-      title: "3. Toma del sustrato",
-      description: "Beberás una solución líquida específica (Lactosa, Fructosa o Lactulosa, según lo indicado por tu médico). Es una bebida dulce que las bacterias de tu intestino procesarán durante el test.",
-      icon: <Beaker className="h-8 w-8 text-secondary" />,
+      title: "3. Envío al Laboratorio",
+      description: "Las muestras recolectadas son enviadas por el centro médico o el paciente directamente a nuestras oficinas centrales para su procesamiento técnico.",
+      icon: <Package className="h-8 w-8 text-secondary" />,
     },
     {
-      title: "4. Seguimiento del proceso",
-      description: "Durante las siguientes 2 a 3 horas, tomaremos muestras de tu aliento en intervalos regulares. Es un proceso tranquilo y sin dolor donde solo deberás soplar suavemente en un equipo especializado.",
+      title: "4. Análisis Sunvou®",
+      description: "Procesamos cada muestra en nuestro analizador DA7349, midiendo H2, CH4 y corrigiendo por CO2 para asegurar la validez de la exhalación.",
       icon: <Clock className="h-8 w-8 text-secondary" />,
     },
     {
-      title: "5. Informe para tu médico",
-      description: "Generamos un reporte detallado con gráficos que muestran cómo reaccionó tu cuerpo. Este documento es el 'mapa' que tu médico usará para darte el tratamiento exacto que necesitas.",
+      title: "5. Reporte al Especialista",
+      description: "Generamos un reporte digital detallado con las curvas metabólicas, entregando una herramienta diagnóstica precisa para el médico tratante.",
       icon: <ClipboardCheck className="h-8 w-8 text-secondary" />,
     },
   ];
@@ -68,15 +69,15 @@ export default function HowItWorksPage() {
               <Link href="/" className="inline-flex items-center text-secondary hover:text-secondary/80 mb-8 font-bold transition-colors">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Volver al inicio
               </Link>
-              <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">Entiende tu <br /><span className="text-secondary">Procedimiento</span></h1>
+              <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">Logística y <br /><span className="text-secondary">Procesamiento</span></h1>
               <p className="text-xl text-primary-foreground/80 max-w-2xl leading-relaxed font-medium">
-                Realizarse un test de aire espirado es un proceso sencillo y no invasivo. Aquí te explicamos paso a paso cómo lo haremos juntos.
+                Oralab opera como un centro de procesamiento especializado. Recibimos muestras de todo Chile para entregar diagnósticos de alta precisión.
               </p>
             </motion.div>
           </div>
         </section>
 
-        {/* Home Kit Section */}
+        {/* B2B Info Section */}
         <section className="py-16 -mt-10 relative z-20">
           <div className="container mx-auto px-4">
             <motion.div 
@@ -86,12 +87,12 @@ export default function HowItWorksPage() {
               className="max-w-4xl mx-auto glass-panel !bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-primary/10 flex flex-col md:flex-row items-center gap-8"
             >
               <div className="bg-secondary/10 p-6 rounded-3xl shrink-0">
-                <Package className="h-12 w-12 text-secondary" />
+                <Building2 className="h-12 w-12 text-secondary" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-primary mb-3">Opción de Test en Casa</h3>
+                <h3 className="text-2xl font-black text-primary mb-3">Modelo de Servicio B2B</h3>
                 <p className="text-muted-foreground leading-relaxed text-lg font-medium">
-                  Si no puedes venir al laboratorio, puedes retirar un kit con todos los insumos y las instrucciones detalladas para recolectar tus muestras cómodamente en tu hogar y luego traerlas para su análisis.
+                  Nuestra red de convenios permite que centros médicos deriven las muestras a nuestro laboratorio central. Contamos con protocolos de transporte que aseguran la estabilidad de los gases para un análisis confiable.
                 </p>
               </div>
             </motion.div>
@@ -103,7 +104,7 @@ export default function HowItWorksPage() {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-16 space-y-4">
-                <h2 className="text-3xl md:text-5xl font-black text-primary italic">Paso a paso del examen</h2>
+                <h2 className="text-3xl md:text-5xl font-black text-primary italic">Flujo de Trabajo</h2>
                 <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full" />
               </div>
               
@@ -134,49 +135,8 @@ export default function HowItWorksPage() {
           </div>
         </section>
 
-        {/* Simple Science Section */}
-        <section className="py-24 bg-background overflow-hidden">
-          <div className="container mx-auto px-4">
-            <div className="glass-panel !bg-primary rounded-[3rem] p-8 md:p-16 shadow-2xl border-none relative">
-              <div className="grid lg:grid-cols-2 gap-16 items-center relative z-10">
-                <div className="text-white">
-                  <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">¿Por qué soplamos?</h2>
-                  <p className="text-lg opacity-80 mb-8 leading-relaxed font-medium">
-                    Cuando las bacterias de tu intestino fermentan ciertos alimentos, producen gases que pasan a tu sangre y finalmente salen por tus pulmones. Al medir tu aliento, podemos "leer" lo que está pasando en tu sistema digestivo sin necesidad de procedimientos invasivos.
-                  </p>
-                  <div className="space-y-6">
-                    <div className="flex items-start gap-4 bg-white/10 p-4 rounded-2xl border border-white/10">
-                      <div className="bg-secondary/20 p-2 rounded-lg mt-1">
-                        <UserRound className="h-5 w-5 text-secondary" />
-                      </div>
-                      <p className="font-bold text-white/90 italic">Es la forma más amable y precisa de detectar intolerancias o sobrecrecimiento bacteriano (SIBO).</p>
-                    </div>
-                    <div className="flex items-start gap-4 bg-white/10 p-4 rounded-2xl border border-white/10">
-                      <div className="bg-secondary/20 p-2 rounded-lg mt-1">
-                        <Stethoscope className="h-5 w-5 text-secondary" />
-                      </div>
-                      <p className="font-bold text-white/90 italic">Usamos tecnología de punta certificada para asegurar resultados confiables para tu médico.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="relative flex justify-center">
-                  <div className="aspect-square w-64 md:w-80 bg-secondary/10 rounded-full flex items-center justify-center p-12 border-4 border-dashed border-secondary/30">
-                    <Microscope className="h-32 w-32 text-secondary" />
-                  </div>
-                  <div className="absolute -bottom-10 -right-10 bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/20 hidden md:block">
-                    <div className="text-center">
-                      <p className="text-4xl font-black text-secondary">Sunvou®</p>
-                      <p className="text-xs font-bold text-white uppercase tracking-widest">Tecnología de Punta</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* CTA Section */}
-        <section className="py-24 bg-white text-center">
+        <section className="py-24 bg-white text-center border-t">
           <div className="container mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -185,20 +145,20 @@ export default function HowItWorksPage() {
               className="max-w-3xl mx-auto"
             >
               <Stethoscope className="h-16 w-16 text-secondary mx-auto mb-8 animate-float" />
-              <h2 className="text-3xl md:text-6xl font-black text-primary mb-6">Estamos para acompañarte</h2>
+              <h2 className="text-3xl md:text-6xl font-black text-primary mb-6">Expertos a su servicio</h2>
               <p className="text-xl text-muted-foreground mb-10 leading-relaxed font-medium">
-                Si tienes dudas sobre la preparación o el día del examen, nuestro equipo técnico está disponible para resolver todas tus inquietudes.
+                Si su clínica requiere implementar este servicio o enviar muestras, nuestro equipo técnico está disponible para coordinar la logística.
               </p>
               <div className="flex flex-wrap justify-center gap-6">
-                <Link href="/booking">
+                <Link href="/agreements">
                   <Button size="lg" className="rounded-full h-16 px-10 text-xl font-black bg-primary hover:bg-secondary hover:text-white transition-all shadow-xl hover:scale-105">
-                    Agendar mi Test
+                    Solicitar Convenio
                   </Button>
                 </Link>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" size="lg" className="rounded-full h-16 px-10 text-xl font-bold border-2 border-primary text-primary hover:bg-primary/5">
                     <MessageCircle className="h-6 w-6 mr-3" />
-                    Consultar por WhatsApp
+                    Consultar Soporte
                   </Button>
                 </a>
               </div>
