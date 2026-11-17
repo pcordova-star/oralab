@@ -28,7 +28,8 @@ import {
   ExternalLink,
   Handshake,
   FlaskConical,
-  Building2
+  Building2,
+  Smartphone
 } from "lucide-react";
 import { 
   LineChart, 
@@ -106,7 +107,9 @@ const HomeTestSimulator = () => {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20" />
       <div className="flex-1 bg-white rounded-2xl overflow-hidden flex flex-col">
         <header className="p-3 border-b bg-slate-50 flex items-center justify-between">
-          <Logo />
+          <div className="scale-75 origin-left">
+            <Logo />
+          </div>
           <Volume2 className="h-4 w-4 text-primary" />
         </header>
         <div className="flex-1 p-4 flex flex-col items-center justify-center text-center space-y-6">
@@ -284,7 +287,6 @@ export default function HomePage() {
                 <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full" />
              </div>
              <div className="grid lg:grid-cols-3 gap-12">
-                {/* Resultados de SIBO e Intolerancias */}
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }} 
                   whileInView={{ opacity: 1, y: 0 }} 
@@ -309,7 +311,6 @@ export default function HomePage() {
                    </div>
                 </motion.div>
 
-                {/* Biomarcadores Clave */}
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }} 
                   whileInView={{ opacity: 1, y: 0 }} 
@@ -348,7 +349,6 @@ export default function HomePage() {
                    </div>
                 </motion.div>
 
-                {/* Proceso */}
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }} 
                   whileInView={{ opacity: 1, y: 0 }} 
@@ -384,11 +384,55 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* EXPERIENCIA DEL PACIENTE Y SIMULADOR */}
+        <section className="py-24 bg-white">
+          <div className="container mx-auto px-4">
+             <div className="grid lg:grid-cols-2 gap-16 items-center">
+                <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-8">
+                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20">
+                      <Smartphone className="h-5 w-5 text-secondary" />
+                      <span className="text-xs font-black uppercase text-secondary tracking-widest">Guía Interactiva Digital</span>
+                   </div>
+                   <h2 className="text-4xl md:text-6xl font-black text-primary italic leading-tight">Tecnología en manos <br />del paciente</h2>
+                   <p className="text-xl text-muted-foreground font-medium leading-relaxed">
+                      Nuestros kits incluyen acceso a un asistente virtual que guía al paciente segundo a segundo. 
+                      Aseguramos que cada muestra sea tomada en el tiempo exacto, garantizando resultados válidos para su médico.
+                   </p>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
+                      <div className="flex gap-4">
+                         <div className="bg-primary/10 h-10 w-10 rounded-xl flex items-center justify-center shrink-0"><Bell className="h-5 w-5 text-primary" /></div>
+                         <div><p className="font-black text-primary italic">Alertas Sonoras</p><p className="text-xs text-muted-foreground">Notificaciones en tiempo real para cada soplido.</p></div>
+                      </div>
+                      <div className="flex gap-4">
+                         <div className="bg-primary/10 h-10 w-10 rounded-xl flex items-center justify-center shrink-0"><History className="h-5 w-5 text-primary" /></div>
+                         <div><p className="font-black text-primary italic">Bitácora Digital</p><p className="text-xs text-muted-foreground">Registro automático de tiempos para el laboratorio.</p></div>
+                      </div>
+                   </div>
+                   <Link href="/how-it-works" className="inline-block pt-6">
+                      <Button variant="outline" className="rounded-full h-14 px-8 font-black text-primary border-primary/20 hover:bg-primary/5">
+                        Ver Logística de Kits <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                   </Link>
+                </motion.div>
+                <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
+                   <div className="relative group">
+                      <div className="absolute inset-0 bg-secondary/20 rounded-full blur-[80px] group-hover:bg-secondary/30 transition-all duration-700" />
+                      <HomeTestSimulator />
+                   </div>
+                   <div className="w-full max-w-sm hidden md:block">
+                      <ClinicalReportVisualizer />
+                      <p className="text-[10px] font-bold text-center mt-4 text-muted-foreground uppercase tracking-widest">Visualización de curvas metabólicas Sunvou®</p>
+                   </div>
+                </div>
+             </div>
+          </div>
+        </section>
+
         {/* ALIANZA CYBERSALUD */}
-        <section className="py-24 bg-white relative overflow-hidden">
+        <section className="py-24 bg-muted/30 relative overflow-hidden">
           <div className="container mx-auto px-4">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-5xl mx-auto">
-              <div className="bg-muted/30 rounded-[3rem] p-8 md:p-12 border border-primary/5 flex flex-col md:flex-row items-center gap-10 md:gap-16">
+              <div className="bg-white rounded-[3rem] p-8 md:p-12 border border-primary/5 flex flex-col md:flex-row items-center gap-10 md:gap-16 shadow-xl">
                 <div className="shrink-0 w-full md:w-auto flex justify-center">
                   <a href="https://www.cybersalud.cl" target="_blank" rel="noopener noreferrer" className="block group transition-all duration-500 hover:scale-105">
                     <div className="relative bg-white p-6 rounded-[2.5rem] border border-primary/10 overflow-hidden shadow-xl">
