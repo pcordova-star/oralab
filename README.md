@@ -2,22 +2,18 @@
 
 Este es el repositorio oficial de **Oralab**, especializado en tests de aire espirado SIBO e Intolerancias.
 
-## Guía de Configuración Git
+## Guía de Gestión de Cambios (Git)
 
-Para subir cambios de forma segura, sigue estos pasos:
+Si encuentras errores de rechazo al subir cambios, sigue estos pasos secuenciales:
 
-### 1. Limpiar Configuración Antigua
-Ejecuta este comando para asegurarte de que Git te pida tus credenciales actuales:
+### 1. Sincronizar el repositorio local
+Ejecuta este comando para traer cambios remotos y evitar conflictos de historial:
 ```bash
-git remote set-url origin https://github.com/pcordova-star/oralab.git
+git pull origin main --rebase
 ```
 
-### 2. Subir Cambios
-Al ejecutar el siguiente comando, la consola solicitará tus credenciales:
-- **Username:** Tu usuario de GitHub (`pcordova-star`).
-- **Password:** Tu **Token Personal (Classic)**. 
-  *Nota: Al pegar el token no se verán caracteres en la pantalla por seguridad.*
-
+### 2. Subir tus cambios finales
+Una vez sincronizado, utiliza el comando estándar. La terminal te solicitará tu **Username** y tu **Token Personal** (como contraseña):
 ```bash
 git add .
 git commit -m "Oralab: Actualización de funcionalidades y mejoras clínicas"
