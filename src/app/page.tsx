@@ -30,7 +30,8 @@ import {
   Handshake,
   FlaskConical,
   Building2,
-  Smartphone
+  Smartphone,
+  History
 } from "lucide-react";
 import { 
   LineChart, 
@@ -432,7 +433,7 @@ export default function HomePage() {
         {/* ALIANZA CYBERSALUD */}
         <section className="py-24 bg-muted/30 relative overflow-hidden">
           <div className="container mx-auto px-4">
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-5xl mx-auto">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="max-w-5xl mx-auto">
               <div className="bg-white rounded-[3rem] p-8 md:p-12 border border-primary/5 flex flex-col md:flex-row items-center gap-10 md:gap-16 shadow-xl">
                 <div className="shrink-0 w-full md:w-auto flex justify-center">
                   <a href="https://www.cybersalud.cl" target="_blank" rel="noopener noreferrer" className="block group transition-all duration-500 hover:scale-105">
