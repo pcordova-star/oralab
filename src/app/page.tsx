@@ -11,6 +11,7 @@ import {
   Beaker,
   Stethoscope,
   ChevronRight,
+  ArrowRight,
   Sparkles,
   Wind,
   Timer,
