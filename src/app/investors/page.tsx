@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -21,20 +21,21 @@ import {
   Microscope, 
   Building2, 
   CheckCircle2,
-  Clock,
-  HandCoins,
-  Sparkles,
-  Users,
   TrendingUp,
   CalendarDays,
   Newspaper,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Lock,
+  ArrowRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const FUNDING_GOAL = 13500000;
+const ACCESS_PASSWORD = "Oralab2024*";
 
 const MILESTONES_CATALOG = [
   {
@@ -89,11 +90,21 @@ const chartData = MILESTONES_CATALOG.map(m => ({
 
 export default function InvestorsDashboardPage() {
   const [mounted, setMounted] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { user } = useUser();
   const db = useFirestore();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Si el usuario es el administrador, bypass del password
+  useEffect(() => {
+    if (user?.email === "admin@oralab.cl") {
+      setIsAuthenticated(true);
+    }
+  }, [user]);
 
   const partnersQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -128,17 +139,62 @@ export default function InvestorsDashboardPage() {
 
   if (!mounted) return null;
 
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col min-h-screen bg-muted/30 font-body">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center p-4">
+          <Card className="w-full max-w-md shadow-2xl border-primary/10 rounded-[2.5rem] overflow-hidden">
+            <div className="bg-primary p-8 text-center text-white">
+               <div className="bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lock className="h-8 w-8 text-secondary" />
+               </div>
+               <h2 className="text-2xl font-black italic">Área Restringida</h2>
+               <p className="text-sm opacity-80 font-bold uppercase tracking-widest mt-2">Acceso Exclusivo Inversionistas</p>
+            </div>
+            <CardContent className="p-8 space-y-6">
+               <div className="space-y-2 text-center">
+                  <p className="text-sm text-muted-foreground font-medium">Ingresa la clave proporcionada por la dirección comercial para visualizar los avances.</p>
+               </div>
+               <div className="space-y-4">
+                  <Input 
+                    type="password" 
+                    placeholder="Clave de acceso..." 
+                    className="h-12 rounded-xl text-center font-bold tracking-widest"
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && passwordInput === ACCESS_PASSWORD && setIsAuthenticated(true)}
+                  />
+                  <Button 
+                    onClick={() => {
+                      if (passwordInput === ACCESS_PASSWORD) {
+                        setIsAuthenticated(true);
+                      } else {
+                        alert("Clave incorrecta");
+                      }
+                    }}
+                    className="w-full h-12 rounded-xl font-black bg-primary italic shadow-lg"
+                  >
+                    ACCEDER AL PANEL <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+               </div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-muted/30 font-body pb-20">
       <Navbar />
       <main className="container mx-auto px-4 py-12 max-w-6xl">
         <div className="text-center mb-12 space-y-4">
           <Badge variant="outline" className="text-secondary border-secondary px-4 py-1 font-bold uppercase tracking-widest">TRANSPARENCIA FF01</Badge>
-          <h1 className="text-3xl md:text-6xl font-black text-primary italic leading-tight text-gradient">Portal de Inversionistas</h1>
+          <h1 className="text-3xl md:text-6xl font-black text-primary italic leading-tight">Portal de Inversionistas</h1>
           <p className="text-lg text-muted-foreground font-medium max-w-2xl mx-auto">Información en tiempo real sobre la ejecución del capital y avances fotográficos del laboratorio.</p>
         </div>
 
-        {/* Mural de Noticias */}
         <section className="mb-20">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-secondary/10 p-3 rounded-2xl">
@@ -249,29 +305,28 @@ export default function InvestorsDashboardPage() {
           </Card>
 
           <div className="space-y-6">
-            <Card className="bg-secondary text-white shadow-xl rounded-[2.5rem] border-none p-6 relative overflow-hidden">
+            <Card className="bg-secondary text-white shadow-xl rounded-[2.5rem] border-none p-6 relative overflow-hidden text-center">
                <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-               <Users className="h-10 w-10 mb-4 opacity-50" />
-               <p className="text-xs font-bold uppercase tracking-widest opacity-80">Socios Cerrados</p>
-               <h3 className="text-5xl font-black italic">{partnersCount}</h3>
-               <p className="text-sm mt-2 font-medium opacity-80 italic">De un máximo de 10 socios.</p>
+               <p className="text-xs font-bold uppercase tracking-widest opacity-80 mb-2">Socios Confirmados</p>
+               <h3 className="text-6xl font-black italic">{partnersCount}</h3>
+               <p className="text-xs mt-2 font-medium opacity-80">Cupos cerrados.</p>
             </Card>
 
             <Card className="bg-white shadow-xl rounded-[2.5rem] border-primary/10 p-6">
                <h4 className="font-black text-primary uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
-                 <CheckCircle2 className="h-4 w-4 text-secondary" /> Socios Confirmados
+                 <CheckCircle2 className="h-4 w-4 text-secondary" /> Socios de Estratégicos
                </h4>
-               <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+               <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2">
                   {loadingPartners ? (
                     <p className="text-xs text-muted-foreground italic">Cargando...</p>
                   ) : partners.length === 0 ? (
-                    <p className="text-xs text-muted-foreground italic">Esperando socios.</p>
+                    <p className="text-xs text-muted-foreground italic">Esperando registros.</p>
                   ) : (
                     partners.map((p, i) => (
                       <div key={p.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl border border-primary/5">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">S{i + 1}</div>
-                          <span className="text-xs font-black text-primary italic text-muted-foreground">Socio Estratégico #{i + 1}</span>
+                          <span className="text-xs font-black text-primary italic">Socio #{i + 1}</span>
                         </div>
                         <Badge variant="outline" className="text-[10px] font-black border-secondary/20 text-secondary">${(p.amount || 0).toLocaleString('es-CL')}</Badge>
                       </div>
@@ -282,11 +337,9 @@ export default function InvestorsDashboardPage() {
           </div>
         </section>
 
-        {/* Timeline Dinámica */}
         <section className="mb-24">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-black text-primary italic">Cronograma del Proyecto</h2>
-            <p className="text-muted-foreground font-medium mt-2">Hitos y avances técnicos para nuestros inversionistas.</p>
             <div className="h-1 w-20 bg-secondary mx-auto mt-4 rounded-full" />
           </div>
           
@@ -295,19 +348,17 @@ export default function InvestorsDashboardPage() {
             
             <div className="space-y-12">
               {loadingMilestones ? (
-                <div className="text-center py-20 italic text-muted-foreground">Cargando cronograma institucional...</div>
+                <div className="text-center py-20 italic text-muted-foreground">Cargando cronograma...</div>
               ) : milestones?.length === 0 ? (
-                <div className="text-center py-20 italic text-muted-foreground">No se han registrado hitos oficiales aún.</div>
+                <div className="text-center py-20 italic text-muted-foreground">No hay hitos registrados.</div>
               ) : (
                 milestones?.map((milestone, idx) => (
                   <div key={milestone.id} className={cn(
                     "relative flex flex-col md:flex-row items-center gap-8",
                     idx % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
                   )}>
-                    {/* Punto de la línea */}
                     <div className="absolute left-8 md:left-1/2 w-6 h-6 rounded-full bg-white border-4 border-primary shadow-lg -translate-x-1/2 z-10 hidden sm:block" />
                     
-                    {/* Contenido */}
                     <Card className="flex-1 w-full bg-white shadow-xl border-primary/5 rounded-[2rem] hover:border-secondary/30 transition-all group overflow-hidden">
                       <div className={cn(
                         "h-2 w-full",
@@ -339,18 +390,9 @@ export default function InvestorsDashboardPage() {
           </div>
         </section>
 
-        {/* Footer Administrativo para socios */}
         <section className="text-center py-12 border-t border-primary/10">
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-4">Contacto Exclusivo Inversionistas</p>
           <p className="text-primary font-black italic text-xl">pcordova@oralab.cl</p>
-          <div className="flex justify-center gap-6 mt-8">
-             <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground">
-               <Building2 className="h-3 w-3 text-secondary" /> Apoquindo 3990, Las Condes.
-             </div>
-             <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground">
-               <Target className="h-3 w-3 text-secondary" /> Tresna SpA.
-             </div>
-          </div>
         </section>
       </main>
     </div>

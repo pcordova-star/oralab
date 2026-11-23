@@ -31,7 +31,7 @@ import {
   FlaskConical,
   Building2,
   Smartphone,
-  History
+  History as HistoryIcon
 } from "lucide-react";
 import { 
   LineChart, 
@@ -406,7 +406,7 @@ export default function HomePage() {
                          <div><p className="font-black text-primary italic">Alertas Sonoras</p><p className="text-xs text-muted-foreground">Notificaciones en tiempo real para cada soplido.</p></div>
                       </div>
                       <div className="flex gap-4">
-                         <div className="bg-primary/10 h-10 w-10 rounded-xl flex items-center justify-center shrink-0"><History className="h-5 w-5 text-primary" /></div>
+                         <div className="bg-primary/10 h-10 w-10 rounded-xl flex items-center justify-center shrink-0"><HistoryIcon className="h-5 w-5 text-primary" /></div>
                          <div><p className="font-black text-primary italic">Bitácora Digital</p><p className="text-xs text-muted-foreground">Registro automático de tiempos para el laboratorio.</p></div>
                       </div>
                    </div>
